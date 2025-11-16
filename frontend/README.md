@@ -19,7 +19,12 @@ A new Flutter project.
    
    # または Homebrew
    brew install mise
+
+   # Windows
+   winget install jdx.mise
    ```
+
+   - 参考: https://mise.jdx.dev/getting-started.html
 
 2. **プロジェクトのクローン**
 
