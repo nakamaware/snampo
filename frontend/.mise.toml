@@ -1,0 +1,27 @@
+[tools]
+flutter = "3.32.0"
+java = "17"
+
+[tasks.build]
+description = "Debug APKをビルド"
+run = "flutter build apk --debug"
+
+[tasks.build-release]
+description = "Release APKをビルド"
+run = "flutter build apk --release"
+
+[tasks.test]
+description = "テストを実行"
+run = "flutter test"
+
+[tasks.clean]
+description = "ビルドキャッシュをクリアして依存関係を再取得"
+run = "flutter clean && flutter pub get"
+
+[tasks.format]
+description = "コードをフォーマット"
+run = "dart format ."
+
+[tasks.analyze]
+description = "コードを解析"
+run = "flutter analyze"
