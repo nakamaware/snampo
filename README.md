@@ -141,14 +141,14 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 3. **環境変数の設定**
 
-   Google Maps API キーを設定するために、`.env`ファイルを作成してください。
+   Google Maps API キーを設定するために、`.env.example`をコピーして`.env`ファイルを作成してください。
 
    ```bash
-   # .envファイルを作成
-   touch .env
+   # .env.exampleをコピーして.envを作成
+   cp .env.example .env
    ```
 
-   `.env`ファイルに以下を追加：
+   その後、`.env`ファイルを開いて、`your_google_maps_api_key_here`を実際のGoogle Maps APIキーに置き換えてください。
 
    ```
    GOOGLE_API_KEY=your_google_maps_api_key_here
