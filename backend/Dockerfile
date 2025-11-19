@@ -1,8 +1,15 @@
-FROM python:3.11
+FROM python:3.13
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /code
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
+# Copy project files
+COPY ./pyproject.toml /code/pyproject.toml
 COPY ./app /code/app
+
+# Install dependencies using uv
+RUN uv pip install --system .
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

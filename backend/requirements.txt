@@ -1,9 +1,4 @@
 fastapi
 uvicorn
 requests
-<<<<<<< HEAD
 folium
-Optional
-=======
-googlemaps
->>>>>>> 4d127782fd61063f77e6c59cac5c35b87c4580fc
