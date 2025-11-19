@@ -1,0 +1,66 @@
+[tools]
+flutter = "3.32.0"
+java = "17"
+
+# Frontend Tasks
+[tasks.frontend:build]
+description = "Debug APKをビルド"
+run = "cd frontend && flutter build apk --debug"
+
+[tasks.frontend:build-release]
+description = "Release APKをビルド"
+run = "cd frontend && flutter build apk --release"
+
+[tasks.frontend:test]
+description = "フロントエンドのテストを実行"
+run = "cd frontend && flutter test"
+
+[tasks.frontend:clean]
+description = "フロントエンドのビルドキャッシュをクリアして依存関係を再取得"
+run = "cd frontend && flutter clean && flutter pub get"
+
+[tasks.frontend:format]
+description = "フロントエンドのコードをフォーマット"
+run = "cd frontend && dart format ."
+
+[tasks.frontend:analyze]
+description = "フロントエンドのコードを解析"
+run = "cd frontend && flutter analyze"
+
+[tasks.frontend:dev]
+description = "フロントエンドアプリを起動"
+run = "cd frontend && flutter run"
+
+[tasks.frontend:pub-get]
+description = "フロントエンドの依存関係をインストール"
+run = "cd frontend && flutter pub get"
+
+# Backend Tasks
+[tasks.backend:dev]
+description = "バックエンド開発サーバーを起動"
+run = "cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+[tasks.backend:sync]
+description = "バックエンドの依存関係をインストール"
+run = "cd backend && uv sync"
+
+[tasks.backend:test]
+description = "バックエンドのテストを実行"
+run = "cd backend && uv run pytest"
+
+[tasks.backend:format]
+description = "バックエンドのコードをフォーマット"
+run = "cd backend && uv run ruff format ."
+
+[tasks.backend:lint]
+description = "バックエンドのコードをリント"
+run = "cd backend && uv run ruff check ."
+
+# Combined Tasks
+[tasks.dev]
+description = "フロントエンドとバックエンドを同時に起動"
+run = ["mise run frontend:dev", "mise run backend:dev"]
+
+[tasks.setup]
+description = "プロジェクトの初期セットアップ（依存関係のインストール）"
+run = ["mise run frontend:pub-get", "mise run backend:sync"]

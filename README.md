@@ -9,16 +9,13 @@ Snampoプロジェクトのリポジトリです。
 
 ## 環境構築
 
-### Frontend環境構築
+### 必要なツール
 
-FrontendはFlutterで開発されています。
-
-#### 必要なツール
-
-- [mise](https://mise.jdx.dev/) - バージョン管理ツール
+- [mise](https://mise.jdx.dev/) - バージョン管理ツールとタスクランナー
 - Android Studio（Android開発用）
+- [uv](https://github.com/astral-sh/uv) - Pythonパッケージマネージャー（バックエンド用）
 
-#### セットアップ手順
+### セットアップ手順
 
 1. **miseのインストール**（未インストールの場合）
 
@@ -35,14 +32,29 @@ FrontendはFlutterで開発されています。
 
    参考: https://mise.jdx.dev/getting-started.html
 
-2. **プロジェクトのクローン**
+2. **uvのインストール**（未インストールの場合）
+
+   ```bash
+   # macOS / Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # または Homebrew
+   brew install uv
+
+   # Windows
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+   参考: https://github.com/astral-sh/uv#installation
+
+3. **プロジェクトのクローン**
 
    ```bash
    git clone <repository-url>
-   cd frontend
+   cd snampo
    ```
 
-3. **miseでツールをインストール**
+4. **miseでツールをインストール**
 
    ```bash
    # 初回のみ、設定ファイルを信頼する必要があります
@@ -54,33 +66,53 @@ FrontendはFlutterで開発されています。
 
    これにより、プロジェクトに必要なFlutterとJavaのバージョンが自動的にインストールされます。
 
-4. **依存関係のインストール**
+5. **依存関係のインストール**
 
    ```bash
-   flutter pub get
+   # プロジェクトルートから実行（フロントエンドとバックエンドの両方の依存関係をインストール）
+   mise run setup
    ```
 
-5. **Android SDKの設定**
+   または個別に実行する場合：
+
+   ```bash
+   # フロントエンドのみ
+   mise run frontend:pub-get
+   
+   # バックエンドのみ
+   mise run backend:sync
+   ```
+
+6. **Android SDKの設定**
 
    Android Studioをインストールするか、Android SDKを手動で設定してください。
    
    Android SDK Platform 36が必要です。
 
-6. **secret.propertiesの設定**
+7. **secret.propertiesの設定**（フロントエンド）
 
-   Google Maps API キーを設定するために、`secret.properties.example` をコピーして `secret.properties` を作成し、API キーを設定してください。
+   Google Maps API キーを設定するために、`frontend/android/secret.properties.example` をコピーして `frontend/android/secret.properties` を作成し、API キーを設定してください。
 
    ```bash
-   cd android
+   cd frontend/android
    cp secret.properties.example secret.properties
    ```
 
-   その後、`android/secret.properties` を開いて `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに置き換えてください。
+   その後、`frontend/android/secret.properties` を開いて `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに置き換えてください。
 
-7. **アプリの実行**
+8. **環境変数の設定**（バックエンド）
+
+   Google Maps API キーを設定するために、`backend/.env.example`をコピーして`backend/.env`ファイルを作成してください。
 
    ```bash
-   flutter run
+   cd backend
+   cp .env.example .env
+   ```
+
+   その後、`backend/.env`ファイルを開いて、`your_google_maps_api_key_here`を実際のGoogle Maps APIキーに置き換えてください。
+
+   ```
+   GOOGLE_API_KEY=your_google_maps_api_key_here
    ```
 
 詳細は `frontend/README.md` を参照してください。
@@ -93,109 +125,6 @@ FrontendはFlutterで開発されています。
 - **Kotlin**: 2.0.21
 - **Android Gradle Plugin**: 8.8.0
 - **Android SDK**: 36 (compileSdkVersion, targetSdkVersion)
-
----
-
-### Backend環境構築
-
-BackendはFastAPIで開発されており、[uv](https://github.com/astral-sh/uv)を使用して依存関係を管理します。
-
-#### 必要なツール
-
-- **Python**: 3.13
-- **[uv](https://github.com/astral-sh/uv)**: Pythonパッケージマネージャー
-
-#### uvのインストール
-
-```bash
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# または Homebrew
-brew install uv
-
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-参考: https://github.com/astral-sh/uv#installation
-
-#### セットアップ手順
-
-1. **プロジェクトディレクトリに移動**
-
-   ```bash
-   cd backend
-   ```
-
-2. **仮想環境の作成と依存関係のインストール**
-
-   ```bash
-   # 仮想環境を作成し、依存関係をインストール
-   uv sync
-   ```
-
-   これにより、`.venv`ディレクトリに仮想環境が作成され、`pyproject.toml`に記載された依存関係がインストールされます。
-
-   **注意**: `uv run`を使用すれば、仮想環境の有効化は不要です。`uv run`コマンドは自動的に仮想環境下でコマンドを実行します。
-
-3. **環境変数の設定**
-
-   Google Maps API キーを設定するために、`.env.example`をコピーして`.env`ファイルを作成してください。
-
-   ```bash
-   # .env.exampleをコピーして.envを作成
-   cp .env.example .env
-   ```
-
-   その後、`.env`ファイルを開いて、`your_google_maps_api_key_here`を実際のGoogle Maps APIキーに置き換えてください。
-
-   ```
-   GOOGLE_API_KEY=your_google_maps_api_key_here
-   ```
-
-4. **開発サーバーの起動**
-
-   ```bash
-   # uv runを使用して実行（推奨）
-   uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-   サーバーは `http://localhost:8000` で起動します。
-
-   **その他のコマンド例**:
-   ```bash
-   # Pythonスクリプトの実行
-   uv run python script.py
-
-   # パッケージのインストール
-   uv add package-name
-
-   # 開発依存関係の追加
-   uv add --dev package-name
-   ```
-
-#### Dockerを使用した起動
-
-Dockerを使用する場合：
-
-```bash
-# Docker Composeを使用
-docker-compose up --build
-
-# または、Dockerfileから直接ビルド
-docker build -t snampo-backend .
-docker run -p 80:80 --env-file .env snampo-backend
-```
-
-#### 依存関係の管理
-
-- **依存関係の追加**: `pyproject.toml`の`dependencies`セクションに追加後、`uv sync`を実行
-- **依存関係の更新**: `uv sync --upgrade`
-- **依存関係のロック**: `uv lock`（`uv.lock`ファイルが生成されます）
-
-#### 使用しているツールバージョン
-
 - **Python**: 3.13
 - **FastAPI**: >=0.104.0
 - **Uvicorn**: >=0.24.0
@@ -204,13 +133,121 @@ docker run -p 80:80 --env-file .env snampo-backend
 
 ---
 
+## タスクランナー
+
+このプロジェクトでは、[mise](https://mise.jdx.dev/)のタスク機能を使用して、フロントエンドとバックエンドのコマンドを統合管理しています。プロジェクトルートの`.mise.toml`にタスクが定義されています。
+
+### 利用可能なタスク
+
+#### フロントエンドタスク
+
+```bash
+# 開発サーバーを起動
+mise run frontend:dev
+
+# 依存関係をインストール
+mise run frontend:pub-get
+
+# Debug APKをビルド
+mise run frontend:build
+
+# Release APKをビルド
+mise run frontend:build-release
+
+# テストを実行
+mise run frontend:test
+
+# ビルドキャッシュをクリア
+mise run frontend:clean
+
+# コードをフォーマット
+mise run frontend:format
+
+# コードを解析
+mise run frontend:analyze
+```
+
+#### バックエンドタスク
+
+```bash
+# 開発サーバーを起動
+mise run backend:dev
+
+# 依存関係をインストール
+mise run backend:sync
+
+# テストを実行
+mise run backend:test
+
+# コードをフォーマット
+mise run backend:format
+
+# コードをリント
+mise run backend:lint
+```
+
+#### 統合タスク
+
+```bash
+# フロントエンドとバックエンドを同時に起動
+mise run dev
+
+# プロジェクトの初期セットアップ（依存関係のインストール）
+mise run setup
+```
+
+### タスク一覧の確認
+
+利用可能なタスクの一覧を確認するには：
+
+```bash
+mise tasks
+```
+
+### Dockerを使用した起動（バックエンド）
+
+Dockerを使用する場合：
+
+```bash
+cd backend
+# Docker Composeを使用
+docker-compose up --build
+
+# または、Dockerfileから直接ビルド
+docker build -t snampo-backend .
+docker run -p 80:80 --env-file .env snampo-backend
+```
+
+---
+
 ## 開発
 
-### ホットリロード（Frontend）
+### 開発サーバーの起動
+
+#### フロントエンドとバックエンドを同時に起動
+
+```bash
+# プロジェクトルートから実行
+mise run dev
+```
+
+#### 個別に起動する場合
+
+```bash
+# フロントエンドのみ
+mise run frontend:dev
+
+# バックエンドのみ
+mise run backend:dev
+```
+
+### ホットリロード
+
+#### Frontend
 
 アプリ実行中に `r` キーを押すとホットリロードが実行されます。
 
-### ホットリロード（Backend）
+#### Backend
 
 Uvicornの`--reload`オプションにより、コード変更時に自動的に再起動されます。
 
