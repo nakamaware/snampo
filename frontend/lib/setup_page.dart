@@ -52,14 +52,14 @@ class _SliderWidgetState extends State<SliderWidget> {
             min: 0.5,
             max: 10.0,
             divisions: 19,
-            onChanged: (distance) {
+            onChanged: (radius) {
               setState(() {
-                slidervalue = distance;
+                slidervalue = radius;
               });
             }
           ),
           const SizedBox(height: 20,),
-          SubmitButton(distance: slidervalue),
+          SubmitButton(radius: slidervalue),
         ],
       ),
     );
@@ -67,9 +67,9 @@ class _SliderWidgetState extends State<SliderWidget> {
 }
 
 class SubmitButton extends StatefulWidget {
-  final double distance;
+  final double radius;
   const SubmitButton({
-    required this.distance,
+    required this.radius,
     super.key,
   });
 
@@ -98,7 +98,7 @@ class _SubmitButtonState extends State<SubmitButton> {
           context, 
           MaterialPageRoute(
             builder: (context) =>
-            MissionPage(distance:widget.distance),
+            MissionPage(radius:widget.radius),
           ),
         );
       },
