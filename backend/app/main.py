@@ -119,7 +119,16 @@ def get_street_view_image(latitude: float, longitude: float, size: Optional[str]
         # メタデータから画像の実際の位置情報を取得
         metadata_latitude = metadata['location']['lat']
         metadata_longitude = metadata['location']['lng']
-        #print(f"Actual Image Location: Latitude {actual_latitude}, Longitude {actual_longitude}")    
+        logger.info(f"Actual Image Location: Latitude {metadata_latitude}, Longitude {metadata_longitude}")
+    else:
+        # ステータスが'OK'でない場合のエラーハンドリング
+        logger.error(
+            f"Street View metadata API returned status '{metadata['status']}' for location ({latitude}, {longitude})."
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Street View metadata unavailable: {metadata['status']}."
+        )
 
     # Street View Static API の URL を構築
     url = "https://maps.googleapis.com/maps/api/streetview"
