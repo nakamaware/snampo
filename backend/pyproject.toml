@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "requests>=2.31.0",
     "folium>=0.15.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [build-system]

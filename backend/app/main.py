@@ -22,10 +22,20 @@ import math
 import random
 import folium
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI()
 
-GOOGLE_API_KEY = "enter_your_api_key"
+# Get Google API key from environment variable
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError(
+        "GOOGLE_API_KEY environment variable is not set. "
+        "Please set it in your .env file or environment variables."
+    )
 
 def generate_random_point(center_lat_str, center_lng_str, radius_str):
     center_lat = float(center_lat_str)
