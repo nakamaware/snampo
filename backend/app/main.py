@@ -17,17 +17,25 @@ import base64
 from fastapi import FastAPI, HTTPException, Response
 from typing import Optional
 import requests
+from requests.exceptions import Timeout, RequestException
 import os
 import math
 import random
 import folium
 import json
+import logging
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Request timeout constant (in seconds)
+REQUEST_TIMEOUT_SECONDS = 15
 
 # Get Google API key from environment variable
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
@@ -96,8 +104,16 @@ def get_street_view_image(latitude: float, longitude: float, size: Optional[str]
     metadata_url = f"https://maps.googleapis.com/maps/api/streetview/metadata?location={latitude},{longitude}&key={GOOGLE_API_KEY}"
     
     # メタデータの取得
-    metadata_response = requests.get(metadata_url)
-    metadata = metadata_response.json()
+    try:
+        metadata_response = requests.get(metadata_url, timeout=REQUEST_TIMEOUT_SECONDS)
+        metadata_response.raise_for_status()
+        metadata = metadata_response.json()
+    except Timeout:
+        logger.error(f"Timeout error while fetching Street View metadata for location ({latitude}, {longitude})")
+        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve Street View metadata")
+    except RequestException as e:
+        logger.error(f"Request error while fetching Street View metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve Street View metadata: {str(e)}")
 
     if metadata['status'] == 'OK':
         # メタデータから画像の実際の位置情報を取得
@@ -116,7 +132,15 @@ def get_street_view_image(latitude: float, longitude: float, size: Optional[str]
     }
 
     # Street View Static API にリクエストを送信
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
+    except Timeout:
+        logger.error(f"Timeout error while fetching Street View image for location ({latitude}, {longitude})")
+        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve Street View image")
+    except RequestException as e:
+        logger.error(f"Request error while fetching Street View image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve Street View image: {str(e)}")
  
     # リクエストが成功した場合
     if response.status_code == 200:
@@ -151,7 +175,15 @@ def route(currentLat: str, currentLng: str, radius: str):
     }
 
     # Directions API へのリクエストを送信
-    r = requests.get(url, params=payload)
+    try:
+        r = requests.get(url, params=payload, timeout=REQUEST_TIMEOUT_SECONDS)
+        r.raise_for_status()
+    except Timeout:
+        logger.error(f"Timeout error while fetching directions from ({currentLat}, {currentLng})")
+        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve directions")
+    except RequestException as e:
+        logger.error(f"Request error while fetching directions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve directions: {str(e)}")
 
     # リクエストが成功した場合
     if r.status_code == 200:
