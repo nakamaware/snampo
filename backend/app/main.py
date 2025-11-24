@@ -1,14 +1,14 @@
 import base64
-from fastapi import FastAPI, HTTPException, Response
-from typing import Optional
-import requests
-from requests.exceptions import Timeout, RequestException
-import os
-import math
-import random
-import folium
 import logging
+import math
+import os
+import random
+
+import folium
+import requests
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from requests.exceptions import RequestException, Timeout
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,20 +29,22 @@ if not GOOGLE_API_KEY:
         "Please set it in your .env file or environment variables."
     )
 
+
 def generate_random_point(center_lat_str, center_lng_str, radius_str):
     center_lat = float(center_lat_str)
     center_lng = float(center_lng_str)
     radius = float(radius_str)
-    
-    radius_in_degrees = radius / 111300 
+
+    radius_in_degrees = radius / 111300
 
     random_angle = random.uniform(0, 2 * math.pi)
 
     # Calculate new coordinates
     new_lat = center_lat + (radius_in_degrees * math.cos(random_angle))
     new_lng = center_lng + (radius_in_degrees * math.sin(random_angle))
-    
+
     return new_lat, new_lng
+
 
 def decode_polyline(polyline_str):
     index = 0
@@ -81,60 +83,71 @@ def decode_polyline(polyline_str):
 
     return coordinates
 
-@app.get("/streetview")
-def get_street_view_image(latitude: float, longitude: float, size: Optional[str] = "600x300"):
 
+@app.get("/streetview")
+def get_street_view_image(latitude: float, longitude: float, size: str | None = "600x300") -> dict:
     # 1. Street View Image Metadata APIのURL
     metadata_url = f"https://maps.googleapis.com/maps/api/streetview/metadata?location={latitude},{longitude}&key={GOOGLE_API_KEY}"
-    
+
     # メタデータの取得
     try:
         metadata_response = requests.get(metadata_url, timeout=REQUEST_TIMEOUT_SECONDS)
         metadata_response.raise_for_status()
         metadata = metadata_response.json()
-    except Timeout:
-        logger.error(f"Timeout error while fetching Street View metadata for location ({latitude}, {longitude})")
-        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve Street View metadata")
+    except Timeout as e:
+        logger.error(
+            f"Timeout error while fetching Street View metadata for location "
+            f"({latitude}, {longitude})."
+        )
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve Street View metadata"
+        ) from e
     except RequestException as e:
         logger.error(f"Request error while fetching Street View metadata: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve Street View metadata: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve Street View metadata: {str(e)}"
+        ) from e
 
-    if metadata['status'] == 'OK':
+    if metadata["status"] == "OK":
         # メタデータから画像の実際の位置情報を取得
-        metadata_latitude = metadata['location']['lat']
-        metadata_longitude = metadata['location']['lng']
-        logger.info(f"Actual Image Location: Latitude {metadata_latitude}, Longitude {metadata_longitude}")
+        metadata_latitude = metadata["location"]["lat"]
+        metadata_longitude = metadata["location"]["lng"]
+        logger.info(
+            f"Actual Image Location: Latitude {metadata_latitude}, Longitude {metadata_longitude}"
+        )
     else:
         # ステータスが'OK'でない場合のエラーハンドリング
         logger.error(
-            f"Street View metadata API returned status '{metadata['status']}' for location ({latitude}, {longitude})."
+            f"Street View metadata API returned status '{metadata['status']}' "
+            f"for location ({latitude}, {longitude})."
         )
         raise HTTPException(
-            status_code=400,
-            detail=f"Street View metadata unavailable: {metadata['status']}."
+            status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."
         )
 
     # Street View Static API の URL を構築
     url = "https://maps.googleapis.com/maps/api/streetview"
-    
+
     # リクエストパラメータを設定
-    params = {
-        "size": size,
-        "location": f"{latitude},{longitude}",
-        "key": GOOGLE_API_KEY
-    }
+    params = {"size": size, "location": f"{latitude},{longitude}", "key": GOOGLE_API_KEY}
 
     # Street View Static API にリクエストを送信
     try:
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
-    except Timeout:
-        logger.error(f"Timeout error while fetching Street View image for location ({latitude}, {longitude})")
-        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve Street View image")
+    except Timeout as e:
+        logger.error(
+            f"Timeout error while fetching Street View image for location ({latitude}, {longitude})"
+        )
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve Street View image"
+        ) from e
     except RequestException as e:
         logger.error(f"Request error while fetching Street View image: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve Street View image: {str(e)}")
- 
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve Street View image: {str(e)}"
+        ) from e
+
     # リクエストが成功した場合
     if response.status_code == 200:
         # 画像データをBase64エンコードして文字列に変換
@@ -145,38 +158,45 @@ def get_street_view_image(latitude: float, longitude: float, size: Optional[str]
             "metadata_longitude": metadata_longitude,
             "original_latitude": latitude,
             "original_longitude": longitude,
-            "image_data": image_data
+            "image_data": image_data,
         }
     else:
         # エラーが発生した場合はエラーレスポンスを返す
-        raise HTTPException(status_code=response.status_code, detail="Failed to retrieve Street View image")
+        raise HTTPException(
+            status_code=response.status_code, detail="Failed to retrieve Street View image"
+        )
+
 
 @app.get("/route")
-def route(currentLat: str, currentLng: str, radius: str):
-    origin = f"{currentLat},{currentLng}"
+def route(current_lat: str, current_lng: str, radius: str) -> dict | str:
+    origin = f"{current_lat},{current_lng}"
     url = "https://maps.googleapis.com/maps/api/directions/json?"
 
     # ランダムな目的地を生成
-    destination_lat, destination_lng = generate_random_point(currentLat, currentLng, radius)
-    
+    destination_lat, destination_lng = generate_random_point(current_lat, current_lng, radius)
+
     # Directions API へのリクエストパラメータの設定
     payload = {
         "origin": origin,
         "destination": f"{destination_lat},{destination_lng}",
         "key": GOOGLE_API_KEY,
-        "mode": "walking"
+        "mode": "walking",
     }
 
     # Directions API へのリクエストを送信
     try:
         r = requests.get(url, params=payload, timeout=REQUEST_TIMEOUT_SECONDS)
         r.raise_for_status()
-    except Timeout:
-        logger.error(f"Timeout error while fetching directions from ({currentLat}, {currentLng})")
-        raise HTTPException(status_code=504, detail="Request timeout: Failed to retrieve directions")
+    except Timeout as e:
+        logger.error(f"Timeout error while fetching directions from ({current_lat}, {current_lng})")
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve directions"
+        ) from e
     except RequestException as e:
         logger.error(f"Request error while fetching directions: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve directions: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve directions: {str(e)}"
+        ) from e
 
     # リクエストが成功した場合
     if r.status_code == 200:
@@ -194,7 +214,7 @@ def route(currentLat: str, currentLng: str, radius: str):
         center = route_coordinates[len(route_coordinates) // 2]
 
         # 出発地点の座標を取得
-        departure_lat, departure_lng = currentLat, currentLng
+        departure_lat, departure_lng = current_lat, current_lng
 
         # 目的地の座標を取得
         destination_lat, destination_lng = destination_lat, destination_lng
@@ -210,27 +230,42 @@ def route(currentLat: str, currentLng: str, radius: str):
         folium.PolyLine(locations=route_coordinates, color="blue", weight=2.5, opacity=1).add_to(m)
 
         # 出発地点にマーカーを追加
-        folium.Marker(location=(float(departure_lat), float(departure_lng)), popup='Departure', icon=folium.Icon(color='green')).add_to(m)
+        folium.Marker(
+            location=(float(departure_lat), float(departure_lng)),
+            popup="Departure",
+            icon=folium.Icon(color="green"),
+        ).add_to(m)
 
         # 目的地にマーカーを追加
-        folium.Marker(location=(float(destination_lat), float(destination_lng)), popup='Destination', icon=folium.Icon(color='red')).add_to(m)
+        folium.Marker(
+            location=(float(destination_lat), float(destination_lng)),
+            popup="Destination",
+            icon=folium.Icon(color="red"),
+        ).add_to(m)
 
         # 中間地点にマーカーを追加
-        folium.Marker(location=(float(midpoint_lat), float(midpoint_lng)), popup='Midpoint', icon=folium.Icon(color='orange')).add_to(m)
+        folium.Marker(
+            location=(float(midpoint_lat), float(midpoint_lng)),
+            popup="Midpoint",
+            icon=folium.Icon(color="orange"),
+        ).add_to(m)
 
         # マップを保存
         m.save("route.html")
 
-        #中間地点の画像とメタデータの緯度経度取得
-        photo_data = get_street_view_image(midpoint_lat, midpoint_lng,"600x300")
+        # 中間地点の画像とメタデータの緯度経度取得
+        photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
 
         # 出力用のデータを準備
         output_data = {
             "departure": {"latitude": float(departure_lat), "longitude": float(departure_lng)},
-            "destination": {"latitude": float(destination_lat), "longitude": float(destination_lng)},
+            "destination": {
+                "latitude": float(destination_lat),
+                "longitude": float(destination_lng),
+            },
             "midpoint": {"latitude": float(midpoint_lat), "longitude": float(midpoint_lng)},
             "midpoint_photo": photo_data,
-            "overview_polyline": data["routes"][0]["overview_polyline"]["points"]
+            "overview_polyline": data["routes"][0]["overview_polyline"]["points"],
         }
 
         return output_data
