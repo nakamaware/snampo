@@ -148,8 +148,7 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
     else:
         # ステータスが'OK'でない場合のエラーハンドリング
         logger.error(
-            f"Street View metadata API returned status '{metadata['status']}'"
-            " for a requested location."
+            "Street View metadata API returned a non-OK status for a requested location."
         )
         raise HTTPException(
             status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."
