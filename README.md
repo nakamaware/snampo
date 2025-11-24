@@ -30,7 +30,7 @@ Snampoプロジェクトのリポジトリです。
    winget install jdx.mise
    ```
 
-   参考: https://mise.jdx.dev/getting-started.html
+   参考: [mise ドキュメント](https://mise.jdx.dev/getting-started.html)
 
 2. **uvのインストール**（未インストールの場合）
 

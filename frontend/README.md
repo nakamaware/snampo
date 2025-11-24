@@ -24,7 +24,7 @@ A new Flutter project.
    winget install jdx.mise
    ```
 
-   - 参考: https://mise.jdx.dev/getting-started.html
+   - 参考: [mise ドキュメント](https://mise.jdx.dev/getting-started.html)
 
 2. **プロジェクトのクローン**
 
@@ -54,19 +54,21 @@ A new Flutter project.
 5. **Android SDKの設定**
 
    Android Studioをインストールするか、Android SDKを手動で設定してください。
-   
+
    Android SDK Platform 36が必要です。
 
 6. **secret.propertiesの設定**
 
-   Google Maps API キーを設定するために、`secret.properties.example` をコピーして `secret.properties` を作成し、API キーを設定してください。
+   Google Maps API キーを設定するために、`secret.properties.example` をコピーして
+   `secret.properties` を作成し、API キーを設定してください。
 
    ```bash
    cd android
    cp secret.properties.example secret.properties
    ```
 
-   その後、`android/secret.properties` を開いて `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに置き換えてください。
+   その後、`android/secret.properties` を開いて
+   `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに置き換えてください。
 
 7. **アプリの実行**
 
