@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:snampo/main.dart';
 
-
 // resultpageに遷移する時にバグるので要修正
 class ResultPage extends StatelessWidget {
   const ResultPage({super.key});

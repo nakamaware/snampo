@@ -15,7 +15,8 @@ class SetupPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'SETUP',
-          style: textstyle,),
+          style: textstyle,
+        ),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -46,19 +47,21 @@ class _SliderWidgetState extends State<SliderWidget> {
         children: [
           Text(
             '$slidervalue km',
-            style: textstyle,),
-          Slider(
-            value: slidervalue,
-            min: 0.5,
-            max: 10.0,
-            divisions: 19,
-            onChanged: (radius) {
-              setState(() {
-                slidervalue = radius;
-              });
-            }
+            style: textstyle,
           ),
-          const SizedBox(height: 20,),
+          Slider(
+              value: slidervalue,
+              min: 0.5,
+              max: 10.0,
+              divisions: 19,
+              onChanged: (radius) {
+                setState(() {
+                  slidervalue = radius;
+                });
+              }),
+          const SizedBox(
+            height: 20,
+          ),
           SubmitButton(radius: slidervalue),
         ],
       ),
@@ -81,7 +84,7 @@ class _SubmitButtonState extends State<SubmitButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-     final style = theme.textTheme.displayMedium!.copyWith(
+    final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
@@ -95,10 +98,9 @@ class _SubmitButtonState extends State<SubmitButton> {
       ),
       onPressed: () {
         Navigator.push(
-          context, 
+          context,
           MaterialPageRoute(
-            builder: (context) =>
-            MissionPage(radius:widget.radius),
+            builder: (context) => MissionPage(radius: widget.radius),
           ),
         );
       },
