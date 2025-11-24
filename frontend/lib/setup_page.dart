@@ -28,7 +28,7 @@ class SliderWidget extends StatefulWidget {
   const SliderWidget({super.key});
 
   @override
-  _SliderWidgetState createState() => _SliderWidgetState();
+  State<SliderWidget> createState() => _SliderWidgetState();
 }
 
 class _SliderWidgetState extends State<SliderWidget> {
@@ -52,27 +52,32 @@ class _SliderWidgetState extends State<SliderWidget> {
             min: 0.5,
             max: 10.0,
             divisions: 19,
-            onChanged: (value) {
+            onChanged: (radius) {
               setState(() {
-                slidervalue = value;
+                slidervalue = radius;
               });
             }
           ),
           const SizedBox(height: 20,),
-          SubmitButton(value: slidervalue),
+          SubmitButton(radius: slidervalue),
         ],
       ),
     );
   }
 }
 
-class SubmitButton extends StatelessWidget {
-  double value;
-  SubmitButton({
-    required this.value,
+class SubmitButton extends StatefulWidget {
+  final double radius;
+  const SubmitButton({
+    required this.radius,
     super.key,
   });
 
+  @override
+  State<SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<SubmitButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -93,7 +98,7 @@ class SubmitButton extends StatelessWidget {
           context, 
           MaterialPageRoute(
             builder: (context) =>
-            MissionPage(value),
+            MissionPage(radius:widget.radius),
           ),
         );
       },
