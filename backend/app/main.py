@@ -129,8 +129,7 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
         metadata = metadata_response.json()
     except Timeout as e:
         logger.error(
-            f"Timeout error while fetching Street View metadata for location "
-            f"({latitude}, {longitude})."
+            "Timeout error while fetching Street View metadata for a requested location."
         )
         raise HTTPException(
             status_code=504, detail="Request timeout: Failed to retrieve Street View metadata"
