@@ -18,3 +18,36 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.5.3",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+# 除外するディレクトリ/ファイル
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# 有効にするルールセット
+# E: pycodestyle errors
+# F: Pyflakes
+# I: isort
+# N: pep8-naming
+# W: pycodestyle warnings
+# UP: pyupgrade
+# B: flake8-bugbear (バグの可能性を検出)
+# C4: flake8-comprehensions (リスト内包表記の改善)
+# SIM: flake8-simplify (コード簡略化の提案)
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
