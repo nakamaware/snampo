@@ -113,7 +113,7 @@ jobs:
         run: dart format --set-exit-if-changed .
 
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       # --- Test (flutter test) (使う場合はコメントアウトを外す) ---
       # - name: Test

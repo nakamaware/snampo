@@ -86,7 +86,7 @@ class StartButton extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => SetupPage()),
+          MaterialPageRoute(builder: (context) => const SetupPage()),
         );
       },
       child: Padding(
@@ -119,7 +119,7 @@ class HistoryButton extends StatelessWidget {
         ),
       ),
       onPressed: () {
-        print('button pressed!');
+        // TODO: 履歴機能を実装
       },
       child: Padding(
         padding: const EdgeInsets.all(20.0),
