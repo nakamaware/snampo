@@ -36,7 +36,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-# 有効にするルールセット
+# ルール一覧: https://docs.astral.sh/ruff/rules/
 select = [
     # 基本スタイルチェック (pycodestyle)
     "E",	# pycodestyle errors (エラー検出)
@@ -78,8 +78,6 @@ select = [
     # Ruff独自
     "RUF",	# Ruff独自のルール
 ]
-
-# 無視するルールセット
 ignore = [
     # Docstring
     "D100",	# モジュールのdocstring必須を無視
