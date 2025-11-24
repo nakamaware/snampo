@@ -137,7 +137,11 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             frontend/android/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: >-
+            ${{ runner.os }}-gradle-${{ hashFiles(
+              'frontend/android/**/*.gradle*',
+              'frontend/android/gradle/wrapper/gradle-wrapper.properties'
+            ) }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
