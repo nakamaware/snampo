@@ -128,9 +128,7 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
         metadata_response.raise_for_status()
         metadata = metadata_response.json()
     except Timeout as e:
-        logger.error(
-            "Timeout error while fetching Street View metadata for a requested location."
-        )
+        logger.error("Timeout error while fetching Street View metadata for a requested location.")
         raise HTTPException(
             status_code=504, detail="Request timeout: Failed to retrieve Street View metadata"
         ) from e
@@ -150,8 +148,7 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
     else:
         # ステータスが'OK'でない場合のエラーハンドリング
         logger.error(
-            f"Street View metadata API returned status '{metadata['status']}' "
-            f"for location ({latitude}, {longitude})."
+            f"Street View metadata API returned status '{metadata['status']}' for a requested location."
         )
         raise HTTPException(
             status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."
@@ -168,9 +165,7 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
     except Timeout as e:
-        logger.error(
-            f"Timeout error while fetching Street View image for location ({latitude}, {longitude})"
-        )
+        logger.error("Timeout error while fetching Street View image for a requested location.")
         raise HTTPException(
             status_code=504, detail="Request timeout: Failed to retrieve Street View image"
         ) from e
@@ -229,7 +224,7 @@ def route(current_lat: str, current_lng: str, radius: str) -> dict | str:
         r = requests.get(url, params=payload, timeout=REQUEST_TIMEOUT_SECONDS)
         r.raise_for_status()
     except Timeout as e:
-        logger.error(f"Timeout error while fetching directions from ({current_lat}, {current_lng})")
+        logger.error("Timeout error while fetching directions from a requested location.")
         raise HTTPException(
             status_code=504, detail="Request timeout: Failed to retrieve directions"
         ) from e
