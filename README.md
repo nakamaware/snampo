@@ -56,7 +56,19 @@ Snampoプロジェクトのリポジトリです。
    cd snampo
    ```
 
-4. **miseでツールをインストール**
+4. **VS Code拡張機能のインストール**（推奨）
+
+   VS Codeを使用する場合、推奨される拡張機能をインストールすることをお勧めします。
+
+   **推奨拡張機能の一覧は `.vscode/extensions.json` を参照してください。**
+
+   拡張機能のインストール方法：
+
+   - VS Codeでプロジェクトを開くと、推奨拡張機能の通知が表示されます。「インストール」をクリックして一括インストールできます
+   - または、VS Codeのコマンドパレット（Cmd+Shift+P / Ctrl+Shift+P）から「Extensions: Show Recommended Extensions」を選択して、推奨拡張機能を確認・インストールできます
+   - 手動でインストールする場合は、VS Codeの拡張機能タブから各拡張機能を検索してインストールすることもできます
+
+5. **miseでツールをインストール**
 
    ```bash
    # 初回のみ、設定ファイルを信頼する必要があります
@@ -68,44 +80,11 @@ Snampoプロジェクトのリポジトリです。
 
    これにより、プロジェクトに必要なFlutterとJavaのバージョンが自動的にインストールされます。
 
-5. **依存関係のインストール**
+6. **依存関係のインストール**
 
    ```bash
    # プロジェクトルートから実行（フロントエンドとバックエンドの両方の依存関係をインストール）
    mise run setup
-   ```
-
-   または個別に実行する場合：
-
-   ```bash
-   # フロントエンドのみ
-   mise run frontend:setup
-
-   # バックエンドのみ
-   mise run backend:setup
-   ```
-
-6. **pre-commitのセットアップ**
-
-   pre-commitをインストールして、Gitフックを有効化します：
-
-   ```bash
-   # pre-commitをインストール（uvを使用する場合）
-   uv pip install pre-commit
-
-   # または、pipを使用する場合
-   pip install pre-commit
-
-   # Gitフックをインストール
-   pre-commit install
-   ```
-
-   これにより、コミット前に自動的にコード品質チェックが実行されます。
-
-   初回実行時や設定変更後は、全ファイルに対してチェックを実行することもできます：
-
-   ```bash
-   pre-commit run --all-files
    ```
 
 7. **Android SDKの設定**
@@ -146,8 +125,6 @@ Snampoプロジェクトのリポジトリです。
    ```env
    GOOGLE_API_KEY=your_google_maps_api_key_here
    ```
-
-詳細は `frontend/README.md` を参照してください。
 
 #### 使用しているツールバージョン
 
@@ -228,93 +205,4 @@ docker-compose up --build
 # または、Dockerfileから直接ビルド
 docker build -t snampo-backend .
 docker run -p 80:80 --env-file .env snampo-backend
-```
-
----
-
-## 開発
-
-### 開発サーバーの起動
-
-#### フロントエンドとバックエンドを同時に起動
-
-```bash
-# プロジェクトルートから実行
-mise run dev
-```
-
-#### 個別に起動する場合
-
-```bash
-# フロントエンドのみ
-mise run frontend:dev
-
-# バックエンドのみ
-mise run backend:dev
-```
-
-### ホットリロード
-
-#### Frontend
-
-アプリ実行中に `r` キーを押すとホットリロードが実行されます。
-
-#### Backend
-
-Uvicornの`--reload`オプションにより、コード変更時に自動的に再起動されます。
-
-## トラブルシューティング
-
-### Frontend（トラブルシューティング）
-
-#### miseがツールを認識しない場合
-
-```bash
-# miseのシェル統合を確認
-mise activate
-
-# シェルを再起動するか、以下を実行
-eval "$(mise activate zsh)"  # zshの場合
-eval "$(mise activate bash)" # bashの場合
-```
-
-#### Flutterのパスが正しく設定されない場合
-
-```bash
-# Flutterのパスを確認
-which flutter
-
-# miseでFlutterを再インストール
-mise uninstall flutter
-mise install
-```
-
-### Backend（トラブルシューティング）
-
-#### uvが見つからない場合
-
-```bash
-# uvのパスを確認
-which uv
-
-# シェルを再起動するか、PATHを確認
-echo $PATH
-```
-
-#### 依存関係のインストールに失敗する場合
-
-```bash
-# 仮想環境を削除して再作成
-rm -rf .venv
-uv sync
-```
-
-#### Python 3.13が見つからない場合
-
-```bash
-# Pythonのバージョンを確認
-python --version
-
-# uvを使用してPythonをインストール
-uv python install 3.13
 ```
