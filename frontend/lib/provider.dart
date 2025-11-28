@@ -1,6 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:dio/dio.dart';
 import 'package:snampo/location_model.dart';
 
 // final currentLocationProvider = FutureProvider<Position>((ref) async {

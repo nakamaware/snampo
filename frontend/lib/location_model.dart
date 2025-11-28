@@ -5,7 +5,6 @@ part 'location_model.g.dart';
 
 @freezed
 abstract class LocationModel with _$LocationModel {
-  @JsonSerializable(explicitToJson: true)
   factory LocationModel({
     @JsonKey(name: 'departure') LocationPoint? departure,
     @JsonKey(name: 'destination') LocationPoint? destination,

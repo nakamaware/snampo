@@ -29,8 +29,12 @@ mixin _$LocationModel {
   @JsonKey(name: 'overview_polyline')
   String? get overviewPolyline => throw _privateConstructorUsedError;
 
+  /// Serializes this LocationModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LocationModelCopyWith<LocationModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -61,6 +65,8 @@ class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -89,6 +95,8 @@ class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
     ) as $Val);
   }
 
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $LocationPointCopyWith<$Res>? get departure {
@@ -101,6 +109,8 @@ class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
     });
   }
 
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $LocationPointCopyWith<$Res>? get destination {
@@ -142,6 +152,8 @@ class __$$LocationModelImplCopyWithImpl<$Res>
       _$LocationModelImpl _value, $Res Function(_$LocationModelImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -172,8 +184,7 @@ class __$$LocationModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class _$LocationModelImpl implements _LocationModel {
   _$LocationModelImpl(
       {@JsonKey(name: 'departure') this.departure,
@@ -226,12 +237,14 @@ class _$LocationModelImpl implements _LocationModel {
                 other.overviewPolyline == overviewPolyline));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, departure, destination,
       const DeepCollectionEquality().hash(_midpoints), overviewPolyline);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LocationModelImplCopyWith<_$LocationModelImpl> get copyWith =>
@@ -268,8 +281,11 @@ abstract class _LocationModel implements LocationModel {
   @override
   @JsonKey(name: 'overview_polyline')
   String? get overviewPolyline;
+
+  /// Create a copy of LocationModel
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LocationModelImplCopyWith<_$LocationModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -285,8 +301,12 @@ mixin _$LocationPoint {
   @JsonKey(name: 'longitude')
   double? get longitude => throw _privateConstructorUsedError;
 
+  /// Serializes this LocationPoint to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LocationPoint
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LocationPointCopyWith<LocationPoint> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -312,6 +332,8 @@ class _$LocationPointCopyWithImpl<$Res, $Val extends LocationPoint>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LocationPoint
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -352,6 +374,8 @@ class __$$LocationPointImplCopyWithImpl<$Res>
       _$LocationPointImpl _value, $Res Function(_$LocationPointImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LocationPoint
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -404,11 +428,13 @@ class _$LocationPointImpl implements _LocationPoint {
                 other.longitude == longitude));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, latitude, longitude);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LocationPoint
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LocationPointImplCopyWith<_$LocationPointImpl> get copyWith =>
@@ -437,8 +463,11 @@ abstract class _LocationPoint implements LocationPoint {
   @override
   @JsonKey(name: 'longitude')
   double? get longitude;
+
+  /// Create a copy of LocationPoint
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LocationPointImplCopyWith<_$LocationPointImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -460,8 +489,12 @@ mixin _$MidPoint {
   @JsonKey(name: 'image_data')
   String? get imageUtf8 => throw _privateConstructorUsedError;
 
+  /// Serializes this MidPoint to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of MidPoint
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $MidPointCopyWith<MidPoint> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -489,6 +522,8 @@ class _$MidPointCopyWithImpl<$Res, $Val extends MidPoint>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of MidPoint
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -547,6 +582,8 @@ class __$$MidPointImplCopyWithImpl<$Res>
       _$MidPointImpl _value, $Res Function(_$MidPointImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of MidPoint
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -632,12 +669,14 @@ class _$MidPointImpl implements _MidPoint {
                 other.imageUtf8 == imageUtf8));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, imageLatitude, imageLongitude,
       latitude, longitude, imageUtf8);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of MidPoint
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$MidPointImplCopyWith<_$MidPointImpl> get copyWith =>
@@ -677,8 +716,11 @@ abstract class _MidPoint implements MidPoint {
   @override
   @JsonKey(name: 'image_data')
   String? get imageUtf8;
+
+  /// Create a copy of MidPoint
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$MidPointImplCopyWith<_$MidPointImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

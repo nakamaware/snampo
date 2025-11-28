@@ -22,9 +22,9 @@ _$LocationModelImpl _$$LocationModelImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$LocationModelImplToJson(_$LocationModelImpl instance) =>
     <String, dynamic>{
-      'departure': instance.departure?.toJson(),
-      'destination': instance.destination?.toJson(),
-      'midpoints': instance.midpoints?.map((e) => e.toJson()).toList(),
+      'departure': instance.departure,
+      'destination': instance.destination,
+      'midpoints': instance.midpoints,
       'overview_polyline': instance.overviewPolyline,
     };
 

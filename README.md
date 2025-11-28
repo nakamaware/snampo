@@ -30,7 +30,7 @@ Snampoプロジェクトのリポジトリです。
    winget install jdx.mise
    ```
 
-   参考: https://mise.jdx.dev/getting-started.html
+   参考: [mise ドキュメント](https://mise.jdx.dev/getting-started.html)
 
 2. **uvのインストール**（未インストールの場合）
 
@@ -42,10 +42,11 @@ Snampoプロジェクトのリポジトリです。
    brew install uv
 
    # Windows
-   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+   powershell -ExecutionPolicy ByPass -c \
+     "irm https://astral.sh/uv/install.ps1 | iex"
    ```
 
-   参考: https://github.com/astral-sh/uv#installation
+   参考: [uv インストール](https://github.com/astral-sh/uv#installation)
 
 3. **プロジェクトのクローン**
 
@@ -86,32 +87,39 @@ Snampoプロジェクトのリポジトリです。
 6. **Android SDKの設定**
 
    Android Studioをインストールするか、Android SDKを手動で設定してください。
-   
+
    Android SDK Platform 36が必要です。
 
 7. **secret.propertiesの設定**（フロントエンド）
 
-   Google Maps API キーを設定するために、`frontend/android/secret.properties.example` をコピーして `frontend/android/secret.properties` を作成し、API キーを設定してください。
+   Google Maps API キーを設定するために、
+   `frontend/android/secret.properties.example` をコピーして
+   `frontend/android/secret.properties` を作成し、API キーを設定してください。
 
    ```bash
    cd frontend/android
    cp secret.properties.example secret.properties
    ```
 
-   その後、`frontend/android/secret.properties` を開いて `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに置き換えてください。
+   その後、`frontend/android/secret.properties` を開いて
+   `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに
+   置き換えてください。
 
 8. **環境変数の設定**（バックエンド）
 
-   Google Maps API キーを設定するために、`backend/.env.example`をコピーして`backend/.env`ファイルを作成してください。
+   Google Maps API キーを設定するために、`backend/.env.example`をコピーして
+   `backend/.env`ファイルを作成してください。
 
    ```bash
    cd backend
    cp .env.example .env
    ```
 
-   その後、`backend/.env`ファイルを開いて、`your_google_maps_api_key_here`を実際のGoogle Maps APIキーに置き換えてください。
+   その後、`backend/.env`ファイルを開いて、
+   `your_google_maps_api_key_here`を実際のGoogle Maps APIキーに
+   置き換えてください。
 
-   ```
+   ```env
    GOOGLE_API_KEY=your_google_maps_api_key_here
    ```
 
@@ -253,7 +261,7 @@ Uvicornの`--reload`オプションにより、コード変更時に自動的に
 
 ## トラブルシューティング
 
-### Frontend
+### Frontend（トラブルシューティング）
 
 #### miseがツールを認識しない場合
 
@@ -277,7 +285,7 @@ mise uninstall flutter
 mise install
 ```
 
-### Backend
+### Backend（トラブルシューティング）
 
 #### uvが見つからない場合
 
@@ -306,4 +314,3 @@ python --version
 # uvを使用してPythonをインストール
 uv python install 3.13
 ```
-
