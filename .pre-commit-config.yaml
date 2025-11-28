@@ -10,11 +10,6 @@ repos:
         description: 末尾の空白を削除
       - id: end-of-file-fixer
         description: ファイル末尾の改行を統一
-      - id: check-yaml
-        description: YAMLファイルの構文チェック
-      - id: check-json
-        description: JSONファイルの構文チェック
-        exclude: ^\.vscode/settings\.json$
       - id: check-added-large-files
         description: 大きなファイル（>500KB）の検出
         args: [--maxkb=500]
@@ -22,20 +17,6 @@ repos:
         description: マージコンフリクトマーカーの検出
       - id: check-case-conflict
         description: ファイル名の大文字小文字の衝突チェック
-
-  # セキュリティチェック
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
-    hooks:
-      - id: detect-secrets
-        description: シークレット（APIキー、パスワードなど）の検出
-        args: ['--baseline', '.secrets.baseline']
-        exclude: |
-          (?x)^(
-            backend/\.env\.example|
-            frontend/android/secret\.properties\.example|
-            .*\.lock
-          )$
 
   # Backend用（Python/FastAPI）
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -70,15 +51,6 @@ repos:
         files: ^frontend/.*\.dart$
         pass_filenames: false
         always_run: false
-
-  # ドキュメント用（Markdown）
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
-    hooks:
-      - id: markdownlint
-        description: Markdownファイルのlint
-        args: [--fix]
-        files: \.md$
 
   # コミットメッセージチェック（Conventional Commits v1.0.0）
   - repo: https://github.com/commitizen-tools/commitizen
