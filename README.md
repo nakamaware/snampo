@@ -23,7 +23,7 @@ Snampoプロジェクトのリポジトリです。
    ```bash
    # macOS / Linux
    curl https://mise.run | sh
-   
+
    # または Homebrew
    brew install mise
 
@@ -38,7 +38,7 @@ Snampoプロジェクトのリポジトリです。
    ```bash
    # macOS / Linux
    curl -LsSf https://astral.sh/uv/install.sh | sh
-   
+
    # または Homebrew
    brew install uv
 
@@ -61,7 +61,7 @@ Snampoプロジェクトのリポジトリです。
    ```bash
    # 初回のみ、設定ファイルを信頼する必要があります
    mise trust
-   
+
    # ツールをインストール
    mise install
    ```
@@ -79,10 +79,10 @@ Snampoプロジェクトのリポジトリです。
 
    ```bash
    # フロントエンドのみ
-   mise run frontend:pub-get
-   
+   mise run frontend:setup
+
    # バックエンドのみ
-   mise run backend:sync
+   mise run backend:setup
    ```
 
 6. **pre-commitのセットアップ**
@@ -92,18 +92,18 @@ Snampoプロジェクトのリポジトリです。
    ```bash
    # pre-commitをインストール（uvを使用する場合）
    uv pip install pre-commit
-   
+
    # または、pipを使用する場合
    pip install pre-commit
-   
+
    # Gitフックをインストール
    pre-commit install
    ```
 
    これにより、コミット前に自動的にコード品質チェックが実行されます。
-   
+
    初回実行時や設定変更後は、全ファイルに対してチェックを実行することもできます：
-   
+
    ```bash
    pre-commit run --all-files
    ```
@@ -171,32 +171,21 @@ Snampoプロジェクトのリポジトリです。
 
 ### 利用可能なタスク
 
+> **Note:** VS Codeを使用している場合、以下の機能は自動化されています：
+>
+> - `flutter pub get` - `pubspec.yaml`保存時に自動実行
+> - `dart format` - 保存時フォーマット（設定により自動）
+> - `flutter analyze` - リアルタイムでエディタに表示
+> - `ruff format` / `ruff check` - Python拡張機能で自動化可能
+
 #### フロントエンドタスク
 
 ```bash
-# 開発サーバーを起動
+# 開発サーバーを起動（VS Codeのデバッグ実行でも可能）
 mise run frontend:dev
 
-# 依存関係をインストール
-mise run frontend:pub-get
-
-# Debug APKをビルド
-mise run frontend:build
-
-# Release APKをビルド
-mise run frontend:build-release
-
-# テストを実行
-mise run frontend:test
-
-# ビルドキャッシュをクリア
-mise run frontend:clean
-
-# コードをフォーマット
-mise run frontend:format
-
-# コードを解析
-mise run frontend:analyze
+# 依存関係をインストール（VS Codeではpubspec.yaml保存時に自動実行）
+mise run frontend:setup
 ```
 
 #### バックエンドタスク
@@ -206,16 +195,7 @@ mise run frontend:analyze
 mise run backend:dev
 
 # 依存関係をインストール
-mise run backend:sync
-
-# テストを実行
-mise run backend:test
-
-# コードをフォーマット
-mise run backend:format
-
-# コードをリント
-mise run backend:lint
+mise run backend:setup
 ```
 
 #### 統合タスク
@@ -224,7 +204,7 @@ mise run backend:lint
 # フロントエンドとバックエンドを同時に起動
 mise run dev
 
-# プロジェクトの初期セットアップ（依存関係のインストール）
+# プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）
 mise run setup
 ```
 
