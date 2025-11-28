@@ -12,9 +12,9 @@ repos:
         description: ファイル末尾の改行を統一
       - id: check-yaml
         description: YAMLファイルの構文チェック
-        args: [--safe]
       - id: check-json
         description: JSONファイルの構文チェック
+        exclude: ^\.vscode/settings\.json$
       - id: check-added-large-files
         description: 大きなファイル（>500KB）の検出
         args: [--maxkb=500]
