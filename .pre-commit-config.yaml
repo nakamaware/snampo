@@ -26,11 +26,11 @@ repos:
         name: ruff (lint)
         description: Pythonコードのlintチェック
         args: [--fix]
-        files: ^backend/
+        files: ^backend/.*\.py$
       - id: ruff-format
         name: ruff (format)
         description: Pythonコードのフォーマットチェック
-        files: ^backend/
+        files: ^backend/.*\.py$
 
   # Frontend用（Flutter/Dart） - カスタムローカルフック
   - repo: local
@@ -42,7 +42,6 @@ repos:
         language: system
         files: ^frontend/.*\.dart$
         pass_filenames: false
-        always_run: false
       - id: flutter-analyze
         name: flutter analyze
         description: Flutter/Dartの静的解析
@@ -50,7 +49,6 @@ repos:
         language: system
         files: ^frontend/.*\.dart$
         pass_filenames: false
-        always_run: false
 
   # コミットメッセージチェック（Conventional Commits v1.0.0）
   - repo: https://github.com/commitizen-tools/commitizen
