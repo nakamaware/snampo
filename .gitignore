@@ -1,1 +1,5 @@
 .ruff_cache/
+.env
+.vscode/
+.DS_Store
+Thumbs.db

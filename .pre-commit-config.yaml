@@ -1,0 +1,89 @@
+# Pre-commit hooks configuration for Snampo monorepo
+# See https://pre-commit.com for more information
+
+repos:
+  # 共通チェック（全ファイル対象）
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        description: 末尾の空白を削除
+      - id: end-of-file-fixer
+        description: ファイル末尾の改行を統一
+      - id: check-yaml
+        description: YAMLファイルの構文チェック
+        args: [--safe]
+      - id: check-json
+        description: JSONファイルの構文チェック
+      - id: check-added-large-files
+        description: 大きなファイル（>500KB）の検出
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+        description: マージコンフリクトマーカーの検出
+      - id: check-case-conflict
+        description: ファイル名の大文字小文字の衝突チェック
+
+  # セキュリティチェック
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        description: シークレット（APIキー、パスワードなど）の検出
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            backend/\.env\.example|
+            frontend/android/secret\.properties\.example|
+            .*\.lock
+          )$
+
+  # Backend用（Python/FastAPI）
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.3
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        description: Pythonコードのlintチェック
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        name: ruff (format)
+        description: Pythonコードのフォーマットチェック
+        files: ^backend/
+
+  # Frontend用（Flutter/Dart） - カスタムローカルフック
+  - repo: local
+    hooks:
+      - id: dart-format
+        name: dart format
+        description: Dartコードのフォーマットチェック
+        entry: bash -c 'cd frontend && dart format --set-exit-if-changed .'
+        language: system
+        files: ^frontend/.*\.dart$
+        pass_filenames: false
+        always_run: false
+      - id: flutter-analyze
+        name: flutter analyze
+        description: Flutter/Dartの静的解析
+        entry: bash -c 'cd frontend && flutter analyze --no-fatal-infos'
+        language: system
+        files: ^frontend/.*\.dart$
+        pass_filenames: false
+        always_run: false
+
+  # ドキュメント用（Markdown）
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+      - id: markdownlint
+        description: Markdownファイルのlint
+        args: [--fix]
+        files: \.md$
+
+  # コミットメッセージチェック（Conventional Commits v1.0.0）
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        description: コミットメッセージのフォーマットチェック（Conventional Commits v1.0.0）
+        stages: [commit-msg]

@@ -14,6 +14,7 @@ Snampoプロジェクトのリポジトリです。
 - [mise](https://mise.jdx.dev/) - バージョン管理ツールとタスクランナー
 - Android Studio（Android開発用）
 - [uv](https://github.com/astral-sh/uv) - Pythonパッケージマネージャー（バックエンド用）
+- [pre-commit](https://pre-commit.com/) - Gitフック管理ツール（コード品質チェック用）
 
 ### セットアップ手順
 
@@ -84,13 +85,36 @@ Snampoプロジェクトのリポジトリです。
    mise run backend:sync
    ```
 
-6. **Android SDKの設定**
+6. **pre-commitのセットアップ**
+
+   pre-commitをインストールして、Gitフックを有効化します：
+
+   ```bash
+   # pre-commitをインストール（uvを使用する場合）
+   uv pip install pre-commit
+   
+   # または、pipを使用する場合
+   pip install pre-commit
+   
+   # Gitフックをインストール
+   pre-commit install
+   ```
+
+   これにより、コミット前に自動的にコード品質チェックが実行されます。
+   
+   初回実行時や設定変更後は、全ファイルに対してチェックを実行することもできます：
+   
+   ```bash
+   pre-commit run --all-files
+   ```
+
+7. **Android SDKの設定**
 
    Android Studioをインストールするか、Android SDKを手動で設定してください。
 
    Android SDK Platform 36が必要です。
 
-7. **secret.propertiesの設定**（フロントエンド）
+8. **secret.propertiesの設定**（フロントエンド）
 
    Google Maps API キーを設定するために、
    `frontend/android/secret.properties.example` をコピーして
@@ -105,7 +129,7 @@ Snampoプロジェクトのリポジトリです。
    `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに
    置き換えてください。
 
-8. **環境変数の設定**（バックエンド）
+9. **環境変数の設定**（バックエンド）
 
    Google Maps API キーを設定するために、`backend/.env.example`をコピーして
    `backend/.env`ファイルを作成してください。
