@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/data/repositories/mission_repository_impl.dart';
 import 'package:snampo/domain/entities/location_entity.dart';
@@ -8,7 +9,7 @@ part 'mission_controller.g.dart';
 
 /// ミッションリポジトリのプロバイダー
 @riverpod
-MissionRepository missionRepository(MissionRepositoryRef ref) {
+MissionRepository missionRepository(Ref ref) {
   return MissionRepositoryImpl();
 }
 
@@ -46,21 +47,21 @@ class MissionController extends _$MissionController {
 
 /// 目的地を取得するプロバイダー
 @riverpod
-LocationPointEntity? target(TargetRef ref) {
+LocationPointEntity? target(Ref ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.destination;
 }
 
 /// ルートのポリライン文字列を取得するプロバイダー
 @riverpod
-String? route(RouteRef ref) {
+String? route(Ref ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.overviewPolyline;
 }
 
 /// 中間地点のリストを取得するプロバイダー
 @riverpod
-List<MidPointEntity>? midpointInfoList(MidpointInfoListRef ref) {
+List<MidPointEntity>? midpointInfoList(Ref ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.midpoints;
 }
