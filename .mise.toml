@@ -31,6 +31,6 @@ run = [
 description = "プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）"
 run = [
     { tasks = ["frontend:setup", "backend:setup"] },
-    "uv tool install pre-commit || pip install pre-commit || echo 'pre-commitのインストールに失敗しました。手動でインストールしてください: pip install pre-commit'",
-    "pre-commit install || echo 'pre-commit installに失敗しました。pre-commitがインストールされているか確認してください。'",
+    "uv tool install pre-commit",
+    "pre-commit install",
 ]
