@@ -7,7 +7,7 @@ import secrets
 import folium
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from requests.exceptions import RequestException, Timeout
 
 # Load environment variables from .env file
@@ -192,7 +192,11 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
 
 
 @app.get("/route")
-def route(current_lat: str, current_lng: str, radius: str) -> dict | str:
+def route(
+    current_lat: str = Query(alias="currentLat"),
+    current_lng: str = Query(alias="currentLng"),
+    radius: str = Query(),
+) -> dict | str:
     """ルートを生成
 
     Args:
