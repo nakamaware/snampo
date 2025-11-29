@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'location_model.dart';
+part of 'location_dto.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -14,58 +14,58 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-LocationModel _$LocationModelFromJson(Map<String, dynamic> json) {
-  return _LocationModel.fromJson(json);
+LocationDto _$LocationDtoFromJson(Map<String, dynamic> json) {
+  return _LocationDto.fromJson(json);
 }
 
 /// @nodoc
-mixin _$LocationModel {
+mixin _$LocationDto {
   @JsonKey(name: 'departure')
-  LocationPoint? get departure => throw _privateConstructorUsedError;
+  LocationPointDto? get departure => throw _privateConstructorUsedError;
   @JsonKey(name: 'destination')
-  LocationPoint? get destination => throw _privateConstructorUsedError;
+  LocationPointDto? get destination => throw _privateConstructorUsedError;
   @JsonKey(name: 'midpoints')
-  List<MidPoint>? get midpoints => throw _privateConstructorUsedError;
+  List<MidPointDto>? get midpoints => throw _privateConstructorUsedError;
   @JsonKey(name: 'overview_polyline')
   String? get overviewPolyline => throw _privateConstructorUsedError;
 
-  /// Serializes this LocationModel to a JSON map.
+  /// Serializes this LocationDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $LocationModelCopyWith<LocationModel> get copyWith =>
+  $LocationDtoCopyWith<LocationDto> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $LocationModelCopyWith<$Res> {
-  factory $LocationModelCopyWith(
-          LocationModel value, $Res Function(LocationModel) then) =
-      _$LocationModelCopyWithImpl<$Res, LocationModel>;
+abstract class $LocationDtoCopyWith<$Res> {
+  factory $LocationDtoCopyWith(
+          LocationDto value, $Res Function(LocationDto) then) =
+      _$LocationDtoCopyWithImpl<$Res, LocationDto>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'departure') LocationPoint? departure,
-      @JsonKey(name: 'destination') LocationPoint? destination,
-      @JsonKey(name: 'midpoints') List<MidPoint>? midpoints,
+      {@JsonKey(name: 'departure') LocationPointDto? departure,
+      @JsonKey(name: 'destination') LocationPointDto? destination,
+      @JsonKey(name: 'midpoints') List<MidPointDto>? midpoints,
       @JsonKey(name: 'overview_polyline') String? overviewPolyline});
 
-  $LocationPointCopyWith<$Res>? get departure;
-  $LocationPointCopyWith<$Res>? get destination;
+  $LocationPointDtoCopyWith<$Res>? get departure;
+  $LocationPointDtoCopyWith<$Res>? get destination;
 }
 
 /// @nodoc
-class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
-    implements $LocationModelCopyWith<$Res> {
-  _$LocationModelCopyWithImpl(this._value, this._then);
+class _$LocationDtoCopyWithImpl<$Res, $Val extends LocationDto>
+    implements $LocationDtoCopyWith<$Res> {
+  _$LocationDtoCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -79,15 +79,15 @@ class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
       departure: freezed == departure
           ? _value.departure
           : departure // ignore: cast_nullable_to_non_nullable
-              as LocationPoint?,
+              as LocationPointDto?,
       destination: freezed == destination
           ? _value.destination
           : destination // ignore: cast_nullable_to_non_nullable
-              as LocationPoint?,
+              as LocationPointDto?,
       midpoints: freezed == midpoints
           ? _value.midpoints
           : midpoints // ignore: cast_nullable_to_non_nullable
-              as List<MidPoint>?,
+              as List<MidPointDto>?,
       overviewPolyline: freezed == overviewPolyline
           ? _value.overviewPolyline
           : overviewPolyline // ignore: cast_nullable_to_non_nullable
@@ -95,64 +95,64 @@ class _$LocationModelCopyWithImpl<$Res, $Val extends LocationModel>
     ) as $Val);
   }
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LocationPointCopyWith<$Res>? get departure {
+  $LocationPointDtoCopyWith<$Res>? get departure {
     if (_value.departure == null) {
       return null;
     }
 
-    return $LocationPointCopyWith<$Res>(_value.departure!, (value) {
+    return $LocationPointDtoCopyWith<$Res>(_value.departure!, (value) {
       return _then(_value.copyWith(departure: value) as $Val);
     });
   }
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LocationPointCopyWith<$Res>? get destination {
+  $LocationPointDtoCopyWith<$Res>? get destination {
     if (_value.destination == null) {
       return null;
     }
 
-    return $LocationPointCopyWith<$Res>(_value.destination!, (value) {
+    return $LocationPointDtoCopyWith<$Res>(_value.destination!, (value) {
       return _then(_value.copyWith(destination: value) as $Val);
     });
   }
 }
 
 /// @nodoc
-abstract class _$$LocationModelImplCopyWith<$Res>
-    implements $LocationModelCopyWith<$Res> {
-  factory _$$LocationModelImplCopyWith(
-          _$LocationModelImpl value, $Res Function(_$LocationModelImpl) then) =
-      __$$LocationModelImplCopyWithImpl<$Res>;
+abstract class _$$LocationDtoImplCopyWith<$Res>
+    implements $LocationDtoCopyWith<$Res> {
+  factory _$$LocationDtoImplCopyWith(
+          _$LocationDtoImpl value, $Res Function(_$LocationDtoImpl) then) =
+      __$$LocationDtoImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'departure') LocationPoint? departure,
-      @JsonKey(name: 'destination') LocationPoint? destination,
-      @JsonKey(name: 'midpoints') List<MidPoint>? midpoints,
+      {@JsonKey(name: 'departure') LocationPointDto? departure,
+      @JsonKey(name: 'destination') LocationPointDto? destination,
+      @JsonKey(name: 'midpoints') List<MidPointDto>? midpoints,
       @JsonKey(name: 'overview_polyline') String? overviewPolyline});
 
   @override
-  $LocationPointCopyWith<$Res>? get departure;
+  $LocationPointDtoCopyWith<$Res>? get departure;
   @override
-  $LocationPointCopyWith<$Res>? get destination;
+  $LocationPointDtoCopyWith<$Res>? get destination;
 }
 
 /// @nodoc
-class __$$LocationModelImplCopyWithImpl<$Res>
-    extends _$LocationModelCopyWithImpl<$Res, _$LocationModelImpl>
-    implements _$$LocationModelImplCopyWith<$Res> {
-  __$$LocationModelImplCopyWithImpl(
-      _$LocationModelImpl _value, $Res Function(_$LocationModelImpl) _then)
+class __$$LocationDtoImplCopyWithImpl<$Res>
+    extends _$LocationDtoCopyWithImpl<$Res, _$LocationDtoImpl>
+    implements _$$LocationDtoImplCopyWith<$Res> {
+  __$$LocationDtoImplCopyWithImpl(
+      _$LocationDtoImpl _value, $Res Function(_$LocationDtoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -162,19 +162,19 @@ class __$$LocationModelImplCopyWithImpl<$Res>
     Object? midpoints = freezed,
     Object? overviewPolyline = freezed,
   }) {
-    return _then(_$LocationModelImpl(
+    return _then(_$LocationDtoImpl(
       departure: freezed == departure
           ? _value.departure
           : departure // ignore: cast_nullable_to_non_nullable
-              as LocationPoint?,
+              as LocationPointDto?,
       destination: freezed == destination
           ? _value.destination
           : destination // ignore: cast_nullable_to_non_nullable
-              as LocationPoint?,
+              as LocationPointDto?,
       midpoints: freezed == midpoints
           ? _value._midpoints
           : midpoints // ignore: cast_nullable_to_non_nullable
-              as List<MidPoint>?,
+              as List<MidPointDto>?,
       overviewPolyline: freezed == overviewPolyline
           ? _value.overviewPolyline
           : overviewPolyline // ignore: cast_nullable_to_non_nullable
@@ -185,27 +185,27 @@ class __$$LocationModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$LocationModelImpl implements _LocationModel {
-  _$LocationModelImpl(
+class _$LocationDtoImpl implements _LocationDto {
+  const _$LocationDtoImpl(
       {@JsonKey(name: 'departure') this.departure,
       @JsonKey(name: 'destination') this.destination,
-      @JsonKey(name: 'midpoints') final List<MidPoint>? midpoints,
+      @JsonKey(name: 'midpoints') final List<MidPointDto>? midpoints,
       @JsonKey(name: 'overview_polyline') this.overviewPolyline})
       : _midpoints = midpoints;
 
-  factory _$LocationModelImpl.fromJson(Map<String, dynamic> json) =>
-      _$$LocationModelImplFromJson(json);
+  factory _$LocationDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$LocationDtoImplFromJson(json);
 
   @override
   @JsonKey(name: 'departure')
-  final LocationPoint? departure;
+  final LocationPointDto? departure;
   @override
   @JsonKey(name: 'destination')
-  final LocationPoint? destination;
-  final List<MidPoint>? _midpoints;
+  final LocationPointDto? destination;
+  final List<MidPointDto>? _midpoints;
   @override
   @JsonKey(name: 'midpoints')
-  List<MidPoint>? get midpoints {
+  List<MidPointDto>? get midpoints {
     final value = _midpoints;
     if (value == null) return null;
     if (_midpoints is EqualUnmodifiableListView) return _midpoints;
@@ -219,14 +219,14 @@ class _$LocationModelImpl implements _LocationModel {
 
   @override
   String toString() {
-    return 'LocationModel(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
+    return 'LocationDto(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LocationModelImpl &&
+            other is _$LocationDtoImpl &&
             (identical(other.departure, departure) ||
                 other.departure == departure) &&
             (identical(other.destination, destination) ||
@@ -242,80 +242,80 @@ class _$LocationModelImpl implements _LocationModel {
   int get hashCode => Object.hash(runtimeType, departure, destination,
       const DeepCollectionEquality().hash(_midpoints), overviewPolyline);
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$LocationModelImplCopyWith<_$LocationModelImpl> get copyWith =>
-      __$$LocationModelImplCopyWithImpl<_$LocationModelImpl>(this, _$identity);
+  _$$LocationDtoImplCopyWith<_$LocationDtoImpl> get copyWith =>
+      __$$LocationDtoImplCopyWithImpl<_$LocationDtoImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LocationModelImplToJson(
+    return _$$LocationDtoImplToJson(
       this,
     );
   }
 }
 
-abstract class _LocationModel implements LocationModel {
-  factory _LocationModel(
-          {@JsonKey(name: 'departure') final LocationPoint? departure,
-          @JsonKey(name: 'destination') final LocationPoint? destination,
-          @JsonKey(name: 'midpoints') final List<MidPoint>? midpoints,
+abstract class _LocationDto implements LocationDto {
+  const factory _LocationDto(
+          {@JsonKey(name: 'departure') final LocationPointDto? departure,
+          @JsonKey(name: 'destination') final LocationPointDto? destination,
+          @JsonKey(name: 'midpoints') final List<MidPointDto>? midpoints,
           @JsonKey(name: 'overview_polyline') final String? overviewPolyline}) =
-      _$LocationModelImpl;
+      _$LocationDtoImpl;
 
-  factory _LocationModel.fromJson(Map<String, dynamic> json) =
-      _$LocationModelImpl.fromJson;
+  factory _LocationDto.fromJson(Map<String, dynamic> json) =
+      _$LocationDtoImpl.fromJson;
 
   @override
   @JsonKey(name: 'departure')
-  LocationPoint? get departure;
+  LocationPointDto? get departure;
   @override
   @JsonKey(name: 'destination')
-  LocationPoint? get destination;
+  LocationPointDto? get destination;
   @override
   @JsonKey(name: 'midpoints')
-  List<MidPoint>? get midpoints;
+  List<MidPointDto>? get midpoints;
   @override
   @JsonKey(name: 'overview_polyline')
   String? get overviewPolyline;
 
-  /// Create a copy of LocationModel
+  /// Create a copy of LocationDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LocationModelImplCopyWith<_$LocationModelImpl> get copyWith =>
+  _$$LocationDtoImplCopyWith<_$LocationDtoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-LocationPoint _$LocationPointFromJson(Map<String, dynamic> json) {
-  return _LocationPoint.fromJson(json);
+LocationPointDto _$LocationPointDtoFromJson(Map<String, dynamic> json) {
+  return _LocationPointDto.fromJson(json);
 }
 
 /// @nodoc
-mixin _$LocationPoint {
+mixin _$LocationPointDto {
   @JsonKey(name: 'latitude')
   double? get latitude => throw _privateConstructorUsedError;
   @JsonKey(name: 'longitude')
   double? get longitude => throw _privateConstructorUsedError;
 
-  /// Serializes this LocationPoint to a JSON map.
+  /// Serializes this LocationPointDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of LocationPoint
+  /// Create a copy of LocationPointDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $LocationPointCopyWith<LocationPoint> get copyWith =>
+  $LocationPointDtoCopyWith<LocationPointDto> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $LocationPointCopyWith<$Res> {
-  factory $LocationPointCopyWith(
-          LocationPoint value, $Res Function(LocationPoint) then) =
-      _$LocationPointCopyWithImpl<$Res, LocationPoint>;
+abstract class $LocationPointDtoCopyWith<$Res> {
+  factory $LocationPointDtoCopyWith(
+          LocationPointDto value, $Res Function(LocationPointDto) then) =
+      _$LocationPointDtoCopyWithImpl<$Res, LocationPointDto>;
   @useResult
   $Res call(
       {@JsonKey(name: 'latitude') double? latitude,
@@ -323,16 +323,16 @@ abstract class $LocationPointCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$LocationPointCopyWithImpl<$Res, $Val extends LocationPoint>
-    implements $LocationPointCopyWith<$Res> {
-  _$LocationPointCopyWithImpl(this._value, this._then);
+class _$LocationPointDtoCopyWithImpl<$Res, $Val extends LocationPointDto>
+    implements $LocationPointDtoCopyWith<$Res> {
+  _$LocationPointDtoCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of LocationPoint
+  /// Create a copy of LocationPointDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -354,11 +354,11 @@ class _$LocationPointCopyWithImpl<$Res, $Val extends LocationPoint>
 }
 
 /// @nodoc
-abstract class _$$LocationPointImplCopyWith<$Res>
-    implements $LocationPointCopyWith<$Res> {
-  factory _$$LocationPointImplCopyWith(
-          _$LocationPointImpl value, $Res Function(_$LocationPointImpl) then) =
-      __$$LocationPointImplCopyWithImpl<$Res>;
+abstract class _$$LocationPointDtoImplCopyWith<$Res>
+    implements $LocationPointDtoCopyWith<$Res> {
+  factory _$$LocationPointDtoImplCopyWith(_$LocationPointDtoImpl value,
+          $Res Function(_$LocationPointDtoImpl) then) =
+      __$$LocationPointDtoImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -367,14 +367,14 @@ abstract class _$$LocationPointImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$LocationPointImplCopyWithImpl<$Res>
-    extends _$LocationPointCopyWithImpl<$Res, _$LocationPointImpl>
-    implements _$$LocationPointImplCopyWith<$Res> {
-  __$$LocationPointImplCopyWithImpl(
-      _$LocationPointImpl _value, $Res Function(_$LocationPointImpl) _then)
+class __$$LocationPointDtoImplCopyWithImpl<$Res>
+    extends _$LocationPointDtoCopyWithImpl<$Res, _$LocationPointDtoImpl>
+    implements _$$LocationPointDtoImplCopyWith<$Res> {
+  __$$LocationPointDtoImplCopyWithImpl(_$LocationPointDtoImpl _value,
+      $Res Function(_$LocationPointDtoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of LocationPoint
+  /// Create a copy of LocationPointDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -382,7 +382,7 @@ class __$$LocationPointImplCopyWithImpl<$Res>
     Object? latitude = freezed,
     Object? longitude = freezed,
   }) {
-    return _then(_$LocationPointImpl(
+    return _then(_$LocationPointDtoImpl(
       latitude: freezed == latitude
           ? _value.latitude
           : latitude // ignore: cast_nullable_to_non_nullable
@@ -397,13 +397,13 @@ class __$$LocationPointImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$LocationPointImpl implements _LocationPoint {
-  _$LocationPointImpl(
+class _$LocationPointDtoImpl implements _LocationPointDto {
+  const _$LocationPointDtoImpl(
       {@JsonKey(name: 'latitude') this.latitude,
       @JsonKey(name: 'longitude') this.longitude});
 
-  factory _$LocationPointImpl.fromJson(Map<String, dynamic> json) =>
-      _$$LocationPointImplFromJson(json);
+  factory _$LocationPointDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$LocationPointDtoImplFromJson(json);
 
   @override
   @JsonKey(name: 'latitude')
@@ -414,14 +414,14 @@ class _$LocationPointImpl implements _LocationPoint {
 
   @override
   String toString() {
-    return 'LocationPoint(latitude: $latitude, longitude: $longitude)';
+    return 'LocationPointDto(latitude: $latitude, longitude: $longitude)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LocationPointImpl &&
+            other is _$LocationPointDtoImpl &&
             (identical(other.latitude, latitude) ||
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
@@ -432,30 +432,31 @@ class _$LocationPointImpl implements _LocationPoint {
   @override
   int get hashCode => Object.hash(runtimeType, latitude, longitude);
 
-  /// Create a copy of LocationPoint
+  /// Create a copy of LocationPointDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$LocationPointImplCopyWith<_$LocationPointImpl> get copyWith =>
-      __$$LocationPointImplCopyWithImpl<_$LocationPointImpl>(this, _$identity);
+  _$$LocationPointDtoImplCopyWith<_$LocationPointDtoImpl> get copyWith =>
+      __$$LocationPointDtoImplCopyWithImpl<_$LocationPointDtoImpl>(
+          this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LocationPointImplToJson(
+    return _$$LocationPointDtoImplToJson(
       this,
     );
   }
 }
 
-abstract class _LocationPoint implements LocationPoint {
-  factory _LocationPoint(
+abstract class _LocationPointDto implements LocationPointDto {
+  const factory _LocationPointDto(
           {@JsonKey(name: 'latitude') final double? latitude,
           @JsonKey(name: 'longitude') final double? longitude}) =
-      _$LocationPointImpl;
+      _$LocationPointDtoImpl;
 
-  factory _LocationPoint.fromJson(Map<String, dynamic> json) =
-      _$LocationPointImpl.fromJson;
+  factory _LocationPointDto.fromJson(Map<String, dynamic> json) =
+      _$LocationPointDtoImpl.fromJson;
 
   @override
   @JsonKey(name: 'latitude')
@@ -464,20 +465,20 @@ abstract class _LocationPoint implements LocationPoint {
   @JsonKey(name: 'longitude')
   double? get longitude;
 
-  /// Create a copy of LocationPoint
+  /// Create a copy of LocationPointDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LocationPointImplCopyWith<_$LocationPointImpl> get copyWith =>
+  _$$LocationPointDtoImplCopyWith<_$LocationPointDtoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-MidPoint _$MidPointFromJson(Map<String, dynamic> json) {
-  return _MidPoint.fromJson(json);
+MidPointDto _$MidPointDtoFromJson(Map<String, dynamic> json) {
+  return _MidPointDto.fromJson(json);
 }
 
 /// @nodoc
-mixin _$MidPoint {
+mixin _$MidPointDto {
   @JsonKey(name: 'metadata_latitude')
   double? get imageLatitude => throw _privateConstructorUsedError;
   @JsonKey(name: 'metadata_longitude')
@@ -489,20 +490,21 @@ mixin _$MidPoint {
   @JsonKey(name: 'image_data')
   String? get imageUtf8 => throw _privateConstructorUsedError;
 
-  /// Serializes this MidPoint to a JSON map.
+  /// Serializes this MidPointDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of MidPoint
+  /// Create a copy of MidPointDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $MidPointCopyWith<MidPoint> get copyWith =>
+  $MidPointDtoCopyWith<MidPointDto> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $MidPointCopyWith<$Res> {
-  factory $MidPointCopyWith(MidPoint value, $Res Function(MidPoint) then) =
-      _$MidPointCopyWithImpl<$Res, MidPoint>;
+abstract class $MidPointDtoCopyWith<$Res> {
+  factory $MidPointDtoCopyWith(
+          MidPointDto value, $Res Function(MidPointDto) then) =
+      _$MidPointDtoCopyWithImpl<$Res, MidPointDto>;
   @useResult
   $Res call(
       {@JsonKey(name: 'metadata_latitude') double? imageLatitude,
@@ -513,16 +515,16 @@ abstract class $MidPointCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$MidPointCopyWithImpl<$Res, $Val extends MidPoint>
-    implements $MidPointCopyWith<$Res> {
-  _$MidPointCopyWithImpl(this._value, this._then);
+class _$MidPointDtoCopyWithImpl<$Res, $Val extends MidPointDto>
+    implements $MidPointDtoCopyWith<$Res> {
+  _$MidPointDtoCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of MidPoint
+  /// Create a copy of MidPointDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -559,11 +561,11 @@ class _$MidPointCopyWithImpl<$Res, $Val extends MidPoint>
 }
 
 /// @nodoc
-abstract class _$$MidPointImplCopyWith<$Res>
-    implements $MidPointCopyWith<$Res> {
-  factory _$$MidPointImplCopyWith(
-          _$MidPointImpl value, $Res Function(_$MidPointImpl) then) =
-      __$$MidPointImplCopyWithImpl<$Res>;
+abstract class _$$MidPointDtoImplCopyWith<$Res>
+    implements $MidPointDtoCopyWith<$Res> {
+  factory _$$MidPointDtoImplCopyWith(
+          _$MidPointDtoImpl value, $Res Function(_$MidPointDtoImpl) then) =
+      __$$MidPointDtoImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -575,14 +577,14 @@ abstract class _$$MidPointImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$MidPointImplCopyWithImpl<$Res>
-    extends _$MidPointCopyWithImpl<$Res, _$MidPointImpl>
-    implements _$$MidPointImplCopyWith<$Res> {
-  __$$MidPointImplCopyWithImpl(
-      _$MidPointImpl _value, $Res Function(_$MidPointImpl) _then)
+class __$$MidPointDtoImplCopyWithImpl<$Res>
+    extends _$MidPointDtoCopyWithImpl<$Res, _$MidPointDtoImpl>
+    implements _$$MidPointDtoImplCopyWith<$Res> {
+  __$$MidPointDtoImplCopyWithImpl(
+      _$MidPointDtoImpl _value, $Res Function(_$MidPointDtoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of MidPoint
+  /// Create a copy of MidPointDto
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -593,7 +595,7 @@ class __$$MidPointImplCopyWithImpl<$Res>
     Object? longitude = freezed,
     Object? imageUtf8 = freezed,
   }) {
-    return _then(_$MidPointImpl(
+    return _then(_$MidPointDtoImpl(
       imageLatitude: freezed == imageLatitude
           ? _value.imageLatitude
           : imageLatitude // ignore: cast_nullable_to_non_nullable
@@ -620,16 +622,16 @@ class __$$MidPointImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$MidPointImpl implements _MidPoint {
-  _$MidPointImpl(
+class _$MidPointDtoImpl implements _MidPointDto {
+  const _$MidPointDtoImpl(
       {@JsonKey(name: 'metadata_latitude') this.imageLatitude,
       @JsonKey(name: 'metadata_longitude') this.imageLongitude,
       @JsonKey(name: 'original_latitude') this.latitude,
       @JsonKey(name: 'original_longitude') this.longitude,
       @JsonKey(name: 'image_data') this.imageUtf8});
 
-  factory _$MidPointImpl.fromJson(Map<String, dynamic> json) =>
-      _$$MidPointImplFromJson(json);
+  factory _$MidPointDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MidPointDtoImplFromJson(json);
 
   @override
   @JsonKey(name: 'metadata_latitude')
@@ -649,14 +651,14 @@ class _$MidPointImpl implements _MidPoint {
 
   @override
   String toString() {
-    return 'MidPoint(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageUtf8: $imageUtf8)';
+    return 'MidPointDto(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageUtf8: $imageUtf8)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$MidPointImpl &&
+            other is _$MidPointDtoImpl &&
             (identical(other.imageLatitude, imageLatitude) ||
                 other.imageLatitude == imageLatitude) &&
             (identical(other.imageLongitude, imageLongitude) ||
@@ -674,32 +676,33 @@ class _$MidPointImpl implements _MidPoint {
   int get hashCode => Object.hash(runtimeType, imageLatitude, imageLongitude,
       latitude, longitude, imageUtf8);
 
-  /// Create a copy of MidPoint
+  /// Create a copy of MidPointDto
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$MidPointImplCopyWith<_$MidPointImpl> get copyWith =>
-      __$$MidPointImplCopyWithImpl<_$MidPointImpl>(this, _$identity);
+  _$$MidPointDtoImplCopyWith<_$MidPointDtoImpl> get copyWith =>
+      __$$MidPointDtoImplCopyWithImpl<_$MidPointDtoImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$MidPointImplToJson(
+    return _$$MidPointDtoImplToJson(
       this,
     );
   }
 }
 
-abstract class _MidPoint implements MidPoint {
-  factory _MidPoint(
-      {@JsonKey(name: 'metadata_latitude') final double? imageLatitude,
-      @JsonKey(name: 'metadata_longitude') final double? imageLongitude,
-      @JsonKey(name: 'original_latitude') final double? latitude,
-      @JsonKey(name: 'original_longitude') final double? longitude,
-      @JsonKey(name: 'image_data') final String? imageUtf8}) = _$MidPointImpl;
+abstract class _MidPointDto implements MidPointDto {
+  const factory _MidPointDto(
+          {@JsonKey(name: 'metadata_latitude') final double? imageLatitude,
+          @JsonKey(name: 'metadata_longitude') final double? imageLongitude,
+          @JsonKey(name: 'original_latitude') final double? latitude,
+          @JsonKey(name: 'original_longitude') final double? longitude,
+          @JsonKey(name: 'image_data') final String? imageUtf8}) =
+      _$MidPointDtoImpl;
 
-  factory _MidPoint.fromJson(Map<String, dynamic> json) =
-      _$MidPointImpl.fromJson;
+  factory _MidPointDto.fromJson(Map<String, dynamic> json) =
+      _$MidPointDtoImpl.fromJson;
 
   @override
   @JsonKey(name: 'metadata_latitude')
@@ -717,10 +720,10 @@ abstract class _MidPoint implements MidPoint {
   @JsonKey(name: 'image_data')
   String? get imageUtf8;
 
-  /// Create a copy of MidPoint
+  /// Create a copy of MidPointDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$MidPointImplCopyWith<_$MidPointImpl> get copyWith =>
+  _$$MidPointDtoImplCopyWith<_$MidPointDtoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

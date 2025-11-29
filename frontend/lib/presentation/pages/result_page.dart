@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -87,11 +88,7 @@ class HomeButton extends StatelessWidget {
         foregroundColor: theme.colorScheme.onPrimary,
       ),
       onPressed: () {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MyApp()),
-        // );
-        Navigator.popUntil(context, (route) => route.isFirst);
+        context.go('/');
       },
       child: Padding(
         padding: const EdgeInsets.all(20),

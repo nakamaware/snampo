@@ -4,9 +4,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:snampo/controllers/mission_controller.dart';
-import 'package:snampo/result_page.dart';
+import 'package:snampo/presentation/controllers/mission_controller.dart';
 
 /// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
@@ -137,10 +137,7 @@ class SnapViewState extends ConsumerWidget {
             ),
           ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute<void>(builder: (context) => const ResultPage()),
-            );
+            context.push('/result');
           },
           child: Padding(
             padding: const EdgeInsets.all(20),

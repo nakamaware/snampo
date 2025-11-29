@@ -1,26 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'location_model.dart';
+part of 'location_dto.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$LocationModelImpl _$$LocationModelImplFromJson(Map<String, dynamic> json) =>
-    _$LocationModelImpl(
+_$LocationDtoImpl _$$LocationDtoImplFromJson(Map<String, dynamic> json) =>
+    _$LocationDtoImpl(
       departure: json['departure'] == null
           ? null
-          : LocationPoint.fromJson(json['departure'] as Map<String, dynamic>),
+          : LocationPointDto.fromJson(
+              json['departure'] as Map<String, dynamic>),
       destination: json['destination'] == null
           ? null
-          : LocationPoint.fromJson(json['destination'] as Map<String, dynamic>),
+          : LocationPointDto.fromJson(
+              json['destination'] as Map<String, dynamic>),
       midpoints: (json['midpoints'] as List<dynamic>?)
-          ?.map((e) => MidPoint.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => MidPointDto.fromJson(e as Map<String, dynamic>))
           .toList(),
       overviewPolyline: json['overview_polyline'] as String?,
     );
 
-Map<String, dynamic> _$$LocationModelImplToJson(_$LocationModelImpl instance) =>
+Map<String, dynamic> _$$LocationDtoImplToJson(_$LocationDtoImpl instance) =>
     <String, dynamic>{
       'departure': instance.departure,
       'destination': instance.destination,
@@ -28,20 +30,22 @@ Map<String, dynamic> _$$LocationModelImplToJson(_$LocationModelImpl instance) =>
       'overview_polyline': instance.overviewPolyline,
     };
 
-_$LocationPointImpl _$$LocationPointImplFromJson(Map<String, dynamic> json) =>
-    _$LocationPointImpl(
+_$LocationPointDtoImpl _$$LocationPointDtoImplFromJson(
+        Map<String, dynamic> json) =>
+    _$LocationPointDtoImpl(
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
     );
 
-Map<String, dynamic> _$$LocationPointImplToJson(_$LocationPointImpl instance) =>
+Map<String, dynamic> _$$LocationPointDtoImplToJson(
+        _$LocationPointDtoImpl instance) =>
     <String, dynamic>{
       'latitude': instance.latitude,
       'longitude': instance.longitude,
     };
 
-_$MidPointImpl _$$MidPointImplFromJson(Map<String, dynamic> json) =>
-    _$MidPointImpl(
+_$MidPointDtoImpl _$$MidPointDtoImplFromJson(Map<String, dynamic> json) =>
+    _$MidPointDtoImpl(
       imageLatitude: (json['metadata_latitude'] as num?)?.toDouble(),
       imageLongitude: (json['metadata_longitude'] as num?)?.toDouble(),
       latitude: (json['original_latitude'] as num?)?.toDouble(),
@@ -49,7 +53,7 @@ _$MidPointImpl _$$MidPointImplFromJson(Map<String, dynamic> json) =>
       imageUtf8: json['image_data'] as String?,
     );
 
-Map<String, dynamic> _$$MidPointImplToJson(_$MidPointImpl instance) =>
+Map<String, dynamic> _$$MidPointDtoImplToJson(_$MidPointDtoImpl instance) =>
     <String, dynamic>{
       'metadata_latitude': instance.imageLatitude,
       'metadata_longitude': instance.imageLongitude,

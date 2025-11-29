@@ -6,9 +6,9 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/controllers/mission_controller.dart';
-import 'package:snampo/location_model.dart';
-import 'package:snampo/snap_menu.dart';
+import 'package:snampo/domain/entities/location_entity.dart';
+import 'package:snampo/presentation/controllers/mission_controller.dart';
+import 'package:snampo/presentation/controllers/mission_page_widgets.dart';
 
 /// ミッションページを表示するウィジェット
 class MissionPage extends HookConsumerWidget {
@@ -125,7 +125,7 @@ class MapView extends ConsumerStatefulWidget {
   const MapView({required this.currentLocation, super.key});
 
   /// 現在位置の座標情報
-  final LocationPoint currentLocation;
+  final LocationPointEntity currentLocation;
 
   @override
   ConsumerState<MapView> createState() => _MapViewState();

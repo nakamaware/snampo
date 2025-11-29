@@ -1,16 +1,22 @@
-import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:snampo/config/env.dart';
-import 'package:snampo/location_model.dart';
+import 'package:snampo/data/repositories/mission_repository_impl.dart';
+import 'package:snampo/domain/entities/location_entity.dart';
+import 'package:snampo/domain/repositories/mission_repository.dart';
 
 part 'mission_controller.g.dart';
+
+/// ミッションリポジトリのプロバイダー
+@riverpod
+MissionRepository missionRepository(MissionRepositoryRef ref) {
+  return MissionRepositoryImpl();
+}
 
 /// ミッション情報を管理するコントローラー
 @riverpod
 class MissionController extends _$MissionController {
   @override
-  Future<LocationModel> build() async {
+  Future<LocationEntity> build() async {
     throw UnimplementedError('loadMission を呼び出してください');
   }
 
@@ -25,20 +31,12 @@ class MissionController extends _$MissionController {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      final dio = Dio();
-      final radiusString =
-          (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
-      final url = '${Env.apiBaseUrl}/route/';
-      final response = await dio.get<Map<String, dynamic>>(
-        url,
-        queryParameters: {
-          'currentLat': position.latitude.toString(),
-          'currentLng': position.longitude.toString(),
-          'radius': radiusString,
-        },
+      final repository = ref.read(missionRepositoryProvider);
+      final missionInfo = await repository.getMission(
+        radius: radius,
+        currentLat: position.latitude,
+        currentLng: position.longitude,
       );
-      final jsonData = response.data!;
-      final missionInfo = LocationModel.fromJson(jsonData);
       state = AsyncValue.data(missionInfo);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -48,7 +46,7 @@ class MissionController extends _$MissionController {
 
 /// 目的地を取得するプロバイダー
 @riverpod
-LocationPoint? target(TargetRef ref) {
+LocationPointEntity? target(TargetRef ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.destination;
 }
@@ -62,7 +60,7 @@ String? route(RouteRef ref) {
 
 /// 中間地点のリストを取得するプロバイダー
 @riverpod
-List<MidPoint>? midpointInfoList(MidpointInfoListRef ref) {
+List<MidPointEntity>? midpointInfoList(MidpointInfoListRef ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.midpoints;
 }

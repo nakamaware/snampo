@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/mission_page.dart';
+import 'package:go_router/go_router.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatelessWidget {
@@ -108,12 +108,7 @@ class _SubmitButtonState extends State<SubmitButton> {
         // ),
       ),
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute<MissionPage>(
-            builder: (context) => MissionPage(radius: widget.radius),
-          ),
-        );
+        context.push('/mission/${widget.radius}');
       },
       child: Padding(
         padding: const EdgeInsets.all(15),
