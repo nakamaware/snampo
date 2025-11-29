@@ -56,15 +56,25 @@ class MissionPage extends HookConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
 
-    // final future = useMemoized(getCurrentLocation);
     final future = useMemoized(makeMission);
     final snapshot = useFuture(future);
 
+    // データが取得されたら、プロバイダーを更新する（ビルド後に実行）
+    useEffect(() {
+      if (snapshot.hasData && snapshot.data != null) {
+        final missionInfo = snapshot.data!;
+        Future.microtask(() {
+          ref.read(targetProvider.notifier).state = missionInfo.destination;
+          ref.read(routeProvider.notifier).state = missionInfo.overviewPolyline;
+          ref.read(midpointInfoListProvider.notifier).state =
+              missionInfo.midpoints;
+        });
+      }
+      return null;
+    }, [snapshot.hasData, snapshot.data]);
+
     if (snapshot.hasData && snapshot.data != null) {
       final missionInfo = snapshot.data!;
-      ref.read(targetProvider.notifier).state = missionInfo.destination;
-      ref.read(routeProvider.notifier).state = missionInfo.overviewPolyline;
-      ref.read(midpointInfoListProvider.notifier).state = missionInfo.midpoints;
 
       return Scaffold(
         appBar: AppBar(
