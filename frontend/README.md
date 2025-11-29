@@ -16,7 +16,7 @@ A new Flutter project.
    ```bash
    # macOS / Linux
    curl https://mise.run | sh
-   
+
    # または Homebrew
    brew install mise
 
@@ -38,7 +38,7 @@ A new Flutter project.
    ```bash
    # 初回のみ、設定ファイルを信頼する必要があります
    mise trust
-   
+
    # ツールをインストール
    mise install
    ```

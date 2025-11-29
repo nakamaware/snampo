@@ -50,15 +50,16 @@ class _SliderWidgetState extends State<SliderWidget> {
             style: textstyle,
           ),
           Slider(
-              value: slidervalue,
-              min: 0.5,
-              max: 10.0,
-              divisions: 19,
-              onChanged: (radius) {
-                setState(() {
-                  slidervalue = radius;
-                });
-              }),
+            value: slidervalue,
+            min: 0.5,
+            max: 10.0,
+            divisions: 19,
+            onChanged: (radius) {
+              setState(() {
+                slidervalue = radius;
+              });
+            },
+          ),
           const SizedBox(
             height: 20,
           ),
