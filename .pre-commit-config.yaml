@@ -4,7 +4,7 @@
 repos:
   # 共通チェック（全ファイル対象）
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         description: 末尾の空白を削除
@@ -20,7 +20,7 @@ repos:
 
   # Backend用（Python/FastAPI）
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.3
+    rev: v0.14.6
     hooks:
       - id: ruff
         name: ruff (lint)
