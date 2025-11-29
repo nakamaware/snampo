@@ -130,3 +130,4 @@ class RouteResponse {
     'overview_polyline',
   };
 }
+

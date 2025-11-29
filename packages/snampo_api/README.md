@@ -41,9 +41,9 @@ import 'package:snampo_api/api.dart';
 
 
 final api_instance = DefaultApi();
-final latitude = 8.14; // num |
-final longitude = 8.14; // num |
-final size = size_example; // String |
+final latitude = 8.14; // num | 
+final longitude = 8.14; // num | 
+final size = size_example; // String | 
 
 try {
     final result = api_instance.getStreetViewImageStreetviewGet(latitude, longitude, size);
@@ -78,3 +78,6 @@ Endpoints do not require authorization.
 
 
 ## Author
+
+
+

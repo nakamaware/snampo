@@ -114,3 +114,4 @@ class Point {
     'longitude',
   };
 }
+

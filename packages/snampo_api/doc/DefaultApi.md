@@ -25,9 +25,9 @@ Street View Image Metadata APIを使用して画像のメタデータを取得  
 import 'package:snampo_api/api.dart';
 
 final api_instance = DefaultApi();
-final latitude = 8.14; // num |
-final longitude = 8.14; // num |
-final size = size_example; // String |
+final latitude = 8.14; // num | 
+final longitude = 8.14; // num | 
+final size = size_example; // String | 
 
 try {
     final result = api_instance.getStreetViewImageStreetviewGet(latitude, longitude, size);
@@ -41,9 +41,9 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **latitude** | **num**|  |
- **longitude** | **num**|  |
- **size** | **String**|  | [optional]
+ **latitude** | **num**|  | 
+ **longitude** | **num**|  | 
+ **size** | **String**|  | [optional] 
 
 ### Return type
 
@@ -72,9 +72,9 @@ Route
 import 'package:snampo_api/api.dart';
 
 final api_instance = DefaultApi();
-final currentLat = currentLat_example; // String |
-final currentLng = currentLng_example; // String |
-final radius = radius_example; // String |
+final currentLat = currentLat_example; // String | 
+final currentLng = currentLng_example; // String | 
+final radius = radius_example; // String | 
 
 try {
     final result = api_instance.routeRouteGet(currentLat, currentLng, radius);
@@ -88,9 +88,9 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **currentLat** | **String**|  |
- **currentLng** | **String**|  |
- **radius** | **String**|  |
+ **currentLat** | **String**|  | 
+ **currentLng** | **String**|  | 
+ **radius** | **String**|  | 
 
 ### Return type
 
@@ -106,3 +106,4 @@ No authorization required
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+

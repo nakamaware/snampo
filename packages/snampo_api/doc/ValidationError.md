@@ -9,7 +9,9 @@ import 'package:snampo_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **loc** | **List<String>** |  | [default to const []]
-**msg** | **String** |  |
-**type** | **String** |  |
+**msg** | **String** |  | 
+**type** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+
