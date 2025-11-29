@@ -50,6 +50,17 @@ repos:
         files: ^frontend/.*\.dart$
         pass_filenames: false
 
+  # API生成コードの検証（OpenAPIスキーマ変更時のみ）
+  - repo: local
+    hooks:
+      - id: check-api-generated
+        name: check-api-generated
+        description: 生成されたAPIクライアントが最新かチェック（OpenAPIスキーマ変更時のみ）
+        entry: bash -c 'mise run check-api'
+        language: system
+        files: ^backend/openapi\.json$
+        pass_filenames: false
+
   # コミットメッセージチェック（Conventional Commits v1.0.0）
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.13.0

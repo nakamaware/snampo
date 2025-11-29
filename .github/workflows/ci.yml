@@ -64,6 +64,11 @@ jobs:
       - name: Format check (ruff)
         run: uv run ruff format --check app
 
+      - name: Check API generated code
+        run: |
+          cd ..
+          bash scripts/check-api.sh
+
       # --- Type check (mypy) (使う場合はコメントアウトを外す) ---
       # - name: Type check (mypy)
       #   # mypy が dev-dependencies に追加されている必要があります
@@ -153,6 +158,11 @@ jobs:
 
       - name: Analyze
         run: flutter analyze --no-fatal-infos
+
+      - name: Check API generated code
+        run: |
+          cd ..
+          bash scripts/check-api.sh
 
       # --- Test (flutter test) (使う場合はコメントアウトを外す) ---
       # - name: Test

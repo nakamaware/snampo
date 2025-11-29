@@ -6,6 +6,7 @@ Snampoプロジェクトのリポジトリです。
 
 - `frontend/`: Flutterアプリケーション
 - `backend/`: FastAPIバックエンド
+- `packages/snampo_api/`: OpenAPIスキーマから自動生成されたDart APIクライアントパッケージ
 
 ## 環境構築
 
@@ -15,6 +16,7 @@ Snampoプロジェクトのリポジトリです。
 - Android Studio（Android開発用）
 - [uv](https://github.com/astral-sh/uv) - Pythonパッケージマネージャー（バックエンド用）
 - [pre-commit](https://pre-commit.com/) - Gitフック管理ツール（コード品質チェック用）
+- [Docker](https://www.docker.com/) - APIクライアント生成用（OpenAPI Generatorの実行に必要）
 
 ### セットアップ手順
 
@@ -49,14 +51,32 @@ Snampoプロジェクトのリポジトリです。
 
    参考: [uv インストール](https://github.com/astral-sh/uv#installation)
 
-3. **プロジェクトのクローン**
+3. **Dockerのインストール**（未インストールの場合）
+
+   APIクライアント生成にDockerが必要です。
+
+   ```bash
+   # macOS / Linux
+   # Homebrewを使用する場合
+   brew install --cask docker
+
+   # または、Docker Desktopを公式サイトからダウンロード
+   # https://www.docker.com/products/docker-desktop/
+   ```
+
+   Windowsの場合：
+   - [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)を公式サイトからダウンロードしてインストール
+
+   参考: [Docker インストール](https://docs.docker.com/get-docker/)
+
+4. **プロジェクトのクローン**
 
    ```bash
    git clone <repository-url>
    cd snampo
    ```
 
-4. **VS Code拡張機能のインストール**（推奨）
+5. **VS Code拡張機能のインストール**（推奨）
 
    VS Codeを使用する場合、推奨される拡張機能をインストールすることをお勧めします。
 
@@ -68,7 +88,7 @@ Snampoプロジェクトのリポジトリです。
    - または、VS Codeのコマンドパレット（Cmd+Shift+P / Ctrl+Shift+P）から「Extensions: Show Recommended Extensions」を選択して、推奨拡張機能を確認・インストールできます
    - 手動でインストールする場合は、VS Codeの拡張機能タブから各拡張機能を検索してインストールすることもできます
 
-5. **miseでツールをインストール**
+6. **miseでツールをインストール**
 
    ```bash
    # 初回のみ、設定ファイルを信頼する必要があります
@@ -80,20 +100,20 @@ Snampoプロジェクトのリポジトリです。
 
    これにより、プロジェクトに必要なFlutterとJavaのバージョンが自動的にインストールされます。
 
-6. **依存関係のインストール**
+7. **依存関係のインストール**
 
    ```bash
    # プロジェクトルートから実行（フロントエンドとバックエンドの両方の依存関係をインストール）
    mise run setup
    ```
 
-7. **Android SDKの設定**
+8. **Android SDKの設定**
 
    Android Studioをインストールするか、Android SDKを手動で設定してください。
 
    Android SDK Platform 36が必要です。
 
-8. **secret.propertiesの設定**（フロントエンド）
+9. **secret.propertiesの設定**（フロントエンド）
 
    Google Maps API キーを設定するために、
    `frontend/android/secret.properties.example` をコピーして
@@ -108,7 +128,7 @@ Snampoプロジェクトのリポジトリです。
    `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに
    置き換えてください。
 
-9. **環境変数の設定**（バックエンド）
+10. **環境変数の設定**（バックエンド）
 
    Google Maps API キーを設定するために、`backend/.env.example`をコピーして
    `backend/.env`ファイルを作成してください。
@@ -186,6 +206,12 @@ mise run backend:setup
 ```bash
 # プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）
 mise run setup
+
+# OpenAPIスキーマからDart APIクライアントを生成
+mise run generate-api
+
+# 生成されたAPIクライアントが最新かチェック（pre-commit/CI/CD用）
+mise run check-api
 ```
 
 **フロントエンドとバックエンドの同時起動：**
@@ -209,6 +235,37 @@ mise run backend:dev
 ```bash
 mise tasks
 ```
+
+### APIクライアントの生成
+
+このプロジェクトでは、バックエンドのOpenAPIスキーマから自動的にDart APIクライアントを生成しています。
+
+> **注意**: APIクライアントの生成にはDockerが必要です。事前にDockerをインストールしておいてください。
+
+#### APIクライアントの生成方法
+
+```bash
+# OpenAPIスキーマを生成し、Dart APIクライアントを生成
+mise run generate-api
+```
+
+このコマンドは以下の処理を実行します：
+
+1. バックエンドのOpenAPIスキーマ（`backend/openapi.json`）を生成
+2. Dockerコンテナ内でOpenAPI Generatorを実行してDart APIクライアント（`packages/snampo_api`）を生成
+
+生成されたAPIクライアントは、フロントエンドの`pubspec.yaml`で依存関係として参照されています。
+
+#### APIクライアントの更新確認
+
+CI/CDやpre-commitフックで、生成されたAPIクライアントが最新かどうかを確認できます：
+
+```bash
+# 生成されたAPIクライアントが最新かチェック
+mise run check-api
+```
+
+このコマンドは、現在のAPIクライアントが最新のOpenAPIスキーマと一致しているかを確認します。不一致がある場合は、`mise run generate-api`を実行して更新してください。
 
 ### Dockerを使用した起動（バックエンド）
 

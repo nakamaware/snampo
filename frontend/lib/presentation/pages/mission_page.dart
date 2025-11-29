@@ -6,7 +6,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/domain/entities/location_entity.dart';
+import 'package:snampo/models/location_entity.dart';
 import 'package:snampo/presentation/controllers/mission_controller.dart';
 import 'package:snampo/presentation/controllers/mission_page_widgets.dart';
 

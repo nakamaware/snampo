@@ -9,12 +9,53 @@ import folium
 import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel
 from requests.exceptions import RequestException, Timeout
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
+
+
+# TODO: 消したい
+# OpenAPIスキーマをカスタマイズして、カスタムValidationErrorモデルを使用
+def custom_openapi() -> dict:
+    """OpenAPIスキーマをカスタマイズして返す
+
+    Returns:
+        dict: カスタマイズされたOpenAPIスキーマ
+    """
+    if app.openapi_schema:
+        return app.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    # カスタムValidationErrorモデルのスキーマを設定(locをlist[str]として定義)
+    openapi_schema["components"]["schemas"]["ValidationError"] = {
+        "properties": {
+            "loc": {
+                "items": {"type": "string"},
+                "type": "array",
+                "title": "Location",
+            },
+            "msg": {"type": "string", "title": "Message"},
+            "type": {"type": "string", "title": "Error Type"},
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError",
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -32,6 +73,23 @@ if not GOOGLE_API_KEY:
         "GOOGLE_API_KEY environment variable is not set. "
         "Please set it in your .env file or environment variables."
     )
+
+
+# Pydantic models for API responses
+class Point(BaseModel):
+    """座標点を表すモデル"""
+
+    latitude: float
+    longitude: float
+
+
+class RouteResponse(BaseModel):
+    """ルート情報を表すモデル"""
+
+    departure: Point
+    destination: Point
+    midpoints: list[Point]
+    overview_polyline: str
 
 
 def generate_random_point(
@@ -256,7 +314,7 @@ def route(
     current_lat: str = Query(alias="currentLat"),
     current_lng: str = Query(alias="currentLng"),
     radius: str = Query(),
-) -> dict | str:
+) -> RouteResponse:
     """ルートを生成
 
     Args:
@@ -265,7 +323,7 @@ def route(
         radius: 半径
 
     Returns:
-        dict: ルート
+        RouteResponse: ルート情報
     """
     origin = f"{current_lat},{current_lng}"
 
@@ -329,13 +387,9 @@ def route(
     # photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
 
     # 出力用のデータを準備
-    return {
-        "departure": {"latitude": float(departure_lat), "longitude": float(departure_lng)},
-        "destination": {
-            "latitude": float(destination_lat),
-            "longitude": float(destination_lng),
-        },
-        "midpoints": [{"latitude": float(midpoint_lat), "longitude": float(midpoint_lng)}],
-        # "midpoint_photo": photo_data,
-        "overview_polyline": data["routes"][0]["overview_polyline"]["points"],
-    }
+    return RouteResponse(
+        departure=Point(latitude=float(departure_lat), longitude=float(departure_lng)),
+        destination=Point(latitude=float(destination_lat), longitude=float(destination_lng)),
+        midpoints=[Point(latitude=float(midpoint_lat), longitude=float(midpoint_lng))],
+        overview_polyline=data["routes"][0]["overview_polyline"]["points"],
+    )

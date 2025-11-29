@@ -600,6 +600,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "3bc132a9dbce73a7e4a21a17d06e1878839ffbf975568bc875c60537824b0c4d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.18.1"
   io:
     dependency: transitive
     description:
@@ -893,6 +901,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  snampo_api:
+    dependency: "direct main"
+    description:
+      path: "../packages/snampo_api"
+      relative: true
+    source: path
+    version: "1.0.0"
   source_gen:
     dependency: transitive
     description:

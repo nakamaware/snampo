@@ -1,16 +1,15 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:snampo/data/repositories/mission_repository_impl.dart';
-import 'package:snampo/domain/entities/location_entity.dart';
-import 'package:snampo/domain/repositories/mission_repository.dart';
+import 'package:snampo/models/location_entity.dart';
+import 'package:snampo/repositories/mission_repository.dart';
 
 part 'mission_controller.g.dart';
 
 /// ミッションリポジトリのプロバイダー
 @riverpod
 MissionRepository missionRepository(Ref ref) {
-  return MissionRepositoryImpl();
+  return MissionRepository();
 }
 
 /// ミッション情報を管理するコントローラー

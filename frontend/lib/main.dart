@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:snampo/app/app.dart';
+import 'package:snampo/app.dart';
 
 void main() async {
   // runAppを呼び出す前にバインディングを初期化する.

@@ -10,6 +10,9 @@ dependencies:
   dio: ^5.4.0
   flutter:
     sdk: flutter
+  # 生成されたAPIクライアント（OpenAPIスキーマから自動生成）
+  snampo_api:
+    path: ../packages/snampo_api
   flutter_hooks: ^0.20.5
   flutter_polyline: ^0.0.1-beta-2
   flutter_polyline_points: ^2.0.0
