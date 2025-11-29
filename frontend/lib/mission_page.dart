@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -33,8 +35,9 @@ class MissionPage extends HookConsumerWidget {
     final dio = Dio();
     final radiusString =
         (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
+    final url = '${Env.apiBaseUrl}/route/';
     final response = await dio.get<Map<String, dynamic>>(
-      '${Env.apiBaseUrl}/route/',
+      url,
       queryParameters: {
         'currentLat': position.latitude.toString(),
         'currentLng': position.longitude.toString(),
@@ -80,9 +83,8 @@ class MissionPage extends HookConsumerWidget {
         ),
       );
     } else if (snapshot.hasError) {
-      return const Center(
-        child: Text('error occurred'),
-      );
+      log('error: ${snapshot.error}');
+      return const Text('error occurred');
     } else {
       return Scaffold(
         appBar: AppBar(

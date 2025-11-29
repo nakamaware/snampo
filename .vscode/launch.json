@@ -5,18 +5,19 @@
             "name": "Flutter dev",
             "request": "launch",
             "type": "dart",
-            "program": "lib/main_dev.dart",
+            "program": "lib/main.dart",
+            "cwd": "${workspaceFolder}/frontend",
             "toolArgs": [
                 "--dart-define=FLAVOR=dev",
-                // ★ 環境変数があれば使う、なければ Env のデフォルトが使われる
-                "--dart-define=API_BASE_URL=${env:FLUTTER_API_BASE_URL_DEV}"
+                "--dart-define=API_BASE_URL=http://localhost:8000"
             ]
         },
         {
             "name": "Flutter prod",
             "request": "launch",
             "type": "dart",
-            "program": "lib/main_prod.dart",
+            "program": "lib/main.dart",
+            "cwd": "${workspaceFolder}/frontend",
             "toolArgs": [
                 "--dart-define=FLAVOR=prod",
                 "--dart-define=API_BASE_URL=${env:FLUTTER_API_BASE_URL_PROD}"

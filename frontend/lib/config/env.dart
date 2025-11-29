@@ -4,12 +4,27 @@
 class Env {
   Env._();
 
-  /// 環境フレーバー（dev/prod）
-  static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+  /// 環境フレーバー (dev/prod)
+  static String get flavor {
+    const value = String.fromEnvironment('FLAVOR');
+    if (value.isEmpty) {
+      throw StateError(
+        'FLAVOR環境変数が設定されていません。'
+        'ビルド時に `--dart-define=FLAVOR=dev` のように指定してください。',
+      );
+    }
+    return value;
+  }
 
   /// APIサーバーのベースURL
-  static const apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://52.197.206.202',
-  );
+  static String get apiBaseUrl {
+    const value = String.fromEnvironment('API_BASE_URL');
+    if (value.isEmpty) {
+      throw StateError(
+        'API_BASE_URL環境変数が設定されていません。'
+        'ビルド時に `--dart-define=API_BASE_URL=http://example.com` のように指定してください。',
+      );
+    }
+    return value;
+  }
 }
