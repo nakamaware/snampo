@@ -122,7 +122,7 @@ Snampoプロジェクトのリポジトリです。
    `your_google_maps_api_key_here`を実際のGoogle Maps APIキーに
    置き換えてください。
 
-   ```env
+   ```bash
    GOOGLE_API_KEY=your_google_maps_api_key_here
    ```
 
