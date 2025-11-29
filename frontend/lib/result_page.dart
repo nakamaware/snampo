@@ -10,13 +10,22 @@ class ResultPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titleTextstyle = theme.textTheme.displayMedium!.copyWith(
+    final titleTextstyle = (theme.textTheme.displayMedium ??
+            theme.textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final textstyleLarge = theme.textTheme.displayLarge!.copyWith(
+    final textstyleLarge = (theme.textTheme.displayLarge ??
+            theme.textTheme.headlineLarge ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.primary,
     );
-    final textstyleMid = theme.textTheme.bodyLarge!.copyWith(
+    final textstyleMid = (theme.textTheme.bodyLarge ??
+            theme.textTheme.bodyMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.primary,
     );
 
@@ -65,7 +74,10 @@ class HomeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displayMedium!.copyWith(
+    final textstyle = (theme.textTheme.displayMedium ??
+            theme.textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.onPrimary,
     );
 

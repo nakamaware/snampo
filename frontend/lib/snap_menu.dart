@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:snampo/provider.dart';
+import 'package:snampo/controllers/mission_controller.dart';
 import 'package:snampo/result_page.dart';
 
 /// mission_pageで表示するsnapのメニューウィジェット
@@ -89,9 +89,13 @@ class SnapViewState extends ConsumerWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final midpointInfoList = ref.read(midpointInfoListProvider.notifier).state;
-    // print("snap_menu_image is");
-    // print(GlobalVariables.midpointInfoList[0].imageUtf8);
+    final midpointInfoList = ref.watch(midpointInfoListProvider);
+
+    // データがまだ読み込まれていない場合はローディング表示
+    if (midpointInfoList == null || midpointInfoList.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Column(
       children: [
         Text(
@@ -102,7 +106,11 @@ class SnapViewState extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('- Spot1: '),
-            AnswerImage(imageUtf8: midpointInfoList![0].imageUtf8!),
+            if (midpointInfoList.isNotEmpty &&
+                midpointInfoList[0].imageUtf8 != null)
+              AnswerImage(imageUtf8: midpointInfoList[0].imageUtf8!)
+            else
+              const SizedBox(width: 150, height: 150),
             const TakeSnap(),
           ],
         ),

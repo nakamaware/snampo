@@ -1,16 +1,13 @@
 import 'dart:developer';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/config/env.dart';
+import 'package:snampo/controllers/mission_controller.dart';
 import 'package:snampo/location_model.dart';
-import 'package:snampo/provider.dart';
 import 'package:snampo/snap_menu.dart';
 
 /// ミッションページを表示するウィジェット
@@ -23,80 +20,64 @@ class MissionPage extends HookConsumerWidget {
   /// ミッションの検索半径（キロメートル単位）
   final double radius;
 
-  /// 現在位置を取得し、APIからミッション情報を取得する
-  ///
-  /// 現在の位置情報を取得し、指定された半径内でミッション情報を
-  /// サーバーから取得して[LocationModel]として返す
-  Future<LocationModel> makeMission() async {
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    final dio = Dio();
-    final radiusString =
-        (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
-    final url = '${Env.apiBaseUrl}/route/';
-    final response = await dio.get<Map<String, dynamic>>(
-      url,
-      queryParameters: {
-        'currentLat': position.latitude.toString(),
-        'currentLng': position.longitude.toString(),
-        'radius': radiusString,
-      },
-    );
-    final jsonData = response.data!;
-    final missionInfo = LocationModel.fromJson(jsonData);
-    return missionInfo;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    log('MissionPage build');
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displaySmall!.copyWith(
+    final textstyle = (theme.textTheme.displaySmall ??
+            theme.textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
-    final future = useMemoized(makeMission);
-    final snapshot = useFuture(future);
+    final missionAsync = ref.watch(missionControllerProvider);
 
-    // データが取得されたら、プロバイダーを更新する（ビルド後に実行）
-    useEffect(() {
-      if (snapshot.hasData && snapshot.data != null) {
-        final missionInfo = snapshot.data!;
+    // radiusが変更されたときにミッションを読み込む（ビルド後に実行）
+    useEffect(
+      () {
         Future.microtask(() {
-          ref.read(targetProvider.notifier).state = missionInfo.destination;
-          ref.read(routeProvider.notifier).state = missionInfo.overviewPolyline;
-          ref.read(midpointInfoListProvider.notifier).state =
-              missionInfo.midpoints;
+          ref.read(missionControllerProvider.notifier).loadMission(radius);
         });
-      }
-      return null;
-    }, [snapshot.hasData, snapshot.data]);
+        return null;
+      },
+      [radius],
+    );
 
-    if (snapshot.hasData && snapshot.data != null) {
-      final missionInfo = snapshot.data!;
+    return missionAsync.when(
+      data: (missionInfo) {
+        if (missionInfo.departure == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                'On MISSION',
+                style: textstyle,
+              ),
+              centerTitle: true,
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            body: const Center(child: Text('出発地点の情報が取得できませんでした')),
+          );
+        }
 
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'On MISSION',
-            style: textstyle,
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'On MISSION',
+              style: textstyle,
+            ),
+            centerTitle: true,
+            backgroundColor: theme.colorScheme.primary,
           ),
-          centerTitle: true,
-          backgroundColor: theme.colorScheme.primary,
-        ),
-        body: Stack(
-          children: [
-            MapView(currentLocation: missionInfo.departure!),
-            const SnapView(),
-          ],
-        ),
-      );
-    } else if (snapshot.hasError) {
-      log('error: ${snapshot.error}');
-      return const Text('error occurred');
-    } else {
-      return Scaffold(
+          body: Stack(
+            children: [
+              MapView(currentLocation: missionInfo.departure!),
+              const SnapView(),
+            ],
+          ),
+        );
+      },
+      loading: () => Scaffold(
         appBar: AppBar(
           title: Text(
             'On MISSION',
@@ -117,8 +98,22 @@ class MissionPage extends HookConsumerWidget {
             ],
           ),
         ),
-      );
-    }
+      ),
+      error: (error, stackTrace) {
+        log('error: $error');
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'On MISSION',
+              style: textstyle,
+            ),
+            centerTitle: true,
+            backgroundColor: theme.colorScheme.primary,
+          ),
+          body: const Center(child: Text('error occurred')),
+        );
+      },
+    );
   }
 }
 
@@ -148,8 +143,15 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void initState() {
     super.initState();
-    final encodedPolyline = ref.read(routeProvider.notifier).state!;
-    _decodePolyline(encodedPolyline);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final encodedPolyline = ref.read(routeProvider);
+    if (encodedPolyline != null && polylineCoordinates.isEmpty) {
+      _decodePolyline(encodedPolyline);
+    }
   }
 
   Future<void> _decodePolyline(String encodedPolyline) async {
@@ -159,16 +161,18 @@ class _MapViewState extends ConsumerState<MapView> {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
 
-      setState(() {
-        _polylines.add(
-          Polyline(
-            polylineId: const PolylineId('poly'),
-            points: polylineCoordinates,
-            color: Colors.blue,
-            width: 3,
-          ),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          _polylines.add(
+            Polyline(
+              polylineId: const PolylineId('poly'),
+              points: polylineCoordinates,
+              color: Colors.blue,
+              width: 3,
+            ),
+          );
+        });
+      }
     }
   }
 
@@ -178,7 +182,18 @@ class _MapViewState extends ConsumerState<MapView> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    final target = ref.read(targetProvider.notifier).state!;
+    final target = ref.watch(targetProvider);
+    final currentLat = widget.currentLocation.latitude;
+    final currentLng = widget.currentLocation.longitude;
+
+    // 必要な値がnullの場合はローディング表示
+    if (target == null ||
+        currentLat == null ||
+        currentLng == null ||
+        target.latitude == null ||
+        target.longitude == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return SizedBox(
       height: height,
@@ -192,8 +207,8 @@ class _MapViewState extends ConsumerState<MapView> {
                 zoom: 17, //ズーム
                 target: LatLng(
                   //緯度, 経度
-                  widget.currentLocation.latitude!,
-                  widget.currentLocation.longitude!,
+                  currentLat,
+                  currentLng,
                 ),
               ),
               markers: {

@@ -1,4 +1,5 @@
 import base64
+import functools
 import logging
 import math
 import os
@@ -20,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 # Request timeout constant (in seconds)
 REQUEST_TIMEOUT_SECONDS = 15
+
+# Cache TTL constant (in seconds) - 1 hour
+CACHE_TTL_SECONDS = 3600
 
 # Get Google API key from environment variable
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
@@ -108,6 +112,100 @@ def decode_polyline(polyline_str: str) -> list[tuple[float, float]]:
     return coordinates
 
 
+@functools.lru_cache(maxsize=128)
+def _fetch_street_view_metadata(latitude: float, longitude: float) -> dict:
+    """Street View Metadata APIからメタデータを取得(キャッシュ付き)
+
+    Args:
+        latitude: 緯度
+        longitude: 経度
+
+    Returns:
+        dict: メタデータ
+    """
+    metadata_url = f"https://maps.googleapis.com/maps/api/streetview/metadata?location={latitude},{longitude}&key={GOOGLE_API_KEY}"
+
+    try:
+        metadata_response = requests.get(metadata_url, timeout=REQUEST_TIMEOUT_SECONDS)
+        metadata_response.raise_for_status()
+        return metadata_response.json()
+    except Timeout as e:
+        logger.error("Timeout error while fetching Street View metadata for a requested location.")
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve Street View metadata"
+        ) from e
+    except RequestException as e:
+        logger.error(f"Request error while fetching Street View metadata: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve Street View metadata: {e}"
+        ) from e
+
+
+@functools.lru_cache(maxsize=128)
+def _fetch_street_view_image(latitude: float, longitude: float, size: str) -> bytes:
+    """Street View Static APIから画像を取得(キャッシュ付き)
+
+    Args:
+        latitude: 緯度
+        longitude: 経度
+        size: 画像サイズ
+
+    Returns:
+        bytes: 画像データ
+    """
+    url = "https://maps.googleapis.com/maps/api/streetview"
+    params = {"size": size, "location": f"{latitude},{longitude}", "key": GOOGLE_API_KEY}
+
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
+        return response.content
+    except Timeout as e:
+        logger.error("Timeout error while fetching Street View image for a requested location.")
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve Street View image"
+        ) from e
+    except RequestException as e:
+        logger.error(f"Request error while fetching Street View image: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve Street View image: {e}"
+        ) from e
+
+
+@functools.lru_cache(maxsize=128)
+def _fetch_directions(origin: str, destination: str) -> dict:
+    """Google Directions APIからルート情報を取得(キャッシュ付き)
+
+    Args:
+        origin: 出発地の座標("緯度,経度"形式)
+        destination: 目的地の座標("緯度,経度"形式)
+
+    Returns:
+        dict: Directions APIのレスポンスデータ
+    """
+    url = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {"origin": origin, "destination": destination, "key": GOOGLE_API_KEY}
+
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
+        data = response.json()
+
+        if data["status"] != "OK":
+            logger.error(f"Directions API returned non-OK status: {data['status']}")
+            raise HTTPException(status_code=400, detail=f"Directions API error: {data['status']}")
+
+        return data
+    except Timeout as e:
+        logger.error("Timeout error while fetching directions.")
+        raise HTTPException(
+            status_code=504, detail="Request timeout: Failed to retrieve directions"
+        ) from e
+    except RequestException as e:
+        logger.error(f"Request error while fetching directions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve directions: {e}") from e
+
+
 @app.get("/streetview")
 def get_street_view_image(latitude: float, longitude: float, size: str | None = "600x300") -> dict:
     """Street View Image Metadata APIを使用して画像のメタデータを取得
@@ -120,23 +218,8 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
     Returns:
         dict: メタデータ
     """
-    metadata_url = f"https://maps.googleapis.com/maps/api/streetview/metadata?location={latitude},{longitude}&key={GOOGLE_API_KEY}"
-
-    # メタデータの取得
-    try:
-        metadata_response = requests.get(metadata_url, timeout=REQUEST_TIMEOUT_SECONDS)
-        metadata_response.raise_for_status()
-        metadata = metadata_response.json()
-    except Timeout as e:
-        logger.error("Timeout error while fetching Street View metadata for a requested location.")
-        raise HTTPException(
-            status_code=504, detail="Request timeout: Failed to retrieve Street View metadata"
-        ) from e
-    except RequestException as e:
-        logger.error(f"Request error while fetching Street View metadata: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve Street View metadata: {e}"
-        ) from e
+    # メタデータの取得(キャッシュ付き)
+    metadata = _fetch_street_view_metadata(latitude, longitude)
 
     if metadata["status"] == "OK":
         # メタデータから画像の実際の位置情報を取得
@@ -152,34 +235,11 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
             status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."
         )
 
-    # Street View Static API の URL を構築
-    url = "https://maps.googleapis.com/maps/api/streetview"
-
-    # リクエストパラメータを設定
-    params = {"size": size, "location": f"{latitude},{longitude}", "key": GOOGLE_API_KEY}
-
-    # Street View Static API にリクエストを送信
-    try:
-        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
-        response.raise_for_status()
-    except Timeout as e:
-        logger.error("Timeout error while fetching Street View image for a requested location.")
-        raise HTTPException(
-            status_code=504, detail="Request timeout: Failed to retrieve Street View image"
-        ) from e
-    except RequestException as e:
-        logger.error(f"Request error while fetching Street View image: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve Street View image: {e}"
-        ) from e
-
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=response.status_code, detail="Failed to retrieve Street View image"
-        )
+    # Street View Static APIから画像を取得(キャッシュ付き)
+    image_content = _fetch_street_view_image(latitude, longitude, size)
 
     # 画像データをBase64エンコードして文字列に変換
-    image_data = base64.b64encode(response.content).decode("utf-8")
+    image_data = base64.b64encode(image_content).decode("utf-8")
 
     # 緯度経度データと画像データをJSON形式で返す
     return {
@@ -208,38 +268,13 @@ def route(
         dict: ルート
     """
     origin = f"{current_lat},{current_lng}"
-    url = "https://maps.googleapis.com/maps/api/directions/json?"
 
     # ランダムな目的地を生成
     destination_lat, destination_lng = generate_random_point(current_lat, current_lng, radius)
+    destination = f"{destination_lat},{destination_lng}"
 
-    # Directions API へのリクエストパラメータの設定
-    payload = {
-        "origin": origin,
-        "destination": f"{destination_lat},{destination_lng}",
-        "key": GOOGLE_API_KEY,
-        "mode": "walking",
-    }
-
-    # Directions API へのリクエストを送信
-    try:
-        r = requests.get(url, params=payload, timeout=REQUEST_TIMEOUT_SECONDS)
-        r.raise_for_status()
-    except Timeout as e:
-        logger.error("Timeout error while fetching directions from a requested location.")
-        raise HTTPException(
-            status_code=504, detail="Request timeout: Failed to retrieve directions"
-        ) from e
-    except RequestException as e:
-        logger.error(f"Request error while fetching directions: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve directions: {e}") from e
-
-    # リクエストが成功した場合
-    if r.status_code != 200:
-        return "500: Backend error"
-
-    # JSON データを取得
-    data = r.json()
+    # Directions APIからルート情報を取得(キャッシュ付き)
+    data = _fetch_directions(origin, destination)
 
     # ルートの座標を取得
     route_coordinates = []
@@ -290,8 +325,8 @@ def route(
     # マップを保存
     m.save("route.html")
 
-    # 中間地点の画像とメタデータの緯度経度取得
-    photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
+    # # 中間地点の画像とメタデータの緯度経度取得
+    # photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
 
     # 出力用のデータを準備
     return {
@@ -300,7 +335,7 @@ def route(
             "latitude": float(destination_lat),
             "longitude": float(destination_lng),
         },
-        "midpoint": {"latitude": float(midpoint_lat), "longitude": float(midpoint_lng)},
-        "midpoint_photo": photo_data,
+        "midpoints": [{"latitude": float(midpoint_lat), "longitude": float(midpoint_lng)}],
+        # "midpoint_photo": photo_data,
         "overview_polyline": data["routes"][0]["overview_polyline"]["points"],
     }
