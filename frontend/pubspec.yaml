@@ -10,38 +10,27 @@ dependencies:
   flutter:
     sdk: flutter
 
-  provider: ^6.0.0
-
-  google_fonts: ^6.1.0
-
-  google_maps_flutter: ^2.5.3
-
-  geolocator: ^10.1.0
-
-  flutter_hooks: ^0.20.5
-
-  http: ^1.2.0
-
-  image_picker: ^1.0.7
-
-  flutter_riverpod: ^2.4.10
-
   dio: ^5.4.0
-
-  json_annotation: ^4.8.1
-  freezed_annotation: ^2.4.1
+  flutter_hooks: ^0.20.5
   flutter_polyline: ^0.0.1-beta-2
   flutter_polyline_points: ^2.0.0
+  flutter_riverpod: ^2.4.10
+  freezed_annotation: ^2.4.1
+  geolocator: ^10.1.0
+  google_fonts: ^6.1.0
+  google_maps_flutter: ^2.5.3
+  http: ^1.2.0
+  image_picker: ^1.0.7
+  json_annotation: ^4.8.1
+  provider: ^6.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-
-  json_serializable: ^6.7.1
-
   build_runner: ^2.4.8
   freezed: ^2.4.7
+  json_serializable: ^6.7.1
+  very_good_analysis: ^5.1.0
 
 dependency_overrides:
   # Dart 3.5+ で削除された UnmodifiableUint8ListView を使わないように

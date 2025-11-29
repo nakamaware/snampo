@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-// resultpageに遷移する時にバグるので要修正
+/// ミッション完了後の結果を表示するページ
+///
+/// resultpageに遷移する時にバグるので要修正
 class ResultPage extends StatelessWidget {
+  /// ResultPageのコンストラクタ
   const ResultPage({super.key});
 
   @override
@@ -41,10 +44,10 @@ class ResultPage extends StatelessWidget {
               'Congratulations!',
               style: textstyleMid,
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            HomeButton(),
+            const HomeButton(),
           ],
         ),
       ),
@@ -52,7 +55,9 @@ class ResultPage extends StatelessWidget {
   }
 }
 
+/// ホームに戻るボタンウィジェット
 class HomeButton extends StatelessWidget {
+  /// HomeButtonのコンストラクタ
   const HomeButton({
     super.key,
   });
@@ -77,7 +82,7 @@ class HomeButton extends StatelessWidget {
         Navigator.popUntil(context, (route) => route.isFirst);
       },
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Text('ホーム', style: textstyle),
       ),
     );

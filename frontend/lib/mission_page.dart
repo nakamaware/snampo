@@ -1,27 +1,36 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:dio/dio.dart';
-import 'package:snampo/snap_menu.dart';
-import 'package:snampo/provider.dart';
 import 'package:snampo/location_model.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:snampo/provider.dart';
+import 'package:snampo/snap_menu.dart';
 
+/// ミッションページを表示するウィジェット
 class MissionPage extends HookWidget {
-  final double radius;
+  /// ミッションページを作成する
+  ///
+  /// [radius] はミッションの検索半径（キロメートル単位）
   const MissionPage({required this.radius, super.key});
 
+  /// ミッションの検索半径（キロメートル単位）
+  final double radius;
+
+  /// 現在位置を取得し、APIからミッション情報を取得する
+  ///
+  /// 現在の位置情報を取得し、指定された半径内でミッション情報を
+  /// サーバーから取得して[LocationModel]として返す
   Future<LocationModel> makeMission() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
 
     final dio = Dio();
-    String radiusString =
+    final radiusString =
         (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
-    final response = await dio.get(
+    final response = await dio.get<Map<String, dynamic>>(
       'http://52.197.206.202/route/',
       queryParameters: {
         'currentLat': position.latitude.toString(),
@@ -29,9 +38,8 @@ class MissionPage extends HookWidget {
         'radius': radiusString,
       },
     );
-    String jsonString = response.toString();
-    Map<String, dynamic> jsonData = await jsonDecode(jsonString);
-    LocationModel missionInfo = LocationModel.fromJson(jsonData);
+    final jsonData = response.data!;
+    final missionInfo = LocationModel.fromJson(jsonData);
     return missionInfo;
   }
 
@@ -44,10 +52,10 @@ class MissionPage extends HookWidget {
 
     // final future = useMemoized(getCurrentLocation);
     final future = useMemoized(makeMission);
-    final snapshot = useFuture(future, initialData: null);
+    final snapshot = useFuture(future);
 
     if (snapshot.hasData && snapshot.data != null) {
-      final LocationModel missionInfo = snapshot.data!;
+      final missionInfo = snapshot.data!;
       GlobalVariables.target = missionInfo.destination!;
       GlobalVariables.route = missionInfo.overviewPolyline!;
       GlobalVariables.midpointInfoList = missionInfo.midpoints!;
@@ -61,10 +69,12 @@ class MissionPage extends HookWidget {
           centerTitle: true,
           backgroundColor: theme.colorScheme.primary,
         ),
-        body: Stack(children: [
-          MapView(currentLocation: missionInfo.departure!),
-          SnapView(),
-        ]),
+        body: Stack(
+          children: [
+            MapView(currentLocation: missionInfo.departure!),
+            const SnapView(),
+          ],
+        ),
       );
     } else if (snapshot.hasError) {
       return const Center(
@@ -83,7 +93,7 @@ class MissionPage extends HookWidget {
         body: const Center(
           child: Column(
             children: [
-              Text("NOW LOADING"),
+              Text('NOW LOADING'),
             ],
           ),
         ),
@@ -92,20 +102,33 @@ class MissionPage extends HookWidget {
   }
 }
 
+/// マップビューを表示するウィジェット
 class MapView extends StatefulWidget {
-  final LocationPoint currentLocation;
+  /// マップビューを作成する
+  ///
+  /// [currentLocation] は現在位置の座標情報
   const MapView({required this.currentLocation, super.key});
 
+  /// 現在位置の座標情報
+  final LocationPoint currentLocation;
+
   @override
-  _MapViewState createState() => _MapViewState();
+  MapViewState createState() => MapViewState();
 }
 
-class _MapViewState extends State<MapView> {
-  // マップの表示制御用
+/// マップビューの状態を管理するクラス
+class MapViewState extends State<MapView> {
+  /// マップの表示制御用コントローラー
   late GoogleMapController mapController;
+
+  /// ポリラインの座標リスト
   List<LatLng> polylineCoordinates = [];
-  Set<Polyline> _polylines = {};
+
+  /// エンコードされたポリライン文字列
   String encodedPolyline = GlobalVariables.route;
+
+  /// ポリラインの集合
+  final Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -113,17 +136,17 @@ class _MapViewState extends State<MapView> {
     _decodePolyline();
   }
 
-  void _decodePolyline() async {
-    List<PointLatLng> result = PolylinePoints().decodePolyline(encodedPolyline);
+  Future<void> _decodePolyline() async {
+    final result = PolylinePoints().decodePolyline(encodedPolyline);
     if (result.isNotEmpty) {
-      result.forEach((PointLatLng point) {
+      for (final point in result) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
+      }
 
       setState(() {
         _polylines.add(
           Polyline(
-            polylineId: PolylineId("poly"),
+            polylineId: const PolylineId('poly'),
             points: polylineCoordinates,
             color: Colors.blue,
             width: 3,
@@ -136,8 +159,8 @@ class _MapViewState extends State<MapView> {
   @override
   Widget build(BuildContext context) {
     // 画面の幅と高さを決定する
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return SizedBox(
       height: height,
@@ -157,18 +180,16 @@ class _MapViewState extends State<MapView> {
               ),
               markers: {
                 Marker(
-                  markerId: MarkerId("marker_1"),
+                  markerId: const MarkerId('marker_1'),
                   position: LatLng(
                     GlobalVariables.target.latitude!,
                     GlobalVariables.target.longitude!,
                   ),
-                )
+                ),
               },
               polylines: _polylines,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
-              mapType: MapType.normal,
-              zoomGesturesEnabled: true,
               zoomControlsEnabled: false,
               onMapCreated: (GoogleMapController controller) {
                 mapController = controller;

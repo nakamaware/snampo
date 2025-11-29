@@ -1,42 +1,13 @@
 import 'package:snampo/location_model.dart';
 
-// final currentLocationProvider = FutureProvider<Position>((ref) async {
-//   Position position = await Geolocator.getCurrentPosition(
-//     desiredAccuracy: LocationAccuracy.high,
-//   );
-//   return position;
-// });
-
-// final createMissionProvider = FutureProvider<String>((ref) async {
-//   final dio = Dio();
-
-//   ref.watch(currentLocationProvider).when(
-//         data: data,
-//         error: error,
-//         loading: loading,
-//       );
-
-//   try {
-//     final response = await dio.get(
-//       'http://localhost:80/route',
-//       queryParameters: {
-//         'currentLat': '35.6895',
-//         'currentLng': '139.6917',
-//         'radius': '10',
-//       },
-//     );
-
-//     return (response.data);
-//   } catch (e) {
-//     return ('Error: $e');
-//   }
-// });
-
-// final targetProvider = StateProvider<Position?>((ref) => (null));
-// final routeProvider = StateProvider<String?>((ref) => (null));
-// final landmarkInfoProvider = StateProvider<List<String>?>((ref) => (null));
+/// アプリケーション全体で使用するグローバル変数
 class GlobalVariables {
+  /// 目標地点
   static late LocationPoint target;
+
+  /// ルート情報
   static late String route;
+
+  /// 中間地点情報のリスト
   static late List<MidPoint> midpointInfoList;
 }

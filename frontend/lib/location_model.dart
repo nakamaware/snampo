@@ -3,8 +3,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'location_model.freezed.dart';
 part 'location_model.g.dart';
 
+/// 位置情報モデル
 @freezed
 abstract class LocationModel with _$LocationModel {
+  /// LocationModelのコンストラクタ
   factory LocationModel({
     @JsonKey(name: 'departure') LocationPoint? departure,
     @JsonKey(name: 'destination') LocationPoint? destination,
@@ -12,23 +14,29 @@ abstract class LocationModel with _$LocationModel {
     @JsonKey(name: 'overview_polyline') String? overviewPolyline,
   }) = _LocationModel;
 
+  /// JSONからLocationModelを作成
   factory LocationModel.fromJson(Map<String, dynamic> json) =>
       _$LocationModelFromJson(json);
 }
 
+/// 位置ポイントモデル
 @freezed
 abstract class LocationPoint with _$LocationPoint {
+  /// LocationPointのコンストラクタ
   factory LocationPoint({
     @JsonKey(name: 'latitude') double? latitude,
     @JsonKey(name: 'longitude') double? longitude,
   }) = _LocationPoint;
 
+  /// JSONからLocationPointを作成
   factory LocationPoint.fromJson(Map<String, dynamic> json) =>
       _$LocationPointFromJson(json);
 }
 
+/// 中間ポイントモデル
 @freezed
 abstract class MidPoint with _$MidPoint {
+  /// MidPointのコンストラクタ
   factory MidPoint({
     @JsonKey(name: 'metadata_latitude') double? imageLatitude,
     @JsonKey(name: 'metadata_longitude') double? imageLongitude,
@@ -37,6 +45,7 @@ abstract class MidPoint with _$MidPoint {
     @JsonKey(name: 'image_data') String? imageUtf8,
   }) = _MidPoint;
 
+  /// JSONからMidPointを作成
   factory MidPoint.fromJson(Map<String, dynamic> json) =>
       _$MidPointFromJson(json);
 }

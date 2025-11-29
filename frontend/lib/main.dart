@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:snampo/setup_page.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   // runAppを呼び出す前にバインディングを初期化する.
   WidgetsFlutterBinding.ensureInitialized();
   // initStateの中には、書けないので、main関数の中で実行する.
-  LocationPermission permission = await Geolocator.checkPermission();
+  final permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
     await Geolocator.requestPermission();
   }
   runApp(const ProviderScope(child: MyApp()));
 }
 
+/// アプリケーションのルートウィジェット
 class MyApp extends StatelessWidget {
+  /// MyAppのコンストラクタ
   const MyApp({super.key});
 
   @override
@@ -25,7 +27,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 34, 255, 38)),
+          seedColor: const Color.fromARGB(255, 34, 255, 38),
+        ),
         textTheme:
             GoogleFonts.sawarabiGothicTextTheme(Theme.of(context).textTheme),
       ),
@@ -34,7 +37,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// アプリケーションのトップページ
 class TopPage extends StatelessWidget {
+  /// TopPageのコンストラクタ
   const TopPage({super.key});
 
   @override
@@ -66,7 +71,9 @@ class TopPage extends StatelessWidget {
   }
 }
 
+/// スタートボタンウィジェット
 class StartButton extends StatelessWidget {
+  /// StartButtonのコンストラクタ
   const StartButton({
     super.key,
   });
@@ -86,18 +93,20 @@ class StartButton extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const SetupPage()),
+          MaterialPageRoute<Widget>(builder: (context) => const SetupPage()),
         );
       },
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Text('START', style: style),
       ),
     );
   }
 }
 
+/// 履歴ボタンウィジェット
 class HistoryButton extends StatelessWidget {
+  /// HistoryButtonのコンストラクタ
   const HistoryButton({
     super.key,
   });
@@ -119,10 +128,10 @@ class HistoryButton extends StatelessWidget {
         ),
       ),
       onPressed: () {
-        // TODO: 履歴機能を実装
+        // TODO(kawayama): 履歴機能を実装する
       },
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Text('履歴', style: style),
       ),
     );
