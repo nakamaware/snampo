@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:snampo/provider.dart';
 import 'package:snampo/result_page.dart';
@@ -77,15 +78,15 @@ class SnapView extends StatelessWidget {
   }
 }
 
-/// SnapView内で表示されるミッション状態を管理するウィジェット
-class SnapViewState extends StatelessWidget {
+/// SnapView内でミッション情報を表示するウィジェット
+class SnapViewState extends ConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
   const SnapViewState({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final titelTextstyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.secondary,
@@ -93,8 +94,9 @@ class SnapViewState extends StatelessWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    log('snap_menu_image is');
-    log(GlobalVariables.midpointInfoList[0].imageUtf8 ?? '');
+    final midpointInfoList = ref.read(midpointInfoListProvider.notifier).state;
+    // print("snap_menu_image is");
+    // print(GlobalVariables.midpointInfoList[0].imageUtf8);
     return Column(
       children: [
         Text(
@@ -105,9 +107,7 @@ class SnapViewState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('- Spot1: '),
-            AnswerImage(
-              imageUtf8: GlobalVariables.midpointInfoList[0].imageUtf8!,
-            ),
+            AnswerImage(imageUtf8: midpointInfoList![0].imageUtf8!),
             const TakeSnap(),
           ],
         ),

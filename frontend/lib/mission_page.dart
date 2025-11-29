@@ -4,12 +4,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/location_model.dart';
 import 'package:snampo/provider.dart';
 import 'package:snampo/snap_menu.dart';
 
 /// ミッションページを表示するウィジェット
-class MissionPage extends HookWidget {
+class MissionPage extends HookConsumerWidget {
   /// ミッションページを作成する
   ///
   /// [radius] はミッションの検索半径（キロメートル単位）
@@ -44,7 +45,7 @@ class MissionPage extends HookWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textstyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -56,9 +57,9 @@ class MissionPage extends HookWidget {
 
     if (snapshot.hasData && snapshot.data != null) {
       final missionInfo = snapshot.data!;
-      GlobalVariables.target = missionInfo.destination!;
-      GlobalVariables.route = missionInfo.overviewPolyline!;
-      GlobalVariables.midpointInfoList = missionInfo.midpoints!;
+      ref.read(targetProvider.notifier).state = missionInfo.destination;
+      ref.read(routeProvider.notifier).state = missionInfo.overviewPolyline;
+      ref.read(midpointInfoListProvider.notifier).state = missionInfo.midpoints;
 
       return Scaffold(
         appBar: AppBar(
@@ -102,9 +103,9 @@ class MissionPage extends HookWidget {
   }
 }
 
-/// マップビューを表示するウィジェット
-class MapView extends StatefulWidget {
-  /// マップビューを作成する
+/// Googleマップを表示するウィジェット
+class MapView extends ConsumerStatefulWidget {
+  /// MapViewを作成する
   ///
   /// [currentLocation] は現在位置の座標情報
   const MapView({required this.currentLocation, super.key});
@@ -113,30 +114,26 @@ class MapView extends StatefulWidget {
   final LocationPoint currentLocation;
 
   @override
-  MapViewState createState() => MapViewState();
+  ConsumerState<MapView> createState() => _MapViewState();
 }
 
-/// マップビューの状態を管理するクラス
-class MapViewState extends State<MapView> {
-  /// マップの表示制御用コントローラー
+/// MapViewの状態を管理するクラス
+class _MapViewState extends ConsumerState<MapView> {
+  /// マップの表示制御用
   late GoogleMapController mapController;
 
   /// ポリラインの座標リスト
   List<LatLng> polylineCoordinates = [];
-
-  /// エンコードされたポリライン文字列
-  String encodedPolyline = GlobalVariables.route;
-
-  /// ポリラインの集合
   final Set<Polyline> _polylines = {};
 
   @override
   void initState() {
     super.initState();
-    _decodePolyline();
+    final encodedPolyline = ref.read(routeProvider.notifier).state!;
+    _decodePolyline(encodedPolyline);
   }
 
-  Future<void> _decodePolyline() async {
+  Future<void> _decodePolyline(String encodedPolyline) async {
     final result = PolylinePoints().decodePolyline(encodedPolyline);
     if (result.isNotEmpty) {
       for (final point in result) {
@@ -162,6 +159,8 @@ class MapViewState extends State<MapView> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
+    final target = ref.read(targetProvider.notifier).state!;
+
     return SizedBox(
       height: height,
       width: width,
@@ -182,8 +181,8 @@ class MapViewState extends State<MapView> {
                 Marker(
                   markerId: const MarkerId('marker_1'),
                   position: LatLng(
-                    GlobalVariables.target.latitude!,
-                    GlobalVariables.target.longitude!,
+                    target.latitude!,
+                    target.longitude!,
                   ),
                 ),
               },
