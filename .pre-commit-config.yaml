@@ -1,6 +1,8 @@
 # Pre-commit hooks configuration for Snampo monorepo
 # See https://pre-commit.com for more information
 
+exclude: ^packages/snampo_api/
+
 repos:
   # 共通チェック（全ファイル対象）
   - repo: https://github.com/pre-commit/pre-commit-hooks
