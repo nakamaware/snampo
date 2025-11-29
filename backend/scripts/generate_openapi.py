@@ -5,6 +5,7 @@ FastAPIアプリからOpenAPIスキーマ(JSON)を生成し、backend/openapi.js
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -14,6 +15,11 @@ backend_dir = project_root / "backend"
 
 # バックエンドディレクトリをパスに追加
 sys.path.insert(0, str(backend_dir))
+
+# OpenAPIスキーマ生成時には実際のAPIキーは不要なので、ダミー値を設定
+# これにより、main.pyのインポート時の環境変数チェックをパスできる
+if "GOOGLE_API_KEY" not in os.environ:
+    os.environ["GOOGLE_API_KEY"] = "dummy-key-for-openapi-generation"
 
 # FastAPIアプリをインポート
 from app.main import app  # noqa: E402
