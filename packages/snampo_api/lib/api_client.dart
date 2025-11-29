@@ -184,6 +184,8 @@ class ApiClient {
           return value is DateTime ? value : DateTime.tryParse(value);
         case 'HTTPValidationError':
           return HTTPValidationError.fromJson(value);
+        case 'MidPoint':
+          return MidPoint.fromJson(value);
         case 'Point':
           return Point.fromJson(value);
         case 'RouteResponse':

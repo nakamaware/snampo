@@ -27,5 +27,6 @@ output_path = backend_dir / "openapi.json"
 # JSONファイルに書き込み
 with output_path.open("w", encoding="utf-8") as f:
     json.dump(openapi_schema, f, indent=2, ensure_ascii=False)
+    f.write("\n")  # ファイル末尾に改行を追加
 
 print(f"OpenAPI schema generated successfully: {output_path}")

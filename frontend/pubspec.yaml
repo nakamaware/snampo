@@ -44,6 +44,8 @@ dependency_overrides:
   # Dart 3.5+ で削除された UnmodifiableUint8ListView を使わないように
   # win32 を 5.5.1 以降に強制的に上げる
   win32: ^5.5.1
+  # snampo_apiが古いhttpバージョンに依存しているため一時的にオーバーライド
+  http: ^1.2.0
 
 flutter:
   uses-material-design: true

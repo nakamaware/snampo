@@ -147,6 +147,58 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "MidPoint": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "image_latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Latitude"
+          },
+          "image_longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Longitude"
+          },
+          "image_utf8": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Utf8"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "MidPoint",
+        "description": "中間地点を表すモデル(画像情報を含む)"
+      },
       "Point": {
         "properties": {
           "latitude": {
@@ -172,11 +224,11 @@
             "$ref": "#/components/schemas/Point"
           },
           "destination": {
-            "$ref": "#/components/schemas/Point"
+            "$ref": "#/components/schemas/MidPoint"
           },
           "midpoints": {
             "items": {
-              "$ref": "#/components/schemas/Point"
+              "$ref": "#/components/schemas/MidPoint"
             },
             "type": "array",
             "title": "Midpoints"

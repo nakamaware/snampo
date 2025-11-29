@@ -46,7 +46,7 @@ class MissionController extends _$MissionController {
 
 /// 目的地を取得するプロバイダー
 @riverpod
-LocationPointEntity? target(Ref ref) {
+MidPointEntity? target(Ref ref) {
   final mission = ref.watch(missionControllerProvider).value;
   return mission?.destination;
 }

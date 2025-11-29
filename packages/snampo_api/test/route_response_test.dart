@@ -21,12 +21,12 @@ void main() {
       // TODO
     });
 
-    // Point destination
+    // MidPoint destination
     test('to test the property `destination`', () async {
       // TODO
     });
 
-    // List<Point> midpoints (default value: const [])
+    // List<MidPoint> midpoints (default value: const [])
     test('to test the property `midpoints`', () async {
       // TODO
     });

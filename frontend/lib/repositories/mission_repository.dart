@@ -47,18 +47,21 @@ class MissionRepository {
         latitude: response.departure.latitude.toDouble(),
         longitude: response.departure.longitude.toDouble(),
       ),
-      destination: LocationPointEntity(
+      destination: MidPointEntity(
+        imageLatitude: response.destination.imageLatitude?.toDouble(),
+        imageLongitude: response.destination.imageLongitude?.toDouble(),
         latitude: response.destination.latitude.toDouble(),
         longitude: response.destination.longitude.toDouble(),
+        imageUtf8: response.destination.imageUtf8,
       ),
       midpoints: response.midpoints
           .map(
-            (point) => MidPointEntity(
-              imageLatitude: null, // APIレスポンスには画像情報が含まれていない
-              imageLongitude: null,
-              latitude: point.latitude.toDouble(),
-              longitude: point.longitude.toDouble(),
-              imageUtf8: null,
+            (midpoint) => MidPointEntity(
+              imageLatitude: midpoint.imageLatitude?.toDouble(),
+              imageLongitude: midpoint.imageLongitude?.toDouble(),
+              latitude: midpoint.latitude.toDouble(),
+              longitude: midpoint.longitude.toDouble(),
+              imageUtf8: midpoint.imageUtf8,
             ),
           )
           .toList(),

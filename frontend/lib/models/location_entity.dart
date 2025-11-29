@@ -12,7 +12,7 @@ class LocationEntity {
   final LocationPointEntity? departure;
 
   /// 目的地
-  final LocationPointEntity? destination;
+  final MidPointEntity? destination;
 
   /// 中間地点のリスト
   final List<MidPointEntity> midpoints;

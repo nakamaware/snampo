@@ -90,6 +90,7 @@ class SnapViewState extends ConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
     final midpointInfoList = ref.watch(midpointInfoListProvider);
+    final destination = ref.watch(targetProvider);
 
     // データがまだ読み込まれていない場合はローディング表示
     if (midpointInfoList == null || midpointInfoList.isEmpty) {
@@ -114,14 +115,15 @@ class SnapViewState extends ConsumerWidget {
             const TakeSnap(),
           ],
         ),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('- Spot2: '),
-            SetTestImage(
-              picture: 'images/test1.jpeg',
-            ),
-            TakeSnap(),
+            const Text('- Spot2: '),
+            if (destination != null && destination.imageUtf8 != null)
+              AnswerImage(imageUtf8: destination.imageUtf8!)
+            else
+              const SizedBox(width: 150, height: 150),
+            const TakeSnap(),
           ],
         ),
         const SizedBox(

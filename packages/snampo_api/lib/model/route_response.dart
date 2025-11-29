@@ -21,9 +21,9 @@ class RouteResponse {
 
   Point departure;
 
-  Point destination;
+  MidPoint destination;
 
-  List<Point> midpoints;
+  List<MidPoint> midpoints;
 
   String overviewPolyline;
 
@@ -74,8 +74,8 @@ class RouteResponse {
 
       return RouteResponse(
         departure: Point.fromJson(json[r'departure'])!,
-        destination: Point.fromJson(json[r'destination'])!,
-        midpoints: Point.listFromJson(json[r'midpoints']),
+        destination: MidPoint.fromJson(json[r'destination'])!,
+        midpoints: MidPoint.listFromJson(json[r'midpoints']),
         overviewPolyline: mapValueOfType<String>(json, r'overview_polyline')!,
       );
     }

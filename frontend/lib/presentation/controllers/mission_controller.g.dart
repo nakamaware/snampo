@@ -6,7 +6,7 @@ part of 'mission_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$missionRepositoryHash() => r'80e9d4a76cf3aed6ab9abc876cdf3f1db179bfc1';
+String _$missionRepositoryHash() => r'2beab0425eaaf019920d04f9035648b852cf0373';
 
 /// ミッションリポジトリのプロバイダー
 ///
@@ -26,13 +26,13 @@ final missionRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MissionRepositoryRef = AutoDisposeProviderRef<MissionRepository>;
-String _$targetHash() => r'cbed4ae546dc93c81528be5cace643c1ada5caf1';
+String _$targetHash() => r'2e13867a224b52d3aa01d574ffb95a800e8304fc';
 
 /// 目的地を取得するプロバイダー
 ///
 /// Copied from [target].
 @ProviderFor(target)
-final targetProvider = AutoDisposeProvider<LocationPointEntity?>.internal(
+final targetProvider = AutoDisposeProvider<MidPointEntity?>.internal(
   target,
   name: r'targetProvider',
   debugGetCreateSourceHash:
@@ -43,8 +43,8 @@ final targetProvider = AutoDisposeProvider<LocationPointEntity?>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef TargetRef = AutoDisposeProviderRef<LocationPointEntity?>;
-String _$routeHash() => r'3013a4b7583d23c637ec6381359a43a61cb70a51';
+typedef TargetRef = AutoDisposeProviderRef<MidPointEntity?>;
+String _$routeHash() => r'46e3dc8ae435a236efc8d6d82f64b80bc418704c';
 
 /// ルートのポリライン文字列を取得するプロバイダー
 ///
@@ -62,7 +62,7 @@ final routeProvider = AutoDisposeProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RouteRef = AutoDisposeProviderRef<String?>;
-String _$midpointInfoListHash() => r'51594576cae51efb76d970c1e8c21cf8114ae385';
+String _$midpointInfoListHash() => r'cbfe00b338652a14efe17d8f7c09ab7cc9396689';
 
 /// 中間地点のリストを取得するプロバイダー
 ///

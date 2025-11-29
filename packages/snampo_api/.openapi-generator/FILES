@@ -5,6 +5,7 @@ README.md
 analysis_options.yaml
 doc/DefaultApi.md
 doc/HTTPValidationError.md
+doc/MidPoint.md
 doc/Point.md
 doc/RouteResponse.md
 doc/ValidationError.md
@@ -20,12 +21,14 @@ lib/auth/http_basic_auth.dart
 lib/auth/http_bearer_auth.dart
 lib/auth/oauth.dart
 lib/model/http_validation_error.dart
+lib/model/mid_point.dart
 lib/model/point.dart
 lib/model/route_response.dart
 lib/model/validation_error.dart
 pubspec.yaml
 test/default_api_test.dart
 test/http_validation_error_test.dart
+test/mid_point_test.dart
 test/point_test.dart
 test/route_response_test.dart
 test/validation_error_test.dart

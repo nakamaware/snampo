@@ -83,12 +83,22 @@ class Point(BaseModel):
     longitude: float
 
 
+class MidPoint(BaseModel):
+    """中間地点を表すモデル(画像情報を含む)"""
+
+    latitude: float
+    longitude: float
+    image_latitude: float | None = None
+    image_longitude: float | None = None
+    image_utf8: str | None = None
+
+
 class RouteResponse(BaseModel):
     """ルート情報を表すモデル"""
 
     departure: Point
-    destination: Point
-    midpoints: list[Point]
+    destination: MidPoint
+    midpoints: list[MidPoint]
     overview_polyline: str
 
 
@@ -380,16 +390,63 @@ def route(
         icon=folium.Icon(color="orange"),
     ).add_to(m)
 
-    # マップを保存
-    m.save("route.html")
+    # 中間地点の画像とメタデータの緯度経度取得
+    midpoint_image_data = None
+    midpoint_image_lat = None
+    midpoint_image_lng = None
+    try:
+        photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
+        midpoint_image_data = photo_data.get("image_data")
+        midpoint_image_lat = photo_data.get("metadata_latitude")
+        midpoint_image_lng = photo_data.get("metadata_longitude")
+    except HTTPException:
+        # Street View画像が取得できない場合は画像情報なしで続行
+        logger.warning(
+            f"Failed to fetch Street View image for midpoint at {midpoint_lat}, {midpoint_lng}"
+        )
 
-    # # 中間地点の画像とメタデータの緯度経度取得
-    # photo_data = get_street_view_image(midpoint_lat, midpoint_lng, "600x300")
+    # 最終地点の画像とメタデータの緯度経度取得
+    destination_image_data = None
+    destination_image_lat = None
+    destination_image_lng = None
+    try:
+        destination_photo_data = get_street_view_image(destination_lat, destination_lng, "600x300")
+        destination_image_data = destination_photo_data.get("image_data")
+        destination_image_lat = destination_photo_data.get("metadata_latitude")
+        destination_image_lng = destination_photo_data.get("metadata_longitude")
+    except HTTPException:
+        # Street View画像が取得できない場合は画像情報なしで続行
+        logger.warning(
+            f"Failed to fetch Street View image for destination at "
+            f"{destination_lat}, {destination_lng}"
+        )
 
     # 出力用のデータを準備
     return RouteResponse(
         departure=Point(latitude=float(departure_lat), longitude=float(departure_lng)),
-        destination=Point(latitude=float(destination_lat), longitude=float(destination_lng)),
-        midpoints=[Point(latitude=float(midpoint_lat), longitude=float(midpoint_lng))],
+        destination=MidPoint(
+            latitude=float(destination_lat),
+            longitude=float(destination_lng),
+            image_latitude=(
+                float(destination_image_lat) if destination_image_lat is not None else None
+            ),
+            image_longitude=(
+                float(destination_image_lng) if destination_image_lng is not None else None
+            ),
+            image_utf8=destination_image_data,
+        ),
+        midpoints=[
+            MidPoint(
+                latitude=float(midpoint_lat),
+                longitude=float(midpoint_lng),
+                image_latitude=(
+                    float(midpoint_image_lat) if midpoint_image_lat is not None else None
+                ),
+                image_longitude=(
+                    float(midpoint_image_lng) if midpoint_image_lng is not None else None
+                ),
+                image_utf8=midpoint_image_data,
+            )
+        ],
         overview_polyline=data["routes"][0]["overview_polyline"]["points"],
     )

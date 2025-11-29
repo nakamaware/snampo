@@ -67,6 +67,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [HTTPValidationError](doc//HTTPValidationError.md)
+ - [MidPoint](doc//MidPoint.md)
  - [Point](doc//Point.md)
  - [RouteResponse](doc//RouteResponse.md)
  - [ValidationError](doc//ValidationError.md)
