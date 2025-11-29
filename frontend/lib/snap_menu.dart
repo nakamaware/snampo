@@ -1,4 +1,3 @@
-// mission_pageで表示するsnapのメニュー
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
