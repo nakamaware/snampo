@@ -1,6 +1,7 @@
 import 'package:snampo/domain/entities/location_entity.dart';
 
 /// ミッション情報を取得するリポジトリのインターフェース
+// ignore: one_member_abstracts (抽象クラスとして正しく使っているため警告を無視している)
 abstract class MissionRepository {
   /// ミッション情報を取得する
   ///
