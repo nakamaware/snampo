@@ -158,12 +158,18 @@ Snampoプロジェクトのリポジトリです。
 #### フロントエンドタスク
 
 ```bash
-# 開発サーバーを起動（VS Codeのデバッグ実行でも可能）
-mise run frontend:dev
-
 # 依存関係をインストール（VS Codeではpubspec.yaml保存時に自動実行）
 mise run frontend:setup
 ```
+
+**フロントエンドの実行について：**
+
+フロントエンドアプリの実行は、VS Codeのデバッグ機能を使用してください。`.vscode/launch.json`に設定されたデバッグ構成を使用して起動できます。
+
+- VS Codeのデバッグパネル（Cmd+Shift+D / Ctrl+Shift+D）から「Flutter dev」または「Flutter prod」を選択して実行
+- または、F5キーでデバッグを開始
+
+バックエンドを同時に起動する場合は、`launch.json`の`preLaunchTask`に`backend:dev`を設定することで、デバッグ開始時に自動的にバックエンドが起動します。
 
 #### バックエンドタスク
 
@@ -178,11 +184,22 @@ mise run backend:setup
 #### 統合タスク
 
 ```bash
-# フロントエンドとバックエンドを同時に起動
-mise run dev
-
 # プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）
 mise run setup
+```
+
+**フロントエンドとバックエンドの同時起動：**
+
+VS Codeのデバッグ実行を使用する場合、`.vscode/launch.json`の`preLaunchTask`に`backend:dev`を設定することで、フロントエンドのデバッグ開始時に自動的にバックエンドが起動します。
+
+バックエンドのみを起動する場合：
+
+```bash
+# バックエンド開発サーバーを起動
+mise run backend:dev
+
+# または、VS Codeのタスクから実行（.vscode/tasks.json）
+# コマンドパレット（Cmd+Shift+P / Ctrl+Shift+P）から「Tasks: Run Task」→「backend:dev」を選択
 ```
 
 ### タスク一覧の確認

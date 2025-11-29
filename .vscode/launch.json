@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flutter dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "toolArgs": [
+                "--dart-define=FLAVOR=dev",
+                // ★ 環境変数があれば使う、なければ Env のデフォルトが使われる
+                "--dart-define=API_BASE_URL=${env:FLUTTER_API_BASE_URL_DEV}"
+            ]
+        },
+        {
+            "name": "Flutter prod",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_prod.dart",
+            "toolArgs": [
+                "--dart-define=FLAVOR=prod",
+                "--dart-define=API_BASE_URL=${env:FLUTTER_API_BASE_URL_PROD}"
+            ]
+        }
+    ]
+}

@@ -7,10 +7,6 @@ java = "17"
 description = "フロントエンドの依存関係をインストール（VS Codeではpubspec.yaml保存時に自動実行されます）"
 run = "cd frontend && flutter pub get"
 
-[tasks."frontend:dev"]
-description = "フロントエンドアプリを起動（VS Codeのデバッグ実行でも可能）"
-run = "cd frontend && flutter run"
-
 # Backend Tasks
 [tasks."backend:setup"]
 description = "バックエンドの依存関係をインストール"
@@ -21,12 +17,6 @@ description = "バックエンド開発サーバーを起動"
 run = "cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 
 # Combined Tasks
-[tasks.dev]
-description = "フロントエンドとバックエンドを同時に起動"
-run = [
-    { tasks = ["frontend:dev", "backend:dev"] },
-]
-
 [tasks.setup]
 description = "プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）"
 run = [

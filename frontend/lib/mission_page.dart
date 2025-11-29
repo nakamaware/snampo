@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/config/env.dart';
 import 'package:snampo/location_model.dart';
 import 'package:snampo/provider.dart';
 import 'package:snampo/snap_menu.dart';
@@ -33,7 +34,7 @@ class MissionPage extends HookConsumerWidget {
     final radiusString =
         (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
     final response = await dio.get<Map<String, dynamic>>(
-      'http://52.197.206.202/route/',
+      '${Env.apiBaseUrl}/route/',
       queryParameters: {
         'currentLat': position.latitude.toString(),
         'currentLng': position.longitude.toString(),
