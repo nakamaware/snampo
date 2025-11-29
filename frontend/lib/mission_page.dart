@@ -5,6 +5,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/location_model.dart';
 import 'package:snampo/provider.dart';
 import 'package:snampo/snap_menu.dart';
@@ -91,10 +92,15 @@ class MissionPage extends HookConsumerWidget {
           centerTitle: true,
           backgroundColor: theme.colorScheme.primary,
         ),
-        body: const Center(
+        body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('NOW LOADING'),
+              LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue,
+                size: 100,
+              ),
+              const Text('NOW LOADING'),
             ],
           ),
         ),

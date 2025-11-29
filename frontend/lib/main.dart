@@ -44,19 +44,14 @@ class TopPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayLarge!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
-
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'スナんぽ',
-              style: style,
+            SizedBox(
+              width: 300,
+              child: Image.asset('images/snampo.png', fit: BoxFit.contain),
             ),
             const SizedBox(
               height: 20,

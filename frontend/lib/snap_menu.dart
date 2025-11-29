@@ -25,12 +25,8 @@ class SnapView extends StatelessWidget {
       initialChildSize: 0.15,
       // 最小の表示割合
       minChildSize: 0.15,
-      // 最大の表示割合
-      maxChildSize: 0.6,
-      // ドラッグを離した時に一番近いsnapSizeになるか
-      snap: true,
       // snapで止める時の割合
-      snapSizes: const [0.15, 0.6],
+      snapSizes: const [0.15, 0.6, 1.0],
       builder: (BuildContext context, ScrollController scrollController) {
         return ColoredBox(
           color: theme.colorScheme.surface,
