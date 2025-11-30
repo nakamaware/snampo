@@ -1,15 +1,16 @@
-// mission_pageで表示するsnapのメニュー
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:snampo/result_page.dart';
-import 'package:snampo/provider.dart';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:snampo/presentation/controllers/mission_controller.dart';
+
+/// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
+  /// SnapViewウィジェットのコンストラクタ
   const SnapView({
     super.key,
   });
@@ -23,34 +24,31 @@ class SnapView extends StatelessWidget {
       initialChildSize: 0.15,
       // 最小の表示割合
       minChildSize: 0.15,
-      // 最大の表示割合
-      maxChildSize: 0.6,
-      // ドラッグを離した時に一番近いsnapSizeになるか
-      snap: true,
       // snapで止める時の割合
-      snapSizes: const [0.15, 0.6],
+      snapSizes: const [0.15, 0.6, 1.0],
       builder: (BuildContext context, ScrollController scrollController) {
-        return Container(
-          color: theme.colorScheme.background,
+        return ColoredBox(
+          color: theme.colorScheme.surface,
           child: Stack(
             children: [
-              Container(
-                  height: MediaQuery.of(context).size.height * 0.9,
-                  width: MediaQuery.of(context).size.width,
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 50,
-                        ),
-                        SnapViewState(),
-                      ],
-                    ),
-                  )),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.9,
+                width: MediaQuery.of(context).size.width,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: const Column(
+                    children: [
+                      SizedBox(
+                        height: 50,
+                      ),
+                      SnapViewState(),
+                    ],
+                  ),
+                ),
+              ),
               IgnorePointer(
-                child: Container(
-                  color: theme.colorScheme.background,
+                child: ColoredBox(
+                  color: theme.colorScheme.surface,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -59,8 +57,9 @@ class SnapView extends StatelessWidget {
                         height: 10,
                         width: 100,
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -74,13 +73,15 @@ class SnapView extends StatelessWidget {
   }
 }
 
-class SnapViewState extends StatelessWidget {
+/// SnapView内でミッション情報を表示するウィジェット
+class SnapViewState extends ConsumerWidget {
+  /// SnapViewStateウィジェットのコンストラクタ
   const SnapViewState({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final titelTextstyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.secondary,
@@ -88,34 +89,44 @@ class SnapViewState extends StatelessWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    print("snap_menu_image is");
-    print(GlobalVariables.midpointInfoList[0].imageUtf8);
+    final midpointInfoList = ref.watch(midpointInfoListProvider);
+    final destination = ref.watch(targetProvider);
+
+    // データがまだ読み込まれていない場合はローディング表示
+    if (midpointInfoList == null || midpointInfoList.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Column(
       children: [
         Text(
-          "MISSION",
+          'MISSION',
           style: titelTextstyle,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("- Spot1: "),
-            AnswerImage(
-                imageUtf8: GlobalVariables.midpointInfoList[0].imageUtf8!),
-            TakeSnap(),
+            const Text('- Spot1: '),
+            if (midpointInfoList.isNotEmpty &&
+                midpointInfoList[0].imageUtf8 != null)
+              AnswerImage(imageUtf8: midpointInfoList[0].imageUtf8!)
+            else
+              const SizedBox(width: 150, height: 150),
+            const TakeSnap(),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("- Spot2: "),
-            SetTestImage(
-              picture: "images/test1.jpeg",
-            ),
-            TakeSnap(),
+            const Text('- Spot2: '),
+            if (destination != null && destination.imageUtf8 != null)
+              AnswerImage(imageUtf8: destination.imageUtf8!)
+            else
+              const SizedBox(width: 150, height: 150),
+            const TakeSnap(),
           ],
         ),
-        SizedBox(
+        const SizedBox(
           height: 20,
         ),
         ElevatedButton(
@@ -128,13 +139,10 @@ class SnapViewState extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ResultPage()),
-            );
+            context.push('/result');
           },
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20),
             child: Text('到着', style: buttonTextstyle),
           ),
         ),
@@ -143,23 +151,30 @@ class SnapViewState extends StatelessWidget {
   }
 }
 
+/// Base64エンコードされた画像データを表示するウィジェット
 class AnswerImage extends StatelessWidget {
-  final String imageUtf8;
+  /// AnswerImageウィジェットのコンストラクタ
+  ///
+  /// [imageUtf8] Base64エンコードされた画像データの文字列
   const AnswerImage({
     required this.imageUtf8,
     super.key,
   });
 
+  /// Base64エンコードされた画像データの文字列
+  final String imageUtf8;
+
   @override
   Widget build(BuildContext context) {
-    log("answer image utf8 is");
+    log('answer image utf8 is');
     log(imageUtf8);
-    Uint8List imageUint8 = base64Decode(imageUtf8);
-    print("imageUint8 is");
-    print(imageUint8);
-    return Container(
+    final imageUint8 = base64Decode(imageUtf8);
+    log('imageUint8 is');
+    log(imageUint8.toString());
+    return SizedBox(
+      width: 150,
+      height: 150,
       child: FittedBox(
-        fit: BoxFit.contain,
         // child: Image.asset(picture_name),
         child: Image.memory(
           imageUint8,
@@ -168,13 +183,13 @@ class AnswerImage extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-      width: 150,
-      height: 150,
     );
   }
 }
 
+/// 写真を撮影するためのボタンを表示するウィジェット
 class TakeSnap extends StatefulWidget {
+  /// TakeSnapウィジェットのコンストラクタ
   const TakeSnap({
     super.key,
   });
@@ -187,7 +202,7 @@ class _TakeSnapState extends State<TakeSnap> {
   File? _image;
   final picker = ImagePicker();
 
-  Future getImage() async {
+  Future<void> getImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     setState(() {
@@ -202,57 +217,66 @@ class _TakeSnapState extends State<TakeSnap> {
     return _image == null
         ? FloatingActionButton(
             onPressed: getImage,
-            child: Icon(Icons.add_a_photo),
+            child: const Icon(Icons.add_a_photo),
           )
-        : Container(
+        : SizedBox(
+            width: 150,
+            height: 150,
             child: SetImage(
               // picture_name: "images/test1.jpeg",
               picture: _image!,
             ),
-            width: 150,
-            height: 150,
           );
   }
 }
 
+/// ファイルから読み込んだ画像を表示するウィジェット
 class SetImage extends StatelessWidget {
-  // final String picture_name;
-  final File picture;
+  /// SetImageウィジェットのコンストラクタ
+  ///
+  /// [picture] 表示する画像ファイル
   const SetImage({
     // required this.picture_name,
     required this.picture,
     super.key,
   });
+  // final String picture_name;
+  /// 表示する画像ファイル
+  final File picture;
 
   @override
   Widget build(BuildContext context) {
     return FittedBox(
-      fit: BoxFit.contain,
       // child: Image.asset(picture_name),
       child: Image.file(picture),
     );
   }
 }
 
+/// アセットから読み込んだ画像を表示するウィジェット
 class SetTestImage extends StatelessWidget {
-  final String picture;
   // final File picture;
+  /// SetTestImageウィジェットのコンストラクタ
+  ///
+  /// [picture] 表示する画像のアセットパス
   const SetTestImage({
     // required this.picture_name,
     required this.picture,
     super.key,
   });
 
+  /// 表示する画像のアセットパス
+  final String picture;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
+      width: 150,
+      height: 150,
       child: FittedBox(
-        fit: BoxFit.contain,
         // child: Image.asset(picture_name),
         child: Image.asset(picture),
       ),
-      width: 150,
-      height: 150,
     );
   }
 }

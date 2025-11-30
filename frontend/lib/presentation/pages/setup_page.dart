@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/mission_page.dart';
+import 'package:go_router/go_router.dart';
 
+/// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatelessWidget {
+  /// [SetupPage] ウィジェットを作成します。
   const SetupPage({super.key});
 
   @override
@@ -25,7 +27,9 @@ class SetupPage extends StatelessWidget {
   }
 }
 
+/// 半径を設定するためのスライダーウィジェット。
 class SliderWidget extends StatefulWidget {
+  /// [SliderWidget] ウィジェットを作成します。
   const SliderWidget({super.key});
 
   @override
@@ -52,7 +56,7 @@ class _SliderWidgetState extends State<SliderWidget> {
           Slider(
             value: slidervalue,
             min: 0.5,
-            max: 10.0,
+            max: 10,
             divisions: 19,
             onChanged: (radius) {
               setState(() {
@@ -70,12 +74,18 @@ class _SliderWidgetState extends State<SliderWidget> {
   }
 }
 
+/// ミッションを開始するための送信ボタンウィジェット。
 class SubmitButton extends StatefulWidget {
-  final double radius;
+  /// [SubmitButton] ウィジェットを作成します。
+  ///
+  /// [radius] はミッションの検索半径（km）です。
   const SubmitButton({
     required this.radius,
     super.key,
   });
+
+  /// ミッションの検索半径（km）。
+  final double radius;
 
   @override
   State<SubmitButton> createState() => _SubmitButtonState();
@@ -98,15 +108,10 @@ class _SubmitButtonState extends State<SubmitButton> {
         // ),
       ),
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MissionPage(radius: widget.radius),
-          ),
-        );
+        context.push('/mission/${widget.radius}');
       },
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(15),
         child: Text('GO', style: style),
       ),
     );

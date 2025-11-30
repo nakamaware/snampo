@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-// resultpageに遷移する時にバグるので要修正
+/// ミッション完了後の結果を表示するページ
+///
+/// resultpageに遷移する時にバグるので要修正
 class ResultPage extends StatelessWidget {
+  /// ResultPageのコンストラクタ
   const ResultPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titleTextstyle = theme.textTheme.displayMedium!.copyWith(
+    final titleTextstyle = (theme.textTheme.displayMedium ??
+            theme.textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final textstyleLarge = theme.textTheme.displayLarge!.copyWith(
+    final textstyleLarge = (theme.textTheme.displayLarge ??
+            theme.textTheme.headlineLarge ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.primary,
     );
-    final textstyleMid = theme.textTheme.bodyLarge!.copyWith(
+    final textstyleMid = (theme.textTheme.bodyLarge ??
+            theme.textTheme.bodyMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.primary,
     );
 
@@ -41,10 +54,10 @@ class ResultPage extends StatelessWidget {
               'Congratulations!',
               style: textstyleMid,
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            HomeButton(),
+            const HomeButton(),
           ],
         ),
       ),
@@ -52,7 +65,9 @@ class ResultPage extends StatelessWidget {
   }
 }
 
+/// ホームに戻るボタンウィジェット
 class HomeButton extends StatelessWidget {
+  /// HomeButtonのコンストラクタ
   const HomeButton({
     super.key,
   });
@@ -60,7 +75,10 @@ class HomeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displayMedium!.copyWith(
+    final textstyle = (theme.textTheme.displayMedium ??
+            theme.textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
@@ -70,14 +88,10 @@ class HomeButton extends StatelessWidget {
         foregroundColor: theme.colorScheme.onPrimary,
       ),
       onPressed: () {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MyApp()),
-        // );
-        Navigator.popUntil(context, (route) => route.isFirst);
+        context.go('/');
       },
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Text('ホーム', style: textstyle),
       ),
     );
