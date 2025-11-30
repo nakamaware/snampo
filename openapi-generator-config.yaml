@@ -1,0 +1,31 @@
+# OpenAPI Generator設定ファイル（Dartクライアント生成用）
+
+# パッケージ名
+packageName: snampo_api
+
+# パッケージバージョン
+packageVersion: 1.0.0
+
+# 出力先ディレクトリ（openapi-generatorはこの下にlib/ディレクトリを作成）
+outputDir: packages/snampo_api
+
+# Dart/Flutter固有の設定
+pubName: snampo_api
+pubVersion: 1.0.0
+pubDescription: "Auto-generated API client from OpenAPI schema"
+
+# null-safety対応
+nullSafety: true
+
+# 日付ライブラリ（デフォルトのcoreDateTimeを使用）
+dateLibrary: core
+
+# モデル名のプレフィックス/サフィックス（必要に応じて調整）
+# modelNamePrefix:
+# modelNameSuffix:
+
+# 追加のインポート（必要に応じて）
+# importMappings: {}
+
+# 型マッピング（必要に応じて）
+# typeMappings: {}

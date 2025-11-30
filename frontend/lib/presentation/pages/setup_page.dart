@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/mission_page.dart';
+import 'package:go_router/go_router.dart';
 
+/// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatelessWidget {
+  /// [SetupPage] ウィジェットを作成します。
   const SetupPage({super.key});
 
   @override
@@ -15,7 +17,8 @@ class SetupPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'SETUP',
-          style: textstyle,),
+          style: textstyle,
+        ),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -24,11 +27,13 @@ class SetupPage extends StatelessWidget {
   }
 }
 
+/// 半径を設定するためのスライダーウィジェット。
 class SliderWidget extends StatefulWidget {
+  /// [SliderWidget] ウィジェットを作成します。
   const SliderWidget({super.key});
 
   @override
-  _SliderWidgetState createState() => _SliderWidgetState();
+  State<SliderWidget> createState() => _SliderWidgetState();
 }
 
 class _SliderWidgetState extends State<SliderWidget> {
@@ -46,37 +51,51 @@ class _SliderWidgetState extends State<SliderWidget> {
         children: [
           Text(
             '$slidervalue km',
-            style: textstyle,),
+            style: textstyle,
+          ),
           Slider(
             value: slidervalue,
             min: 0.5,
-            max: 10.0,
+            max: 10,
             divisions: 19,
-            onChanged: (value) {
+            onChanged: (radius) {
               setState(() {
-                slidervalue = value;
+                slidervalue = radius;
               });
-            }
+            },
           ),
-          const SizedBox(height: 20,),
-          SubmitButton(value: slidervalue),
+          const SizedBox(
+            height: 20,
+          ),
+          SubmitButton(radius: slidervalue),
         ],
       ),
     );
   }
 }
 
-class SubmitButton extends StatelessWidget {
-  double value;
-  SubmitButton({
-    required this.value,
+/// ミッションを開始するための送信ボタンウィジェット。
+class SubmitButton extends StatefulWidget {
+  /// [SubmitButton] ウィジェットを作成します。
+  ///
+  /// [radius] はミッションの検索半径（km）です。
+  const SubmitButton({
+    required this.radius,
     super.key,
   });
 
+  /// ミッションの検索半径（km）。
+  final double radius;
+
+  @override
+  State<SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<SubmitButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-     final style = theme.textTheme.displayMedium!.copyWith(
+    final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
@@ -89,16 +108,10 @@ class SubmitButton extends StatelessWidget {
         // ),
       ),
       onPressed: () {
-        Navigator.push(
-          context, 
-          MaterialPageRoute(
-            builder: (context) =>
-            MissionPage(value),
-          ),
-        );
+        context.push('/mission/${widget.radius}');
       },
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(15),
         child: Text('GO', style: style),
       ),
     );

@@ -1,0 +1,16 @@
+extends: default
+
+rules:
+  document-start: disable  # 単一ドキュメントの場合は不要
+  truthy: disable  # GitHub Actionsの標準的な書き方
+  comments-indentation: disable  # コメントのインデントは柔軟に
+  line-length:
+    max: 100
+
+ignore: |
+  .dart_tool/
+  build/
+  .venv/
+  __pycache__/
+  node_modules/
+  .git/

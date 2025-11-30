@@ -1,0 +1,39 @@
+[tools]
+flutter = "3.32.0"
+java = "17"
+
+# Frontend Tasks
+[tasks."frontend:setup"]
+description = "フロントエンドの依存関係をインストール（VS Codeではpubspec.yaml保存時に自動実行されます）"
+run = "cd frontend && flutter pub get"
+
+# Backend Tasks
+[tasks."backend:setup"]
+description = "バックエンドの依存関係をインストール"
+run = "cd backend && uv sync"
+
+[tasks."backend:dev"]
+description = "バックエンド開発サーバーを起動"
+run = "cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+# API生成タスク
+[tasks."generate-api"]
+description = "OpenAPIスキーマからDartクライアントを生成"
+run = [
+    "cd backend && uv run python scripts/generate_openapi.py",
+    "rm -rf packages/snampo_api/lib packages/snampo_api/",
+    "docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli:v7.2.0 generate -i /local/backend/openapi.json -g dart -o /local/packages/snampo_api -c /local/openapi-generator-config.yaml",
+]
+
+[tasks."check-api"]
+description = "生成されたAPIクライアントが最新かチェック（pre-commit/CI/CD用）"
+run = "bash scripts/check-api.sh"
+
+# Combined Tasks
+[tasks.setup]
+description = "プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）"
+run = [
+    { tasks = ["frontend:setup", "backend:setup"] },
+    "uv tool install pre-commit",
+    "pre-commit install",
+]
