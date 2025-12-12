@@ -96,9 +96,6 @@ def generate_route(current_lat: str, current_lng: str, radius: str) -> RouteResp
     # 出発地点の座標を取得
     departure_lat, departure_lng = current_lat, current_lng
 
-    # 目的地の座標を取得
-    destination_lat, destination_lng = destination_lat, destination_lng
-
     # 中間地点の座標を計算
     midpoint_index = len(route_coordinates) // 2
     midpoint_lat, midpoint_lng = route_coordinates[midpoint_index]
