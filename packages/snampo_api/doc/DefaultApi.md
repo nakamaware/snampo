@@ -14,20 +14,20 @@ Method | HTTP request | Description
 
 
 # **getStreetViewImageStreetviewGet**
-> Map<String, Object> getStreetViewImageStreetviewGet(latitude, longitude, size)
+> StreetViewImageResponse getStreetViewImageStreetviewGet(latitude, longitude, size)
 
 Get Street View Image
 
-Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     dict: メタデータ
+Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
 
 ### Example
 ```dart
 import 'package:snampo_api/api.dart';
 
 final api_instance = DefaultApi();
-final latitude = 8.14; // num | 
-final longitude = 8.14; // num | 
-final size = size_example; // String | 
+final latitude = 35.6762; // num | 緯度
+final longitude = 139.6503; // num | 経度
+final size = 600x300; // String | 画像サイズ
 
 try {
     final result = api_instance.getStreetViewImageStreetviewGet(latitude, longitude, size);
@@ -41,13 +41,13 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **latitude** | **num**|  | 
- **longitude** | **num**|  | 
- **size** | **String**|  | [optional] 
+ **latitude** | **num**| 緯度 | 
+ **longitude** | **num**| 経度 | 
+ **size** | **String**| 画像サイズ | [optional] [default to '600x300']
 
 ### Return type
 
-[**Map<String, Object>**](Object.md)
+[**StreetViewImageResponse**](StreetViewImageResponse.md)
 
 ### Authorization
 
@@ -65,16 +65,16 @@ No authorization required
 
 Route
 
-ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径  Returns:     RouteResponse: ルート情報
+ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
 
 ### Example
 ```dart
 import 'package:snampo_api/api.dart';
 
 final api_instance = DefaultApi();
-final currentLat = currentLat_example; // String | 
-final currentLng = currentLng_example; // String | 
-final radius = radius_example; // String | 
+final currentLat = 35.6762; // num | 現在地の緯度
+final currentLng = 139.6503; // num | 現在地の経度
+final radius = 5000; // num | 目的地を生成する半径 (メートル単位)
 
 try {
     final result = api_instance.routeRouteGet(currentLat, currentLng, radius);
@@ -88,9 +88,9 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **currentLat** | **String**|  | 
- **currentLng** | **String**|  | 
- **radius** | **String**|  | 
+ **currentLat** | **num**| 現在地の緯度 | 
+ **currentLng** | **num**| 現在地の経度 | 
+ **radius** | **num**| 目的地を生成する半径 (メートル単位) | 
 
 ### Return type
 

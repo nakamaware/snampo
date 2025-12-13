@@ -41,9 +41,9 @@ import 'package:snampo_api/api.dart';
 
 
 final api_instance = DefaultApi();
-final latitude = 8.14; // num | 
-final longitude = 8.14; // num | 
-final size = size_example; // String | 
+final latitude = 35.6762; // num | 緯度
+final longitude = 139.6503; // num | 経度
+final size = 600x300; // String | 画像サイズ
 
 try {
     final result = api_instance.getStreetViewImageStreetviewGet(latitude, longitude, size);
@@ -70,6 +70,7 @@ Class | Method | HTTP request | Description
  - [MidPoint](doc//MidPoint.md)
  - [Point](doc//Point.md)
  - [RouteResponse](doc//RouteResponse.md)
+ - [StreetViewImageResponse](doc//StreetViewImageResponse.md)
  - [ValidationError](doc//ValidationError.md)
 
 

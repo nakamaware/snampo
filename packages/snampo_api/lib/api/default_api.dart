@@ -18,17 +18,20 @@ class DefaultApi {
 
   /// Get Street View Image
   ///
-  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     dict: メタデータ
+  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
   /// * [num] latitude (required):
+  ///   緯度
   ///
   /// * [num] longitude (required):
+  ///   経度
   ///
   /// * [String] size:
+  ///   画像サイズ
   Future<Response> getStreetViewImageStreetviewGetWithHttpInfo(num latitude, num longitude, { String? size, }) async {
     // ignore: prefer_const_declarations
     final path = r'/streetview';
@@ -62,16 +65,19 @@ class DefaultApi {
 
   /// Get Street View Image
   ///
-  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     dict: メタデータ
+  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
   ///
   /// Parameters:
   ///
   /// * [num] latitude (required):
+  ///   緯度
   ///
   /// * [num] longitude (required):
+  ///   経度
   ///
   /// * [String] size:
-  Future<Map<String, Object>?> getStreetViewImageStreetviewGet(num latitude, num longitude, { String? size, }) async {
+  ///   画像サイズ
+  Future<StreetViewImageResponse?> getStreetViewImageStreetviewGet(num latitude, num longitude, { String? size, }) async {
     final response = await getStreetViewImageStreetviewGetWithHttpInfo(latitude, longitude,  size: size, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -80,26 +86,29 @@ class DefaultApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return Map<String, Object>.from(await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'Map<String, Object>'),);
-
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'StreetViewImageResponse',) as StreetViewImageResponse;
+    
     }
     return null;
   }
 
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径  Returns:     RouteResponse: ルート情報
+  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [String] currentLat (required):
+  /// * [num] currentLat (required):
+  ///   現在地の緯度
   ///
-  /// * [String] currentLng (required):
+  /// * [num] currentLng (required):
+  ///   現在地の経度
   ///
-  /// * [String] radius (required):
-  Future<Response> routeRouteGetWithHttpInfo(String currentLat, String currentLng, String radius,) async {
+  /// * [num] radius (required):
+  ///   目的地を生成する半径 (メートル単位)
+  Future<Response> routeRouteGetWithHttpInfo(num currentLat, num currentLng, num radius,) async {
     // ignore: prefer_const_declarations
     final path = r'/route';
 
@@ -130,16 +139,19 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径  Returns:     RouteResponse: ルート情報
+  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
   ///
   /// Parameters:
   ///
-  /// * [String] currentLat (required):
+  /// * [num] currentLat (required):
+  ///   現在地の緯度
   ///
-  /// * [String] currentLng (required):
+  /// * [num] currentLng (required):
+  ///   現在地の経度
   ///
-  /// * [String] radius (required):
-  Future<RouteResponse?> routeRouteGet(String currentLat, String currentLng, String radius,) async {
+  /// * [num] radius (required):
+  ///   目的地を生成する半径 (メートル単位)
+  Future<RouteResponse?> routeRouteGet(num currentLat, num currentLng, num radius,) async {
     final response = await routeRouteGetWithHttpInfo(currentLat, currentLng, radius,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
