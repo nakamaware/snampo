@@ -23,6 +23,16 @@ class MidPoint(BaseModel):
     image_utf8: str | None = None
 
 
+class StreetViewImageResponse(BaseModel):
+    """Street View画像のメタデータと画像データを表すモデル"""
+
+    metadata_latitude: float
+    metadata_longitude: float
+    original_latitude: float
+    original_longitude: float
+    image_data: str
+
+
 class RouteResponse(BaseModel):
     """ルート情報を表すモデル"""
 

@@ -9,7 +9,7 @@ import logging
 import folium
 from fastapi import HTTPException
 
-from app.models import MidPoint, Point, RouteResponse
+from app.models import MidPoint, Point, RouteResponse, StreetViewImageResponse
 from app.services.google_maps_service import (
     fetch_directions,
     fetch_street_view_image,
@@ -20,7 +20,9 @@ from app.utils.geometry import decode_polyline, generate_random_point
 logger = logging.getLogger(__name__)
 
 
-def get_street_view_image_data(latitude: float, longitude: float, size: str) -> dict:
+def get_street_view_image_data(
+    latitude: float, longitude: float, size: str
+) -> StreetViewImageResponse:
     """Street View Image Metadata APIを使用して画像のメタデータを取得
 
     Args:
@@ -29,7 +31,7 @@ def get_street_view_image_data(latitude: float, longitude: float, size: str) -> 
         size: 画像サイズ
 
     Returns:
-        dict: メタデータと画像データを含む辞書
+        StreetViewImageResponse: メタデータと画像データ
     """
     # メタデータの取得(キャッシュ付き)
     metadata = fetch_street_view_metadata(latitude, longitude)
@@ -54,23 +56,23 @@ def get_street_view_image_data(latitude: float, longitude: float, size: str) -> 
     # 画像データをBase64エンコードして文字列に変換
     image_data = base64.b64encode(image_content).decode("utf-8")
 
-    # 緯度経度データと画像データをJSON形式で返す
-    return {
-        "metadata_latitude": metadata_latitude,
-        "metadata_longitude": metadata_longitude,
-        "original_latitude": latitude,
-        "original_longitude": longitude,
-        "image_data": image_data,
-    }
+    # StreetViewImageResponseインスタンスを返す
+    return StreetViewImageResponse(
+        metadata_latitude=metadata_latitude,
+        metadata_longitude=metadata_longitude,
+        original_latitude=latitude,
+        original_longitude=longitude,
+        image_data=image_data,
+    )
 
 
-def generate_route(current_lat: str, current_lng: str, radius: str) -> RouteResponse:
+def generate_route(current_lat: float, current_lng: float, radius_m: float) -> RouteResponse:
     """ルートを生成
 
     Args:
         current_lat: 現在の緯度
         current_lng: 現在の経度
-        radius: 半径
+        radius_m: 半径 (メートル単位)
 
     Returns:
         RouteResponse: ルート情報
@@ -78,7 +80,7 @@ def generate_route(current_lat: str, current_lng: str, radius: str) -> RouteResp
     origin = f"{current_lat},{current_lng}"
 
     # ランダムな目的地を生成
-    destination_lat, destination_lng = generate_random_point(current_lat, current_lng, radius)
+    destination_lat, destination_lng = generate_random_point(current_lat, current_lng, radius_m)
     destination = f"{destination_lat},{destination_lng}"
 
     # Directions APIからルート情報を取得(キャッシュ付き)
@@ -133,9 +135,9 @@ def generate_route(current_lat: str, current_lng: str, radius: str) -> RouteResp
     midpoint_image_lng = None
     try:
         photo_data = get_street_view_image_data(midpoint_lat, midpoint_lng, "600x300")
-        midpoint_image_data = photo_data.get("image_data")
-        midpoint_image_lat = photo_data.get("metadata_latitude")
-        midpoint_image_lng = photo_data.get("metadata_longitude")
+        midpoint_image_data = photo_data.image_data
+        midpoint_image_lat = photo_data.metadata_latitude
+        midpoint_image_lng = photo_data.metadata_longitude
     except HTTPException:
         # Street View画像が取得できない場合は画像情報なしで続行
         logger.warning(
@@ -150,9 +152,9 @@ def generate_route(current_lat: str, current_lng: str, radius: str) -> RouteResp
         destination_photo_data = get_street_view_image_data(
             destination_lat, destination_lng, "600x300"
         )
-        destination_image_data = destination_photo_data.get("image_data")
-        destination_image_lat = destination_photo_data.get("metadata_latitude")
-        destination_image_lng = destination_photo_data.get("metadata_longitude")
+        destination_image_data = destination_photo_data.image_data
+        destination_image_lat = destination_photo_data.metadata_latitude
+        destination_image_lng = destination_photo_data.metadata_longitude
     except HTTPException:
         # Street View画像が取得できない場合は画像情報なしで続行
         logger.warning(

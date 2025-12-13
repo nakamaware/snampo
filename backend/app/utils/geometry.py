@@ -5,24 +5,20 @@ import secrets
 
 
 def generate_random_point(
-    center_lat_str: str, center_lng_str: str, radius_str: str
+    center_lat: float, center_lng: float, radius_m: float
 ) -> tuple[float, float]:
     """指定された中心点から半径内のランダムな地点を生成
 
     Args:
-        center_lat_str: 中心点の緯度
-        center_lng_str: 中心点の経度
-        radius_str: 半径
+        center_lat: 中心点の緯度
+        center_lng: 中心点の経度
+        radius_m: 半径 (メートル単位)
 
     Returns:
         new_lat: 新しい緯度
         new_lng: 新しい経度
     """
-    center_lat = float(center_lat_str)
-    center_lng = float(center_lng_str)
-    radius = float(radius_str)
-
-    radius_in_degrees = radius / 111300
+    radius_in_degrees = radius_m / 111300
 
     # Use secrets module for cryptographically secure random number generation
     # Equivalent to random.uniform(0, 2 * math.pi) which is: 0 + (2*pi - 0) * random.random()
