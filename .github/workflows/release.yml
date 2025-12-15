@@ -113,13 +113,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download APK artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: flutter-apk-release
           path: ./artifacts
 
       - name: Download AppBundle artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: flutter-appbundle-release
           path: ./artifacts
