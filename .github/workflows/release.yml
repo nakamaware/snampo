@@ -89,14 +89,14 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: flutter-apk-release
           path: frontend/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 90
 
       - name: Upload AppBundle artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: flutter-appbundle-release
           path: frontend/build/app/outputs/bundle/release/app-release.aab

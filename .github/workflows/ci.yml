@@ -100,7 +100,7 @@ jobs:
       #     output: ../frontend/lib/api_client
       #
       # - name: Upload generated Dart client artifact
-      #   uses: actions/upload-artifact@v5
+      #   uses: actions/upload-artifact@v6
       #   with:
       #     name: dart-api-client
       #     path: frontend/lib/api_client
@@ -198,7 +198,7 @@ jobs:
         run: flutter build apk --debug --target-platform android-arm64
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: flutter-apk-debug
           path: frontend/build/app/outputs/flutter-apk/app-debug.apk
