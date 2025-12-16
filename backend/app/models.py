@@ -5,31 +5,33 @@ APIレスポンス用のデータモデルを定義します。
 
 from pydantic import BaseModel
 
+from app.value_objects import Latitude, Longitude
+
 
 class Point(BaseModel):
     """座標点を表すモデル"""
 
-    latitude: float
-    longitude: float
+    latitude: Latitude
+    longitude: Longitude
 
 
 class MidPoint(BaseModel):
     """中間地点を表すモデル(画像情報を含む)"""
 
-    latitude: float
-    longitude: float
-    image_latitude: float | None = None
-    image_longitude: float | None = None
+    latitude: Latitude
+    longitude: Longitude
+    image_latitude: Latitude | None = None
+    image_longitude: Longitude | None = None
     image_utf8: str | None = None
 
 
 class StreetViewImageResponse(BaseModel):
     """Street View画像のメタデータと画像データを表すモデル"""
 
-    metadata_latitude: float
-    metadata_longitude: float
-    original_latitude: float
-    original_longitude: float
+    metadata_latitude: Latitude
+    metadata_longitude: Longitude
+    original_latitude: Latitude
+    original_longitude: Longitude
     image_data: str
 
 
