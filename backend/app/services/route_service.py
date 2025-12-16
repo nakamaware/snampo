@@ -99,7 +99,7 @@ def generate_route(current_lat: float, current_lng: float, radius_m: float) -> R
     data = fetch_directions(origin, destination)
 
     # ルートの座標を取得
-    route_coordinates = []
+    route_coordinates: list[tuple[Latitude, Longitude]] = []
     for step in data["routes"][0]["legs"][0]["steps"]:
         # ステップごとの詳細なルート情報を取得
         route_coordinates.extend(decode_polyline(step["polyline"]["points"]))
@@ -151,7 +151,9 @@ def generate_route(current_lat: float, current_lng: float, radius_m: float) -> R
     midpoint_image_lat = None
     midpoint_image_lng = None
     try:
-        photo_data = get_street_view_image_data(midpoint_lat, midpoint_lng, "600x300")
+        photo_data = get_street_view_image_data(
+            midpoint_lat.to_float(), midpoint_lng.to_float(), "600x300"
+        )
         midpoint_image_data = photo_data.image_data
         midpoint_image_lat = photo_data.metadata_latitude
         midpoint_image_lng = photo_data.metadata_longitude
