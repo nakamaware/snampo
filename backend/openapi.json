@@ -166,37 +166,39 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "Latitude": {
+        "type": "number"
+      },
+      "Longitude": {
+        "type": "number"
+      },
       "MidPoint": {
         "properties": {
           "latitude": {
-            "type": "number",
-            "title": "Latitude"
+            "$ref": "#/components/schemas/Latitude"
           },
           "longitude": {
-            "type": "number",
-            "title": "Longitude"
+            "$ref": "#/components/schemas/Longitude"
           },
           "image_latitude": {
             "anyOf": [
               {
-                "type": "number"
+                "$ref": "#/components/schemas/Latitude"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Image Latitude"
+            ]
           },
           "image_longitude": {
             "anyOf": [
               {
-                "type": "number"
+                "$ref": "#/components/schemas/Longitude"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Image Longitude"
+            ]
           },
           "image_utf8": {
             "anyOf": [
@@ -221,12 +223,10 @@
       "Point": {
         "properties": {
           "latitude": {
-            "type": "number",
-            "title": "Latitude"
+            "$ref": "#/components/schemas/Latitude"
           },
           "longitude": {
-            "type": "number",
-            "title": "Longitude"
+            "$ref": "#/components/schemas/Longitude"
           }
         },
         "type": "object",
@@ -270,20 +270,16 @@
       "StreetViewImageResponse": {
         "properties": {
           "metadata_latitude": {
-            "type": "number",
-            "title": "Metadata Latitude"
+            "$ref": "#/components/schemas/Latitude"
           },
           "metadata_longitude": {
-            "type": "number",
-            "title": "Metadata Longitude"
+            "$ref": "#/components/schemas/Longitude"
           },
           "original_latitude": {
-            "type": "number",
-            "title": "Original Latitude"
+            "$ref": "#/components/schemas/Latitude"
           },
           "original_longitude": {
-            "type": "number",
-            "title": "Original Longitude"
+            "$ref": "#/components/schemas/Longitude"
           },
           "image_data": {
             "type": "string",
