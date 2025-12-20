@@ -175,12 +175,17 @@ def fetch_directions(origin: Coordinate, destination: Coordinate) -> tuple[list[
             logger.error(f"Directions API returned non-OK status: {data['status']}")
             raise HTTPException(status_code=400, detail=f"Directions API error: {data['status']}")
 
+        routes = data.get("routes", [])
+        if not routes or not routes[0].get("legs"):
+            logger.error("Directions API returned empty routes")
+            raise HTTPException(status_code=400, detail="No route found")
+
         # インフラストラクチャ層で変換処理を行う
         route_coordinates: list[Coordinate] = []
-        for step in data["routes"][0]["legs"][0]["steps"]:
+        for step in routes[0]["legs"][0]["steps"]:
             route_coordinates.extend(decode_polyline(step["polyline"]["points"]))
 
-        overview_polyline = data["routes"][0]["overview_polyline"]["points"]
+        overview_polyline = routes[0]["overview_polyline"]["points"]
 
         return route_coordinates, overview_polyline
     except Timeout as e:
