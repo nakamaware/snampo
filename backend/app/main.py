@@ -1,125 +1,20 @@
+"""FastAPIアプリケーションエントリーポイント"""
+
 import logging
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 
-from app.models import RouteResponse, StreetViewImageResponse
-from app.services.route_service import generate_route, get_street_view_image_data
+from app.api.openapi import custom_openapi
+from app.api.routes import route, streetview
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# OpenAPIスキーマをカスタマイズ
+app.openapi = lambda: custom_openapi(app)
 
-# TODO: 消したい
-# OpenAPIスキーマをカスタマイズして、カスタムValidationErrorモデルを使用
-def custom_openapi() -> dict:
-    """OpenAPIスキーマをカスタマイズして返す
-
-    Returns:
-        dict: カスタマイズされたOpenAPIスキーマ
-    """
-    if app.openapi_schema:
-        return app.openapi_schema
-    from fastapi.openapi.utils import get_openapi
-
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-    # カスタムValidationErrorモデルのスキーマを設定(locをlist[str]として定義)
-    openapi_schema["components"]["schemas"]["ValidationError"] = {
-        "properties": {
-            "loc": {
-                "items": {"type": "string"},
-                "type": "array",
-                "title": "Location",
-            },
-            "msg": {"type": "string", "title": "Message"},
-            "type": {"type": "string", "title": "Error Type"},
-        },
-        "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError",
-    }
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi
-
-
-@app.get("/streetview")
-def get_street_view_image(
-    latitude: float = Query(
-        ...,
-        description="緯度",
-        ge=-90,
-        le=90,
-        example=35.6762,
-    ),
-    longitude: float = Query(
-        ...,
-        description="経度",
-        ge=-180,
-        le=180,
-        example=139.6503,
-    ),
-    size: str = Query(
-        default="600x300",
-        description="画像サイズ",
-        example="600x300",
-    ),
-) -> StreetViewImageResponse:
-    """Street View Image Metadata APIを使用して画像のメタデータを取得
-
-    Args:
-        latitude: 緯度
-        longitude: 経度
-        size: 画像サイズ
-
-    Returns:
-        StreetViewImageResponse: メタデータと画像データ
-    """
-    return get_street_view_image_data(latitude, longitude, size)
-
-
-@app.get("/route")
-def route(
-    current_lat: float = Query(
-        ...,
-        alias="currentLat",
-        description="現在地の緯度",
-        ge=-90,
-        le=90,
-        example=35.6762,
-    ),
-    current_lng: float = Query(
-        ...,
-        alias="currentLng",
-        description="現在地の経度",
-        ge=-180,
-        le=180,
-        example=139.6503,
-    ),
-    radius: float = Query(
-        ...,
-        description="目的地を生成する半径 (メートル単位)",
-        gt=0,
-        le=40075000,  # 地球の赤道一周の長さ (メートル)
-        example=5000,
-    ),
-) -> RouteResponse:
-    """ルートを生成
-
-    Args:
-        current_lat: 現在の緯度
-        current_lng: 現在の経度
-        radius: 半径 (メートル単位)
-
-    Returns:
-        RouteResponse: ルート情報
-    """
-    return generate_route(current_lat, current_lng, radius)
+# ルーターを登録
+app.include_router(route.router)
+app.include_router(streetview.router)
