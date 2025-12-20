@@ -28,9 +28,9 @@ class MissionRepository {
 
     // 生成されたAPIクライアントを直接使用
     final response = await _generatedApi.routeRouteGet(
-      currentLat.toString(),
-      currentLng.toString(),
-      radiusString,
+      currentLat,
+      currentLng,
+      double.parse(radiusString),
     );
 
     if (response == null) {

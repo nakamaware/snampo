@@ -34,6 +34,7 @@ part 'model/http_validation_error.dart';
 part 'model/mid_point.dart';
 part 'model/point.dart';
 part 'model/route_response.dart';
+part 'model/street_view_image_response.dart';
 part 'model/validation_error.dart';
 
 

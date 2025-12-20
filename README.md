@@ -2,6 +2,9 @@
 
 Snampoプロジェクトのリポジトリです。
 
+> [!NOTE]
+> プロジェクトの詳細情報は <https://deepwiki.com/nakamaware/snampo> を参照してください。
+
 ## プロジェクト構成
 
 - `frontend/`: Flutterアプリケーション
