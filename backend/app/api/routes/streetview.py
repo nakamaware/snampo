@@ -1,10 +1,11 @@
 """Street View APIエンドポイント"""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app import container
 from app.api.schemas import StreetViewImageResponse
 from app.application.usecases.get_street_view_image_usecase import GetStreetViewImageUseCase
+from app.domain.value_objects import ImageHeight, ImageSize, ImageWidth
 
 router = APIRouter()
 
@@ -32,6 +33,7 @@ def get_street_view_image(
         default="600x300",
         description="画像サイズ",
         example="600x300",
+        pattern=r"^\d+x\d+$",
     ),
 ) -> StreetViewImageResponse:
     """Street View Image Metadata APIを使用して画像のメタデータを取得
@@ -44,6 +46,26 @@ def get_street_view_image(
     Returns:
         StreetViewImageResponse: メタデータと画像データ
     """
+    # sizeパラメータをパースしてValue Objectを作成
+    try:
+        width_str, height_str = size.split("x")
+        width = int(width_str)
+        height = int(height_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="sizeパラメータは'WIDTHxHEIGHT'形式である必要があります(例: 600x300)",
+        ) from None
+
+    # Value Objectを作成(バリデーションはValue Object内で行われる)
+    try:
+        image_size = ImageSize(
+            width=ImageWidth(value=width),
+            height=ImageHeight(value=height),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
     usecase = _container.get(GetStreetViewImageUseCase)
-    dto = usecase.execute(latitude, longitude, size)
+    dto = usecase.execute(latitude, longitude, image_size)
     return StreetViewImageResponse.from_dto(dto)

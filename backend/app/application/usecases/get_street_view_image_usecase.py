@@ -7,7 +7,7 @@ from injector import inject
 
 from app.application.dto.street_view_dto import StreetViewImageResultDto
 from app.application.services.street_view_service import StreetViewService
-from app.domain.value_objects import Latitude, Longitude
+from app.domain.value_objects import ImageSize, Latitude, Longitude
 
 
 class GetStreetViewImageUseCase:
@@ -22,13 +22,15 @@ class GetStreetViewImageUseCase:
         """
         self.street_view_service = street_view_service
 
-    def execute(self, latitude: float, longitude: float, size: str) -> StreetViewImageResultDto:
+    def execute(
+        self, latitude: float, longitude: float, image_size: ImageSize
+    ) -> StreetViewImageResultDto:
         """Street View画像を取得する
 
         Args:
             latitude: 緯度
             longitude: 経度
-            size: 画像サイズ
+            image_size: 画像サイズ
 
         Returns:
             StreetViewImageResultDto: メタデータと画像データ
@@ -38,4 +40,4 @@ class GetStreetViewImageUseCase:
         lng_vo = Longitude(value=longitude)
 
         # サービス層の共通処理を呼び出し
-        return self.street_view_service.get_street_view_image_data(lat_vo, lng_vo, size)
+        return self.street_view_service.get_street_view_image_data(lat_vo, lng_vo, image_size)

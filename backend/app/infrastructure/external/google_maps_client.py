@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from requests.exceptions import RequestException, Timeout
 
 from app.config import GOOGLE_API_KEY, REQUEST_TIMEOUT_SECONDS
-from app.domain.value_objects import Coordinate, Latitude, Longitude
+from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -111,13 +111,15 @@ def fetch_street_view_metadata(latitude: Latitude, longitude: Longitude) -> dict
 
 
 @functools.lru_cache(maxsize=128)
-def fetch_street_view_image(latitude: Latitude, longitude: Longitude, size: str) -> bytes:
+def fetch_street_view_image(
+    latitude: Latitude, longitude: Longitude, image_size: ImageSize
+) -> bytes:
     """Street View Static APIから画像を取得 (キャッシュ付き)
 
     Args:
         latitude: 緯度
         longitude: 経度
-        size: 画像サイズ
+        image_size: 画像サイズ
 
     Returns:
         bytes: 画像データ
@@ -125,7 +127,11 @@ def fetch_street_view_image(latitude: Latitude, longitude: Longitude, size: str)
     lat_float = latitude.to_float()
     lng_float = longitude.to_float()
     url = "https://maps.googleapis.com/maps/api/streetview"
-    params = {"size": size, "location": f"{lat_float},{lng_float}", "key": GOOGLE_API_KEY}
+    params = {
+        "size": image_size.to_string(),
+        "location": f"{lat_float},{lng_float}",
+        "key": GOOGLE_API_KEY,
+    }
 
     try:
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)

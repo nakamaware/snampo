@@ -11,7 +11,7 @@ from injector import inject
 
 from app.application.dto.street_view_dto import StreetViewImageResultDto
 from app.application.ports.google_maps_gateway import GoogleMapsGateway
-from app.domain.value_objects import Coordinate, Latitude, Longitude
+from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +29,14 @@ class StreetViewService:
         self.google_maps_gateway = google_maps_gateway
 
     def get_street_view_image_data(
-        self, latitude: Latitude, longitude: Longitude, size: str
+        self, latitude: Latitude, longitude: Longitude, image_size: ImageSize
     ) -> StreetViewImageResultDto:
         """Street View Image Metadata APIを使用して画像のメタデータを取得
 
         Args:
             latitude: 緯度(値オブジェクト)
             longitude: 経度(値オブジェクト)
-            size: 画像サイズ
+            image_size: 画像サイズ
 
         Returns:
             StreetViewImageResult: メタデータと画像データ
@@ -65,7 +65,9 @@ class StreetViewService:
             )
 
         # Street View Static APIから画像を取得(キャッシュ付き)
-        image_content = self.google_maps_gateway.get_street_view_image(latitude, longitude, size)
+        image_content = self.google_maps_gateway.get_street_view_image(
+            latitude, longitude, image_size
+        )
 
         # 画像データをBase64エンコードして文字列に変換
         image_data = base64.b64encode(image_content).decode("utf-8")

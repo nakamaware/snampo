@@ -5,7 +5,7 @@ Google Maps APIへのアクセスを抽象化するポートです。
 
 from typing import Protocol
 
-from app.domain.value_objects import Coordinate, Latitude, Longitude
+from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
 
 
 class GoogleMapsGateway(Protocol):
@@ -38,13 +38,15 @@ class GoogleMapsGateway(Protocol):
         """
         ...
 
-    def get_street_view_image(self, latitude: Latitude, longitude: Longitude, size: str) -> bytes:
+    def get_street_view_image(
+        self, latitude: Latitude, longitude: Longitude, image_size: ImageSize
+    ) -> bytes:
         """Street View画像を取得
 
         Args:
             latitude: 緯度
             longitude: 経度
-            size: 画像サイズ
+            image_size: 画像サイズ
 
         Returns:
             bytes: 画像データ

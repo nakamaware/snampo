@@ -3,16 +3,15 @@
 緯度・経度のペアを表す値オブジェクトです。
 """
 
-from pydantic import BaseModel, ConfigDict
+from dataclasses import dataclass
 
 from app.domain.value_objects.latitude import Latitude
 from app.domain.value_objects.longitude import Longitude
 
 
-class Coordinate(BaseModel):
+@dataclass(frozen=True)
+class Coordinate:
     """座標を表す値オブジェクト (緯度・経度のペア)"""
-
-    model_config = ConfigDict(frozen=True)  # 不変性を保証
 
     latitude: Latitude
     longitude: Longitude
@@ -26,7 +25,9 @@ class Coordinate(BaseModel):
         """
         lat = latitude if isinstance(latitude, Latitude) else Latitude(value=latitude)
         lng = longitude if isinstance(longitude, Longitude) else Longitude(value=longitude)
-        super().__init__(latitude=lat, longitude=lng)
+        # frozen dataclassのフィールドを設定するためにobject.__setattr__を使用
+        object.__setattr__(self, "latitude", lat)
+        object.__setattr__(self, "longitude", lng)
 
     def to_tuple(self) -> tuple[float, float]:
         """floatのタプルに変換

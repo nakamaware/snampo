@@ -1,32 +1,22 @@
 """緯度値オブジェクト定義"""
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_serializer
+from dataclasses import dataclass
 
 
-class Latitude(BaseModel):
+@dataclass(frozen=True)
+class Latitude:
     """緯度を表す値オブジェクト"""
-
-    model_config = ConfigDict(frozen=True)  # 不変性を保証
 
     value: float
 
-    @field_validator("value")
-    @classmethod
-    def validate_range(cls, v: float) -> float:
+    def __post_init__(self) -> None:
         """緯度の範囲を検証
-
-        Args:
-            v: 検証する緯度の値
-
-        Returns:
-            float: 検証済みの緯度の値
 
         Raises:
             ValueError: 緯度が-90から90の範囲外の場合
         """
-        if not (-90.0 <= v <= 90.0):
-            raise ValueError(f"Latitude must be between -90 and 90, got {v}")
-        return v
+        if not (-90.0 <= self.value <= 90.0):
+            raise ValueError(f"Latitude must be between -90 and 90, got {self.value}")
 
     def to_float(self) -> float:
         """float型に変換
@@ -43,12 +33,3 @@ class Latitude(BaseModel):
             int: ハッシュ値
         """
         return hash(self.value)
-
-    @model_serializer
-    def serialize_model(self) -> float:
-        """JSONシリアライズ時にfloatとして出力
-
-        Returns:
-            float: 緯度の値
-        """
-        return self.value

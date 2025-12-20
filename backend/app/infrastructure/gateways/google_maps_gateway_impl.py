@@ -6,7 +6,7 @@ Google Maps APIへのアクセスを実装します。
 import functools
 
 from app.application.ports.google_maps_gateway import GoogleMapsGateway
-from app.domain.value_objects import Coordinate, Latitude, Longitude
+from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
 from app.infrastructure.external import google_maps_client
 
 
@@ -24,8 +24,8 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             )
         )
         self._get_street_view_image_cached = functools.lru_cache(maxsize=128)(
-            lambda latitude, longitude, size: google_maps_client.fetch_street_view_image(
-                latitude, longitude, size
+            lambda latitude, longitude, image_size: google_maps_client.fetch_street_view_image(
+                latitude, longitude, image_size
             )
         )
 
@@ -56,18 +56,20 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         """
         return self._get_street_view_metadata_cached(latitude, longitude)
 
-    def get_street_view_image(self, latitude: Latitude, longitude: Longitude, size: str) -> bytes:
+    def get_street_view_image(
+        self, latitude: Latitude, longitude: Longitude, image_size: ImageSize
+    ) -> bytes:
         """Street View画像を取得
 
         Args:
             latitude: 緯度
             longitude: 経度
-            size: 画像サイズ
+            image_size: 画像サイズ
 
         Returns:
             bytes: 画像データ
         """
-        return self._get_street_view_image_cached(latitude, longitude, size)
+        return self._get_street_view_image_cached(latitude, longitude, image_size)
 
     def coordinate_to_lat_lng_string(self, coordinate: Coordinate) -> str:
         """座標をGoogle Maps API用の文字列形式に変換
