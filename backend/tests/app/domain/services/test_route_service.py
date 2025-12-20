@@ -52,8 +52,8 @@ class TestCalculateMidpoint:
         assert midpoint.latitude.to_float() == 35.6812
         assert midpoint.longitude.to_float() == 139.7671
 
-    def test_2つの座標の場合は最初の座標を返すこと(self) -> None:
-        """2つの座標の場合は最初の座標を返すことを確認"""
+    def test_2つの座標の場合は2番目の座標を返すこと(self) -> None:
+        """2つの座標の場合は2番目の座標 (インデックス1) を返すことを確認"""
         route_coordinates = [
             Coordinate(latitude=35.6812, longitude=139.7671),  # 東京駅
             Coordinate(latitude=35.6896, longitude=139.6917),  # 新宿駅
@@ -61,7 +61,7 @@ class TestCalculateMidpoint:
 
         midpoint = calculate_midpoint(route_coordinates)
 
-        # len // 2 = 2 // 2 = 1 なので、インデックス1の座標が返される
+        # len // 2 = 2 // 2 = 1 なので、インデックス1 (2番目の座標) が返される
         assert midpoint == route_coordinates[1]
         assert midpoint.latitude.to_float() == 35.6896
         assert midpoint.longitude.to_float() == 139.6917
