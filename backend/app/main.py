@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI, Query
 
-from app.models import RouteResponse
+from app.models import RouteResponse, StreetViewImageResponse
 from app.services.route_service import generate_route, get_street_view_image_data
 
 # Configure logging
@@ -52,7 +52,27 @@ app.openapi = custom_openapi
 
 
 @app.get("/streetview")
-def get_street_view_image(latitude: float, longitude: float, size: str | None = "600x300") -> dict:
+def get_street_view_image(
+    latitude: float = Query(
+        ...,
+        description="緯度",
+        ge=-90,
+        le=90,
+        example=35.6762,
+    ),
+    longitude: float = Query(
+        ...,
+        description="経度",
+        ge=-180,
+        le=180,
+        example=139.6503,
+    ),
+    size: str = Query(
+        default="600x300",
+        description="画像サイズ",
+        example="600x300",
+    ),
+) -> StreetViewImageResponse:
     """Street View Image Metadata APIを使用して画像のメタデータを取得
 
     Args:
@@ -61,23 +81,43 @@ def get_street_view_image(latitude: float, longitude: float, size: str | None = 
         size: 画像サイズ
 
     Returns:
-        dict: メタデータ
+        StreetViewImageResponse: メタデータと画像データ
     """
     return get_street_view_image_data(latitude, longitude, size)
 
 
 @app.get("/route")
 def route(
-    current_lat: str = Query(alias="currentLat"),
-    current_lng: str = Query(alias="currentLng"),
-    radius: str = Query(),
+    current_lat: float = Query(
+        ...,
+        alias="currentLat",
+        description="現在地の緯度",
+        ge=-90,
+        le=90,
+        example=35.6762,
+    ),
+    current_lng: float = Query(
+        ...,
+        alias="currentLng",
+        description="現在地の経度",
+        ge=-180,
+        le=180,
+        example=139.6503,
+    ),
+    radius: float = Query(
+        ...,
+        description="目的地を生成する半径 (メートル単位)",
+        gt=0,
+        le=40075000,  # 地球の赤道一周の長さ (メートル)
+        example=5000,
+    ),
 ) -> RouteResponse:
     """ルートを生成
 
     Args:
         current_lat: 現在の緯度
         current_lng: 現在の経度
-        radius: 半径
+        radius: 半径 (メートル単位)
 
     Returns:
         RouteResponse: ルート情報

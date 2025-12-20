@@ -11,12 +11,13 @@ from fastapi import HTTPException
 from requests.exceptions import RequestException, Timeout
 
 from app.config import GOOGLE_API_KEY, REQUEST_TIMEOUT_SECONDS
+from app.value_objects import Latitude, Longitude
 
 logger = logging.getLogger(__name__)
 
 
 @functools.lru_cache(maxsize=128)
-def fetch_street_view_metadata(latitude: float, longitude: float) -> dict:
+def fetch_street_view_metadata(latitude: Latitude, longitude: Longitude) -> dict:
     """Street View Metadata APIからメタデータを取得 (キャッシュ付き)
 
     Args:
@@ -26,9 +27,11 @@ def fetch_street_view_metadata(latitude: float, longitude: float) -> dict:
     Returns:
         dict: メタデータ
     """
+    lat_float = latitude.to_float()
+    lng_float = longitude.to_float()
     metadata_url = (
         f"https://maps.googleapis.com/maps/api/streetview/metadata"
-        f"?location={latitude},{longitude}&key={GOOGLE_API_KEY}"
+        f"?location={lat_float},{lng_float}&key={GOOGLE_API_KEY}"
     )
 
     try:
@@ -48,7 +51,7 @@ def fetch_street_view_metadata(latitude: float, longitude: float) -> dict:
 
 
 @functools.lru_cache(maxsize=128)
-def fetch_street_view_image(latitude: float, longitude: float, size: str) -> bytes:
+def fetch_street_view_image(latitude: Latitude, longitude: Longitude, size: str) -> bytes:
     """Street View Static APIから画像を取得 (キャッシュ付き)
 
     Args:
@@ -59,8 +62,10 @@ def fetch_street_view_image(latitude: float, longitude: float, size: str) -> byt
     Returns:
         bytes: 画像データ
     """
+    lat_float = latitude.to_float()
+    lng_float = longitude.to_float()
     url = "https://maps.googleapis.com/maps/api/streetview"
-    params = {"size": size, "location": f"{latitude},{longitude}", "key": GOOGLE_API_KEY}
+    params = {"size": size, "location": f"{lat_float},{lng_float}", "key": GOOGLE_API_KEY}
 
     try:
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)

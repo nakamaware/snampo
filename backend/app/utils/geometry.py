@@ -3,26 +3,24 @@
 import math
 import secrets
 
+from app.value_objects import Latitude, Longitude
+
 
 def generate_random_point(
-    center_lat_str: str, center_lng_str: str, radius_str: str
-) -> tuple[float, float]:
+    center_lat: Latitude, center_lng: Longitude, radius_m: float
+) -> tuple[Latitude, Longitude]:
     """指定された中心点から半径内のランダムな地点を生成
 
     Args:
-        center_lat_str: 中心点の緯度
-        center_lng_str: 中心点の経度
-        radius_str: 半径
+        center_lat: 中心点の緯度
+        center_lng: 中心点の経度
+        radius_m: 半径 (メートル単位)
 
     Returns:
         new_lat: 新しい緯度
         new_lng: 新しい経度
     """
-    center_lat = float(center_lat_str)
-    center_lng = float(center_lng_str)
-    radius = float(radius_str)
-
-    radius_in_degrees = radius / 111300
+    radius_in_degrees = radius_m / 111300
 
     # Use secrets module for cryptographically secure random number generation
     # Equivalent to random.uniform(0, 2 * math.pi) which is: 0 + (2*pi - 0) * random.random()
@@ -30,13 +28,15 @@ def generate_random_point(
     random_angle = (secrets.randbelow(2**53) / (2**53)) * 2 * math.pi
 
     # Calculate new coordinates
-    new_lat = center_lat + (radius_in_degrees * math.cos(random_angle))
-    new_lng = center_lng + (radius_in_degrees * math.sin(random_angle))
+    center_lat_float = center_lat.to_float()
+    center_lng_float = center_lng.to_float()
+    new_lat_float = center_lat_float + (radius_in_degrees * math.cos(random_angle))
+    new_lng_float = center_lng_float + (radius_in_degrees * math.sin(random_angle))
 
-    return new_lat, new_lng
+    return Latitude(value=new_lat_float), Longitude(value=new_lng_float)
 
 
-def decode_polyline(polyline_str: str) -> list[tuple[float, float]]:
+def decode_polyline(polyline_str: str) -> list[tuple[Latitude, Longitude]]:
     """ポリラインをデコードして座標リストを生成
 
     Args:
@@ -77,6 +77,8 @@ def decode_polyline(polyline_str: str) -> list[tuple[float, float]]:
         dlng = ~(result >> 1) if result & 1 else (result >> 1)
         lng += dlng
 
-        coordinates.append((lat * 1e-5, lng * 1e-5))
+        lat_float = lat * 1e-5
+        lng_float = lng * 1e-5
+        coordinates.append((Latitude(value=lat_float), Longitude(value=lng_float)))
 
     return coordinates
