@@ -16,3 +16,6 @@ Thumbs.db
 
 # Ruff stuff
 .ruff_cache/
+
+# Claude用プロジェクトガイド
+CLAUDE.md
