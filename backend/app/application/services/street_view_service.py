@@ -45,12 +45,20 @@ class StreetViewService:
             HTTPException: Street View画像が取得できない場合
         """
         # メタデータの取得(キャッシュ付き)
-        metadata = self.google_maps_gateway.get_street_view_metadata(latitude, longitude)
+        # infrastructure層で検証済みのメタデータを取得
+        try:
+            metadata = self.google_maps_gateway.get_street_view_metadata(latitude, longitude)
+        except ValueError as e:
+            # infrastructure層からの標準例外をHTTPExceptionに変換
+            logger.error(f"Street View metadata validation failed: {e}")
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
         if metadata["status"] == "OK":
             # メタデータから画像の実際の位置情報を取得
-            metadata_latitude = Latitude(value=metadata["location"]["lat"])
-            metadata_longitude = Longitude(value=metadata["location"]["lng"])
+            # infrastructure層で検証済みのため、安全にアクセス可能
+            location = metadata["location"]
+            metadata_latitude = Latitude(value=float(location["lat"]))
+            metadata_longitude = Longitude(value=float(location["lng"]))
             logger.info(
                 f"Actual Image Location: Latitude {metadata_latitude.to_float()}, "
                 f"Longitude {metadata_longitude.to_float()}"
@@ -58,7 +66,8 @@ class StreetViewService:
         else:
             # ステータスが'OK'でない場合のエラーハンドリング
             logger.error(
-                "Street View metadata API returned a non-OK status for a requested location."
+                f"Street View metadata API returned a non-OK status for a requested location. "
+                f"Status: {metadata.get('status')}, Metadata: {metadata}"
             )
             raise HTTPException(
                 status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."

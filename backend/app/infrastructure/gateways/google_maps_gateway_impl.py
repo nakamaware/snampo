@@ -4,10 +4,13 @@ Google Maps APIへのアクセスを実装します。
 """
 
 import functools
+import logging
 
 from app.application.ports.google_maps_gateway import GoogleMapsGateway
 from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
 from app.infrastructure.external import google_maps_client
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleMapsGatewayImpl(GoogleMapsGateway):
@@ -53,8 +56,50 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
 
         Returns:
             dict: メタデータ
+
+        Raises:
+            ValueError: メタデータが不完全または無効な場合
         """
-        return self._get_street_view_metadata_cached(latitude, longitude)
+        metadata = self._get_street_view_metadata_cached(latitude, longitude)
+
+        # status == "OK"の場合、location辞書とlat/lngキーの存在を検証
+        if metadata.get("status") == "OK":
+            location = metadata.get("location")
+            if not isinstance(location, dict):
+                logger.error(
+                    f"Street View metadata missing or invalid 'location' field. "
+                    f"Status: {metadata.get('status')}, Metadata: {metadata}"
+                )
+                raise ValueError(
+                    f"Street View metadata incomplete: 'location' field is missing or invalid. "
+                    f"Status: {metadata.get('status')}, Metadata: {metadata}"
+                )
+
+            lat_value = location.get("lat")
+            lng_value = location.get("lng")
+
+            if lat_value is None or lng_value is None:
+                logger.error(
+                    f"Street View metadata missing 'lat' or 'lng' in location. "
+                    f"Status: {metadata.get('status')}, Location: {location}, Metadata: {metadata}"
+                )
+                raise ValueError(
+                    f"Street View metadata incomplete: 'lat' or 'lng' is missing in location. "
+                    f"Status: {metadata.get('status')}, Location: {location}, Metadata: {metadata}"
+                )
+
+            # 型の検証 (floatまたはint型であることを確認)
+            if not isinstance(lat_value, (int, float)) or not isinstance(lng_value, (int, float)):
+                logger.error(
+                    f"Street View metadata has invalid type for 'lat' or 'lng'. "
+                    f"Status: {metadata.get('status')}, Location: {location}, Metadata: {metadata}"
+                )
+                raise ValueError(
+                    f"Street View metadata incomplete: 'lat' or 'lng' has invalid type. "
+                    f"Status: {metadata.get('status')}, Location: {location}, Metadata: {metadata}"
+                )
+
+        return metadata
 
     def get_street_view_image(
         self, latitude: Latitude, longitude: Longitude, image_size: ImageSize
