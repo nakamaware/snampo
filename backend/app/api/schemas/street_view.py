@@ -3,16 +3,15 @@
 from pydantic import BaseModel
 
 from app.application.dto.street_view_dto import StreetViewImageResultDto
-from app.domain.value_objects import Latitude, Longitude
 
 
 class StreetViewImageResponse(BaseModel):
     """Street View画像のメタデータと画像データを表すモデル"""
 
-    metadata_latitude: Latitude
-    metadata_longitude: Longitude
-    original_latitude: Latitude
-    original_longitude: Longitude
+    metadata_latitude: float
+    metadata_longitude: float
+    original_latitude: float
+    original_longitude: float
     image_data: str
 
     @classmethod
@@ -26,9 +25,9 @@ class StreetViewImageResponse(BaseModel):
             StreetViewImageResponse: APIレスポンススキーマ
         """
         return cls(
-            metadata_latitude=dto.metadata_coordinate.latitude,
-            metadata_longitude=dto.metadata_coordinate.longitude,
-            original_latitude=dto.original_coordinate.latitude,
-            original_longitude=dto.original_coordinate.longitude,
+            metadata_latitude=dto.metadata_coordinate.latitude.value,
+            metadata_longitude=dto.metadata_coordinate.longitude.value,
+            original_latitude=dto.original_coordinate.latitude.value,
+            original_longitude=dto.original_coordinate.longitude.value,
             image_data=dto.image_data,
         )

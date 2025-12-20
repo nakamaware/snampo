@@ -3,23 +3,22 @@
 from pydantic import BaseModel
 
 from app.application.dto.route_dto import RouteResultDto
-from app.domain.value_objects import Latitude, Longitude
 
 
 class Point(BaseModel):
     """座標点を表すモデル"""
 
-    latitude: Latitude
-    longitude: Longitude
+    latitude: float
+    longitude: float
 
 
 class MidPoint(BaseModel):
     """中間地点を表すモデル(画像情報を含む)"""
 
-    latitude: Latitude
-    longitude: Longitude
-    image_latitude: Latitude | None = None
-    image_longitude: Longitude | None = None
+    latitude: float
+    longitude: float
+    image_latitude: float | None = None
+    image_longitude: float | None = None
     image_utf8: str | None = None
 
 
@@ -49,18 +48,18 @@ class RouteResponse(BaseModel):
                 image_coordinate, image_data = image_info
                 midpoint_list.append(
                     MidPoint(
-                        latitude=midpoint_coordinate.latitude,
-                        longitude=midpoint_coordinate.longitude,
-                        image_latitude=image_coordinate.latitude,
-                        image_longitude=image_coordinate.longitude,
+                        latitude=midpoint_coordinate.latitude.value,
+                        longitude=midpoint_coordinate.longitude.value,
+                        image_latitude=image_coordinate.latitude.value,
+                        image_longitude=image_coordinate.longitude.value,
                         image_utf8=image_data,
                     )
                 )
             else:
                 midpoint_list.append(
                     MidPoint(
-                        latitude=midpoint_coordinate.latitude,
-                        longitude=midpoint_coordinate.longitude,
+                        latitude=midpoint_coordinate.latitude.value,
+                        longitude=midpoint_coordinate.longitude.value,
                     )
                 )
 
@@ -70,15 +69,17 @@ class RouteResponse(BaseModel):
         destination_image_data = None
         if dto.destination_image:
             image_coordinate, image_data = dto.destination_image
-            destination_image_lat = image_coordinate.latitude
-            destination_image_lng = image_coordinate.longitude
+            destination_image_lat = image_coordinate.latitude.value
+            destination_image_lng = image_coordinate.longitude.value
             destination_image_data = image_data
 
         return cls(
-            departure=Point(latitude=dto.departure.latitude, longitude=dto.departure.longitude),
+            departure=Point(
+                latitude=dto.departure.latitude.value, longitude=dto.departure.longitude.value
+            ),
             destination=MidPoint(
-                latitude=dto.destination.latitude,
-                longitude=dto.destination.longitude,
+                latitude=dto.destination.latitude.value,
+                longitude=dto.destination.longitude.value,
                 image_latitude=destination_image_lat,
                 image_longitude=destination_image_lng,
                 image_utf8=destination_image_data,
