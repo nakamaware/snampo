@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # 環境変数をDart defineに変換するスクリプト
 # 参考: https://zenn.dev/altiveinc/articles/separating-environments-in-flutter
