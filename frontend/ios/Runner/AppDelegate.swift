@@ -1,7 +1,8 @@
 import UIKit
 import Flutter
+import GoogleMaps
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate {
   override func application(
     _ application: UIApplication,
@@ -9,8 +10,10 @@ import Flutter
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    // TODO: Add your Google Maps API key
-    GMSServices.provideAPIKey(Env.googleMapApiKey)
+    guard let googleMapApiKey = Bundle.main.infoDictionary?["GoogleMapsApiKey"] as? String else {
+      fatalError("GoogleMapsApiKey is not set in Info.plist")
+    }
+    GMSServices.provideAPIKey(googleMapApiKey)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

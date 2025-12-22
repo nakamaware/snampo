@@ -33,3 +33,6 @@ Runner/Environment.swift
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# Dart define
+**/Flutter/Dart-Defines.xcconfig
