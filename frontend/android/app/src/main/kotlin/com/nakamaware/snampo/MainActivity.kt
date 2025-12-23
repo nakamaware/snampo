@@ -1,4 +1,4 @@
-package com.example.snampo
+package com.nakamaware.snampo
 
 import io.flutter.embedding.android.FlutterActivity
 

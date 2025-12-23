@@ -4,3 +4,4 @@
 .env.*
 !.env.example
 secret.properties
+key.properties

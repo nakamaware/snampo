@@ -22,16 +22,27 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-def secretProperties = new Properties()
-def secretPropertiesFile = rootProject.file('secret.properties')
-if (secretPropertiesFile.exists()) {
-    secretPropertiesFile.withReader('UTF-8') { reader ->
-        secretProperties.load(reader)
-    }
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+// dart-define の値を入れる変数の宣言
+// 参考: https://zenn.dev/altiveinc/articles/separating-environments-in-flutter
+def dartDefines = [:];
+if (project.hasProperty('dart-defines')) {
+    // カンマ区切りかつBase64でエンコードされている dart-defines をデコードして変数に格納する
+    dartDefines = dartDefines + project.property('dart-defines')
+        .split(',')
+        .collectEntries { entry ->
+            def pair = new String(entry.decodeBase64(), 'UTF-8').split('=')
+            pair.length == 2 ? [(pair.first()): pair.last()] : [:]
+        }
 }
 
 android {
-    namespace "com.example.snampo"
+    namespace "com.nakamaware.snampo"
     compileSdkVersion 36//flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -49,8 +60,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.snampo"
+        applicationId "com.nakamaware.snampo"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion //flutter.minSdkVersion
@@ -58,15 +68,29 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         manifestPlaceholders += [
-            googleMapApiKey: secretProperties.getProperty('googleMap.apiKey') ?: '',
+            googleMapApiKey: "$dartDefines.GOOGLE_MAP_API_KEY",
         ]
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            config {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.config
+            } else {
+                // ローカル開発時はデバッグキーを使用（key.propertiesがない場合）
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }
