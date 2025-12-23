@@ -133,6 +133,12 @@ Snampoプロジェクトのリポジトリです。
    API_BASE_URL=your_api_base_url_here
    ```
 
+   API_BASE_URLは以下のように設定します：
+
+   - 開発環境 (Android): `http://10.0.2.2:8000` (ローカルBEのポートに置き換えてください)
+   - 開発環境 (iOS): `http://localhost:8000` (ローカルBEのポートに置き換えてください)
+   - 本番環境: `https://hoge-fuga.asia-northeast1.run.app` (本番BEのURLに置き換えてください)
+
    **VS Code から実行する場合**: `.vscode/launch.json` で `--dart-define-from-file=.env` が設定されているため、自動的に読み込まれます。
 
    **コマンドラインから実行する場合**:
