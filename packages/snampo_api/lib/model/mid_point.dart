@@ -24,20 +24,8 @@ class MidPoint {
 
   num longitude;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   num? imageLatitude;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   num? imageLongitude;
 
   String? imageUtf8;
@@ -105,8 +93,12 @@ class MidPoint {
       return MidPoint(
         latitude: num.parse('${json[r'latitude']}'),
         longitude: num.parse('${json[r'longitude']}'),
-        imageLatitude: num.parse('${json[r'image_latitude']}'),
-        imageLongitude: num.parse('${json[r'image_longitude']}'),
+        imageLatitude: json[r'image_latitude'] == null
+            ? null
+            : num.parse('${json[r'image_latitude']}'),
+        imageLongitude: json[r'image_longitude'] == null
+            ? null
+            : num.parse('${json[r'image_longitude']}'),
         imageUtf8: mapValueOfType<String>(json, r'image_utf8'),
       );
     }
