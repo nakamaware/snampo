@@ -3,15 +3,13 @@
 Street View画像取得の共通処理を提供します。
 """
 
-import base64
 import logging
 
-from fastapi import HTTPException
 from injector import inject
 
-from app.application.dto.street_view_dto import StreetViewImageResultDto
-from app.application.ports.google_maps_gateway import GoogleMapsGateway
-from app.domain.value_objects import Coordinate, ImageSize, Latitude, Longitude
+from app.application.gateway_interfaces.google_maps_gateway_if import GoogleMapsGatewayIf
+from app.domain.exceptions import ExternalServiceValidationError
+from app.domain.value_objects import Coordinate, ImageSize, StreetViewImage
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class StreetViewService:
     """Street View画像取得サービス"""
 
     @inject
-    def __init__(self, google_maps_gateway: GoogleMapsGateway) -> None:
+    def __init__(self, google_maps_gateway: GoogleMapsGatewayIf) -> None:
         """初期化
 
         Args:
@@ -29,63 +27,71 @@ class StreetViewService:
         self.google_maps_gateway = google_maps_gateway
 
     def get_street_view_image_data(
-        self, latitude: Latitude, longitude: Longitude, image_size: ImageSize
-    ) -> StreetViewImageResultDto:
+        self, coordinate: Coordinate, image_size: ImageSize
+    ) -> StreetViewImage:
         """Street View Image Metadata APIを使用して画像のメタデータを取得
 
         Args:
-            latitude: 緯度(値オブジェクト)
-            longitude: 経度(値オブジェクト)
+            coordinate: 座標
             image_size: 画像サイズ
 
         Returns:
-            StreetViewImageResult: メタデータと画像データ
+            StreetViewImage: Street View画像情報
 
         Raises:
-            HTTPException: Street View画像が取得できない場合
+            ExternalServiceValidationError: Street View画像が取得できない場合
         """
-        # メタデータの取得(キャッシュ付き)
-        # infrastructure層で検証済みのメタデータを取得
-        try:
-            metadata = self.google_maps_gateway.get_street_view_metadata(latitude, longitude)
-        except ValueError as e:
-            # infrastructure層からの標準例外をHTTPExceptionに変換
-            logger.error(f"Street View metadata validation failed: {e}")
-            raise HTTPException(status_code=400, detail=str(e)) from e
+        metadata_coordinate = self._get_validated_metadata(coordinate)
+        image_content = self.google_maps_gateway.get_street_view_image(
+            coordinate=metadata_coordinate,
+            image_size=image_size,
+        )
+        return StreetViewImage(
+            metadata_coordinate=metadata_coordinate,
+            original_coordinate=coordinate,
+            image_data=image_content,
+        )
 
-        if metadata["status"] == "OK":
-            # メタデータから画像の実際の位置情報を取得
-            # infrastructure層で検証済みのため、安全にアクセス可能
-            location = metadata["location"]
-            metadata_latitude = Latitude(value=float(location["lat"]))
-            metadata_longitude = Longitude(value=float(location["lng"]))
-            logger.info(
-                f"Actual Image Location: Latitude {metadata_latitude.to_float()}, "
-                f"Longitude {metadata_longitude.to_float()}"
-            )
-        else:
-            # ステータスが'OK'でない場合のエラーハンドリング
+    def _get_validated_metadata(self, coordinate: Coordinate) -> Coordinate:
+        """メタデータを取得し、検証する
+
+        Args:
+            coordinate: 座標
+
+        Returns:
+            Coordinate: メタデータから取得した画像の実際の座標
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
+        """
+        try:
+            metadata = self.google_maps_gateway.get_street_view_metadata(coordinate)
+        except ExternalServiceValidationError as e:
+            logger.error(f"Street View metadata validation failed: {e}")
+            raise ExternalServiceValidationError(str(e), service_name="Street View API") from e
+
+        if metadata.status != "OK":
             logger.error(
                 f"Street View metadata API returned a non-OK status for a requested location. "
-                f"Status: {metadata.get('status')}, Metadata: {metadata}"
+                f"Status: {metadata.status}"
             )
-            raise HTTPException(
-                status_code=400, detail=f"Street View metadata unavailable: {metadata['status']}."
+            raise ExternalServiceValidationError(
+                f"Street View metadata unavailable: {metadata.status}.",
+                service_name="Street View API",
             )
 
-        # Street View Static APIから画像を取得(キャッシュ付き)
-        image_content = self.google_maps_gateway.get_street_view_image(
-            latitude, longitude, image_size
+        location_coordinate = metadata.location
+        if location_coordinate is None:
+            # このケースは通常発生しない(Gateway実装のバリデーションで防がれる)
+            logger.error("Street View metadata has OK status but location is None")
+            raise ExternalServiceValidationError(
+                "Street View metadata incomplete: location is None",
+                service_name="Street View API",
+            )
+
+        logger.info(
+            f"Actual Image Location: Latitude {location_coordinate.latitude.to_float()}, "
+            f"Longitude {location_coordinate.longitude.to_float()}"
         )
 
-        # 画像データをBase64エンコードして文字列に変換
-        image_data = base64.b64encode(image_content).decode("utf-8")
-
-        # StreetViewImageResultインスタンスを返す
-        return StreetViewImageResultDto(
-            metadata_coordinate=Coordinate(
-                latitude=metadata_latitude, longitude=metadata_longitude
-            ),
-            original_coordinate=Coordinate(latitude=latitude, longitude=longitude),
-            image_data=image_data,
-        )
+        return location_coordinate

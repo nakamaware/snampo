@@ -5,8 +5,69 @@
 
 from dataclasses import dataclass
 
-from app.domain.value_objects.latitude import Latitude
-from app.domain.value_objects.longitude import Longitude
+
+@dataclass(frozen=True)
+class Latitude:
+    """緯度を表す値オブジェクト"""
+
+    value: float
+
+    def __post_init__(self) -> None:
+        """緯度の範囲を検証
+
+        Raises:
+            ValueError: 緯度が-90から90の範囲外の場合
+        """
+        if not (-90.0 <= self.value <= 90.0):
+            raise ValueError(f"Latitude must be between -90 and 90, got {self.value}")
+
+    def to_float(self) -> float:
+        """float型に変換
+
+        Returns:
+            float: 緯度の値
+        """
+        return self.value
+
+    def __hash__(self) -> int:
+        """ハッシュ値を計算 (lru_cacheで使用するため)
+
+        Returns:
+            int: ハッシュ値
+        """
+        return hash(self.value)
+
+
+@dataclass(frozen=True)
+class Longitude:
+    """経度を表す値オブジェクト"""
+
+    value: float
+
+    def __post_init__(self) -> None:
+        """経度の範囲を検証
+
+        Raises:
+            ValueError: 経度が-180から180の範囲外の場合
+        """
+        if not (-180.0 <= self.value <= 180.0):
+            raise ValueError(f"Longitude must be between -180 and 180, got {self.value}")
+
+    def to_float(self) -> float:
+        """float型に変換
+
+        Returns:
+            float: 経度の値
+        """
+        return self.value
+
+    def __hash__(self) -> int:
+        """ハッシュ値を計算 (lru_cacheで使用するため)
+
+        Returns:
+            int: ハッシュ値
+        """
+        return hash(self.value)
 
 
 @dataclass(frozen=True)
@@ -29,7 +90,7 @@ class Coordinate:
         object.__setattr__(self, "latitude", lat)
         object.__setattr__(self, "longitude", lng)
 
-    def to_tuple(self) -> tuple[float, float]:
+    def to_float_tuple(self) -> tuple[float, float]:
         """floatのタプルに変換
 
         Returns:

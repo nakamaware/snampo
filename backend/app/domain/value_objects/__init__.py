@@ -3,12 +3,9 @@
 ドメインの値オブジェクトを定義します。
 """
 
-from app.domain.value_objects.coordinate import Coordinate
-from app.domain.value_objects.image_height import ImageHeight
-from app.domain.value_objects.image_size import ImageSize
-from app.domain.value_objects.image_width import ImageWidth
-from app.domain.value_objects.latitude import Latitude
-from app.domain.value_objects.longitude import Longitude
+from app.domain.value_objects.coordinate import Coordinate, Latitude, Longitude
+from app.domain.value_objects.image_size import ImageHeight, ImageSize, ImageWidth
+from app.domain.value_objects.street_view_image import StreetViewImage
 
 __all__ = [
     "Coordinate",
@@ -17,4 +14,5 @@ __all__ = [
     "ImageWidth",
     "Latitude",
     "Longitude",
+    "StreetViewImage",
 ]

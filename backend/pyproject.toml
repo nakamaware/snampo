@@ -10,6 +10,7 @@ dependencies = [
     "folium>=0.15.0",
     "python-dotenv>=1.0.0",
     "injector>=0.20.0",
+    "tenacity>=8.0.0",
 ]
 
 [build-system]
@@ -98,3 +99,9 @@ known-first-party = ["app"]
 [tool.ruff.lint.per-file-ignores]
 # テストファイルではassert文の使用を許可、関数名に日本語を使用可能にする
 "tests/**/*.py" = ["S101", "N802"]
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+include = ["app", "tests"]
+exclude = ["**/__pycache__"]

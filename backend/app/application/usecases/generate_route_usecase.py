@@ -4,17 +4,54 @@
 """
 
 import logging
+from dataclasses import dataclass
 
-from fastapi import HTTPException
 from injector import inject
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+)
 
-from app.application.dto.route_dto import RouteResultDto
-from app.application.ports.google_maps_gateway import GoogleMapsGateway
+from app.application.gateway_interfaces.google_maps_gateway_if import GoogleMapsGatewayIf
 from app.application.services.street_view_service import StreetViewService
+from app.config import ROUTE_GENERATION_MAX_RETRY_COUNT
+from app.domain.exceptions import ExternalServiceValidationError, RouteGenerationError
 from app.domain.services import coordinate_service, route_service
-from app.domain.value_objects import Coordinate, ImageHeight, ImageSize, ImageWidth
+from app.domain.value_objects import (
+    Coordinate,
+    ImageHeight,
+    ImageSize,
+    ImageWidth,
+    StreetViewImage,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class RouteResultDto:
+    """ルート生成結果DTO
+
+    Application層から返されるルート情報を表します。
+
+    Attributes:
+        departure: 出発地点の座標
+        destination: 目的地の座標
+        midpoints: 中間地点の座標リスト
+        overview_polyline: ルートの概要ポリライン文字列
+        midpoint_images: 中間地点の画像情報リスト
+            ((座標, StreetViewImage)のリスト、順序を保持)
+        destination_image: 目的地の画像情報
+    """
+
+    departure: Coordinate
+    destination: Coordinate
+    midpoints: list[Coordinate]
+    overview_polyline: str
+    midpoint_images: list[tuple[Coordinate, StreetViewImage]]
+    destination_image: StreetViewImage | None = None
 
 
 class GenerateRouteUseCase:
@@ -23,7 +60,7 @@ class GenerateRouteUseCase:
     @inject
     def __init__(
         self,
-        google_maps_gateway: GoogleMapsGateway,
+        google_maps_gateway: GoogleMapsGatewayIf,
         street_view_service: StreetViewService,
     ) -> None:
         """初期化
@@ -35,38 +72,68 @@ class GenerateRouteUseCase:
         self.google_maps_gateway = google_maps_gateway
         self.street_view_service = street_view_service
 
-    def execute(self, current_lat: float, current_lng: float, radius_m: float) -> RouteResultDto:
+    def execute(self, current_coordinate: Coordinate, radius_m: float) -> RouteResultDto:
         """ルートを生成する
 
+        Street View画像が取得できない場合は、目的地を再生成してリトライします。
+        最大リトライ回数を超えた場合はRouteGenerationErrorを発生させます。
+
         Args:
-            current_lat: 現在の緯度
-            current_lng: 現在の経度
+            current_coordinate: 現在地の座標
             radius_m: 半径 (メートル単位)
 
         Returns:
             RouteResultDto: ルート情報
-        """
-        # 座標値オブジェクトに変換
-        current_coordinate = Coordinate(latitude=current_lat, longitude=current_lng)
 
-        # ルート検索
+        Raises:
+            ExternalServiceError: 外部サービスエラーが発生した場合
+            RouteGenerationError: リトライ回数を超えてもルート生成に失敗した場合
+        """
+        try:
+            return self._attempt_route_generation(current_coordinate, radius_m)
+        except ExternalServiceValidationError as e:
+            raise RouteGenerationError(
+                message="Street View画像が取得可能なルートが見つかりませんでした",
+                retry_count=ROUTE_GENERATION_MAX_RETRY_COUNT,
+            ) from e
+
+    @retry(
+        stop=stop_after_attempt(ROUTE_GENERATION_MAX_RETRY_COUNT),
+        retry=retry_if_exception_type(ExternalServiceValidationError),
+        before_sleep=before_sleep_log(logger, logging.INFO),
+        reraise=True,
+    )
+    def _attempt_route_generation(
+        self, current_coordinate: Coordinate, radius_m: float
+    ) -> RouteResultDto:
+        """ルート生成を試みる
+
+        Street View画像が取得できない場合は、目的地を再生成してリトライします。
+        最大リトライ回数を超えた場合はRouteGenerationErrorを発生させます。
+
+        Args:
+            current_coordinate: 現在地の座標
+            radius_m: 半径 (メートル単位)
+
+        Returns:
+            RouteResultDto: ルート情報
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
+        """
         destination_coordinate, route_coordinates, overview_polyline = (
             self._fetch_route_coordinates(current_coordinate, radius_m)
         )
 
-        # 中間地点の情報取得
-        midpoint_coordinate, midpoint_images = self._fetch_midpoint_image(route_coordinates)
-
-        # 最終地点の情報取得
+        midpoint_coordinate, midpoint_image = self._fetch_midpoint_image(route_coordinates)
         destination_image = self._fetch_destination_image(destination_coordinate)
 
-        # RouteResultを返す
         return RouteResultDto(
             departure=current_coordinate,
             destination=destination_coordinate,
             midpoints=[midpoint_coordinate],
             overview_polyline=overview_polyline,
-            midpoint_images=midpoint_images,
+            midpoint_images=[(midpoint_coordinate, midpoint_image)],
             destination_image=destination_image,
         )
 
@@ -94,71 +161,46 @@ class GenerateRouteUseCase:
 
     def _fetch_midpoint_image(
         self, route_coordinates: list[Coordinate]
-    ) -> tuple[Coordinate, dict[Coordinate, tuple[Coordinate, str]]]:
+    ) -> tuple[Coordinate, StreetViewImage]:
         """中間地点の画像情報を取得
 
         Args:
             route_coordinates: ルート座標リスト
 
         Returns:
-            tuple[Coordinate, dict[Coordinate, tuple[Coordinate, str]]]:
-                (中間地点座標, 中間地点画像情報)
+            tuple[Coordinate, StreetViewImage]: (中間地点座標, 画像情報)
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
         """
         midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
-        midpoint_images: dict[Coordinate, tuple[Coordinate, str]] = {}
-        try:
-            # 画像サイズを値オブジェクトに変換
-            image_size = ImageSize(
-                width=ImageWidth(value=600),
-                height=ImageHeight(value=300),
-            )
-            photo_data = self.street_view_service.get_street_view_image_data(
-                midpoint_coordinate.latitude,
-                midpoint_coordinate.longitude,
-                image_size,
-            )
-            midpoint_images[midpoint_coordinate] = (
-                photo_data.metadata_coordinate,
-                photo_data.image_data,
-            )
-        except HTTPException:
-            # Street View画像が取得できない場合は画像情報なしで続行
-            logger.warning(
-                f"Failed to fetch Street View image for midpoint at "
-                f"{self.google_maps_gateway.coordinate_to_lat_lng_string(midpoint_coordinate)}"
-            )
-        return midpoint_coordinate, midpoint_images
+        image_size = ImageSize(
+            width=ImageWidth(value=600),
+            height=ImageHeight(value=300),
+        )
+        street_view_image = self.street_view_service.get_street_view_image_data(
+            midpoint_coordinate,
+            image_size,
+        )
+        return midpoint_coordinate, street_view_image
 
-    def _fetch_destination_image(
-        self, destination_coordinate: Coordinate
-    ) -> tuple[Coordinate, str] | None:
-        """最終地点の画像情報を取得
+    def _fetch_destination_image(self, destination_coordinate: Coordinate) -> StreetViewImage:
+        """目的地の画像情報を取得
 
         Args:
             destination_coordinate: 目的地の座標
 
         Returns:
-            tuple[Coordinate, str] | None: 最終地点の画像情報(取得できない場合はNone)
+            StreetViewImage: 目的地の画像情報
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
         """
-        try:
-            # 画像サイズを値オブジェクトに変換
-            image_size = ImageSize(
-                width=ImageWidth(value=600),
-                height=ImageHeight(value=300),
-            )
-            destination_photo_data = self.street_view_service.get_street_view_image_data(
-                destination_coordinate.latitude,
-                destination_coordinate.longitude,
-                image_size,
-            )
-            return (
-                destination_photo_data.metadata_coordinate,
-                destination_photo_data.image_data,
-            )
-        except HTTPException:
-            # Street View画像が取得できない場合は画像情報なしで続行
-            logger.warning(
-                f"Failed to fetch Street View image for destination at "
-                f"{self.google_maps_gateway.coordinate_to_lat_lng_string(destination_coordinate)}"
-            )
-            return None
+        image_size = ImageSize(
+            width=ImageWidth(value=600),
+            height=ImageHeight(value=300),
+        )
+        return self.street_view_service.get_street_view_image_data(
+            destination_coordinate,
+            image_size,
+        )
