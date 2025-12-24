@@ -12,7 +12,7 @@ from app.application.dto.route_dto import RouteResultDto
 from app.application.ports.google_maps_gateway import GoogleMapsGateway
 from app.application.services.street_view_service import StreetViewService
 from app.domain.services import coordinate_service, route_service
-from app.domain.value_objects import Coordinate
+from app.domain.value_objects import Coordinate, ImageHeight, ImageSize, ImageWidth
 
 logger = logging.getLogger(__name__)
 
@@ -107,10 +107,15 @@ class GenerateRouteUseCase:
         midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
         midpoint_images: dict[Coordinate, tuple[Coordinate, str]] = {}
         try:
+            # 画像サイズを値オブジェクトに変換
+            image_size = ImageSize(
+                width=ImageWidth(value=600),
+                height=ImageHeight(value=300),
+            )
             photo_data = self.street_view_service.get_street_view_image_data(
                 midpoint_coordinate.latitude,
                 midpoint_coordinate.longitude,
-                "600x300",
+                image_size,
             )
             midpoint_images[midpoint_coordinate] = (
                 photo_data.metadata_coordinate,
@@ -136,10 +141,15 @@ class GenerateRouteUseCase:
             tuple[Coordinate, str] | None: 最終地点の画像情報(取得できない場合はNone)
         """
         try:
+            # 画像サイズを値オブジェクトに変換
+            image_size = ImageSize(
+                width=ImageWidth(value=600),
+                height=ImageHeight(value=300),
+            )
             destination_photo_data = self.street_view_service.get_street_view_image_data(
                 destination_coordinate.latitude,
                 destination_coordinate.longitude,
-                "600x300",
+                image_size,
             )
             return (
                 destination_photo_data.metadata_coordinate,
