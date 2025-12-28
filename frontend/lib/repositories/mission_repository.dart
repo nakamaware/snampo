@@ -23,15 +23,17 @@ class MissionRepository {
     required double currentLat,
     required double currentLng,
   }) async {
-    final radiusString =
-        (radius * 1000).toInt().toString(); // km から m にし整数値の文字列に
+    final radiusInMeters = radius * 1000; // km から m に変換
+
+    // リクエストボディを作成
+    final request = generated.RouteRequest(
+      currentLat: currentLat,
+      currentLng: currentLng,
+      radius: radiusInMeters,
+    );
 
     // 生成されたAPIクライアントを直接使用
-    final response = await _generatedApi.routeRouteGet(
-      currentLat,
-      currentLng,
-      double.parse(radiusString),
-    );
+    final response = await _generatedApi.routeRoutePost(request);
 
     if (response == null) {
       throw Exception('APIレスポンスがnullです');

@@ -28,10 +28,10 @@ void main() {
 
     // Route
     //
-    // ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
+    // ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)  Returns:     RouteResponse: ルート情報
     //
-    //Future<RouteResponse> routeRouteGet(num currentLat, num currentLng, num radius) async
-    test('test routeRouteGet', () async {
+    //Future<RouteResponse> routeRoutePost(RouteRequest routeRequest) async
+    test('test routeRoutePost', () async {
       // TODO
     });
 

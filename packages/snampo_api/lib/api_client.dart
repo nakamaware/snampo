@@ -188,6 +188,8 @@ class ApiClient {
           return MidPoint.fromJson(value);
         case 'Point':
           return Point.fromJson(value);
+        case 'RouteRequest':
+          return RouteRequest.fromJson(value);
         case 'RouteResponse':
           return RouteResponse.fromJson(value);
         case 'StreetViewImageResponse':
