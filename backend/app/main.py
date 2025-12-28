@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI, Query
 
-from app.models import RouteResponse, StreetViewImageResponse
+from app.models import RouteRequest, RouteResponse, StreetViewImageResponse
 from app.services.route_service import generate_route, get_street_view_image_data
 
 # Configure logging
@@ -86,40 +86,14 @@ def get_street_view_image(
     return get_street_view_image_data(latitude, longitude, size)
 
 
-@app.get("/route")
-def route(
-    current_lat: float = Query(
-        ...,
-        alias="currentLat",
-        description="現在地の緯度",
-        ge=-90,
-        le=90,
-        example=35.6762,
-    ),
-    current_lng: float = Query(
-        ...,
-        alias="currentLng",
-        description="現在地の経度",
-        ge=-180,
-        le=180,
-        example=139.6503,
-    ),
-    radius: float = Query(
-        ...,
-        description="目的地を生成する半径 (メートル単位)",
-        gt=0,
-        le=40075000,  # 地球の赤道一周の長さ (メートル)
-        example=5000,
-    ),
-) -> RouteResponse:
+@app.post("/route")
+def route(request: RouteRequest) -> RouteResponse:
     """ルートを生成
 
     Args:
-        current_lat: 現在の緯度
-        current_lng: 現在の経度
-        radius: 半径 (メートル単位)
+        request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)
 
     Returns:
         RouteResponse: ルート情報
     """
-    return generate_route(current_lat, current_lng, radius)
+    return generate_route(request.current_lat, request.current_lng, request.radius)

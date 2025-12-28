@@ -61,7 +61,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**getStreetViewImageStreetviewGet**](doc//DefaultApi.md#getstreetviewimagestreetviewget) | **GET** /streetview | Get Street View Image
-*DefaultApi* | [**routeRouteGet**](doc//DefaultApi.md#routerouteget) | **GET** /route | Route
+*DefaultApi* | [**routeRoutePost**](doc//DefaultApi.md#routeroutepost) | **POST** /route | Route
 
 
 ## Documentation For Models
@@ -69,6 +69,7 @@ Class | Method | HTTP request | Description
  - [HTTPValidationError](doc//HTTPValidationError.md)
  - [MidPoint](doc//MidPoint.md)
  - [Point](doc//Point.md)
+ - [RouteRequest](doc//RouteRequest.md)
  - [RouteResponse](doc//RouteResponse.md)
  - [StreetViewImageResponse](doc//StreetViewImageResponse.md)
  - [ValidationError](doc//ValidationError.md)
