@@ -3,16 +3,14 @@
 Street View画像取得のビジネスロジックをオーケストレーションします。
 """
 
-from dataclasses import dataclass
-
 from injector import inject
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.application.services.street_view_service import StreetViewService
 from app.domain.value_objects import Coordinate, ImageSize
 
 
-@dataclass(frozen=True)
-class StreetViewImageResultDto:
+class StreetViewImageResultDto(BaseModel):
     """Street View画像取得結果DTO
 
     Application層から返されるStreet View画像情報を表します。
@@ -23,9 +21,11 @@ class StreetViewImageResultDto:
         image_data: 画像データ (バイナリ)
     """
 
-    metadata_coordinate: Coordinate
-    original_coordinate: Coordinate
-    image_data: bytes
+    model_config = ConfigDict(frozen=True)
+
+    metadata_coordinate: Coordinate = Field(description="メタデータから取得した画像の実際の座標")
+    original_coordinate: Coordinate = Field(description="リクエストした元の座標")
+    image_data: bytes = Field(description="画像データ (バイナリ)")
 
 
 class GetStreetViewImageUseCase:

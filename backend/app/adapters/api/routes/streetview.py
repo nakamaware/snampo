@@ -10,9 +10,7 @@ from app.application.usecases.get_street_view_image_usecase import GetStreetView
 from app.domain.exceptions import ExternalServiceError
 from app.domain.value_objects import (
     Coordinate,
-    ImageHeight,
     ImageSize,
-    ImageWidth,
 )
 
 logger = logging.getLogger(__name__)
@@ -75,10 +73,7 @@ def get_street_view_image(
         width = int(width_str)
         height = int(height_str)
         coordinate = Coordinate(latitude=latitude, longitude=longitude)
-        image_size = ImageSize(
-            width=ImageWidth(value=width),
-            height=ImageHeight(value=height),
-        )
+        image_size = ImageSize(width=width, height=height)
     except ValueError as e:
         logger.error(
             f"ValueError in /streetview: {e}",

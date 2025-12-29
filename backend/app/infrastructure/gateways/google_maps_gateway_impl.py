@@ -160,7 +160,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         Returns:
             str: "緯度,経度"形式の文字列
         """
-        return f"{coordinate.latitude.to_float()},{coordinate.longitude.to_float()}"
+        return f"{coordinate.latitude},{coordinate.longitude}"
 
     @staticmethod
     def _decode_polyline(polyline_str: str) -> list[Coordinate]:

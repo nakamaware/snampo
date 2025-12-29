@@ -21,8 +21,8 @@ class TestCalculateMidpoint:
 
         # 中間地点は2番目の座標(インデックス1)であることを確認
         assert midpoint == route_coordinates[1]
-        assert midpoint.latitude.to_float() == 35.6896
-        assert midpoint.longitude.to_float() == 139.6917
+        assert midpoint.latitude == 35.6896
+        assert midpoint.longitude == 139.6917
 
     def test_偶数個の座標リストから中間地点を計算できること(self) -> None:
         """偶数個の座標リストから中間地点を計算できることを確認"""
@@ -37,8 +37,8 @@ class TestCalculateMidpoint:
 
         # 中間地点は3番目の座標(インデックス2)であることを確認
         assert midpoint == route_coordinates[2]
-        assert midpoint.latitude.to_float() == 35.6586
-        assert midpoint.longitude.to_float() == 139.7014
+        assert midpoint.latitude == 35.6586
+        assert midpoint.longitude == 139.7014
 
     def test_1つの座標のみの場合はその座標を返すこと(self) -> None:
         """1つの座標のみの場合はその座標を返すことを確認"""
@@ -49,8 +49,8 @@ class TestCalculateMidpoint:
         midpoint = calculate_midpoint(route_coordinates)
 
         assert midpoint == route_coordinates[0]
-        assert midpoint.latitude.to_float() == 35.6812
-        assert midpoint.longitude.to_float() == 139.7671
+        assert midpoint.latitude == 35.6812
+        assert midpoint.longitude == 139.7671
 
     def test_2つの座標の場合は2番目の座標を返すこと(self) -> None:
         """2つの座標の場合は2番目の座標 (インデックス1) を返すことを確認"""
@@ -63,8 +63,8 @@ class TestCalculateMidpoint:
 
         # len // 2 = 2 // 2 = 1 なので、インデックス1 (2番目の座標) が返される
         assert midpoint == route_coordinates[1]
-        assert midpoint.latitude.to_float() == 35.6896
-        assert midpoint.longitude.to_float() == 139.6917
+        assert midpoint.latitude == 35.6896
+        assert midpoint.longitude == 139.6917
 
     def test_空のリストの場合はIndexErrorが発生すること(self) -> None:
         """空のリストの場合はIndexErrorが発生することを確認"""

@@ -90,8 +90,8 @@ class StreetViewService:
             )
 
         logger.info(
-            f"Actual Image Location: Latitude {location_coordinate.latitude.to_float()}, "
-            f"Longitude {location_coordinate.longitude.to_float()}"
+            f"Actual Image Location: Latitude {location_coordinate.latitude}, "
+            f"Longitude {location_coordinate.longitude}"
         )
 
         return location_coordinate

@@ -31,8 +31,8 @@ def generate_random_point(center: Coordinate, radius_m: float) -> Coordinate:
     Returns:
         Coordinate: 新しい座標
     """
-    center_lat_float = center.latitude.to_float()
-    center_lng_float = center.longitude.to_float()
+    center_lat_float = center.latitude
+    center_lng_float = center.longitude
     center_lat_radians = math.radians(center_lat_float)
 
     # 緯度方向の半径(度単位)

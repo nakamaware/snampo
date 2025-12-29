@@ -4,9 +4,9 @@
 """
 
 import logging
-from dataclasses import dataclass
 
 from injector import inject
+from pydantic import BaseModel, ConfigDict, Field
 from tenacity import (
     before_sleep_log,
     retry,
@@ -21,17 +21,14 @@ from app.domain.exceptions import ExternalServiceValidationError, RouteGeneratio
 from app.domain.services import coordinate_service, route_service
 from app.domain.value_objects import (
     Coordinate,
-    ImageHeight,
     ImageSize,
-    ImageWidth,
     StreetViewImage,
 )
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RouteResultDto:
+class RouteResultDto(BaseModel):
     """ルート生成結果DTO
 
     Application層から返されるルート情報を表します。
@@ -46,12 +43,16 @@ class RouteResultDto:
         destination_image: 目的地の画像情報
     """
 
-    departure: Coordinate
-    destination: Coordinate
-    midpoints: list[Coordinate]
-    overview_polyline: str
-    midpoint_images: list[tuple[Coordinate, StreetViewImage]]
-    destination_image: StreetViewImage | None = None
+    model_config = ConfigDict(frozen=True)
+
+    departure: Coordinate = Field(description="出発地点の座標")
+    destination: Coordinate = Field(description="目的地の座標")
+    midpoints: list[Coordinate] = Field(description="中間地点の座標リスト")
+    overview_polyline: str = Field(description="ルートの概要ポリライン文字列")
+    midpoint_images: list[tuple[Coordinate, StreetViewImage]] = Field(
+        description="中間地点の画像情報リスト ((座標, StreetViewImage)のリスト、順序を保持)"
+    )
+    destination_image: StreetViewImage | None = Field(default=None, description="目的地の画像情報")
 
 
 class GenerateRouteUseCase:
@@ -174,10 +175,7 @@ class GenerateRouteUseCase:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
         midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
-        image_size = ImageSize(
-            width=ImageWidth(value=600),
-            height=ImageHeight(value=300),
-        )
+        image_size = ImageSize(width=600, height=300)
         street_view_image = self.street_view_service.get_street_view_image_data(
             midpoint_coordinate,
             image_size,
@@ -196,10 +194,7 @@ class GenerateRouteUseCase:
         Raises:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
-        image_size = ImageSize(
-            width=ImageWidth(value=600),
-            height=ImageHeight(value=300),
-        )
+        image_size = ImageSize(width=600, height=300)
         return self.street_view_service.get_street_view_image_data(
             destination_coordinate,
             image_size,

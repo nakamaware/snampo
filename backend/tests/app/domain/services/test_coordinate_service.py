@@ -21,8 +21,8 @@ class TestGenerateRandomPoint:
 
             # 実装と同じ計算方法で距離を計算
             # 実装では radius_in_degrees = radius_m / 111300 で度に変換している
-            delta_lat_deg = point.latitude.to_float() - center.latitude.to_float()
-            delta_lng_deg = point.longitude.to_float() - center.longitude.to_float()
+            delta_lat_deg = point.latitude - center.latitude
+            delta_lng_deg = point.longitude - center.longitude
             # 度単位での距離を計算し、メートルに変換
             distance_deg = math.sqrt(delta_lat_deg**2 + delta_lng_deg**2)
             distance_m = distance_deg * 111300  # 1度 ≈ 111.3km
@@ -42,8 +42,8 @@ class TestGenerateRandomPoint:
         point = generate_random_point(center, radius_m)
 
         # 浮動小数点数の誤差を考慮して、ほぼ同じ座標であることを確認
-        assert abs(point.latitude.to_float() - center.latitude.to_float()) < 1e-6
-        assert abs(point.longitude.to_float() - center.longitude.to_float()) < 1e-6
+        assert abs(point.latitude - center.latitude) < 1e-6
+        assert abs(point.longitude - center.longitude) < 1e-6
 
     def test_戻り値がCoordinate型であること(self) -> None:
         """戻り値がCoordinate型であることを確認"""
@@ -74,8 +74,8 @@ class TestGenerateRandomPoint:
             point = generate_random_point(center, radius_m)
 
             # 緯度・経度が有効な範囲内であることを確認
-            assert -90 <= point.latitude.to_float() <= 90
-            assert -180 <= point.longitude.to_float() <= 180
+            assert -90 <= point.latitude <= 90
+            assert -180 <= point.longitude <= 180
 
     def test_異なる中心点で正しく動作すること(self) -> None:
         """異なる中心点で正しく動作することを確認"""
@@ -90,8 +90,8 @@ class TestGenerateRandomPoint:
 
         for center in [center_equator, center_near_pole, center_dateline]:
             point = generate_random_point(center, radius_m)
-            assert -90 <= point.latitude.to_float() <= 90
-            assert -180 <= point.longitude.to_float() <= 180
+            assert -90 <= point.latitude <= 90
+            assert -180 <= point.longitude <= 180
 
     def test_様々な半径で正しく動作すること(self) -> None:
         """様々な半径で正しく動作することを確認"""
@@ -100,8 +100,8 @@ class TestGenerateRandomPoint:
 
         for radius_m in radii:
             point = generate_random_point(center, radius_m)
-            assert -90 <= point.latitude.to_float() <= 90
-            assert -180 <= point.longitude.to_float() <= 180
+            assert -90 <= point.latitude <= 90
+            assert -180 <= point.longitude <= 180
 
     def test_全方向に点が生成されること(self) -> None:
         """ランダムな角度が均等に分布し、全方向に点が生成されることを確認"""
@@ -114,8 +114,8 @@ class TestGenerateRandomPoint:
         # 角度を計算して、全方向に分布していることを確認
         angles = []
         for point in points:
-            delta_lat = point.latitude.to_float() - center.latitude.to_float()
-            delta_lng = point.longitude.to_float() - center.longitude.to_float()
+            delta_lat = point.latitude - center.latitude
+            delta_lng = point.longitude - center.longitude
             angle = math.atan2(delta_lng, delta_lat)
             angles.append(angle)
 

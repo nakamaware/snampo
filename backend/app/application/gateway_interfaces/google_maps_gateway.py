@@ -4,14 +4,15 @@ Google Maps APIへのアクセスを抽象化するポートです。
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from typing import cast
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.exceptions import ExternalServiceValidationError
 from app.domain.value_objects import Coordinate, ImageSize
 
 
-@dataclass(frozen=True)
-class StreetViewMetadata:
+class StreetViewMetadata(BaseModel):
     """Street Viewメタデータを表すDTO
 
     Gatewayの返り値として使用されます。
@@ -21,32 +22,48 @@ class StreetViewMetadata:
         location: 画像の実際の座標(status == "OK"の場合のみ設定、それ以外はNone)
     """
 
-    status: str
-    location: Coordinate | None
+    model_config = ConfigDict(frozen=True)
 
-    def __init__(self, status: str, location: Coordinate | None = None) -> None:
-        """Street Viewメタデータを初期化
+    status: str = Field(description='メタデータのステータス (例: "OK", "ZERO_RESULTS")')
+    location: Coordinate | None = Field(
+        default=None,
+        description='画像の実際の座標 (status == "OK"の場合のみ設定、それ以外はNone)',
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_metadata(cls, data: dict | object) -> dict:
+        """Street Viewメタデータを検証・正規化
+
+        status == "OK"の場合、locationが必須であることを確認します。
+        status != "OK"の場合、locationをNoneに設定します。
 
         Args:
-            status: メタデータのステータス
-            location: 画像の実際の座標(status == "OK"の場合のみ設定)
+            data: 初期化データ
+
+        Returns:
+            dict: 正規化された初期化データ
 
         Raises:
             ExternalServiceValidationError: メタデータが無効な場合
         """
-        # frozen dataclassのフィールドを設定するためにobject.__setattr__を使用
-        object.__setattr__(self, "status", status)
+        if not isinstance(data, dict):
+            return cast(dict, data)
 
-        # status == "OK"の場合、locationの検証を行う
+        status = data.get("status")
+        location = data.get("location")
+
         if status == "OK":
             if location is None:
                 raise ExternalServiceValidationError(
                     "Street View metadata incomplete: 'location' is required when status is 'OK'",
                     service_name="Street View API",
                 )
-            object.__setattr__(self, "location", location)
         else:
-            object.__setattr__(self, "location", None)
+            # status != "OK"の場合、locationをNoneに設定
+            data["location"] = None
+
+        return data
 
 
 class GoogleMapsGateway(ABC):

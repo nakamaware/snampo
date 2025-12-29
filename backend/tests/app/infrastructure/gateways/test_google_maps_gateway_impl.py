@@ -19,8 +19,8 @@ class TestDecodePolyline:
         assert len(coordinates) >= 1
         assert isinstance(coordinates[0], Coordinate)
         # デコード結果が有効な座標範囲内であることを確認
-        assert -90 <= coordinates[0].latitude.to_float() <= 90
-        assert -180 <= coordinates[0].longitude.to_float() <= 180
+        assert -90 <= coordinates[0].latitude <= 90
+        assert -180 <= coordinates[0].longitude <= 180
 
     def test_複数の点を含むポリラインをデコードできること(self) -> None:
         """複数の点を含むポリラインをデコードできることを確認"""
@@ -33,8 +33,8 @@ class TestDecodePolyline:
         assert len(coordinates) > 1
         for coord in coordinates:
             assert isinstance(coord, Coordinate)
-            assert -90 <= coord.latitude.to_float() <= 90
-            assert -180 <= coord.longitude.to_float() <= 180
+            assert -90 <= coord.latitude <= 90
+            assert -180 <= coord.longitude <= 180
 
     def test_空のポリライン文字列を処理できること(self) -> None:
         """空のポリライン文字列を処理できることを確認"""
@@ -63,5 +63,5 @@ class TestDecodePolyline:
 
         for coord in coordinates:
             # 緯度・経度が有効な範囲内であることを確認
-            assert -90 <= coord.latitude.to_float() <= 90
-            assert -180 <= coord.longitude.to_float() <= 180
+            assert -90 <= coord.latitude <= 90
+            assert -180 <= coord.longitude <= 180
