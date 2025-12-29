@@ -16,8 +16,8 @@ REQUEST_TIMEOUT_SECONDS = 15
 # ルート生成のリトライ回数
 ROUTE_GENERATION_MAX_RETRY_COUNT = 3
 
-# キャッシュTTL定数 (秒) - 1時間
-CACHE_TTL_SECONDS = 3600
+# キャッシュTTL定数 (秒) - 24時間
+CACHE_TTL_SECONDS = 86400
 
 # 環境変数からGoogle APIキーを取得
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
