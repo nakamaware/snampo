@@ -15,7 +15,6 @@ from tenacity import (
 )
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
-from app.application.services.street_view_service import StreetViewService
 from app.config import ROUTE_GENERATION_MAX_RETRY_COUNT
 from app.domain.exceptions import ExternalServiceValidationError, RouteGenerationError
 from app.domain.services import coordinate_service, route_service
@@ -62,16 +61,13 @@ class GenerateRouteUseCase:
     def __init__(
         self,
         google_maps_gateway: GoogleMapsGateway,
-        street_view_service: StreetViewService,
     ) -> None:
         """初期化
 
         Args:
             google_maps_gateway: Google Maps Gateway
-            street_view_service: Street Viewサービス
         """
         self.google_maps_gateway = google_maps_gateway
-        self.street_view_service = street_view_service
 
     def execute(self, current_coordinate: Coordinate, radius_m: float) -> RouteResultDto:
         """ルートを生成する
@@ -176,7 +172,7 @@ class GenerateRouteUseCase:
         """
         midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
         image_size = ImageSize(width=600, height=300)
-        street_view_image = self.street_view_service.get_street_view_image_data(
+        street_view_image = self._get_street_view_image_data(
             midpoint_coordinate,
             image_size,
         )
@@ -195,7 +191,77 @@ class GenerateRouteUseCase:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
         image_size = ImageSize(width=600, height=300)
-        return self.street_view_service.get_street_view_image_data(
+        return self._get_street_view_image_data(
             destination_coordinate,
             image_size,
         )
+
+    def _get_street_view_image_data(
+        self, coordinate: Coordinate, image_size: ImageSize
+    ) -> StreetViewImage:
+        """Street View Image Metadata APIを使用して画像のメタデータを取得
+
+        Args:
+            coordinate: 座標
+            image_size: 画像サイズ
+
+        Returns:
+            StreetViewImage: Street View画像情報
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
+        """
+        metadata_coordinate = self._get_validated_metadata(coordinate)
+        image_content = self.google_maps_gateway.get_street_view_image(
+            coordinate=metadata_coordinate,
+            image_size=image_size,
+        )
+        return StreetViewImage(
+            metadata_coordinate=metadata_coordinate,
+            original_coordinate=coordinate,
+            image_data=image_content,
+        )
+
+    def _get_validated_metadata(self, coordinate: Coordinate) -> Coordinate:
+        """メタデータを取得し、検証する
+
+        Args:
+            coordinate: 座標
+
+        Returns:
+            Coordinate: メタデータから取得した画像の実際の座標
+
+        Raises:
+            ExternalServiceValidationError: Street View画像が取得できない場合
+        """
+        try:
+            metadata = self.google_maps_gateway.get_street_view_metadata(coordinate)
+        except ExternalServiceValidationError as e:
+            logger.error(f"Street View metadata validation failed: {e}")
+            raise ExternalServiceValidationError(str(e), service_name="Street View API") from e
+
+        if metadata.status != "OK":
+            logger.error(
+                f"Street View metadata API returned a non-OK status for a requested location. "
+                f"Status: {metadata.status}"
+            )
+            raise ExternalServiceValidationError(
+                f"Street View metadata unavailable: {metadata.status}.",
+                service_name="Street View API",
+            )
+
+        location_coordinate = metadata.location
+        if location_coordinate is None:
+            # このケースは通常発生しない(Gateway実装のバリデーションで防がれる)
+            logger.error("Street View metadata has OK status but location is None")
+            raise ExternalServiceValidationError(
+                "Street View metadata incomplete: location is None",
+                service_name="Street View API",
+            )
+
+        logger.info(
+            f"Actual Image Location: Latitude {location_coordinate.latitude}, "
+            f"Longitude {location_coordinate.longitude}"
+        )
+
+        return location_coordinate

@@ -5,7 +5,7 @@ import logging
 from fastapi import FastAPI
 
 from app.adapters.api.openapi import custom_openapi
-from app.adapters.api.routes import route, streetview
+from app.adapters.api.routes import route
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
@@ -16,4 +16,3 @@ app = FastAPI()
 app.openapi = lambda: custom_openapi(app)
 
 app.include_router(route.router)
-app.include_router(streetview.router)
