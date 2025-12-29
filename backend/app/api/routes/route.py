@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app import container
-from app.adapters.api.schemas import RouteResponse
+from app.api.schemas import RouteResponse
 from app.application.usecases.generate_route_usecase import GenerateRouteUseCase
 from app.domain.exceptions import ExternalServiceError, RouteGenerationError
 from app.domain.value_objects import Coordinate
