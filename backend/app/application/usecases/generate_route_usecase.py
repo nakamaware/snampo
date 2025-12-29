@@ -68,6 +68,7 @@ class GenerateRouteUseCase:
             google_maps_gateway: Google Maps Gateway
         """
         self.google_maps_gateway = google_maps_gateway
+        self.image_size = ImageSize(width=600, height=300)
 
     def execute(self, current_coordinate: Coordinate, radius_m: float) -> RouteResultDto:
         """ルートを生成する
@@ -118,12 +119,26 @@ class GenerateRouteUseCase:
         Raises:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
-        destination_coordinate, route_coordinates, overview_polyline = (
-            self._fetch_route_coordinates(current_coordinate, radius_m)
+        # 目的地の座標計算
+        destination_coordinate = coordinate_service.generate_random_point(
+            current_coordinate, radius_m
+        )
+        destination_image = self._get_street_view_image_data(
+            destination_coordinate,
+            self.image_size,
         )
 
-        midpoint_coordinate, midpoint_image = self._fetch_midpoint_image(route_coordinates)
-        destination_image = self._fetch_destination_image(destination_coordinate)
+        # ルート情報取得
+        route_coordinates, overview_polyline = self.google_maps_gateway.get_directions(
+            current_coordinate, destination_coordinate
+        )
+
+        # 中間地点の座標計算と画像取得
+        midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
+        midpoint_image = self._get_street_view_image_data(
+            midpoint_coordinate,
+            self.image_size,
+        )
 
         return RouteResultDto(
             departure=current_coordinate,
@@ -132,68 +147,6 @@ class GenerateRouteUseCase:
             overview_polyline=overview_polyline,
             midpoint_images=[(midpoint_coordinate, midpoint_image)],
             destination_image=destination_image,
-        )
-
-    def _fetch_route_coordinates(
-        self, current_coordinate: Coordinate, radius_m: float
-    ) -> tuple[Coordinate, list[Coordinate], str]:
-        """ルート検索を実行
-
-        Args:
-            current_coordinate: 現在地の座標
-            radius_m: 半径 (メートル単位)
-
-        Returns:
-            tuple[Coordinate, list[Coordinate], str]:
-                (目的地座標, ルート座標リスト, overview_polyline文字列)
-        """
-        destination_coordinate = coordinate_service.generate_random_point(
-            current_coordinate, radius_m
-        )
-        route_coordinates, overview_polyline = self.google_maps_gateway.get_directions(
-            current_coordinate, destination_coordinate
-        )
-
-        return destination_coordinate, route_coordinates, overview_polyline
-
-    def _fetch_midpoint_image(
-        self, route_coordinates: list[Coordinate]
-    ) -> tuple[Coordinate, StreetViewImage]:
-        """中間地点の画像情報を取得
-
-        Args:
-            route_coordinates: ルート座標リスト
-
-        Returns:
-            tuple[Coordinate, StreetViewImage]: (中間地点座標, 画像情報)
-
-        Raises:
-            ExternalServiceValidationError: Street View画像が取得できない場合
-        """
-        midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
-        image_size = ImageSize(width=600, height=300)
-        street_view_image = self._get_street_view_image_data(
-            midpoint_coordinate,
-            image_size,
-        )
-        return midpoint_coordinate, street_view_image
-
-    def _fetch_destination_image(self, destination_coordinate: Coordinate) -> StreetViewImage:
-        """目的地の画像情報を取得
-
-        Args:
-            destination_coordinate: 目的地の座標
-
-        Returns:
-            StreetViewImage: 目的地の画像情報
-
-        Raises:
-            ExternalServiceValidationError: Street View画像が取得できない場合
-        """
-        image_size = ImageSize(width=600, height=300)
-        return self._get_street_view_image_data(
-            destination_coordinate,
-            image_size,
         )
 
     def _get_street_view_image_data(
