@@ -49,7 +49,7 @@ class StreetViewMetadata:
             object.__setattr__(self, "location", None)
 
 
-class GoogleMapsGatewayIf(ABC):
+class GoogleMapsGateway(ABC):
     """Google Maps APIへのアクセスを提供するポート"""
 
     @abstractmethod

@@ -14,7 +14,7 @@ from tenacity import (
     stop_after_attempt,
 )
 
-from app.application.gateway_interfaces.google_maps_gateway_if import GoogleMapsGatewayIf
+from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.application.services.street_view_service import StreetViewService
 from app.config import ROUTE_GENERATION_MAX_RETRY_COUNT
 from app.domain.exceptions import ExternalServiceValidationError, RouteGenerationError
@@ -60,7 +60,7 @@ class GenerateRouteUseCase:
     @inject
     def __init__(
         self,
-        google_maps_gateway: GoogleMapsGatewayIf,
+        google_maps_gateway: GoogleMapsGateway,
         street_view_service: StreetViewService,
     ) -> None:
         """初期化

@@ -6,10 +6,8 @@ Infrastructure層の実装への依存は、この設定モジュールに集約
 
 from injector import Injector
 
-from app.adapters.client_interfaces.google_maps_client_if import GoogleMapsClientIf
-from app.adapters.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
-from app.application.gateway_interfaces.google_maps_gateway_if import GoogleMapsGatewayIf
-from app.infrastructure.clients.google_maps_client_impl import GoogleMapsClientImpl
+from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
+from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
 
 
 def create_container() -> Injector:
@@ -19,8 +17,7 @@ def create_container() -> Injector:
         Injector: 設定済みのDIコンテナ
     """
     injector = Injector()
-    injector.binder.bind(GoogleMapsClientIf, to=GoogleMapsClientImpl)
-    injector.binder.bind(GoogleMapsGatewayIf, to=GoogleMapsGatewayImpl)
+    injector.binder.bind(GoogleMapsGateway, to=GoogleMapsGatewayImpl)
     return injector
 
 

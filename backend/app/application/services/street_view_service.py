@@ -7,7 +7,7 @@ import logging
 
 from injector import inject
 
-from app.application.gateway_interfaces.google_maps_gateway_if import GoogleMapsGatewayIf
+from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.domain.exceptions import ExternalServiceValidationError
 from app.domain.value_objects import Coordinate, ImageSize, StreetViewImage
 
@@ -18,7 +18,7 @@ class StreetViewService:
     """Street View画像取得サービス"""
 
     @inject
-    def __init__(self, google_maps_gateway: GoogleMapsGatewayIf) -> None:
+    def __init__(self, google_maps_gateway: GoogleMapsGateway) -> None:
         """初期化
 
         Args:

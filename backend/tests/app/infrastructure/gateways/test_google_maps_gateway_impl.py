@@ -1,7 +1,7 @@
-"""google_maps_gateway_adapterのポリラインデコードテスト"""
+"""google_maps_gateway_implのポリラインデコードテスト"""
 
-from app.adapters.gateways.google_maps_gateway_adapter import GoogleMapsGatewayAdapter
 from app.domain.value_objects import Coordinate
+from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
 
 
 class TestDecodePolyline:
@@ -14,7 +14,7 @@ class TestDecodePolyline:
         # 実際のGoogle Maps APIから取得した形式を使用
         polyline = "_p~iF~ps|U"
 
-        coordinates = GoogleMapsGatewayAdapter._decode_polyline(polyline)
+        coordinates = GoogleMapsGatewayImpl._decode_polyline(polyline)
 
         assert len(coordinates) >= 1
         assert isinstance(coordinates[0], Coordinate)
@@ -28,7 +28,7 @@ class TestDecodePolyline:
         # 実際のポリライン文字列を使用
         polyline = "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
 
-        coordinates = GoogleMapsGatewayAdapter._decode_polyline(polyline)
+        coordinates = GoogleMapsGatewayImpl._decode_polyline(polyline)
 
         assert len(coordinates) > 1
         for coord in coordinates:
@@ -40,7 +40,7 @@ class TestDecodePolyline:
         """空のポリライン文字列を処理できることを確認"""
         polyline = ""
 
-        coordinates = GoogleMapsGatewayAdapter._decode_polyline(polyline)
+        coordinates = GoogleMapsGatewayImpl._decode_polyline(polyline)
 
         assert coordinates == []
 
@@ -49,7 +49,7 @@ class TestDecodePolyline:
         # 有効なポリライン文字列を使用
         polyline = "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
 
-        coordinates = GoogleMapsGatewayAdapter._decode_polyline(polyline)
+        coordinates = GoogleMapsGatewayImpl._decode_polyline(polyline)
 
         assert isinstance(coordinates, list)
         assert all(isinstance(coord, Coordinate) for coord in coordinates)
@@ -59,7 +59,7 @@ class TestDecodePolyline:
         # 東京駅周辺のポリライン (簡易版)
         polyline = "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
 
-        coordinates = GoogleMapsGatewayAdapter._decode_polyline(polyline)
+        coordinates = GoogleMapsGatewayImpl._decode_polyline(polyline)
 
         for coord in coordinates:
             # 緯度・経度が有効な範囲内であることを確認
