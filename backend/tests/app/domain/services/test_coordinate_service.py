@@ -11,8 +11,6 @@ from app.domain.value_objects import Coordinate
 DEFAULT_LATITUDE = 35.6870958
 DEFAULT_LONGITUDE = 139.8133963
 
-# ========== 基本的な動作確認(正常系) ==========
-
 
 def test_戻り値がCoordinate型であること() -> None:
     """戻り値がCoordinate型であることを確認"""
@@ -60,9 +58,6 @@ def test_半径0の場合は中心点と同じ座標が生成されること() -
     assert abs(point.longitude - center.longitude) < 1e-6
 
 
-# ========== ランダム性・分布の確認 ==========
-
-
 def test_複数回実行すると異なる結果が得られること() -> None:
     """複数回実行すると異なる結果が得られることを確認"""
     center = Coordinate(latitude=DEFAULT_LATITUDE, longitude=DEFAULT_LONGITUDE)
@@ -101,9 +96,6 @@ def test_全方向に点が生成されること() -> None:
 
     # すべての象限に少なくとも1つの点が存在することを確認
     assert all(count > 0 for count in quadrants), "全方向に点が生成されていません"
-
-
-# ========== 様々な入力値での動作確認 ==========
 
 
 def test_様々な半径で正しく動作すること() -> None:
@@ -161,9 +153,6 @@ def test_異なる中心点で正しく動作すること() -> None:
         point = generate_random_point(center, radius_m)
         assert -90 <= point.latitude <= 90
         assert -180 <= point.longitude <= 180
-
-
-# ========== 境界値・エッジケース ==========
 
 
 def test_生成された座標が有効な範囲内であること() -> None:
