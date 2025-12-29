@@ -11,6 +11,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "injector>=0.20.0",
     "tenacity>=8.0.0",
+    "geopy>=2.4.0",
 ]
 
 [build-system]
