@@ -205,6 +205,18 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 service_name="Street View Metadata API",
             ) from e
 
+    def get_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
+        """Street View画像を取得
+
+        Args:
+            coordinate: 座標
+            image_size: 画像サイズ
+
+        Returns:
+            bytes: 画像データ
+        """
+        return self._get_street_view_image_cached(coordinate, image_size)
+
     def _fetch_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
         """Street View Static APIから画像を取得
 
@@ -239,18 +251,6 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 f"Failed to retrieve Street View image: {e}",
                 service_name="Street View Static API",
             ) from e
-
-    def get_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
-        """Street View画像を取得
-
-        Args:
-            coordinate: 座標
-            image_size: 画像サイズ
-
-        Returns:
-            bytes: 画像データ
-        """
-        return self._get_street_view_image_cached(coordinate, image_size)
 
     @staticmethod
     def _coordinate_to_lat_lng_string(coordinate: Coordinate) -> str:

@@ -16,7 +16,12 @@ from tenacity import (
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.config import ROUTE_GENERATION_MAX_RETRY_COUNT
-from app.domain.exceptions import ExternalServiceValidationError, RouteGenerationError
+from app.domain.exceptions import (
+    ExternalServiceError,
+    ExternalServiceTimeoutError,
+    ExternalServiceValidationError,
+    RouteGenerationError,
+)
 from app.domain.services import coordinate_service, route_service
 from app.domain.value_objects import (
     Coordinate,
@@ -164,29 +169,7 @@ class GenerateRouteUseCase:
         Raises:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
-        metadata_coordinate = self._get_validated_metadata(coordinate)
-        image_content = self.google_maps_gateway.get_street_view_image(
-            coordinate=metadata_coordinate,
-            image_size=image_size,
-        )
-        return StreetViewImage(
-            metadata_coordinate=metadata_coordinate,
-            original_coordinate=coordinate,
-            image_data=image_content,
-        )
-
-    def _get_validated_metadata(self, coordinate: Coordinate) -> Coordinate:
-        """メタデータを取得し、検証する
-
-        Args:
-            coordinate: 座標
-
-        Returns:
-            Coordinate: メタデータから取得した画像の実際の座標
-
-        Raises:
-            ExternalServiceValidationError: Street View画像が取得できない場合
-        """
+        # 対象座標にストリートビューが存在するかを確認するためにメタデータを取得
         try:
             metadata = self.google_maps_gateway.get_street_view_metadata(coordinate)
         except ExternalServiceValidationError as e:
@@ -203,18 +186,30 @@ class GenerateRouteUseCase:
                 service_name="Street View API",
             )
 
-        location_coordinate = metadata.location
-        if location_coordinate is None:
-            # このケースは通常発生しない(Gateway実装のバリデーションで防がれる)
+        metadata_coordinate = metadata.location
+        if metadata_coordinate is None:
+            # NOTE: このケースは通常発生しない (Gateway実装のバリデーションで防がれる)
             logger.error("Street View metadata has OK status but location is None")
             raise ExternalServiceValidationError(
                 "Street View metadata incomplete: location is None",
                 service_name="Street View API",
             )
 
-        logger.info(
-            f"Actual Image Location: Latitude {location_coordinate.latitude}, "
-            f"Longitude {location_coordinate.longitude}"
-        )
+        # ストリートビュー画像を取得
+        try:
+            image_content = self.google_maps_gateway.get_street_view_image(
+                coordinate=metadata_coordinate,
+                image_size=image_size,
+            )
+        except ExternalServiceTimeoutError as e:
+            logger.error(f"Street View image timeout: {e}")
+            raise ExternalServiceTimeoutError(str(e), service_name="Street View API") from e
+        except ExternalServiceError as e:
+            logger.error(f"Street View image error: {e}")
+            raise ExternalServiceError(str(e), service_name="Street View API") from e
 
-        return location_coordinate
+        return StreetViewImage(
+            metadata_coordinate=metadata_coordinate,
+            original_coordinate=coordinate,
+            image_data=image_content,
+        )
