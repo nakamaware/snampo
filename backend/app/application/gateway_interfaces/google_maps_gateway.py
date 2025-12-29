@@ -4,11 +4,9 @@ Google Maps APIへのアクセスを抽象化するポートです。
 """
 
 from abc import ABC, abstractmethod
-from typing import cast
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.exceptions import ExternalServiceValidationError
 from app.domain.value_objects import Coordinate, ImageSize
 
 
@@ -29,41 +27,6 @@ class StreetViewMetadata(BaseModel):
         default=None,
         description='画像の実際の座標 (status == "OK"の場合のみ設定、それ以外はNone)',
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def validate_metadata(cls, data: dict | object) -> dict:
-        """Street Viewメタデータを検証・正規化
-
-        status == "OK"の場合、locationが必須であることを確認します。
-        status != "OK"の場合、locationをNoneに設定します。
-
-        Args:
-            data: 初期化データ
-
-        Returns:
-            dict: 正規化された初期化データ
-
-        Raises:
-            ExternalServiceValidationError: メタデータが無効な場合
-        """
-        if not isinstance(data, dict):
-            return cast(dict, data)
-
-        status = data.get("status")
-        location = data.get("location")
-
-        if status == "OK":
-            if location is None:
-                raise ExternalServiceValidationError(
-                    "Street View metadata incomplete: 'location' is required when status is 'OK'",
-                    service_name="Street View API",
-                )
-        else:
-            # status != "OK"の場合、locationをNoneに設定
-            data["location"] = None
-
-        return data
 
 
 class GoogleMapsGateway(ABC):

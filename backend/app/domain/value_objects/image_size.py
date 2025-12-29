@@ -8,14 +8,6 @@ class ImageSize(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    def __hash__(self) -> int:
-        """ハッシュ値を計算
-
-        Returns:
-            int: ハッシュ値
-        """
-        return hash((self.width, self.height))
-
     width: int = Field(
         gt=0,
         le=640,
@@ -27,6 +19,14 @@ class ImageSize(BaseModel):
         le=640,
         description="画像高さの値 (1から640の範囲)",
     )
+
+    def __hash__(self) -> int:
+        """ハッシュ値を計算
+
+        Returns:
+            int: ハッシュ値
+        """
+        return hash((self.width, self.height))
 
     def to_string(self) -> str:
         """Google API用の文字列形式に変換

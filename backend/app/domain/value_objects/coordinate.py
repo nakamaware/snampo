@@ -11,14 +11,6 @@ class Coordinate(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    def __hash__(self) -> int:
-        """ハッシュ値を計算
-
-        Returns:
-            int: ハッシュ値
-        """
-        return hash((self.latitude, self.longitude))
-
     latitude: float = Field(
         ge=-90.0,
         le=90.0,
@@ -30,6 +22,14 @@ class Coordinate(BaseModel):
         le=180.0,
         description="経度の値 (-180から180の範囲)",
     )
+
+    def __hash__(self) -> int:
+        """ハッシュ値を計算
+
+        Returns:
+            int: ハッシュ値
+        """
+        return hash((self.latitude, self.longitude))
 
     def to_float_tuple(self) -> tuple[float, float]:
         """floatのタプルに変換

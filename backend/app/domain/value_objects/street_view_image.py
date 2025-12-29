@@ -13,6 +13,10 @@ class StreetViewImage(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    metadata_coordinate: Coordinate
+    original_coordinate: Coordinate
+    image_data: bytes
+
     def __hash__(self) -> int:
         """ハッシュ値を計算
 
@@ -20,7 +24,3 @@ class StreetViewImage(BaseModel):
             int: ハッシュ値
         """
         return hash((self.metadata_coordinate, self.original_coordinate, self.image_data))
-
-    metadata_coordinate: Coordinate
-    original_coordinate: Coordinate
-    image_data: bytes

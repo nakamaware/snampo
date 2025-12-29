@@ -21,8 +21,8 @@ def get_generate_route_usecase() -> GenerateRouteUseCase:
     Returns:
         GenerateRouteUseCase: ルート生成ユースケース
     """
-    _container = container.get_container()
-    return _container.get(GenerateRouteUseCase)
+    container_instance = container.get_container()
+    return container_instance.get(GenerateRouteUseCase)
 
 
 @router.get("/route")

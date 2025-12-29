@@ -73,7 +73,7 @@ class RouteResponse(BaseModel):
         Returns:
             RouteResponse: APIレスポンススキーマ
         """
-        midpoint_images_dict = dict(dto.midpoint_images)
+        midpoint_images_dict = dict[Coordinate, StreetViewImage](dto.midpoint_images)
         midpoint_list = [
             MidPoint.from_coordinate(coord, midpoint_images_dict.get(coord))
             for coord in dto.midpoints
