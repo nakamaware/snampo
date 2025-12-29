@@ -16,85 +16,9 @@ class DefaultApi {
 
   final ApiClient apiClient;
 
-  /// Get Street View Image
-  ///
-  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
-  /// Parameters:
-  ///
-  /// * [num] latitude (required):
-  ///   緯度
-  ///
-  /// * [num] longitude (required):
-  ///   経度
-  ///
-  /// * [String] size:
-  ///   画像サイズ
-  Future<Response> getStreetViewImageStreetviewGetWithHttpInfo(num latitude, num longitude, { String? size, }) async {
-    // ignore: prefer_const_declarations
-    final path = r'/streetview';
-
-    // ignore: prefer_final_locals
-    Object? postBody;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-      queryParams.addAll(_queryParams('', 'latitude', latitude));
-      queryParams.addAll(_queryParams('', 'longitude', longitude));
-    if (size != null) {
-      queryParams.addAll(_queryParams('', 'size', size));
-    }
-
-    const contentTypes = <String>[];
-
-
-    return apiClient.invokeAPI(
-      path,
-      'GET',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-    );
-  }
-
-  /// Get Street View Image
-  ///
-  /// Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
-  ///
-  /// Parameters:
-  ///
-  /// * [num] latitude (required):
-  ///   緯度
-  ///
-  /// * [num] longitude (required):
-  ///   経度
-  ///
-  /// * [String] size:
-  ///   画像サイズ
-  Future<StreetViewImageResponse?> getStreetViewImageStreetviewGet(num latitude, num longitude, { String? size, }) async {
-    final response = await getStreetViewImageStreetviewGetWithHttpInfo(latitude, longitude,  size: size, );
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-    // When a remote server returns no body with a status of 204, we shall not decode it.
-    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
-    // FormatException when trying to decode an empty string.
-    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'StreetViewImageResponse',) as StreetViewImageResponse;
-    
-    }
-    return null;
-  }
-
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
+  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -139,7 +63,7 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)  Returns:     RouteResponse: ルート情報
+  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Parameters:
   ///

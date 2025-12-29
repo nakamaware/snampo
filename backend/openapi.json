@@ -8,7 +8,7 @@
     "/route": {
       "get": {
         "summary": "Route",
-        "description": "ルートを生成\n\nArgs:\n    current_lat: 現在の緯度\n    current_lng: 現在の経度\n    radius: 半径 (メートル単位)\n\nReturns:\n    RouteResponse: ルート情報",
+        "description": "ルートを生成\n\nArgs:\n    current_lat: 現在の緯度\n    current_lng: 現在の経度\n    radius: 半径 (メートル単位)\n    usecase: ルート生成ユースケース\n\nReturns:\n    RouteResponse: ルート情報\n\nRaises:\n    HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合",
         "operationId": "route_route_get",
         "parameters": [
           {
@@ -61,79 +61,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RouteResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/streetview": {
-      "get": {
-        "summary": "Get Street View Image",
-        "description": "Street View Image Metadata APIを使用して画像のメタデータを取得\n\nArgs:\n    latitude: 緯度\n    longitude: 経度\n    size: 画像サイズ\n\nReturns:\n    StreetViewImageResponse: メタデータと画像データ",
-        "operationId": "get_street_view_image_streetview_get",
-        "parameters": [
-          {
-            "name": "latitude",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "maximum": 90,
-              "minimum": -90,
-              "description": "緯度",
-              "title": "Latitude"
-            },
-            "description": "緯度",
-            "example": 35.6762
-          },
-          {
-            "name": "longitude",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "maximum": 180,
-              "minimum": -180,
-              "description": "経度",
-              "title": "Longitude"
-            },
-            "description": "経度",
-            "example": 139.6503
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^\\d+x\\d+$",
-              "description": "画像サイズ",
-              "default": "600x300",
-              "title": "Size"
-            },
-            "description": "画像サイズ",
-            "example": "600x300"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StreetViewImageResponse"
                 }
               }
             }
@@ -267,40 +194,6 @@
         ],
         "title": "RouteResponse",
         "description": "ルート情報を表すモデル"
-      },
-      "StreetViewImageResponse": {
-        "properties": {
-          "metadata_latitude": {
-            "type": "number",
-            "title": "Metadata Latitude"
-          },
-          "metadata_longitude": {
-            "type": "number",
-            "title": "Metadata Longitude"
-          },
-          "original_latitude": {
-            "type": "number",
-            "title": "Original Latitude"
-          },
-          "original_longitude": {
-            "type": "number",
-            "title": "Original Longitude"
-          },
-          "image_data": {
-            "type": "string",
-            "title": "Image Data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "metadata_latitude",
-          "metadata_longitude",
-          "original_latitude",
-          "original_longitude",
-          "image_data"
-        ],
-        "title": "StreetViewImageResponse",
-        "description": "Street View画像のメタデータと画像データを表すモデル"
       },
       "ValidationError": {
         "properties": {

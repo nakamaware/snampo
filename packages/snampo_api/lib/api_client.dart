@@ -190,8 +190,6 @@ class ApiClient {
           return Point.fromJson(value);
         case 'RouteResponse':
           return RouteResponse.fromJson(value);
-        case 'StreetViewImageResponse':
-          return StreetViewImageResponse.fromJson(value);
         case 'ValidationError':
           return ValidationError.fromJson(value);
         default:
