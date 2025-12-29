@@ -20,6 +20,7 @@ from app.domain.exceptions import (
     ExternalServiceValidationError,
 )
 from app.domain.value_objects import Coordinate, ImageSize
+from app.infrastructure import mappers
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             tuple[list[Coordinate], str]:
                 (ルート座標リスト, overview_polyline文字列)
         """
-        origin_str = self._coordinate_to_lat_lng_string(origin)
-        destination_str = self._coordinate_to_lat_lng_string(destination)
+        origin_str = f"{origin.latitude},{origin.longitude}"
+        destination_str = f"{destination.latitude},{destination.longitude}"
         data = self._get_directions_cached(origin_str, destination_str)
 
         if data.get("status") != "OK":
@@ -74,7 +75,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
 
         route_coordinates: list[Coordinate] = []
         for step in routes[0]["legs"][0]["steps"]:
-            route_coordinates.extend(self._decode_polyline(step["polyline"]["points"]))
+            route_coordinates.extend(mappers.decode_polyline(step["polyline"]["points"]))
 
         overview_polyline = routes[0]["overview_polyline"]["points"]
 
@@ -251,63 +252,3 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 f"Failed to retrieve Street View image: {e}",
                 service_name="Street View Static API",
             ) from e
-
-    @staticmethod
-    def _coordinate_to_lat_lng_string(coordinate: Coordinate) -> str:
-        """座標をGoogle Maps API用の文字列形式に変換
-
-        Args:
-            coordinate: 座標値オブジェクト
-
-        Returns:
-            str: "緯度,経度"形式の文字列
-        """
-        return f"{coordinate.latitude},{coordinate.longitude}"
-
-    @staticmethod
-    def _decode_polyline(polyline_str: str) -> list[Coordinate]:
-        """Google Maps APIのポリラインをデコードして座標リストを生成
-
-        Args:
-            polyline_str: ポリラインの文字列
-
-        Returns:
-            list[Coordinate]: 座標リスト
-        """
-        index = 0
-        coordinates = []
-        lat = 0
-        lng = 0
-
-        while index < len(polyline_str):
-            shift = 0
-            result = 0
-            while True:
-                byte = ord(polyline_str[index]) - 63
-                index += 1
-                result |= (byte & 0x1F) << shift
-                shift += 5
-                if byte < 0x20:
-                    break
-
-            dlat = ~(result >> 1) if result & 1 else (result >> 1)
-            lat += dlat
-
-            shift = 0
-            result = 0
-            while True:
-                byte = ord(polyline_str[index]) - 63
-                index += 1
-                result |= (byte & 0x1F) << shift
-                shift += 5
-                if byte < 0x20:
-                    break
-
-            dlng = ~(result >> 1) if result & 1 else (result >> 1)
-            lng += dlng
-
-            lat_float = lat * 1e-5
-            lng_float = lng * 1e-5
-            coordinates.append(Coordinate(latitude=lat_float, longitude=lng_float))
-
-        return coordinates
