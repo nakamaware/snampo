@@ -116,20 +116,37 @@ Snampoプロジェクトのリポジトリです。
 
    Android SDK Platform 36が必要です。
 
-9. **secret.propertiesの設定**（フロントエンド）
+9. **環境変数の設定**（フロントエンド）
 
-   Google Maps API キーを設定するために、
-   `frontend/android/secret.properties.example` をコピーして
-   `frontend/android/secret.properties` を作成し、API キーを設定してください。
+   `frontend/.env.example` をコピーして `frontend/.env` ファイルを作成し、API キーとAPIのベースURLを設定してください。
 
    ```bash
-   cd frontend/android
-   cp secret.properties.example secret.properties
+   cd frontend
+   cp .env.example .env
    ```
 
-   その後、`frontend/android/secret.properties` を開いて
-   `YOUR_GOOGLE_MAPS_API_KEY_HERE` を実際の Google Maps API キーに
-   置き換えてください。
+   `.env` ファイルを開いて、実際の値を設定します：
+
+   ```dotenv
+   FLAVOR=dev
+   GOOGLE_MAP_API_KEY=your_google_maps_api_key_here
+   API_BASE_URL=your_api_base_url_here
+   ```
+
+   API_BASE_URLは以下のように設定します：
+
+   - 開発環境 (Android): `http://10.0.2.2:8000` (ローカルBEのポートに置き換えてください)
+   - 開発環境 (iOS): `http://localhost:8000` (ローカルBEのポートに置き換えてください)
+   - 本番環境: `https://hoge-fuga.asia-northeast1.run.app` (本番BEのURLに置き換えてください)
+
+   **VS Code から実行する場合**: `.vscode/launch.json` で `--dart-define-from-file=.env` が設定されているため、自動的に読み込まれます。
+
+   **コマンドラインから実行する場合**:
+
+   ```bash
+   cd frontend
+   flutter run --dart-define-from-file=.env
+   ```
 
 10. **環境変数の設定**（バックエンド）
 

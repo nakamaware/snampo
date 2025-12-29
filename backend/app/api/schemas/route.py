@@ -2,11 +2,37 @@
 
 import base64
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.application.usecases.generate_route_usecase import RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
 from app.domain.value_objects.street_view_image import StreetViewImage
+
+
+class RouteRequest(BaseModel):
+    """ルート生成リクエストを表すモデル"""
+
+    current_lat: float = Field(
+        ...,
+        description="現在地の緯度",
+        ge=-90,
+        le=90,
+        example=35.6762,
+    )
+    current_lng: float = Field(
+        ...,
+        description="現在地の経度",
+        ge=-180,
+        le=180,
+        example=139.6503,
+    )
+    radius: float = Field(
+        ...,
+        description="目的地を生成する半径 (メートル単位)",
+        gt=0,
+        le=40075000,  # 地球の赤道一周の長さ (メートル)
+        example=5000,
+    )
 
 
 class Point(BaseModel):

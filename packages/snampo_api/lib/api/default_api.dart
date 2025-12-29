@@ -18,41 +18,30 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [num] currentLat (required):
-  ///   現在地の緯度
-  ///
-  /// * [num] currentLng (required):
-  ///   現在地の経度
-  ///
-  /// * [num] radius (required):
-  ///   目的地を生成する半径 (メートル単位)
-  Future<Response> routeRouteGetWithHttpInfo(num currentLat, num currentLng, num radius,) async {
+  /// * [RouteRequest] routeRequest (required):
+  Future<Response> routeRoutePostWithHttpInfo(RouteRequest routeRequest,) async {
     // ignore: prefer_const_declarations
     final path = r'/route';
 
     // ignore: prefer_final_locals
-    Object? postBody;
+    Object? postBody = routeRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-      queryParams.addAll(_queryParams('', 'currentLat', currentLat));
-      queryParams.addAll(_queryParams('', 'currentLng', currentLng));
-      queryParams.addAll(_queryParams('', 'radius', radius));
-
-    const contentTypes = <String>[];
+    const contentTypes = <String>['application/json'];
 
 
     return apiClient.invokeAPI(
       path,
-      'GET',
+      'POST',
       queryParams,
       postBody,
       headerParams,
@@ -63,20 +52,13 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Parameters:
   ///
-  /// * [num] currentLat (required):
-  ///   現在地の緯度
-  ///
-  /// * [num] currentLng (required):
-  ///   現在地の経度
-  ///
-  /// * [num] radius (required):
-  ///   目的地を生成する半径 (メートル単位)
-  Future<RouteResponse?> routeRouteGet(num currentLat, num currentLng, num radius,) async {
-    final response = await routeRouteGetWithHttpInfo(currentLat, currentLng, radius,);
+  /// * [RouteRequest] routeRequest (required):
+  Future<RouteResponse?> routeRoutePost(RouteRequest routeRequest,) async {
+    final response = await routeRoutePostWithHttpInfo(routeRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

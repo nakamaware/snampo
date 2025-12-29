@@ -19,10 +19,10 @@ void main() {
   group('tests for DefaultApi', () {
     // Route
     //
-    // ルートを生成  Args:     current_lat: 現在の緯度     current_lng: 現在の経度     radius: 半径 (メートル単位)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+    // ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
     //
-    //Future<RouteResponse> routeRouteGet(num currentLat, num currentLng, num radius) async
-    test('test routeRouteGet', () async {
+    //Future<RouteResponse> routeRoutePost(RouteRequest routeRequest) async
+    test('test routeRoutePost', () async {
       // TODO
     });
 

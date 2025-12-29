@@ -41,15 +41,13 @@ import 'package:snampo_api/api.dart';
 
 
 final api_instance = DefaultApi();
-final currentLat = 35.6762; // num | 現在地の緯度
-final currentLng = 139.6503; // num | 現在地の経度
-final radius = 5000; // num | 目的地を生成する半径 (メートル単位)
+final routeRequest = RouteRequest(); // RouteRequest | 
 
 try {
-    final result = api_instance.routeRouteGet(currentLat, currentLng, radius);
+    final result = api_instance.routeRoutePost(routeRequest);
     print(result);
 } catch (e) {
-    print('Exception when calling DefaultApi->routeRouteGet: $e\n');
+    print('Exception when calling DefaultApi->routeRoutePost: $e\n');
 }
 
 ```
@@ -60,7 +58,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*DefaultApi* | [**routeRouteGet**](doc//DefaultApi.md#routerouteget) | **GET** /route | Route
+*DefaultApi* | [**routeRoutePost**](doc//DefaultApi.md#routeroutepost) | **POST** /route | Route
 
 
 ## Documentation For Models
@@ -68,6 +66,7 @@ Class | Method | HTTP request | Description
  - [HTTPValidationError](doc//HTTPValidationError.md)
  - [MidPoint](doc//MidPoint.md)
  - [Point](doc//Point.md)
+ - [RouteRequest](doc//RouteRequest.md)
  - [RouteResponse](doc//RouteResponse.md)
  - [ValidationError](doc//ValidationError.md)
 
