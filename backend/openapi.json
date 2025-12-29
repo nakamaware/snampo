@@ -139,7 +139,9 @@
             "minimum": -90.0,
             "title": "Current Lat",
             "description": "現在地の緯度",
-            "example": 35.6762
+            "examples": [
+              35.6870958
+            ]
           },
           "current_lng": {
             "type": "number",
@@ -147,7 +149,9 @@
             "minimum": -180.0,
             "title": "Current Lng",
             "description": "現在地の経度",
-            "example": 139.6503
+            "examples": [
+              139.8133963
+            ]
           },
           "radius": {
             "type": "number",
@@ -155,7 +159,9 @@
             "exclusiveMinimum": 0.0,
             "title": "Radius",
             "description": "目的地を生成する半径 (メートル単位)",
-            "example": 5000
+            "examples": [
+              5000
+            ]
           }
         },
         "type": "object",

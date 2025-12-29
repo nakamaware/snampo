@@ -1,5 +1,7 @@
 """polyline_mapperのテスト"""
 
+import pytest
+
 from app.domain.value_objects import Coordinate
 from app.infrastructure.mappers import decode_polyline
 
@@ -66,3 +68,35 @@ def test_デコードされた座標が有効な範囲内であること() -> No
         # 緯度・経度が有効な範囲内であることを確認
         assert -90 <= coord.latitude <= 90
         assert -180 <= coord.longitude <= 180
+
+
+def test_不完全なポリライン_緯度デコード中に終了する場合にValueErrorを発生させること() -> None:
+    """不完全なポリライン(緯度デコード中に終了)でValueErrorが発生することを確認"""
+    # 有効なポリラインの一部のみ(緯度デコード中に終了)
+    # 1文字だけのポリラインは不完全(緯度の最初の文字で終了)
+    incomplete_polyline = "_"
+
+    with pytest.raises(ValueError) as exc_info:
+        decode_polyline(incomplete_polyline)
+
+    error_message = str(exc_info.value)
+    assert "Invalid or incomplete polyline" in error_message
+    assert "decoding latitude" in error_message
+    assert "index" in error_message
+    assert "current position" in error_message
+
+
+def test_不完全なポリライン_経度デコード中に終了する場合にValueErrorを発生させること() -> None:
+    """不完全なポリライン(経度デコード中に終了)でValueErrorが発生することを確認"""
+    # 有効なポリラインの一部のみ(経度デコード中に終了)
+    # "_p~iF~ps" は不完全(経度の途中で終了)
+    incomplete_polyline = "_p~iF~ps"
+
+    with pytest.raises(ValueError) as exc_info:
+        decode_polyline(incomplete_polyline)
+
+    error_message = str(exc_info.value)
+    assert "Invalid or incomplete polyline" in error_message
+    assert "decoding longitude" in error_message
+    assert "index" in error_message
+    assert "current position" in error_message

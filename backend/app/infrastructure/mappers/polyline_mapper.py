@@ -24,6 +24,14 @@ def decode_polyline(polyline_str: str) -> list[Coordinate]:
         shift = 0
         result = 0
         while True:
+            if index >= len(polyline_str):
+                lat_float = lat * 1e-5
+                lng_float = lng * 1e-5
+                raise ValueError(
+                    f"Invalid or incomplete polyline: input ended unexpectedly "
+                    f"while decoding latitude at index {index} "
+                    f"(current position: lat={lat_float:.5f}, lng={lng_float:.5f})"
+                )
             byte = ord(polyline_str[index]) - 63
             index += 1
             result |= (byte & 0x1F) << shift
@@ -37,6 +45,14 @@ def decode_polyline(polyline_str: str) -> list[Coordinate]:
         shift = 0
         result = 0
         while True:
+            if index >= len(polyline_str):
+                lat_float = lat * 1e-5
+                lng_float = lng * 1e-5
+                raise ValueError(
+                    f"Invalid or incomplete polyline: input ended unexpectedly "
+                    f"while decoding longitude at index {index} "
+                    f"(current position: lat={lat_float:.5f}, lng={lng_float:.5f})"
+                )
             byte = ord(polyline_str[index]) - 63
             index += 1
             result |= (byte & 0x1F) << shift

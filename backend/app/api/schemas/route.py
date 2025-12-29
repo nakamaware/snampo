@@ -13,25 +13,22 @@ class RouteRequest(BaseModel):
     """ルート生成リクエストを表すモデル"""
 
     current_lat: float = Field(
-        ...,
         description="現在地の緯度",
-        ge=-90,
-        le=90,
-        example=35.6762,
+        ge=-90.0,
+        le=90.0,
+        examples=[35.6870958],
     )
     current_lng: float = Field(
-        ...,
         description="現在地の経度",
         ge=-180,
         le=180,
-        example=139.6503,
+        examples=[139.8133963],
     )
     radius: float = Field(
-        ...,
         description="目的地を生成する半径 (メートル単位)",
         gt=0,
         le=40075000,  # 地球の赤道一周の長さ (メートル)
-        example=5000,
+        examples=[5000],
     )
 
 
