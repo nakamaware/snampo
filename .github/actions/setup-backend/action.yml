@@ -7,7 +7,7 @@ runs:
     - name: Setup uv
       uses: astral-sh/setup-uv@v7
       with:
-        version-file: 'backend/pyproject.toml'
+        version-file: 'backend/.python-version'
         enable-cache: true
 
     - name: Install dependencies
