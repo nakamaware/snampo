@@ -22,88 +22,8 @@ jobs:
         id: filter
         with:
           filters: |
-            backend:
-              - 'backend/**'
             frontend:
               - 'frontend/**'
-
-  backend:
-    name: Backend
-    runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
-
-    defaults:
-      run:
-        working-directory: backend
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.13'
-
-      - name: Cache uv
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/uv
-            backend/.venv
-          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Lint (ruff)
-        run: uv run ruff check app
-
-      - name: Format check (ruff)
-        run: uv run ruff format --check app
-
-      - name: Check API generated code
-        run: |
-          cd ..
-          bash scripts/check-api.sh
-
-      # --- Type check (mypy) (使う場合はコメントアウトを外す) ---
-      # - name: Type check (mypy)
-      #   # mypy が dev-dependencies に追加されている必要があります
-      #   run: uv run mypy app
-      # ---------------------------------------------------------
-
-      # --- Test (pytest) (使う場合はコメントアウトを外す) ---
-      # - name: Test (pytest)
-      #   # pytest が dev-dependencies に追加されている必要があります
-      #   run: uv run pytest -q --cov=app --cov-report=xml --cov-report=html
-      #
-      # - name: Upload coverage reports
-      #   uses: codecov/codecov-action@v5
-      #   with:
-      #     files: ./coverage.xml
-      #     flags: backend
-      #     name: backend-coverage
-      # ---------------------------------------------------------
-
-      # --- OpenAPI 連携（使う場合はコメントアウトを外す） ---
-      # - name: Generate OpenAPI schema
-      #   run: uv run python -m app.generate_openapi  # 自前のスクリプト想定
-      #
-      # - name: Generate Dart client from OpenAPI
-      #   uses: openapi-generators/openapi-generator-action@v1
-      #   with:
-      #     generator: dart
-      #     input: backend/openapi.json
-      #     output: ../frontend/lib/api_client
-      #
-      # - name: Upload generated Dart client artifact
-      #   uses: actions/upload-artifact@v5
-      #   with:
-      #     name: dart-api-client
-      #     path: frontend/lib/api_client
-      # ---------------------------------------------------------
 
   frontend:
     name: Frontend
@@ -124,23 +44,8 @@ jobs:
         with:
           channel: stable
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.13'
-
-      - name: Cache uv
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/uv
-            backend/.venv
-          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
-
-      - name: Install backend dependencies
-        run: |
-          cd ../backend
-          uv sync
+      - name: Backend Setup
+        uses: ./.github/actions/setup-backend
 
       - name: Cache Flutter deps
         uses: actions/cache@v4
