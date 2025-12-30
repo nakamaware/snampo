@@ -61,7 +61,7 @@ jobs:
       - name: Check API generated code
         run: bash scripts/check-api.sh
 
-  docker-build:
+  build-docker-image:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
