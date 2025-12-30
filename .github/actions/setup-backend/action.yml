@@ -7,10 +7,10 @@ runs:
     - name: Setup uv
       uses: astral-sh/setup-uv@v7
       with:
-        python-version-file: 'backend/pyproject.toml'
+        version-file: 'backend/pyproject.toml'
         enable-cache: true
 
     - name: Install dependencies
       working-directory: backend
-      run: uv sync --all-extras
+      run: uv sync --all-groups
       shell: bash
