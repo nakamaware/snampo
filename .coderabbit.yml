@@ -1,5 +1,6 @@
 language: ja-JP
 reviews:
+  request-changes-workflow: true
   auto_review:
     enabled: true
     branches:
