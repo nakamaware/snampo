@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:snampo/app.dart';
 
+// CIキャッシュテスト用の変更
 void main() async {
   // runAppを呼び出す前にバインディングを初期化する.
   WidgetsFlutterBinding.ensureInitialized();
