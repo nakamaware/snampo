@@ -4,9 +4,6 @@ description: 'Setup Python environment with uv for backend. Installs dependencie
 runs:
   using: 'composite'
   steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-
     - name: Setup uv
       uses: astral-sh/setup-uv@v7
       with:
