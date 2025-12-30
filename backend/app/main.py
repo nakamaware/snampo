@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+print("Hello, World!")
+
 
 # TODO: 消したい
 # OpenAPIスキーマをカスタマイズして、カスタムValidationErrorモデルを使用
