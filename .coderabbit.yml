@@ -5,7 +5,7 @@ reviews:
   auto_review:
     enabled: true
     base_branches:
-      - "*"
+      - ".*"
 code_generation:
   docstrings:
     language: ja-JP
