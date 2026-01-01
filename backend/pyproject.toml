@@ -32,66 +32,60 @@ dev = [
 line-length = 100
 target-version = "py313"
 # 除外するディレクトリ/ファイル
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "build",
-    "dist",
-]
+exclude = [".git", ".venv", "__pycache__", "build", "dist"]
 
 [tool.ruff.lint]
 # ルール一覧: https://docs.astral.sh/ruff/rules/
 select = [
     # 基本スタイルチェック (pycodestyle)
-    "E",	# pycodestyle errors (エラー検出)
-    "W",	# pycodestyle warnings (警告検出)
+    "E", # pycodestyle errors (エラー検出)
+    "W", # pycodestyle warnings (警告検出)
 
     # コード品質・バグ検出
-    "F",	# Pyflakes (未使用変数・インポート検出)
-    "B",	# flake8-bugbear (バグの可能性を検出)
-    "SIM",	# flake8-simplify (コード簡略化の提案)
-    "RET",	# flake8-return (return文の改善)
-    "PIE",	# flake8-pie (不要なコードを検出)
+    "F",   # Pyflakes (未使用変数・インポート検出)
+    "B",   # flake8-bugbear (バグの可能性を検出)
+    "SIM", # flake8-simplify (コード簡略化の提案)
+    "RET", # flake8-return (return文の改善)
+    "PIE", # flake8-pie (不要なコードを検出)
 
     # インポート関連
-    "I",	# isort (インポート順序の整理)
+    "I", # isort (インポート順序の整理)
 
     # 命名規則
-    "N",	# pep8-naming (命名規則チェック)
+    "N", # pep8-naming (命名規則チェック)
 
     # モダンPython構文
-    "UP",	# pyupgrade (モダンPython構文へのアップグレード)
-    "PTH",	# flake8-use-pathlib (pathlibの使用を推奨)
+    "UP",  # pyupgrade (モダンPython構文へのアップグレード)
+    "PTH", # flake8-use-pathlib (pathlibの使用を推奨)
 
     # パフォーマンス
-    "PERF",	# Perflint (パフォーマンス改善)
-    "C4",	# flake8-comprehensions (リスト内包表記の改善)
+    "PERF", # Perflint (パフォーマンス改善)
+    "C4",   # flake8-comprehensions (リスト内包表記の改善)
 
     # セキュリティ
-    "S",	# flake8-bandit (セキュリティチェック)
+    "S", # flake8-bandit (セキュリティチェック)
 
     # ロギング
-    "LOG",	# flake8-logging-format (ロギングの改善)
+    "LOG", # flake8-logging-format (ロギングの改善)
 
     # 型アノテーション
-    "ANN",	# flake8-annotations (型アノテーションの必須化)
+    "ANN", # flake8-annotations (型アノテーションの必須化)
 
     # Docstring
-    "D",	# pydocstyle (docstringのスタイルチェック)
+    "D", # pydocstyle (docstringのスタイルチェック)
 
     # Ruff独自
-    "RUF",	# Ruff独自のルール
+    "RUF", # Ruff独自のルール
 ]
 ignore = [
     # Docstring
-    "D100",	# モジュールのdocstring必須を無視
-    "D104",	# パッケージのdocstring必須を無視
-    "D400",	# Docstringの先頭を大文字で始める必要を無視
-    "D401",	# Docstringの末尾をピリオドにする必須を無視
-    "D403",	# 一行目は命令形で書く必要を無視
-    "D413",	# Docstringセクションの間に空行が推奨されるルールを無視
-    "D415",	# Docstringのセクション間は空行必須を無視
+    "D100", # モジュールのdocstring必須を無視
+    "D104", # パッケージのdocstring必須を無視
+    "D400", # Docstringの先頭を大文字で始める必要を無視
+    "D401", # Docstringの末尾をピリオドにする必須を無視
+    "D403", # 一行目は命令形で書く必要を無視
+    "D413", # Docstringセクションの間に空行が推奨されるルールを無視
+    "D415", # Docstringのセクション間は空行必須を無視
 ]
 
 [tool.ruff.lint.isort]

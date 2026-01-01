@@ -4,6 +4,7 @@
     "dart-code.flutter",
     "ms-python.python",
     "ms-python.pylance",
-    "charliermarsh.ruff"
+    "charliermarsh.ruff",
+    "redhat.vscode-yaml"
   ]
 }
