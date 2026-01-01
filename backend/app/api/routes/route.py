@@ -81,7 +81,7 @@ def route(
                 "radius": request.radius,
             },
         )
-        raise HTTPException(status_code=422, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
     except ExternalServiceError as e:
         logger.error(
             f"ExternalServiceError in /route: {e}",
