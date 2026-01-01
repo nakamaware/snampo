@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 
 from app import container
 from app.api.schemas import RouteRequest, RouteResponse
@@ -45,16 +46,28 @@ def route(
     """
     try:
         current_coordinate = Coordinate(latitude=request.current_lat, longitude=request.current_lng)
-    except ValueError as e:
+    except ValidationError as e:
         logger.error(
-            f"ValueError in /route: {e}",
+            f"ValidationError in /route: {e}",
+            extra={
+                "current_lat": request.current_lat,
+                "current_lng": request.current_lng,
+                "radius": request.radius,
+                "errors": str(e.errors()),
+                "body": e.json(),
+            },
+        )
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception(
+            f"Exception in /route: {e}",
             extra={
                 "current_lat": request.current_lat,
                 "current_lng": request.current_lng,
                 "radius": request.radius,
             },
         )
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     try:
         result = usecase.execute(current_coordinate, request.radius)
