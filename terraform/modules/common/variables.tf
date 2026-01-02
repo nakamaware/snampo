@@ -72,7 +72,7 @@ variable "gar_repository_id" {
 }
 
 # snampoのDockerイメージ
-variable "snampo_be_image" {
-  type    = string
-  default = "snampo/snampo-be-dev"
-}
+# variable "snampo_be_image" {
+#   type    = string
+#   default = "snampo/snampo-be-dev"
+# }
