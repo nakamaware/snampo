@@ -67,12 +67,20 @@ def test_2つの座標の場合は2番目の座標を返すこと() -> None:
     assert midpoint.longitude == 139.6917
 
 
-def test_空のリストの場合はIndexErrorが発生すること() -> None:
-    """空のリストの場合はIndexErrorが発生することを確認"""
+def test_空のリストの場合はValueErrorが発生すること() -> None:
+    """空のリストの場合はValueErrorが発生することを確認"""
     route_coordinates: list[Coordinate] = []
 
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError, match="route_coordinates must be a non-empty list"):
         calculate_midpoint(route_coordinates)
+
+
+def test_Noneが渡された場合はValueErrorが発生すること() -> None:
+    """Noneが渡された場合はValueErrorが発生することを確認"""
+    route_coordinates = None  # type: ignore[assignment]
+
+    with pytest.raises(ValueError, match="route_coordinates must be a non-empty list"):
+        calculate_midpoint(route_coordinates)  # type: ignore[arg-type]
 
 
 def test_戻り値がCoordinate型であること() -> None:
