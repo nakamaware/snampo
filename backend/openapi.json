@@ -5,82 +5,10 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/streetview": {
-      "get": {
-        "summary": "Get Street View Image",
-        "description": "Street View Image Metadata APIを使用して画像のメタデータを取得\n\nArgs:\n    latitude: 緯度\n    longitude: 経度\n    size: 画像サイズ\n\nReturns:\n    StreetViewImageResponse: メタデータと画像データ",
-        "operationId": "get_street_view_image_streetview_get",
-        "parameters": [
-          {
-            "name": "latitude",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "maximum": 90,
-              "minimum": -90,
-              "description": "緯度",
-              "title": "Latitude"
-            },
-            "description": "緯度",
-            "example": 35.6762
-          },
-          {
-            "name": "longitude",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "maximum": 180,
-              "minimum": -180,
-              "description": "経度",
-              "title": "Longitude"
-            },
-            "description": "経度",
-            "example": 139.6503
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "画像サイズ",
-              "default": "600x300",
-              "title": "Size"
-            },
-            "description": "画像サイズ",
-            "example": "600x300"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StreetViewImageResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/route": {
       "post": {
         "summary": "Route",
-        "description": "ルートを生成\n\nArgs:\n    request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)\n\nReturns:\n    RouteResponse: ルート情報",
+        "description": "ルートを生成\n\nArgs:\n    request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)\n    usecase: ルート生成ユースケース\n\nReturns:\n    RouteResponse: ルート情報\n\nRaises:\n    HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合",
         "operationId": "route_route_post",
         "requestBody": {
           "content": {
@@ -132,39 +60,37 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "Latitude": {
-        "type": "number"
-      },
-      "Longitude": {
-        "type": "number"
-      },
       "MidPoint": {
         "properties": {
           "latitude": {
-            "$ref": "#/components/schemas/Latitude"
+            "type": "number",
+            "title": "Latitude"
           },
           "longitude": {
-            "$ref": "#/components/schemas/Longitude"
+            "type": "number",
+            "title": "Longitude"
           },
           "image_latitude": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Latitude"
+                "type": "number"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Image Latitude"
           },
           "image_longitude": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Longitude"
+                "type": "number"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Image Longitude"
           },
           "image_utf8": {
             "anyOf": [
@@ -189,10 +115,12 @@
       "Point": {
         "properties": {
           "latitude": {
-            "$ref": "#/components/schemas/Latitude"
+            "type": "number",
+            "title": "Latitude"
           },
           "longitude": {
-            "$ref": "#/components/schemas/Longitude"
+            "type": "number",
+            "title": "Longitude"
           }
         },
         "type": "object",
@@ -211,7 +139,9 @@
             "minimum": -90.0,
             "title": "Current Lat",
             "description": "現在地の緯度",
-            "example": 35.6762
+            "examples": [
+              35.6870958
+            ]
           },
           "current_lng": {
             "type": "number",
@@ -219,7 +149,9 @@
             "minimum": -180.0,
             "title": "Current Lng",
             "description": "現在地の経度",
-            "example": 139.6503
+            "examples": [
+              139.8133963
+            ]
           },
           "radius": {
             "type": "number",
@@ -227,7 +159,9 @@
             "exclusiveMinimum": 0.0,
             "title": "Radius",
             "description": "目的地を生成する半径 (メートル単位)",
-            "example": 5000
+            "examples": [
+              5000
+            ]
           }
         },
         "type": "object",
@@ -268,36 +202,6 @@
         ],
         "title": "RouteResponse",
         "description": "ルート情報を表すモデル"
-      },
-      "StreetViewImageResponse": {
-        "properties": {
-          "metadata_latitude": {
-            "$ref": "#/components/schemas/Latitude"
-          },
-          "metadata_longitude": {
-            "$ref": "#/components/schemas/Longitude"
-          },
-          "original_latitude": {
-            "$ref": "#/components/schemas/Latitude"
-          },
-          "original_longitude": {
-            "$ref": "#/components/schemas/Longitude"
-          },
-          "image_data": {
-            "type": "string",
-            "title": "Image Data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "metadata_latitude",
-          "metadata_longitude",
-          "original_latitude",
-          "original_longitude",
-          "image_data"
-        ],
-        "title": "StreetViewImageResponse",
-        "description": "Street View画像のメタデータと画像データを表すモデル"
       },
       "ValidationError": {
         "properties": {

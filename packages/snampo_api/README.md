@@ -41,15 +41,13 @@ import 'package:snampo_api/api.dart';
 
 
 final api_instance = DefaultApi();
-final latitude = 35.6762; // num | 緯度
-final longitude = 139.6503; // num | 経度
-final size = 600x300; // String | 画像サイズ
+final routeRequest = RouteRequest(); // RouteRequest | 
 
 try {
-    final result = api_instance.getStreetViewImageStreetviewGet(latitude, longitude, size);
+    final result = api_instance.routeRoutePost(routeRequest);
     print(result);
 } catch (e) {
-    print('Exception when calling DefaultApi->getStreetViewImageStreetviewGet: $e\n');
+    print('Exception when calling DefaultApi->routeRoutePost: $e\n');
 }
 
 ```
@@ -60,7 +58,6 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*DefaultApi* | [**getStreetViewImageStreetviewGet**](doc//DefaultApi.md#getstreetviewimagestreetviewget) | **GET** /streetview | Get Street View Image
 *DefaultApi* | [**routeRoutePost**](doc//DefaultApi.md#routeroutepost) | **POST** /route | Route
 
 
@@ -71,7 +68,6 @@ Class | Method | HTTP request | Description
  - [Point](doc//Point.md)
  - [RouteRequest](doc//RouteRequest.md)
  - [RouteResponse](doc//RouteResponse.md)
- - [StreetViewImageResponse](doc//StreetViewImageResponse.md)
  - [ValidationError](doc//ValidationError.md)
 
 
