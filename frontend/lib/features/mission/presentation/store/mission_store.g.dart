@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'mission_controller.dart';
+part of 'mission_store.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$missionRepositoryHash() => r'2beab0425eaaf019920d04f9035648b852cf0373';
+String _$missionRepositoryHash() => r'2392a60bfd7b3e1c8bf62814038ee5f2df98a180';
 
 /// ミッションリポジトリのプロバイダー
 ///
@@ -26,7 +26,49 @@ final missionRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MissionRepositoryRef = AutoDisposeProviderRef<MissionRepository>;
-String _$targetHash() => r'2e13867a224b52d3aa01d574ffb95a800e8304fc';
+String _$getCurrentLocationUseCaseHash() =>
+    r'1b46d72dd802296b8ce7b3f16ac4daac57905cc1';
+
+/// 現在地を取得するユースケースのプロバイダー
+///
+/// Copied from [getCurrentLocationUseCase].
+@ProviderFor(getCurrentLocationUseCase)
+final getCurrentLocationUseCaseProvider =
+    AutoDisposeProvider<GetCurrentLocationUseCase>.internal(
+  getCurrentLocationUseCase,
+  name: r'getCurrentLocationUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$getCurrentLocationUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetCurrentLocationUseCaseRef
+    = AutoDisposeProviderRef<GetCurrentLocationUseCase>;
+String _$getMissionUseCaseHash() => r'7b18f274819f9f458415aa5c5156604e70ec641b';
+
+/// ミッション情報を取得するユースケースのプロバイダー
+///
+/// Copied from [getMissionUseCase].
+@ProviderFor(getMissionUseCase)
+final getMissionUseCaseProvider =
+    AutoDisposeProvider<GetMissionUseCase>.internal(
+  getMissionUseCase,
+  name: r'getMissionUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$getMissionUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetMissionUseCaseRef = AutoDisposeProviderRef<GetMissionUseCase>;
+String _$targetHash() => r'3846633866fe443b5960ebafaa7e4e5a1f74d2c2';
 
 /// 目的地を取得するプロバイダー
 ///
@@ -44,7 +86,7 @@ final targetProvider = AutoDisposeProvider<MidPointEntity?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TargetRef = AutoDisposeProviderRef<MidPointEntity?>;
-String _$routeHash() => r'46e3dc8ae435a236efc8d6d82f64b80bc418704c';
+String _$routeHash() => r'166b7fe15f3010294955f9fa3143ea182b613da6';
 
 /// ルートのポリライン文字列を取得するプロバイダー
 ///
@@ -62,7 +104,7 @@ final routeProvider = AutoDisposeProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RouteRef = AutoDisposeProviderRef<String?>;
-String _$midpointInfoListHash() => r'cbfe00b338652a14efe17d8f7c09ab7cc9396689';
+String _$midpointInfoListHash() => r'bd03c204e42e81369e0ba38cf6f12a0239877555';
 
 /// 中間地点のリストを取得するプロバイダー
 ///
@@ -82,23 +124,23 @@ final midpointInfoListProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MidpointInfoListRef = AutoDisposeProviderRef<List<MidPointEntity>?>;
-String _$missionControllerHash() => r'6aa3867711e7eb47be57e2211f08ee6783eaf5b7';
+String _$missionNotifierHash() => r'1610d90005d51228d033c67e08315606d4acc54b';
 
-/// ミッション情報を管理するコントローラー
+/// ミッション情報を管理するストア
 ///
-/// Copied from [MissionController].
-@ProviderFor(MissionController)
-final missionControllerProvider = AutoDisposeAsyncNotifierProvider<
-    MissionController, LocationEntity>.internal(
-  MissionController.new,
-  name: r'missionControllerProvider',
+/// Copied from [MissionNotifier].
+@ProviderFor(MissionNotifier)
+final missionNotifierProvider =
+    AutoDisposeAsyncNotifierProvider<MissionNotifier, LocationEntity>.internal(
+  MissionNotifier.new,
+  name: r'missionNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$missionControllerHash,
+      : _$missionNotifierHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$MissionController = AutoDisposeAsyncNotifier<LocationEntity>;
+typedef _$MissionNotifier = AutoDisposeAsyncNotifier<LocationEntity>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

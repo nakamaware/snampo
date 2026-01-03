@@ -62,3 +62,4 @@ class MidPointEntity {
   /// Base64エンコードされた画像データ
   final String? imageUtf8;
 }
+

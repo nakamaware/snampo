@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:snampo/presentation/pages/home_page.dart';
-import 'package:snampo/presentation/pages/mission_page.dart';
-import 'package:snampo/presentation/pages/result_page.dart';
-import 'package:snampo/presentation/pages/setup_page.dart';
+import 'package:snampo/core/routing/app_router.dart';
 
 /// アプリケーションのルートウィジェット
 class MyApp extends StatelessWidget {
@@ -23,32 +19,7 @@ class MyApp extends StatelessWidget {
         textTheme:
             GoogleFonts.sawarabiGothicTextTheme(Theme.of(context).textTheme),
       ),
-      routerConfig: _router,
+      routerConfig: appRouter,
     );
   }
 }
-
-/// ルーティング設定
-final GoRouter _router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/setup',
-      builder: (context, state) => const SetupPage(),
-    ),
-    GoRoute(
-      path: '/mission/:radius',
-      builder: (context, state) {
-        final radius = double.parse(state.pathParameters['radius']!);
-        return MissionPage(radius: radius);
-      },
-    ),
-    GoRoute(
-      path: '/result',
-      builder: (context, state) => const ResultPage(),
-    ),
-  ],
-);

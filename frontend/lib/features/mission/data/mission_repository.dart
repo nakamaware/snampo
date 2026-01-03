@@ -1,9 +1,10 @@
 import 'package:snampo/config.dart';
-import 'package:snampo/models/location_entity.dart';
+import 'package:snampo/features/mission/application/interface/mission_repository_interface.dart';
+import 'package:snampo/features/mission/domain/mission_model.dart';
 import 'package:snampo_api/api.dart' as generated;
 
 /// ミッションリポジトリ
-class MissionRepository {
+class MissionRepository implements MissionRepositoryInterface {
   /// MissionRepositoryのコンストラクタ
   MissionRepository({generated.DefaultApi? generatedApi})
       : _generatedApi = generatedApi ??
@@ -18,6 +19,7 @@ class MissionRepository {
   /// [radius] はミッションの検索半径（キロメートル単位）
   /// [currentLat] は現在位置の緯度
   /// [currentLng] は現在位置の経度
+  @override
   Future<LocationEntity> getMission({
     required double radius,
     required double currentLat,
