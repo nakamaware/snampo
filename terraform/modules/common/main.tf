@@ -74,16 +74,7 @@ module "google_api_keys" {
   source     = "../gcp/api-key"
   depends_on = [module.project_services]
 
-  api_keys = {
-    # TODO: これ消して、API Keyを作成する
-    test-name = {
-      name = "test-display-name"
-      target_services = [
-        "streetviewpublish.googleapis.com",
-        "directions-backend.googleapis.com",
-      ]
-    }
-  }
+  api_keys = var.api_keys
 }
 
 # Secret Manager
@@ -120,37 +111,6 @@ module "secret_manager" {
   )
 }
 
-# TODO: GitHub Actionsに移行するためコメントアウト
-# Cloud Build
-# data "google_secret_manager_secret_version" "github_token" {
-#   depends_on        = [module.secret_manager]
-#   project           = var.project_id
-#   secret            = "github_token"
-#   fetch_secret_data = false
-# }
-
-# module "cloud_build" {
-#   source     = "../gcp/cloud-build"
-#   depends_on = [module.google_api_keys, module.secret_manager]
-
-#   project_id = var.project_id
-#   location   = var.location
-#   # リポジトリのリンク設定
-#   config = {
-#     nakamaware = {
-#       app_installation_id = 100612195
-#       gh_pat_id           = data.google_secret_manager_secret_version.github_token.id
-#       repos = [
-#         {
-#           name = "snampo"
-#           uri  = "https://github.com/nakamaware/snampo.git"
-#         }
-#       ]
-#     }
-#   }
-#   # TODO: トリガーの設定
-# }
-
 # Artifact Registry
 module "artifact_registry" {
   source     = "GoogleCloudPlatform/artifact-registry/google"
@@ -180,4 +140,14 @@ module "artifact_registry" {
       }
     }
   }
+}
+
+# Cloud Run Service
+module "cloud_run_service" {
+  source     = "../gcp/cloud-run"
+  depends_on = [module.iam_members, module.secret_manager]
+
+  service_name = var.cloud_run_service_config.service_name
+  service_account = var.cloud_run_service_config.service_account
+  container_specs = var.cloud_run_service_config.container_specs
 }

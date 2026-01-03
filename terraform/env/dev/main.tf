@@ -22,22 +22,31 @@ provider "google" {
 module "snampo_dev" {
   source = "../../modules/common"
 
-  project_id          = local.project_id
-  # Secret Managerに登録するsecret
-  # secrets = [
-  #   {
-  #     name = "github_token",
-  #     secret_data = var.github_token_secret
-  #   }
-  # ]
+  project_id = local.project_id
+  # 作成するAPIキー
+  api_keys = [
+    # TODO: これ消して、実際に利用するAPIキーを作成する
+    {
+      id           = "test-name"
+      display_name = "test-display-name"
+      target_services = [
+        "streetviewpublish.googleapis.com",
+        "directions-backend.googleapis.com",
+      ]
+    }
+  ]
   # Service Account
   sa_list = [
     {
-      id   = "snampo-dev-cicd"
+      id   = "${local.project_name}-run"
+      desc = "Cloud Run用サービスアカウント"
+    },
+    {
+      id   = "${local.project_name}-cicd"
       desc = "CI/CD用サービスアカウント"
     },
     {
-      id   = "snampo-dev-terraform"
+      id   = "${local.project_name}-terraform"
       desc = "Terraform用サービスアカウント"
     }
   ]
@@ -51,27 +60,52 @@ module "snampo_dev" {
   # Service Accountの権限
   sa_iam_config = [
     {
-      email = "snampo-dev-cicd@snampo-480404.iam.gserviceaccount.com"
-      roles = ["roles/artifactregistry.writer"]
+      email = "${local.project_name}-run@snampo-480404.iam.gserviceaccount.com"
+      roles = [
+        "roles/secretmanager.secretAccessor",
+        "roles/logging.logWriter",
+      ]
     },
     {
-      email = "snampo-dev-terraform@snampo-480404.iam.gserviceaccount.com"
+      email = "${local.project_name}-cicd@snampo-480404.iam.gserviceaccount.com"
+      roles = [
+        "roles/artifactregistry.writer",
+        "roles/run.developer",
+      ]
+    },
+    {
+      email = "${local.project_name}-terraform@snampo-480404.iam.gserviceaccount.com"
       roles = ["roles/owner"]
     }
   ]
   # Service AccountとGitHubリポジトリの連携
   sa_gh_repo_bindings = [
     {
-      sa_id = "snampo-dev-cicd"
+      sa_id = "${local.project_name}-cicd"
       repos = ["nakamaware/snampo"]
     },
     {
-      sa_id = "snampo-dev-terraform"
+      sa_id = "${local.project_name}-terraform"
       repos = ["nakamaware/snampo"]
     }
   ]
   # GCSのバケット
-  gcs_bucket_names  = ["${local.project_name}-bucket"]
+  gcs_bucket_names = ["${local.project_name}-bucket"]
   # GARのリポジトリ
   gar_repository_id = "cloud-run-source-deploy"
+  # Cloud Run Service
+  cloud_run_service_config = {
+    service_name = "test-${local.project_name}-be"
+    service_account = "${local.project_name}-run@snampo-480404.iam.gserviceaccount.com"
+    container_specs = {
+      env = []
+      env_secret = [
+        {
+          name      = "TEST_NAME"
+          secret_id = "test-name"
+        }
+      ] # ここで指定できるのは、APIキーかシークレットのID
+      port = 8080
+    }
+  }
 }

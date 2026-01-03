@@ -9,10 +9,20 @@ variable "location" {
   default = "asia-northeast1"
 }
 
+# 作成するAPIキー
+variable "api_keys" {
+  type = list(object({
+    id              = string
+    display_name    = string
+    target_services = list(string)
+  }))
+  default = []
+}
+
 # Secret Managerに登録するSecret
 variable "secrets" {
   type = list(object({
-    name = string
+    name        = string
     secret_data = string
   }))
   default = []
@@ -59,20 +69,26 @@ variable "gcs_bucket_names" {
   type = list(string)
 }
 
-# Cloud Runの設定
-# variable "cloud_run_service_name" {
-#   type = object({
-#     service_name = string
-#   })
-# }
-
 # Artifact RegistryのID
 variable "gar_repository_id" {
   type = string
 }
 
-# snampoのDockerイメージ
-# variable "snampo_be_image" {
-#   type    = string
-#   default = "snampo/snampo-be-dev"
-# }
+# Cloud Runの設定
+variable "cloud_run_service_config" {
+  type = object({
+    service_name    = string
+    service_account = string
+    container_specs = object({
+      env = list(object({
+        name  = string
+        value = string
+      }))
+      env_secret = list(object({
+        name      = string
+        secret_id = string
+      }))
+      port = string
+    })
+  })
+}
