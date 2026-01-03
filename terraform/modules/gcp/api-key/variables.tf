@@ -1,6 +1,7 @@
 variable "api_keys" {
-  type = map(object({
-    name            = string
+  type = list(object({
+    id              = string
+    display_name    = string
     target_services = list(string)
   }))
 }
