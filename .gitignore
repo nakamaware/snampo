@@ -19,3 +19,6 @@ Thumbs.db
 
 # Claude用プロジェクトガイド
 CLAUDE.md
+
+# Terraformのローカル設定ファイル
+*.terraform
