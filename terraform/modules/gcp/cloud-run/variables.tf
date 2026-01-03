@@ -3,10 +3,26 @@ variable "service_name" {
 }
 
 variable "location" {
-  type = string
+  type    = string
   default = "asia-northeast1"
 }
 
-variable "image_link" {
-    type = string
+# Cloud Runインスタンスが利用するSA
+variable "service_account" {
+  type = string
+}
+
+# コンテナの設定
+variable "container_specs" {
+  type = object({
+    env = list(object({
+      name  = string
+      value = string
+    }))
+    env_secret = list(object({
+      name      = string
+      secret_id = string
+    }))
+    port = string
+  })
 }
