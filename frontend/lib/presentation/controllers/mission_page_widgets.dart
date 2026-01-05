@@ -209,20 +209,45 @@ class TakeSnap extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(gameSessionControllerProvider).value;
-    // spotIndexは1-indexedなので、0-indexedに変換 (spotIndex 1 -> 0, spotIndex 2 -> 1)
-    final photoPath = session?.getPhotoPath(spotIndex - 1);
+    final sessionAsync = ref.watch(gameSessionControllerProvider);
 
-    return photoPath == null
-        ? FloatingActionButton(
-            onPressed: () => _getImage(ref),
-            child: const Icon(Icons.add_a_photo),
-          )
-        : SizedBox(
-            width: 150,
-            height: 150,
-            child: SetImage(picture: File(photoPath)),
-          );
+    return sessionAsync.when(
+      loading: () => const CircularProgressIndicator(),
+      error: (error, stackTrace) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(height: 8),
+          Text(
+            'エラーが発生しました',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.red,
+                ),
+          ),
+          Text(
+            error.toString(),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.red,
+                ),
+          ),
+        ],
+      ),
+      data: (session) {
+        // spotIndexは1-indexedなので、0-indexedに変換 (spotIndex 1 -> 0, spotIndex 2 -> 1)
+        final photoPath = session?.getPhotoPath(spotIndex - 1);
+
+        return photoPath == null
+            ? FloatingActionButton(
+                onPressed: () => _getImage(ref),
+                child: const Icon(Icons.add_a_photo),
+              )
+            : SizedBox(
+                width: 150,
+                height: 150,
+                child: SetImage(picture: File(photoPath)),
+              );
+      },
+    );
   }
 
   Future<void> _getImage(WidgetRef ref) async {
