@@ -23,6 +23,15 @@ module "snampo_dev" {
   source = "../../modules/common"
 
   project_id = local.project_id
+  # 有効化するAPI
+  api_list = [
+    # アプリケーション用API
+    "streetviewpublish.googleapis.com",
+    "directions-backend.googleapis.com",  # TODO: Legacyになったので、Routes APIに置き換える。
+    "maps-ios-backend.googleapis.com",
+    "maps-android-backend.googleapis.com",
+    "maps-backend.googleapis.com",
+  ]
   # 作成するAPIキー
   api_keys = [
     # TODO: これ消して、実際に利用するAPIキーを作成する
@@ -78,7 +87,7 @@ module "snampo_dev" {
       roles = ["roles/owner"]
     }
   ]
-  # Service AccountとGitHubリポジトリの連携
+  # Service AccountとGitHubリポジトリの連携（nakamawareが管理するリポジトリ限定）
   sa_gh_repo_bindings = [
     {
       sa_id = "${local.project_name}-cicd"
@@ -92,20 +101,28 @@ module "snampo_dev" {
   # GCSのバケット
   gcs_bucket_names = ["${local.project_name}-bucket"]
   # GARのリポジトリ
-  gar_repository_id = "cloud-run-source-deploy"
-  # Cloud Run Service
-  cloud_run_service_config = {
-    service_name = "test-${local.project_name}-be"
-    service_account = "${local.project_name}-run@snampo-480404.iam.gserviceaccount.com"
-    container_specs = {
-      env = []
-      env_secret = [
-        {
-          name      = "TEST_NAME"
-          secret_id = "test-name"
-        }
-      ] # ここで指定できるのは、APIキーかシークレットのID
-      port = 8080
+  gar_repository_list = [
+    {
+      id                    = "cloud-run-source-deploy"
+      desc                  = "Cloud Run Source Deployments"
+      package_name_prefixes = ["snampo"]
     }
-  }
+  ]
+  # Cloud Run Service
+  cloud_run_service_configs = [
+    {
+      service_name    = "test-${local.project_name}-be"
+      service_account = "${local.project_name}-run@snampo-480404.iam.gserviceaccount.com"
+      container_specs = {
+        env = []
+        env_secret = [
+          {
+            name      = "TEST_NAME"
+            secret_id = "test-name"
+          }
+        ] # ここで指定できるのは、APIキーかシークレットのID
+        port = 8080
+      }
+    }
+  ]
 }

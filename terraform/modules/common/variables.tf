@@ -9,6 +9,12 @@ variable "location" {
   default = "asia-northeast1"
 }
 
+# 有効にするAPI
+variable "api_list" {
+  type    = list(string)
+  default = []
+}
+
 # 作成するAPIキー
 variable "api_keys" {
   type = list(object({
@@ -69,14 +75,19 @@ variable "gcs_bucket_names" {
   type = list(string)
 }
 
-# Artifact RegistryのID
-variable "gar_repository_id" {
-  type = string
+# Artifact RegistryのID（Docker）
+variable "gar_repository_list" {
+  type = list(object({
+    id   = string
+    desc = string
+    package_name_prefixes = list(string)
+  }))
+  default = []
 }
 
 # Cloud Runの設定
-variable "cloud_run_service_config" {
-  type = object({
+variable "cloud_run_service_configs" {
+  type = list(object({
     service_name    = string
     service_account = string
     container_specs = object({
@@ -90,5 +101,7 @@ variable "cloud_run_service_config" {
       }))
       port = string
     })
-  })
+  }))
+
+  default = []
 }

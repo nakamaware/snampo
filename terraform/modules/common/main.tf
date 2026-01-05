@@ -1,26 +1,27 @@
 # API
+locals {
+  default_api_list = [
+    # インフラ用API
+    "cloudresourcemanager.googleapis.com",
+    "storage.googleapis.com",
+    "run.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "apikeys.googleapis.com",
+    "secretmanager.googleapis.com",
+    "sts.googleapis.com",
+    "cloudbuild.googleapis.com",  # TODO: GitHub Actionsに移行するため削除予定。
+  ]
+}
+
 module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
   version = "~> 18.2"
 
   project_id = var.project_id
-  activate_apis = [
-    # インフラ用API
-    "cloudresourcemanager.googleapis.com",
-    "storage.googleapis.com",
-    "run.googleapis.com",
-    "cloudbuild.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "apikeys.googleapis.com",
-    "secretmanager.googleapis.com",
-    "sts.googleapis.com",
-    # アプリケーション用API
-    "streetviewpublish.googleapis.com",
-    "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
-    "maps-ios-backend.googleapis.com",
-    "maps-android-backend.googleapis.com",
-    "maps-backend.googleapis.com",
-  ]
+  activate_apis = concat(
+    local.default_api_list,
+    var.api_list
+  )
 }
 
 # Service Account
@@ -84,6 +85,7 @@ module "secret_manager" {
   depends_on = [module.google_api_keys]
 
   project_id = var.project_id
+  # 登録するシークレット
   secrets = concat(
     # APIキー
     [
@@ -95,6 +97,7 @@ module "secret_manager" {
     # その他シークレット
     var.secrets
   )
+  # シークレットの保管場所
   user_managed_replication = merge(
     {
       for key, val in module.google_api_keys.key_strings : key => [{
@@ -116,19 +119,25 @@ module "artifact_registry" {
   source     = "GoogleCloudPlatform/artifact-registry/google"
   version    = "~> 0.8"
   depends_on = [module.project_services]
+  for_each = {
+    for repo in var.gar_repository_list : repo.id => {
+      desc         = repo.desc
+      pkg_prefixes = repo.package_name_prefixes
+    }
+  }
 
   project_id    = var.project_id
   location      = var.location
   format        = "Docker"
-  repository_id = var.gar_repository_id
-  description   = "Cloud Run Source Deployments"
+  repository_id = each.key
+  description   = each.value.desc
   cleanup_policies = {
     # 7日より前に作成されたイメージは削除
     delete_policy = {
       action = "DELETE"
       condition = {
         older_than            = "7d"
-        package_name_prefixes = ["snampo"]
+        package_name_prefixes = each.value.pkg_prefixes
       }
     }
     # 最新の10バージョンは残す
@@ -136,7 +145,7 @@ module "artifact_registry" {
       action = "KEEP"
       most_recent_versions = {
         keep_count            = 10
-        package_name_prefixes = ["snampo"]
+        package_name_prefixes = each.value.pkg_prefixes
       }
     }
   }
@@ -146,8 +155,14 @@ module "artifact_registry" {
 module "cloud_run_service" {
   source     = "../gcp/cloud-run"
   depends_on = [module.iam_members, module.secret_manager]
+  for_each = {
+    for conf in var.cloud_run_service_configs : conf.service_name => {
+      service_account = conf.service_account
+      container_specs = conf.container_specs
+    }
+  }
 
-  service_name = var.cloud_run_service_config.service_name
-  service_account = var.cloud_run_service_config.service_account
-  container_specs = var.cloud_run_service_config.container_specs
+  service_name    = each.key
+  service_account = each.value.service_account
+  container_specs = each.value.container_specs
 }
