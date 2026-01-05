@@ -29,13 +29,25 @@ class GameSession {
             .toList() ??
         [];
 
+    final statusName = json['status'] as String;
+    final status = GameStatus.values.asNameMap()[statusName];
+    if (status == null) {
+      throw FormatException('Invalid GameStatus: $statusName');
+    }
+
+    final startedAtString = json['startedAt'] as String;
+    final startedAt = DateTime.tryParse(startedAtString);
+    if (startedAt == null) {
+      throw FormatException('Invalid DateTime format: $startedAtString');
+    }
+
     return GameSession(
       locationEntity: LocationEntity.fromJson(
         json['locationEntity'] as Map<String, dynamic>,
       ),
       radius: (json['radius'] as num).toDouble(),
-      startedAt: DateTime.parse(json['startedAt'] as String),
-      status: GameStatus.values.byName(json['status'] as String),
+      startedAt: startedAt,
+      status: status,
       photoPaths: photoPaths,
     );
   }
