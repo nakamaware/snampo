@@ -18,16 +18,144 @@
 
   * GCPのリソースを構成するサブモジュールが入る。
 
-### 開発の方針
+## 開発の方針
 
-#### ルートモジュール
+### ルートモジュール
 
 ルートモジュールでは開発・本番プロジェクトで共通の構成となるリソースの最低限の設定と、各環境で必要なリソースを定義する。
 
-#### サブモジュール
+### サブモジュール
 
-開発環境と本番環境で共通するリソースを追加・削除する場合は`common`に変更を加える。個別でリソースを追加・削除する場合は`env/*`に対して変更を加える。複数のリソースの定義が必要になる場合は`gcp`などのサブモジュールを定義して呼び出すようにする。サブモジュールの追加は、公開されているモジュールで代用できない場合に限定する。サブモジュールを作成する際は、推奨設定をハードコーディングし、プロジェクトによって変更が必要な設定を変数で設定できるようにする。
+開発環境と本番環境で共通するリソースを追加・削除する場合は`common`に変更を加える。各環境に対して個別でリソースを追加・削除する場合は`env/*`に対して変更を加える。複数のリソースの定義が必要になる場合は`gcp`などのサブモジュールを定義して呼び出すようにする。サブモジュールの追加は、公開されているモジュールで代用できない場合に限定する。サブモジュールを作成する際は、推奨設定をハードコーディングし、プロジェクトによって変更が必要な設定を変数で設定できるようにする。
 
 ### シークレットの扱い
 
 基本的に、GCPで生成するシークレット（APIキーなど）とGCP以外のシークレット（GitHub AppsのSecretなど）の2つがある。GCPのシークレットはTerraformでシークレットを作成してSecret Managerに登録することでGCP上のリソースで利用できる。GCP以外のシークレットは`TF_VAR_{xxx}`の環境変数をGitHubリポジトリのSecretに設定して、GitHub Actionsで`terrafrom apply`する際に変数としてTerraformに注入する。
+
+## 初期セットアップ
+
+### 権限の確認とGCPの認証
+
+GCPでOwner権限があれば、ほとんどのリソースの作成・削除は問題なく行える。Editor権限だとIAMリソースの変更は不可、それ以外は大体変更できる。
+
+```bash
+gcloud auth application-default login
+```
+
+### 手順
+
+Terraform CLIをインストール
+
+* https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+
+ルートモジュール（env/devまたはenv/prod）で状態を初期化
+
+```bash
+terraform init
+```
+
+インフラの変更の確認
+
+```bash
+terraform plan
+```
+
+変更の適用（原則**ローカルではやらない**）
+
+```bash
+terrafrom apply
+```
+
+## 新しく環境を追加する場合（ステージング環境など）
+
+env以下にルートモジュールを追加する。
+
+```
+env
+└── stg
+    ├── backend.tf  # 空ファイル
+    └── main.tf     # プロバイダ+共通モジュールの呼び出しなど
+```
+
+backend.tfが空の状態で状態を初期化する。この時点でenv/stgに状態管理用のファイルが作成される。
+
+```bash
+# env/stgで実行
+terraform init
+```
+
+Terraform用のリソースを作成する。（別の管理用プロジェクトでこれらを作成するでも良い。）
+
+* Terraformのバックエンド
+
+  * Google Cloud Strage
+
+* TerraformのCI/CD用リソース
+  
+  * サービスアカウント（Owner権限）
+  
+  * Workload Identity連携（snampoリポジトリと上記サービスアカウントの連携）
+
+例：env/stg/main.tf
+
+```terraform
+...(Providerの定義)
+
+module "snampo_stg" {
+  source = "../../modules/common"
+
+  # プロジェクトのDI
+  project_id = "snampo-stg"
+  # GCSのバケット
+  gcs_bucket_names = ["snampo-stg-bucket"]
+  # Terraform用SA
+  sa_list = [
+    {
+      id   = "snampo-stg-terraform"
+      desc = "Terraform用サービスアカウント"
+    }
+  ]
+  # Terraform用SAの権限を設定
+  sa_iam_config = [
+    {
+      email = "snampo-stg-terraform@snampo-stg.iam.gserviceaccount.com"
+      roles = ["roles/owner"]
+    }
+  ]
+  # Workload Identity連携
+  sa_gh_repo_bindings = [
+    {
+      sa_id = "snampo-stg-terraform"
+      repos = ["nakamaware/snampo"]
+    }
+  ]
+}
+```
+
+上記の構成を適用する
+
+```shell
+# env/stgで実行
+terraform apply
+```
+
+
+backend.tfにリモートバックエンドを追加する。
+
+例：env/stg/main.tf
+
+```terrafrom
+terraform {
+  backend "gcs" {
+    bucket = "snampo-stg-bucket"
+    prefix = "terraform/state"
+  }
+}
+```
+
+ローカルからリモートバックエンドに状態管理を移行する。
+
+```bash
+# env/stgで実行
+terraform init -migrate-state
+```
