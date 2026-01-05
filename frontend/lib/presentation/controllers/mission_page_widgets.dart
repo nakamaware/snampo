@@ -140,10 +140,6 @@ class SnapViewState extends ConsumerWidget {
             ),
           ),
           onPressed: () async {
-            // ゲームセッションと写真状態をクリア
-            await ref
-                .read(gameSessionControllerProvider.notifier)
-                .clearSession();
             if (context.mounted) {
               await context.push<void>('/result');
             }
