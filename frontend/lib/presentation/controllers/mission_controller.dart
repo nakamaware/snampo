@@ -29,6 +29,9 @@ class MissionController extends _$MissionController {
     state = const AsyncValue.loading();
 
     try {
+      // 新規ゲームなので写真状態をリセット
+      ref.read(capturedPhotosControllerProvider.notifier).reset();
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -67,6 +70,11 @@ class MissionController extends _$MissionController {
       if (session == null || session.status != GameStatus.inProgress) {
         throw Exception('再開可能なゲームがありません');
       }
+
+      // 写真状態を復元
+      ref
+          .read(capturedPhotosControllerProvider.notifier)
+          .restoreFromSession(session);
 
       state = AsyncValue.data(session.locationEntity);
     } catch (error, stackTrace) {

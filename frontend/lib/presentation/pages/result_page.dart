@@ -90,9 +90,10 @@ class HomeButton extends ConsumerWidget {
         foregroundColor: theme.colorScheme.onPrimary,
       ),
       onPressed: () async {
-        // ゲームセッションをクリア (念のため)
+        // ゲームセッションと写真状態をクリア (念のため)
         final sessionRepository = ref.read(gameSessionRepositoryProvider);
         await sessionRepository.clearSession();
+        ref.read(capturedPhotosControllerProvider.notifier).reset();
         if (context.mounted) {
           context.go('/');
         }

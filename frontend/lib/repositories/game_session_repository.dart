@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snampo/models/game_session.dart';
 
@@ -18,8 +20,15 @@ class GameSessionRepository {
     await prefs.setString(_key, session.toJsonString());
   }
 
-  /// ゲームセッションを削除する
+  /// ゲームセッションを削除する (写真ファイルも削除)
   Future<void> clearSession() async {
+    // 保存された写真ファイルを削除
+    final session = await getSavedSession();
+    if (session != null) {
+      await _deletePhotoFile(session.spot1PhotoPath);
+      await _deletePhotoFile(session.spot2PhotoPath);
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
@@ -28,5 +37,18 @@ class GameSessionRepository {
   Future<bool> hasSavedSession() async {
     final session = await getSavedSession();
     return session != null && session.status == GameStatus.inProgress;
+  }
+
+  /// 写真ファイルを削除する
+  Future<void> _deletePhotoFile(String? path) async {
+    if (path == null) return;
+    try {
+      final file = File(path);
+      if (file.existsSync()) {
+        await file.delete();
+      }
+    } catch (_) {
+      // ファイル削除に失敗しても無視
+    }
   }
 }

@@ -19,6 +19,8 @@ class GameSession {
     required this.radius,
     required this.startedAt,
     required this.status,
+    this.spot1PhotoPath,
+    this.spot2PhotoPath,
   });
 
   /// JSONからGameSessionを生成する
@@ -30,6 +32,8 @@ class GameSession {
       radius: (json['radius'] as num).toDouble(),
       startedAt: DateTime.parse(json['startedAt'] as String),
       status: GameStatus.values.byName(json['status'] as String),
+      spot1PhotoPath: json['spot1PhotoPath'] as String?,
+      spot2PhotoPath: json['spot2PhotoPath'] as String?,
     );
   }
 
@@ -57,6 +61,12 @@ class GameSession {
   /// ゲームの状態
   final GameStatus status;
 
+  /// Spot1の写真パス
+  final String? spot1PhotoPath;
+
+  /// Spot2の写真パス
+  final String? spot2PhotoPath;
+
   /// GameSessionをJSONに変換する
   Map<String, dynamic> toJson() {
     return {
@@ -64,7 +74,24 @@ class GameSession {
       'radius': radius,
       'startedAt': startedAt.toIso8601String(),
       'status': status.name,
+      'spot1PhotoPath': spot1PhotoPath,
+      'spot2PhotoPath': spot2PhotoPath,
     };
+  }
+
+  /// 写真パスを更新した新しいGameSessionを作成する
+  GameSession copyWith({
+    String? spot1PhotoPath,
+    String? spot2PhotoPath,
+  }) {
+    return GameSession(
+      locationEntity: locationEntity,
+      radius: radius,
+      startedAt: startedAt,
+      status: status,
+      spot1PhotoPath: spot1PhotoPath ?? this.spot1PhotoPath,
+      spot2PhotoPath: spot2PhotoPath ?? this.spot2PhotoPath,
+    );
   }
 
   /// GameSessionをJSON文字列に変換する

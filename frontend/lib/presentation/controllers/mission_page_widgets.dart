@@ -113,7 +113,7 @@ class SnapViewState extends ConsumerWidget {
               AnswerImage(imageUtf8: midpointInfoList[0].imageUtf8!)
             else
               const SizedBox(width: 150, height: 150),
-            const TakeSnap(),
+            const TakeSnap(spotIndex: 1),
           ],
         ),
         Row(
@@ -124,7 +124,7 @@ class SnapViewState extends ConsumerWidget {
               AnswerImage(imageUtf8: destination.imageUtf8!)
             else
               const SizedBox(width: 150, height: 150),
-            const TakeSnap(),
+            const TakeSnap(spotIndex: 2),
           ],
         ),
         const SizedBox(
@@ -140,9 +140,10 @@ class SnapViewState extends ConsumerWidget {
             ),
           ),
           onPressed: () async {
-            // ゲームセッションをクリア
+            // ゲームセッションと写真状態をクリア
             final sessionRepository = ref.read(gameSessionRepositoryProvider);
             await sessionRepository.clearSession();
+            ref.read(capturedPhotosControllerProvider.notifier).reset();
             if (context.mounted) {
               await context.push<void>('/result');
             }
@@ -194,45 +195,49 @@ class AnswerImage extends StatelessWidget {
 }
 
 /// 写真を撮影するためのボタンを表示するウィジェット
-class TakeSnap extends StatefulWidget {
+class TakeSnap extends ConsumerWidget {
   /// TakeSnapウィジェットのコンストラクタ
+  ///
+  /// [spotIndex] は撮影するスポットの番号 (1 または 2)
   const TakeSnap({
+    required this.spotIndex,
     super.key,
   });
 
-  @override
-  State<TakeSnap> createState() => _TakeSnapState();
-}
-
-class _TakeSnapState extends State<TakeSnap> {
-  File? _image;
-  final picker = ImagePicker();
-
-  Future<void> getImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
-  }
+  /// 撮影するスポットの番号
+  final int spotIndex;
 
   @override
-  Widget build(BuildContext context) {
-    return _image == null
+  Widget build(BuildContext context, WidgetRef ref) {
+    final capturedPhotos = ref.watch(capturedPhotosControllerProvider);
+    final photoPath = spotIndex == 1
+        ? capturedPhotos.spot1PhotoPath
+        : capturedPhotos.spot2PhotoPath;
+
+    return photoPath == null
         ? FloatingActionButton(
-            onPressed: getImage,
+            onPressed: () => _getImage(ref),
             child: const Icon(Icons.add_a_photo),
           )
         : SizedBox(
             width: 150,
             height: 150,
-            child: SetImage(
-              // picture_name: "images/test1.jpeg",
-              picture: _image!,
-            ),
+            child: SetImage(picture: File(photoPath)),
           );
+  }
+
+  Future<void> _getImage(WidgetRef ref) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      final controller = ref.read(capturedPhotosControllerProvider.notifier);
+      if (spotIndex == 1) {
+        await controller.saveSpot1Photo(pickedFile.path);
+      } else {
+        await controller.saveSpot2Photo(pickedFile.path);
+      }
+    }
   }
 }
 

@@ -65,5 +65,24 @@ final savedSessionProvider = AutoDisposeFutureProvider<GameSession?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SavedSessionRef = AutoDisposeFutureProviderRef<GameSession?>;
+String _$capturedPhotosControllerHash() =>
+    r'd1afcae1c4eacef26ce40871935f77677871cb2e';
+
+/// 撮影した写真を管理するコントローラー
+///
+/// Copied from [CapturedPhotosController].
+@ProviderFor(CapturedPhotosController)
+final capturedPhotosControllerProvider = AutoDisposeNotifierProvider<
+    CapturedPhotosController, CapturedPhotos>.internal(
+  CapturedPhotosController.new,
+  name: r'capturedPhotosControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$capturedPhotosControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$CapturedPhotosController = AutoDisposeNotifier<CapturedPhotos>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
