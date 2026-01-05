@@ -29,8 +29,8 @@ class MissionController extends _$MissionController {
     state = const AsyncValue.loading();
 
     try {
-      // 新規ゲームなので写真状態をリセット
-      ref.read(capturedPhotosControllerProvider.notifier).reset();
+      // 新規ゲームなので既存のセッションと写真をクリア
+      await ref.read(gameSessionControllerProvider.notifier).clearSession();
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -44,14 +44,15 @@ class MissionController extends _$MissionController {
       );
 
       // ゲームセッションを保存
-      final sessionRepository = ref.read(gameSessionRepositoryProvider);
       final session = GameSession(
         locationEntity: missionInfo,
         radius: radius,
         startedAt: DateTime.now(),
         status: GameStatus.inProgress,
       );
-      await sessionRepository.saveSession(session);
+      await ref
+          .read(gameSessionControllerProvider.notifier)
+          .saveSession(session);
 
       state = AsyncValue.data(missionInfo);
     } catch (error, stackTrace) {
@@ -64,17 +65,11 @@ class MissionController extends _$MissionController {
     state = const AsyncValue.loading();
 
     try {
-      final sessionRepository = ref.read(gameSessionRepositoryProvider);
-      final session = await sessionRepository.getSavedSession();
+      final session = await ref.read(gameSessionControllerProvider.future);
 
       if (session == null || session.status != GameStatus.inProgress) {
         throw Exception('再開可能なゲームがありません');
       }
-
-      // 写真状態を復元
-      ref
-          .read(capturedPhotosControllerProvider.notifier)
-          .restoreFromSession(session);
 
       state = AsyncValue.data(session.locationEntity);
     } catch (error, stackTrace) {

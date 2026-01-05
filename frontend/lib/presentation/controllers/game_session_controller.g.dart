@@ -28,7 +28,7 @@ final gameSessionRepositoryProvider =
 // ignore: unused_element
 typedef GameSessionRepositoryRef
     = AutoDisposeProviderRef<GameSessionRepository>;
-String _$hasSavedSessionHash() => r'365fe3e310d27edcf909b4216ad93104b8414cba';
+String _$hasSavedSessionHash() => r'2b55c6188a24cb26c34064773aeffe4541de25e5';
 
 /// 中断中のゲームセッションがあるかをチェックするプロバイダー
 ///
@@ -47,42 +47,24 @@ final hasSavedSessionProvider = AutoDisposeFutureProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HasSavedSessionRef = AutoDisposeFutureProviderRef<bool>;
-String _$savedSessionHash() => r'e8c459b3488204a79aad8b847b0ecfc4288619f4';
+String _$gameSessionControllerHash() =>
+    r'1393d2ee7bd040093c06779acbce93ad59876621';
 
-/// 保存されたゲームセッションを取得するプロバイダー
+/// ゲームセッションと写真を統合管理するコントローラー
 ///
-/// Copied from [savedSession].
-@ProviderFor(savedSession)
-final savedSessionProvider = AutoDisposeFutureProvider<GameSession?>.internal(
-  savedSession,
-  name: r'savedSessionProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$savedSessionHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SavedSessionRef = AutoDisposeFutureProviderRef<GameSession?>;
-String _$capturedPhotosControllerHash() =>
-    r'd1afcae1c4eacef26ce40871935f77677871cb2e';
-
-/// 撮影した写真を管理するコントローラー
-///
-/// Copied from [CapturedPhotosController].
-@ProviderFor(CapturedPhotosController)
-final capturedPhotosControllerProvider = AutoDisposeNotifierProvider<
-    CapturedPhotosController, CapturedPhotos>.internal(
-  CapturedPhotosController.new,
-  name: r'capturedPhotosControllerProvider',
+/// Copied from [GameSessionController].
+@ProviderFor(GameSessionController)
+final gameSessionControllerProvider = AutoDisposeAsyncNotifierProvider<
+    GameSessionController, GameSession?>.internal(
+  GameSessionController.new,
+  name: r'gameSessionControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$capturedPhotosControllerHash,
+      : _$gameSessionControllerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$CapturedPhotosController = AutoDisposeNotifier<CapturedPhotos>;
+typedef _$GameSessionController = AutoDisposeAsyncNotifier<GameSession?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

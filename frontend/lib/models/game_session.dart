@@ -19,12 +19,16 @@ class GameSession {
     required this.radius,
     required this.startedAt,
     required this.status,
-    this.spot1PhotoPath,
-    this.spot2PhotoPath,
-  });
+    List<String?>? photoPaths,
+  }) : photoPaths = photoPaths ?? [];
 
   /// JSONからGameSessionを生成する
   factory GameSession.fromJson(Map<String, dynamic> json) {
+    final photoPaths = (json['photoPaths'] as List<dynamic>?)
+            ?.map((e) => e as String?)
+            .toList() ??
+        [];
+
     return GameSession(
       locationEntity: LocationEntity.fromJson(
         json['locationEntity'] as Map<String, dynamic>,
@@ -32,8 +36,7 @@ class GameSession {
       radius: (json['radius'] as num).toDouble(),
       startedAt: DateTime.parse(json['startedAt'] as String),
       status: GameStatus.values.byName(json['status'] as String),
-      spot1PhotoPath: json['spot1PhotoPath'] as String?,
-      spot2PhotoPath: json['spot2PhotoPath'] as String?,
+      photoPaths: photoPaths,
     );
   }
 
@@ -61,11 +64,15 @@ class GameSession {
   /// ゲームの状態
   final GameStatus status;
 
-  /// Spot1の写真パス
-  final String? spot1PhotoPath;
+  /// 各スポットの写真パスのリスト
+  /// インデックス0がmidpoints[0]、インデックス1がdestinationに対応
+  final List<String?> photoPaths;
 
-  /// Spot2の写真パス
-  final String? spot2PhotoPath;
+  /// 指定されたインデックスの写真パスを取得する
+  String? getPhotoPath(int index) {
+    if (index < 0 || index >= photoPaths.length) return null;
+    return photoPaths[index];
+  }
 
   /// GameSessionをJSONに変換する
   Map<String, dynamic> toJson() {
@@ -74,24 +81,32 @@ class GameSession {
       'radius': radius,
       'startedAt': startedAt.toIso8601String(),
       'status': status.name,
-      'spot1PhotoPath': spot1PhotoPath,
-      'spot2PhotoPath': spot2PhotoPath,
+      'photoPaths': photoPaths,
     };
   }
 
   /// 写真パスを更新した新しいGameSessionを作成する
   GameSession copyWith({
-    String? spot1PhotoPath,
-    String? spot2PhotoPath,
+    List<String?>? photoPaths,
   }) {
     return GameSession(
       locationEntity: locationEntity,
       radius: radius,
       startedAt: startedAt,
       status: status,
-      spot1PhotoPath: spot1PhotoPath ?? this.spot1PhotoPath,
-      spot2PhotoPath: spot2PhotoPath ?? this.spot2PhotoPath,
+      photoPaths: photoPaths ?? this.photoPaths,
     );
+  }
+
+  /// 指定されたインデックスの写真パスを更新した新しいGameSessionを作成する
+  GameSession copyWithPhotoPath(int index, String? photoPath) {
+    final updatedPhotoPaths = List<String?>.from(photoPaths);
+    // インデックスが範囲外の場合はリストを拡張
+    while (updatedPhotoPaths.length <= index) {
+      updatedPhotoPaths.add(null);
+    }
+    updatedPhotoPaths[index] = photoPath;
+    return copyWith(photoPaths: updatedPhotoPaths);
   }
 
   /// GameSessionをJSON文字列に変換する

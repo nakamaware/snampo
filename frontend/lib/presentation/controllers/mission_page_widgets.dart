@@ -141,9 +141,9 @@ class SnapViewState extends ConsumerWidget {
           ),
           onPressed: () async {
             // ゲームセッションと写真状態をクリア
-            final sessionRepository = ref.read(gameSessionRepositoryProvider);
-            await sessionRepository.clearSession();
-            ref.read(capturedPhotosControllerProvider.notifier).reset();
+            await ref
+                .read(gameSessionControllerProvider.notifier)
+                .clearSession();
             if (context.mounted) {
               await context.push<void>('/result');
             }
@@ -209,10 +209,9 @@ class TakeSnap extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final capturedPhotos = ref.watch(capturedPhotosControllerProvider);
-    final photoPath = spotIndex == 1
-        ? capturedPhotos.spot1PhotoPath
-        : capturedPhotos.spot2PhotoPath;
+    final session = ref.watch(gameSessionControllerProvider).value;
+    // spotIndexは1-indexedなので、0-indexedに変換 (spotIndex 1 -> 0, spotIndex 2 -> 1)
+    final photoPath = session?.getPhotoPath(spotIndex - 1);
 
     return photoPath == null
         ? FloatingActionButton(
@@ -231,12 +230,9 @@ class TakeSnap extends ConsumerWidget {
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
-      final controller = ref.read(capturedPhotosControllerProvider.notifier);
-      if (spotIndex == 1) {
-        await controller.saveSpot1Photo(pickedFile.path);
-      } else {
-        await controller.saveSpot2Photo(pickedFile.path);
-      }
+      final controller = ref.read(gameSessionControllerProvider.notifier);
+      // spotIndexは1-indexedなので、0-indexedに変換
+      await controller.saveSpotPhoto(spotIndex - 1, pickedFile.path);
     }
   }
 }
