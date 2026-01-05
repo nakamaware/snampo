@@ -1,10 +1,10 @@
 name: snampo
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.1
 
 environment:
-  sdk: '>=3.2.6 <4.0.0'
+  sdk: ">=3.2.6 <4.0.0"
 
 dependencies:
   dio: ^5.4.0
@@ -28,7 +28,7 @@ dependencies:
   provider: ^6.0.0
   riverpod: ^2.6.1
   riverpod_annotation: ^2.3.3
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.5.3
   # 生成されたAPIクライアント（OpenAPIスキーマから自動生成）
   snampo_api:
     path: ../packages/snampo_api
