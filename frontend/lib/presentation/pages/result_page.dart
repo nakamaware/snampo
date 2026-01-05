@@ -92,6 +92,7 @@ class HomeButton extends ConsumerWidget {
       onPressed: () async {
         // ゲームセッションと写真状態をクリア (念のため)
         await ref.read(gameSessionControllerProvider.notifier).clearSession();
+        ref.invalidate(hasSavedSessionProvider);
         if (context.mounted) {
           context.go('/');
         }

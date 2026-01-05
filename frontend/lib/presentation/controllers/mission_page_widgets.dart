@@ -140,6 +140,10 @@ class SnapViewState extends ConsumerWidget {
             ),
           ),
           onPressed: () async {
+            await ref
+                .read(gameSessionControllerProvider.notifier)
+                .clearSession();
+            ref.invalidate(hasSavedSessionProvider);
             if (context.mounted) {
               await context.push<void>('/result');
             }
