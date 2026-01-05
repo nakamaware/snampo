@@ -104,7 +104,7 @@ Terraform用のリソースを作成する。（別の管理用プロジェク�
 module "snampo_stg" {
   source = "../../modules/common"
 
-  # プロジェクトのDI
+  # プロジェクトのID
   project_id = "snampo-stg"
   # GCSのバケット
   gcs_bucket_names = ["snampo-stg-bucket"]
