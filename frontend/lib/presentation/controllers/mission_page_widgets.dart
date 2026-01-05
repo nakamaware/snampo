@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:snampo/presentation/controllers/game_session_controller.dart';
 import 'package:snampo/presentation/controllers/mission_controller.dart';
 
 /// mission_pageで表示するsnapのメニューウィジェット
@@ -138,8 +139,13 @@ class SnapViewState extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10), // 角の丸み
             ),
           ),
-          onPressed: () {
-            context.push('/result');
+          onPressed: () async {
+            // ゲームセッションをクリア
+            final sessionRepository = ref.read(gameSessionRepositoryProvider);
+            await sessionRepository.clearSession();
+            if (context.mounted) {
+              await context.push<void>('/result');
+            }
           },
           child: Padding(
             padding: const EdgeInsets.all(20),
