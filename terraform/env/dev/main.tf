@@ -36,13 +36,13 @@ module "snampo_dev" {
   api_keys = [
     # TODO: これ消して、実際に利用するAPIキーを作成する
     {
-      id           = "test-name"
-      display_name = "test-display-name"
+      id           = "google-api-key"
+      display_name = "google-api-key"
       target_services = [
         "streetviewpublish.googleapis.com",
         "directions-backend.googleapis.com",
       ]
-    }
+    },
   ]
   # Service Account
   sa_list = [
@@ -57,14 +57,14 @@ module "snampo_dev" {
     {
       id   = "${local.project_name}-terraform"
       desc = "Terraform用サービスアカウント"
-    }
+    },
   ]
   # グループの権限
   grp_iam_config = [
     {
       email = "gcp-organization-developers@nakamaware.com"
       roles = ["roles/editor"]
-    }
+    },
   ]
   # Service Accountの権限
   sa_iam_config = [
@@ -86,7 +86,7 @@ module "snampo_dev" {
     {
       email = "${local.project_name}-terraform@snampo-480404.iam.gserviceaccount.com"
       roles = ["roles/owner"]
-    }
+    },
   ]
   # Service AccountとGitHubリポジトリの連携（nakamawareが管理するリポジトリ限定）
   sa_gh_repo_bindings = [
@@ -97,7 +97,7 @@ module "snampo_dev" {
     {
       sa_id = "${local.project_name}-terraform"
       repos = ["nakamaware/snampo"]
-    }
+    },
   ]
   # GCSのバケット
   gcs_bucket_names = ["${local.project_name}-bucket"]
@@ -107,7 +107,7 @@ module "snampo_dev" {
       id                    = "cloud-run-source-deploy"
       desc                  = "Cloud Run Source Deployments"
       package_name_prefixes = ["snampo"]
-    }
+    },
   ]
   # Cloud Run Service
   cloud_run_service_configs = [
@@ -118,9 +118,9 @@ module "snampo_dev" {
         env = []
         env_secret = [
           {
-            name      = "TEST_NAME"
-            secret_id = "test-name"
-          }
+            name      = "GOOGLE_API_KEY"
+            secret_id = "google-api-key"
+          },
         ] # ここで指定できるのは、APIキーかシークレットのID
         port = 80
       }
