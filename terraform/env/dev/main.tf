@@ -122,7 +122,7 @@ module "snampo_dev" {
             secret_id = "test-name"
           }
         ] # ここで指定できるのは、APIキーかシークレットのID
-        port = 8080
+        port = 80
       }
     }
   ]
