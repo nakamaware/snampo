@@ -51,6 +51,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # TODO: リポジトリ名とイメージ名を見直して、環境変数にする（TerraformのCI/CD設定後）
           images: ${{ vars.GAR_REPOSITORY }}/snampo/snampo-be-test
           tags: |
             type=semver,pattern={{version}}
@@ -93,6 +94,7 @@ jobs:
       - name: Deploy to Cloud Run
         uses: 'google-github-actions/deploy-cloudrun@v3'
         with:
+          # TODO: サービス名を環境変数にする（TerraformのCI/CD設定後）
           service: 'test-snampo-dev-be'
           image: ${{ needs.build-and-push-docker-image.outputs.image_tag }}
           region: 'asia-northeast1'
