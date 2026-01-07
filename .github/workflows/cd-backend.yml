@@ -66,6 +66,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
 
     outputs:
       image_tag: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
