@@ -238,6 +238,7 @@ class TakeSnap extends ConsumerWidget {
 
         return photoPath == null
             ? FloatingActionButton(
+                heroTag: 'take_snap_spot_$spotIndex',
                 onPressed: () => _getImage(ref),
                 child: const Icon(Icons.add_a_photo),
               )
