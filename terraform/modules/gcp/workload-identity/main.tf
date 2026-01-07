@@ -47,21 +47,47 @@ resource "google_iam_workload_identity_pool_provider" "gh_provider" {
 }
 
 # GitHubリポジトリとサービスアカウントの連携
+locals {
+  # GitHubリポジトリに付与する権限
+  _roles = [
+    "roles/iam.workloadIdentityUser",
+    "roles/iam.serviceAccountTokenCreator"
+  ]
+
+  _sa_gh_binding_list = flatten([
+    for b in var.sa_gh_repo_bindings : [
+      for r in local._roles : {
+        sa_id = b.sa_id
+        role  = r
+        repos = b.repos
+      }
+    ]
+  ])
+
+  sa_gh_bindings_map = {
+    for b in local._sa_gh_binding_list : "${b.sa_id}:${b.role}" => {
+      sa_id = b.sa_id
+      role  = b.role
+      repos = b.repos
+    }
+  }
+}
+
 data "google_service_account" "service_account" {
-  for_each   = toset([for b in var.sa_gh_repo_bindings : b.sa_id])
-  
+  for_each = toset([for b in var.sa_gh_repo_bindings : b.sa_id])
+
   project    = var.project_id
   account_id = each.value
 }
 
 resource "google_service_account_iam_binding" "sa_gh_binding" {
   depends_on = [google_iam_workload_identity_pool.pool]
-  for_each           = { for b in var.sa_gh_repo_bindings : b.sa_id => b.repos }
+  for_each   = local.sa_gh_bindings_map
 
-  service_account_id = data.google_service_account.service_account["${each.key}"].name
-  role               = "roles/iam.workloadIdentityUser"
+  service_account_id = data.google_service_account.service_account["${each.value.sa_id}"].name
+  role               = each.value.role
   members = [
-    for repo in each.value :
+    for repo in each.value.repos :
     "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.pool["github"].name}/attribute.repository/${repo}"
   ]
 }
