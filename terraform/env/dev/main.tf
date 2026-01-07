@@ -27,7 +27,7 @@ module "snampo_dev" {
   api_list = [
     # アプリケーション用API
     "streetviewpublish.googleapis.com",
-    "directions-backend.googleapis.com",  # TODO: Legacyになったので、Routes APIに置き換える。
+    "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
     "maps-ios-backend.googleapis.com",
     "maps-android-backend.googleapis.com",
     "maps-backend.googleapis.com",
@@ -80,6 +80,7 @@ module "snampo_dev" {
       roles = [
         "roles/artifactregistry.writer",
         "roles/run.developer",
+        "roles/iam.serviceAccountUser",
       ]
     },
     {
