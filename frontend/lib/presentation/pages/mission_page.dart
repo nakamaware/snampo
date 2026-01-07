@@ -15,10 +15,18 @@ class MissionPage extends HookConsumerWidget {
   /// ミッションページを作成する
   ///
   /// [radius] はミッションの検索半径（キロメートル単位）
-  const MissionPage({required this.radius, super.key});
+  /// [isResume] が true の場合、保存されたセッションから復元する
+  const MissionPage({
+    required this.radius,
+    this.isResume = false,
+    super.key,
+  });
 
   /// ミッションの検索半径（キロメートル単位）
   final double radius;
+
+  /// 保存されたセッションから復元するかどうか
+  final bool isResume;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,15 +41,21 @@ class MissionPage extends HookConsumerWidget {
 
     final missionAsync = ref.watch(missionControllerProvider);
 
-    // radiusが変更されたときにミッションを読み込む（ビルド後に実行）
+    // ミッションを読み込む（ビルド後に実行）
     useEffect(
       () {
         Future.microtask(() {
-          ref.read(missionControllerProvider.notifier).loadMission(radius);
+          if (isResume) {
+            // 保存されたセッションから復元
+            ref.read(missionControllerProvider.notifier).loadSavedSession();
+          } else {
+            // 新規ミッションを取得
+            ref.read(missionControllerProvider.notifier).loadMission(radius);
+          }
         });
         return null;
       },
-      [radius],
+      [radius, isResume],
     );
 
     return missionAsync.when(

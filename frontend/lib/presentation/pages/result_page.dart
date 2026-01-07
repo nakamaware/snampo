@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:snampo/presentation/controllers/game_session_controller.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -66,14 +68,14 @@ class ResultPage extends StatelessWidget {
 }
 
 /// ホームに戻るボタンウィジェット
-class HomeButton extends StatelessWidget {
+class HomeButton extends ConsumerWidget {
   /// HomeButtonのコンストラクタ
   const HomeButton({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
@@ -87,8 +89,13 @@ class HomeButton extends StatelessWidget {
         backgroundColor: theme.colorScheme.primary, //ボタンの背景色
         foregroundColor: theme.colorScheme.onPrimary,
       ),
-      onPressed: () {
-        context.go('/');
+      onPressed: () async {
+        // ゲームセッションと写真状態をクリア (念のため)
+        await ref.read(gameSessionControllerProvider.notifier).clearSession();
+        ref.invalidate(hasSavedSessionProvider);
+        if (context.mounted) {
+          context.go('/');
+        }
       },
       child: Padding(
         padding: const EdgeInsets.all(20),

@@ -42,7 +42,12 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/mission/:radius',
       builder: (context, state) {
-        final radius = double.parse(state.pathParameters['radius']!);
+        final radiusParam = state.pathParameters['radius']!;
+        // 「resume」の場合は保存データから復元
+        if (radiusParam == 'resume') {
+          return const MissionPage(radius: 0, isResume: true);
+        }
+        final radius = double.parse(radiusParam);
         return MissionPage(radius: radius);
       },
     ),
