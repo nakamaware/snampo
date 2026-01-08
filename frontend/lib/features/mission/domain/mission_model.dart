@@ -1,65 +1,57 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'mission_model.freezed.dart';
+
 /// 位置情報エンティティ
-class LocationEntity {
+@freezed
+abstract class LocationEntity with _$LocationEntity {
   /// LocationEntityのコンストラクタ
-  LocationEntity({
-    required this.departure,
-    required this.destination,
-    required this.midpoints,
-    required this.overviewPolyline,
-  });
+  const factory LocationEntity({
+    /// 出発地点
+    LocationPointEntity? departure,
 
-  /// 出発地点
-  final LocationPointEntity? departure;
+    /// 目的地
+    MidPointEntity? destination,
 
-  /// 目的地
-  final MidPointEntity? destination;
+    /// 中間地点のリスト
+    @Default([]) List<MidPointEntity> midpoints,
 
-  /// 中間地点のリスト
-  final List<MidPointEntity> midpoints;
-
-  /// ルートのポリライン文字列
-  final String? overviewPolyline;
+    /// ルートのポリライン文字列
+    String? overviewPolyline,
+  }) = _LocationEntity;
 }
 
 /// 位置ポイントエンティティ
-class LocationPointEntity {
+@freezed
+abstract class LocationPointEntity with _$LocationPointEntity {
   /// LocationPointEntityのコンストラクタ
-  LocationPointEntity({
-    required this.latitude,
-    required this.longitude,
-  });
+  const factory LocationPointEntity({
+    /// 緯度
+    double? latitude,
 
-  /// 緯度
-  final double? latitude;
-
-  /// 経度
-  final double? longitude;
+    /// 経度
+    double? longitude,
+  }) = _LocationPointEntity;
 }
 
 /// 中間ポイントエンティティ
-class MidPointEntity {
+@freezed
+abstract class MidPointEntity with _$MidPointEntity {
   /// MidPointEntityのコンストラクタ
-  MidPointEntity({
-    required this.imageLatitude,
-    required this.imageLongitude,
-    required this.latitude,
-    required this.longitude,
-    required this.imageUtf8,
-  });
+  const factory MidPointEntity({
+    /// 画像のメタデータ緯度
+    double? imageLatitude,
 
-  /// 画像のメタデータ緯度
-  final double? imageLatitude;
+    /// 画像のメタデータ経度
+    double? imageLongitude,
 
-  /// 画像のメタデータ経度
-  final double? imageLongitude;
+    /// 元の緯度
+    double? latitude,
 
-  /// 元の緯度
-  final double? latitude;
+    /// 元の経度
+    double? longitude,
 
-  /// 元の経度
-  final double? longitude;
-
-  /// Base64エンコードされた画像データ
-  final String? imageUtf8;
+    /// Base64エンコードされた画像データ
+    String? imageUtf8,
+  }) = _MidPointEntity;
 }
-
