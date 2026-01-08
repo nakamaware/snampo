@@ -52,6 +52,6 @@ abstract class MidPointEntity with _$MidPointEntity {
     double? longitude,
 
     /// Base64エンコードされた画像データ
-    String? imageUtf8,
+    String? imageBase64,
   }) = _MidPointEntity;
 }

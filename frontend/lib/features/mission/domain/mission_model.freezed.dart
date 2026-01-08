@@ -785,7 +785,7 @@ mixin _$MidPointEntity {
   double? get longitude;
 
   /// Base64エンコードされた画像データ
-  String? get imageUtf8;
+  String? get imageBase64;
 
   /// Create a copy of MidPointEntity
   /// with the given fields replaced by the non-null parameter values.
@@ -808,17 +808,17 @@ mixin _$MidPointEntity {
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
                 other.longitude == longitude) &&
-            (identical(other.imageUtf8, imageUtf8) ||
-                other.imageUtf8 == imageUtf8));
+            (identical(other.imageBase64, imageBase64) ||
+                other.imageBase64 == imageBase64));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, imageLatitude, imageLongitude,
-      latitude, longitude, imageUtf8);
+      latitude, longitude, imageBase64);
 
   @override
   String toString() {
-    return 'MidPointEntity(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageUtf8: $imageUtf8)';
+    return 'MidPointEntity(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageBase64: $imageBase64)';
   }
 }
 
@@ -833,7 +833,7 @@ abstract mixin class $MidPointEntityCopyWith<$Res> {
       double? imageLongitude,
       double? latitude,
       double? longitude,
-      String? imageUtf8});
+      String? imageBase64});
 }
 
 /// @nodoc
@@ -853,7 +853,7 @@ class _$MidPointEntityCopyWithImpl<$Res>
     Object? imageLongitude = freezed,
     Object? latitude = freezed,
     Object? longitude = freezed,
-    Object? imageUtf8 = freezed,
+    Object? imageBase64 = freezed,
   }) {
     return _then(_self.copyWith(
       imageLatitude: freezed == imageLatitude
@@ -872,9 +872,9 @@ class _$MidPointEntityCopyWithImpl<$Res>
           ? _self.longitude
           : longitude // ignore: cast_nullable_to_non_nullable
               as double?,
-      imageUtf8: freezed == imageUtf8
-          ? _self.imageUtf8
-          : imageUtf8 // ignore: cast_nullable_to_non_nullable
+      imageBase64: freezed == imageBase64
+          ? _self.imageBase64
+          : imageBase64 // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -974,7 +974,7 @@ extension MidPointEntityPatterns on MidPointEntity {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(double? imageLatitude, double? imageLongitude,
-            double? latitude, double? longitude, String? imageUtf8)?
+            double? latitude, double? longitude, String? imageBase64)?
         $default, {
     required TResult orElse(),
   }) {
@@ -982,7 +982,7 @@ extension MidPointEntityPatterns on MidPointEntity {
     switch (_that) {
       case _MidPointEntity() when $default != null:
         return $default(_that.imageLatitude, _that.imageLongitude,
-            _that.latitude, _that.longitude, _that.imageUtf8);
+            _that.latitude, _that.longitude, _that.imageBase64);
       case _:
         return orElse();
     }
@@ -1004,14 +1004,14 @@ extension MidPointEntityPatterns on MidPointEntity {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(double? imageLatitude, double? imageLongitude,
-            double? latitude, double? longitude, String? imageUtf8)
+            double? latitude, double? longitude, String? imageBase64)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _MidPointEntity():
         return $default(_that.imageLatitude, _that.imageLongitude,
-            _that.latitude, _that.longitude, _that.imageUtf8);
+            _that.latitude, _that.longitude, _that.imageBase64);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -1032,14 +1032,14 @@ extension MidPointEntityPatterns on MidPointEntity {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(double? imageLatitude, double? imageLongitude,
-            double? latitude, double? longitude, String? imageUtf8)?
+            double? latitude, double? longitude, String? imageBase64)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _MidPointEntity() when $default != null:
         return $default(_that.imageLatitude, _that.imageLongitude,
-            _that.latitude, _that.longitude, _that.imageUtf8);
+            _that.latitude, _that.longitude, _that.imageBase64);
       case _:
         return null;
     }
@@ -1054,7 +1054,7 @@ class _MidPointEntity implements MidPointEntity {
       this.imageLongitude,
       this.latitude,
       this.longitude,
-      this.imageUtf8});
+      this.imageBase64});
 
   /// 画像のメタデータ緯度
   @override
@@ -1074,7 +1074,7 @@ class _MidPointEntity implements MidPointEntity {
 
   /// Base64エンコードされた画像データ
   @override
-  final String? imageUtf8;
+  final String? imageBase64;
 
   /// Create a copy of MidPointEntity
   /// with the given fields replaced by the non-null parameter values.
@@ -1097,17 +1097,17 @@ class _MidPointEntity implements MidPointEntity {
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
                 other.longitude == longitude) &&
-            (identical(other.imageUtf8, imageUtf8) ||
-                other.imageUtf8 == imageUtf8));
+            (identical(other.imageBase64, imageBase64) ||
+                other.imageBase64 == imageBase64));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, imageLatitude, imageLongitude,
-      latitude, longitude, imageUtf8);
+      latitude, longitude, imageBase64);
 
   @override
   String toString() {
-    return 'MidPointEntity(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageUtf8: $imageUtf8)';
+    return 'MidPointEntity(imageLatitude: $imageLatitude, imageLongitude: $imageLongitude, latitude: $latitude, longitude: $longitude, imageBase64: $imageBase64)';
   }
 }
 
@@ -1124,7 +1124,7 @@ abstract mixin class _$MidPointEntityCopyWith<$Res>
       double? imageLongitude,
       double? latitude,
       double? longitude,
-      String? imageUtf8});
+      String? imageBase64});
 }
 
 /// @nodoc
@@ -1144,7 +1144,7 @@ class __$MidPointEntityCopyWithImpl<$Res>
     Object? imageLongitude = freezed,
     Object? latitude = freezed,
     Object? longitude = freezed,
-    Object? imageUtf8 = freezed,
+    Object? imageBase64 = freezed,
   }) {
     return _then(_MidPointEntity(
       imageLatitude: freezed == imageLatitude
@@ -1163,9 +1163,9 @@ class __$MidPointEntityCopyWithImpl<$Res>
           ? _self.longitude
           : longitude // ignore: cast_nullable_to_non_nullable
               as double?,
-      imageUtf8: freezed == imageUtf8
-          ? _self.imageUtf8
-          : imageUtf8 // ignore: cast_nullable_to_non_nullable
+      imageBase64: freezed == imageBase64
+          ? _self.imageBase64
+          : imageBase64 // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }

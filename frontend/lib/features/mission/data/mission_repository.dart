@@ -56,7 +56,7 @@ class MissionRepository implements MissionRepositoryInterface {
         imageLongitude: response.destination.imageLongitude?.toDouble(),
         latitude: response.destination.latitude.toDouble(),
         longitude: response.destination.longitude.toDouble(),
-        imageUtf8: response.destination.imageUtf8,
+        imageBase64: response.destination.imageUtf8,
       ),
       midpoints: response.midpoints
           .map(
@@ -65,7 +65,7 @@ class MissionRepository implements MissionRepositoryInterface {
               imageLongitude: midpoint.imageLongitude?.toDouble(),
               latitude: midpoint.latitude.toDouble(),
               longitude: midpoint.longitude.toDouble(),
-              imageUtf8: midpoint.imageUtf8,
+              imageBase64: midpoint.imageUtf8,
             ),
           )
           .toList(),

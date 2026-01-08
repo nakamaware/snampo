@@ -338,8 +338,8 @@ class SnapViewState extends ConsumerWidget {
           children: [
             const Text('- Spot1: '),
             if (midpointInfoList.isNotEmpty &&
-                midpointInfoList[0].imageUtf8 != null)
-              AnswerImage(imageUtf8: midpointInfoList[0].imageUtf8!)
+                midpointInfoList[0].imageBase64 != null)
+              AnswerImage(imageBase64: midpointInfoList[0].imageBase64!)
             else
               const SizedBox(width: 150, height: 150),
             const TakeSnap(spotIndex: 0),
@@ -349,8 +349,8 @@ class SnapViewState extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('- Spot2: '),
-            if (destination != null && destination.imageUtf8 != null)
-              AnswerImage(imageUtf8: destination.imageUtf8!)
+            if (destination != null && destination.imageBase64 != null)
+              AnswerImage(imageBase64: destination.imageBase64!)
             else
               const SizedBox(width: 150, height: 150),
             const TakeSnap(spotIndex: 1),
@@ -385,20 +385,20 @@ class SnapViewState extends ConsumerWidget {
 class AnswerImage extends StatelessWidget {
   /// AnswerImageウィジェットのコンストラクタ
   ///
-  /// [imageUtf8] Base64エンコードされた画像データの文字列
+  /// [imageBase64] Base64エンコードされた画像データの文字列
   const AnswerImage({
-    required this.imageUtf8,
+    required this.imageBase64,
     super.key,
   });
 
   /// Base64エンコードされた画像データの文字列
-  final String imageUtf8;
+  final String imageBase64;
 
   @override
   Widget build(BuildContext context) {
     log('answer image utf8 is');
-    log(imageUtf8);
-    final imageUint8 = base64Decode(imageUtf8);
+    log(imageBase64);
+    final imageUint8 = base64Decode(imageBase64);
     log('imageUint8 is');
     log(imageUint8.toString());
     return SizedBox(
