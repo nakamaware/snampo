@@ -342,7 +342,7 @@ class SnapViewState extends ConsumerWidget {
               AnswerImage(imageUtf8: midpointInfoList[0].imageUtf8!)
             else
               const SizedBox(width: 150, height: 150),
-            const TakeSnap(),
+            const TakeSnap(spotIndex: 0),
           ],
         ),
         Row(
@@ -353,7 +353,7 @@ class SnapViewState extends ConsumerWidget {
               AnswerImage(imageUtf8: destination.imageUtf8!)
             else
               const SizedBox(width: 150, height: 150),
-            const TakeSnap(),
+            const TakeSnap(spotIndex: 1),
           ],
         ),
         const SizedBox(
@@ -421,8 +421,12 @@ class AnswerImage extends StatelessWidget {
 class TakeSnap extends StatefulWidget {
   /// TakeSnapウィジェットのコンストラクタ
   const TakeSnap({
+    required this.spotIndex,
     super.key,
   });
+
+  /// スポットのインデックス
+  final int spotIndex;
 
   @override
   State<TakeSnap> createState() => _TakeSnapState();
@@ -446,6 +450,7 @@ class _TakeSnapState extends State<TakeSnap> {
   Widget build(BuildContext context) {
     return _image == null
         ? FloatingActionButton(
+            heroTag: 'take_snap_spot_${widget.spotIndex}',
             onPressed: getImage,
             child: const Icon(Icons.add_a_photo),
           )
