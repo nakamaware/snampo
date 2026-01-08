@@ -1,4 +1,3 @@
-import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_location_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_mission_use_case.dart';
@@ -8,28 +7,36 @@ import 'package:snampo/features/mission/domain/mission_model.dart';
 
 part 'mission_store.g.dart';
 
+// ============================================================================
+// 依存関係プロバイダー（Dependency Providers）
+// ============================================================================
+// リポジトリやユースケースなどの依存関係を提供する関数プロバイダー
+
 /// ミッションリポジトリのプロバイダー
 @riverpod
-MissionRepository missionRepository(MissionRepositoryRef ref) {
+MissionRepository missionRepository(Ref ref) {
   return MissionRepository();
 }
 
 /// 現在地を取得するユースケースのプロバイダー
 @riverpod
-GetCurrentLocationUseCase getCurrentLocationUseCase(
-  GetCurrentLocationUseCaseRef ref,
-) {
+GetCurrentLocationUseCase getCurrentLocationUseCase(Ref ref) {
   return GetCurrentLocationUseCase(LocationService());
 }
 
 /// ミッション情報を取得するユースケースのプロバイダー
 @riverpod
-GetMissionUseCase getMissionUseCase(GetMissionUseCaseRef ref) {
+GetMissionUseCase getMissionUseCase(Ref ref) {
   return GetMissionUseCase(
     ref.read(getCurrentLocationUseCaseProvider),
     ref.read(missionRepositoryProvider),
   );
 }
+
+// ============================================================================
+// 状態管理（State Management）
+// ============================================================================
+// アプリケーションの状態を管理するNotifierクラス
 
 /// ミッション情報を管理するストア
 @riverpod
@@ -55,23 +62,28 @@ class MissionNotifier extends _$MissionNotifier {
   }
 }
 
+// ============================================================================
+// 計算プロバイダー（Computed Providers）
+// ============================================================================
+// 他のプロバイダーから値を計算して返す関数プロバイダー
+
 /// 目的地を取得するプロバイダー
 @riverpod
-MidPointEntity? target(TargetRef ref) {
-  final mission = ref.watch(missionNotifierProvider).value;
+MidPointEntity? target(Ref ref) {
+  final mission = ref.watch(missionProvider).value;
   return mission?.destination;
 }
 
 /// ルートのポリライン文字列を取得するプロバイダー
 @riverpod
-String? route(RouteRef ref) {
-  final mission = ref.watch(missionNotifierProvider).value;
+String? route(Ref ref) {
+  final mission = ref.watch(missionProvider).value;
   return mission?.overviewPolyline;
 }
 
 /// 中間地点のリストを取得するプロバイダー
 @riverpod
-List<MidPointEntity>? midpointInfoList(MidpointInfoListRef ref) {
-  final mission = ref.watch(missionNotifierProvider).value;
+List<MidPointEntity>? midpointInfoList(Ref ref) {
+  final mission = ref.watch(missionProvider).value;
   return mission?.midpoints;
 }
