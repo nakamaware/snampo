@@ -128,7 +128,7 @@ class MapView extends ConsumerStatefulWidget {
   const MapView({required this.currentLocation, super.key});
 
   /// 現在位置の座標情報
-  final LocationPointEntity currentLocation;
+  final LocationEntity currentLocation;
 
   @override
   ConsumerState<MapView> createState() => _MapViewState();

@@ -2,13 +2,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'mission_model.freezed.dart';
 
-/// 位置情報エンティティ
+/// ルート情報エンティティ
 @freezed
-abstract class LocationEntity with _$LocationEntity {
-  /// LocationEntityのコンストラクタ
-  const factory LocationEntity({
+abstract class RouteEntity with _$RouteEntity {
+  /// RouteEntityのコンストラクタ
+  const factory RouteEntity({
     /// 出発地点
-    LocationPointEntity? departure,
+    LocationEntity? departure,
 
     /// 目的地
     MidPointEntity? destination,
@@ -18,20 +18,20 @@ abstract class LocationEntity with _$LocationEntity {
 
     /// ルートのポリライン文字列
     String? overviewPolyline,
-  }) = _LocationEntity;
+  }) = _RouteEntity;
 }
 
-/// 位置ポイントエンティティ
+/// 位置情報エンティティ
 @freezed
-abstract class LocationPointEntity with _$LocationPointEntity {
-  /// LocationPointEntityのコンストラクタ
-  const factory LocationPointEntity({
+abstract class LocationEntity with _$LocationEntity {
+  /// LocationEntityのコンストラクタ
+  const factory LocationEntity({
     /// 緯度
     double? latitude,
 
     /// 経度
     double? longitude,
-  }) = _LocationPointEntity;
+  }) = _LocationEntity;
 }
 
 /// 中間ポイントエンティティ

@@ -19,7 +19,7 @@ class GetMissionUseCase {
   /// ミッション情報を取得する
   ///
   /// [radius] はミッションの検索半径（キロメートル単位）
-  Future<LocationEntity> call(double radius) async {
+  Future<RouteEntity> call(double radius) async {
     // 現在位置を取得
     final position = await _getCurrentLocationUseCase.call();
 

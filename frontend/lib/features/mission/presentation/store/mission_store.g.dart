@@ -160,7 +160,7 @@ final missionProvider = MissionNotifierProvider._();
 
 /// ミッション情報を管理するストア
 final class MissionNotifierProvider
-    extends $AsyncNotifierProvider<MissionNotifier, LocationEntity> {
+    extends $AsyncNotifierProvider<MissionNotifier, RouteEntity> {
   /// ミッション情報を管理するストア
   MissionNotifierProvider._()
       : super(
@@ -181,19 +181,19 @@ final class MissionNotifierProvider
   MissionNotifier create() => MissionNotifier();
 }
 
-String _$missionNotifierHash() => r'1610d90005d51228d033c67e08315606d4acc54b';
+String _$missionNotifierHash() => r'0f34af15b1f12dc95626a4342e11c114e3f39f34';
 
 /// ミッション情報を管理するストア
 
-abstract class _$MissionNotifier extends $AsyncNotifier<LocationEntity> {
-  FutureOr<LocationEntity> build();
+abstract class _$MissionNotifier extends $AsyncNotifier<RouteEntity> {
+  FutureOr<RouteEntity> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<LocationEntity>, LocationEntity>;
+    final ref = this.ref as $Ref<AsyncValue<RouteEntity>, RouteEntity>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<LocationEntity>, LocationEntity>,
-        AsyncValue<LocationEntity>,
+        AnyNotifier<AsyncValue<RouteEntity>, RouteEntity>,
+        AsyncValue<RouteEntity>,
         Object?,
         Object?>;
     element.handleCreate(ref, build);

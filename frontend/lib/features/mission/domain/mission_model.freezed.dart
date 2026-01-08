@@ -13,9 +13,9 @@ part of 'mission_model.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$LocationEntity {
+mixin _$RouteEntity {
   /// 出発地点
-  LocationPointEntity? get departure;
+  LocationEntity? get departure;
 
   /// 目的地
   MidPointEntity? get destination;
@@ -26,19 +26,18 @@ mixin _$LocationEntity {
   /// ルートのポリライン文字列
   String? get overviewPolyline;
 
-  /// Create a copy of LocationEntity
+  /// Create a copy of RouteEntity
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $LocationEntityCopyWith<LocationEntity> get copyWith =>
-      _$LocationEntityCopyWithImpl<LocationEntity>(
-          this as LocationEntity, _$identity);
+  $RouteEntityCopyWith<RouteEntity> get copyWith =>
+      _$RouteEntityCopyWithImpl<RouteEntity>(this as RouteEntity, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is LocationEntity &&
+            other is RouteEntity &&
             (identical(other.departure, departure) ||
                 other.departure == departure) &&
             (identical(other.destination, destination) ||
@@ -54,35 +53,34 @@ mixin _$LocationEntity {
 
   @override
   String toString() {
-    return 'LocationEntity(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
+    return 'RouteEntity(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
   }
 }
 
 /// @nodoc
-abstract mixin class $LocationEntityCopyWith<$Res> {
-  factory $LocationEntityCopyWith(
-          LocationEntity value, $Res Function(LocationEntity) _then) =
-      _$LocationEntityCopyWithImpl;
+abstract mixin class $RouteEntityCopyWith<$Res> {
+  factory $RouteEntityCopyWith(
+          RouteEntity value, $Res Function(RouteEntity) _then) =
+      _$RouteEntityCopyWithImpl;
   @useResult
   $Res call(
-      {LocationPointEntity? departure,
+      {LocationEntity? departure,
       MidPointEntity? destination,
       List<MidPointEntity> midpoints,
       String? overviewPolyline});
 
-  $LocationPointEntityCopyWith<$Res>? get departure;
+  $LocationEntityCopyWith<$Res>? get departure;
   $MidPointEntityCopyWith<$Res>? get destination;
 }
 
 /// @nodoc
-class _$LocationEntityCopyWithImpl<$Res>
-    implements $LocationEntityCopyWith<$Res> {
-  _$LocationEntityCopyWithImpl(this._self, this._then);
+class _$RouteEntityCopyWithImpl<$Res> implements $RouteEntityCopyWith<$Res> {
+  _$RouteEntityCopyWithImpl(this._self, this._then);
 
-  final LocationEntity _self;
-  final $Res Function(LocationEntity) _then;
+  final RouteEntity _self;
+  final $Res Function(RouteEntity) _then;
 
-  /// Create a copy of LocationEntity
+  /// Create a copy of RouteEntity
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -96,7 +94,7 @@ class _$LocationEntityCopyWithImpl<$Res>
       departure: freezed == departure
           ? _self.departure
           : departure // ignore: cast_nullable_to_non_nullable
-              as LocationPointEntity?,
+              as LocationEntity?,
       destination: freezed == destination
           ? _self.destination
           : destination // ignore: cast_nullable_to_non_nullable
@@ -112,21 +110,21 @@ class _$LocationEntityCopyWithImpl<$Res>
     ));
   }
 
-  /// Create a copy of LocationEntity
+  /// Create a copy of RouteEntity
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LocationPointEntityCopyWith<$Res>? get departure {
+  $LocationEntityCopyWith<$Res>? get departure {
     if (_self.departure == null) {
       return null;
     }
 
-    return $LocationPointEntityCopyWith<$Res>(_self.departure!, (value) {
+    return $LocationEntityCopyWith<$Res>(_self.departure!, (value) {
       return _then(_self.copyWith(departure: value));
     });
   }
 
-  /// Create a copy of LocationEntity
+  /// Create a copy of RouteEntity
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
@@ -138,6 +136,399 @@ class _$LocationEntityCopyWithImpl<$Res>
     return $MidPointEntityCopyWith<$Res>(_self.destination!, (value) {
       return _then(_self.copyWith(destination: value));
     });
+  }
+}
+
+/// Adds pattern-matching-related methods to [RouteEntity].
+extension RouteEntityPatterns on RouteEntity {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_RouteEntity value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_RouteEntity value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_RouteEntity value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(LocationEntity? departure, MidPointEntity? destination,
+            List<MidPointEntity> midpoints, String? overviewPolyline)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity() when $default != null:
+        return $default(_that.departure, _that.destination, _that.midpoints,
+            _that.overviewPolyline);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(LocationEntity? departure, MidPointEntity? destination,
+            List<MidPointEntity> midpoints, String? overviewPolyline)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity():
+        return $default(_that.departure, _that.destination, _that.midpoints,
+            _that.overviewPolyline);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(LocationEntity? departure, MidPointEntity? destination,
+            List<MidPointEntity> midpoints, String? overviewPolyline)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RouteEntity() when $default != null:
+        return $default(_that.departure, _that.destination, _that.midpoints,
+            _that.overviewPolyline);
+      case _:
+        return null;
+    }
+  }
+}
+
+/// @nodoc
+
+class _RouteEntity implements RouteEntity {
+  const _RouteEntity(
+      {this.departure,
+      this.destination,
+      final List<MidPointEntity> midpoints = const [],
+      this.overviewPolyline})
+      : _midpoints = midpoints;
+
+  /// 出発地点
+  @override
+  final LocationEntity? departure;
+
+  /// 目的地
+  @override
+  final MidPointEntity? destination;
+
+  /// 中間地点のリスト
+  final List<MidPointEntity> _midpoints;
+
+  /// 中間地点のリスト
+  @override
+  @JsonKey()
+  List<MidPointEntity> get midpoints {
+    if (_midpoints is EqualUnmodifiableListView) return _midpoints;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_midpoints);
+  }
+
+  /// ルートのポリライン文字列
+  @override
+  final String? overviewPolyline;
+
+  /// Create a copy of RouteEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$RouteEntityCopyWith<_RouteEntity> get copyWith =>
+      __$RouteEntityCopyWithImpl<_RouteEntity>(this, _$identity);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _RouteEntity &&
+            (identical(other.departure, departure) ||
+                other.departure == departure) &&
+            (identical(other.destination, destination) ||
+                other.destination == destination) &&
+            const DeepCollectionEquality()
+                .equals(other._midpoints, _midpoints) &&
+            (identical(other.overviewPolyline, overviewPolyline) ||
+                other.overviewPolyline == overviewPolyline));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, departure, destination,
+      const DeepCollectionEquality().hash(_midpoints), overviewPolyline);
+
+  @override
+  String toString() {
+    return 'RouteEntity(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$RouteEntityCopyWith<$Res>
+    implements $RouteEntityCopyWith<$Res> {
+  factory _$RouteEntityCopyWith(
+          _RouteEntity value, $Res Function(_RouteEntity) _then) =
+      __$RouteEntityCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {LocationEntity? departure,
+      MidPointEntity? destination,
+      List<MidPointEntity> midpoints,
+      String? overviewPolyline});
+
+  @override
+  $LocationEntityCopyWith<$Res>? get departure;
+  @override
+  $MidPointEntityCopyWith<$Res>? get destination;
+}
+
+/// @nodoc
+class __$RouteEntityCopyWithImpl<$Res> implements _$RouteEntityCopyWith<$Res> {
+  __$RouteEntityCopyWithImpl(this._self, this._then);
+
+  final _RouteEntity _self;
+  final $Res Function(_RouteEntity) _then;
+
+  /// Create a copy of RouteEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? departure = freezed,
+    Object? destination = freezed,
+    Object? midpoints = null,
+    Object? overviewPolyline = freezed,
+  }) {
+    return _then(_RouteEntity(
+      departure: freezed == departure
+          ? _self.departure
+          : departure // ignore: cast_nullable_to_non_nullable
+              as LocationEntity?,
+      destination: freezed == destination
+          ? _self.destination
+          : destination // ignore: cast_nullable_to_non_nullable
+              as MidPointEntity?,
+      midpoints: null == midpoints
+          ? _self._midpoints
+          : midpoints // ignore: cast_nullable_to_non_nullable
+              as List<MidPointEntity>,
+      overviewPolyline: freezed == overviewPolyline
+          ? _self.overviewPolyline
+          : overviewPolyline // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+
+  /// Create a copy of RouteEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $LocationEntityCopyWith<$Res>? get departure {
+    if (_self.departure == null) {
+      return null;
+    }
+
+    return $LocationEntityCopyWith<$Res>(_self.departure!, (value) {
+      return _then(_self.copyWith(departure: value));
+    });
+  }
+
+  /// Create a copy of RouteEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $MidPointEntityCopyWith<$Res>? get destination {
+    if (_self.destination == null) {
+      return null;
+    }
+
+    return $MidPointEntityCopyWith<$Res>(_self.destination!, (value) {
+      return _then(_self.copyWith(destination: value));
+    });
+  }
+}
+
+/// @nodoc
+mixin _$LocationEntity {
+  /// 緯度
+  double? get latitude;
+
+  /// 経度
+  double? get longitude;
+
+  /// Create a copy of LocationEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $LocationEntityCopyWith<LocationEntity> get copyWith =>
+      _$LocationEntityCopyWithImpl<LocationEntity>(
+          this as LocationEntity, _$identity);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is LocationEntity &&
+            (identical(other.latitude, latitude) ||
+                other.latitude == latitude) &&
+            (identical(other.longitude, longitude) ||
+                other.longitude == longitude));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, latitude, longitude);
+
+  @override
+  String toString() {
+    return 'LocationEntity(latitude: $latitude, longitude: $longitude)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $LocationEntityCopyWith<$Res> {
+  factory $LocationEntityCopyWith(
+          LocationEntity value, $Res Function(LocationEntity) _then) =
+      _$LocationEntityCopyWithImpl;
+  @useResult
+  $Res call({double? latitude, double? longitude});
+}
+
+/// @nodoc
+class _$LocationEntityCopyWithImpl<$Res>
+    implements $LocationEntityCopyWith<$Res> {
+  _$LocationEntityCopyWithImpl(this._self, this._then);
+
+  final LocationEntity _self;
+  final $Res Function(LocationEntity) _then;
+
+  /// Create a copy of LocationEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? latitude = freezed,
+    Object? longitude = freezed,
+  }) {
+    return _then(_self.copyWith(
+      latitude: freezed == latitude
+          ? _self.latitude
+          : latitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      longitude: freezed == longitude
+          ? _self.longitude
+          : longitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+    ));
   }
 }
 
@@ -234,415 +625,12 @@ extension LocationEntityPatterns on LocationEntity {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(
-            LocationPointEntity? departure,
-            MidPointEntity? destination,
-            List<MidPointEntity> midpoints,
-            String? overviewPolyline)?
-        $default, {
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _LocationEntity() when $default != null:
-        return $default(_that.departure, _that.destination, _that.midpoints,
-            _that.overviewPolyline);
-      case _:
-        return orElse();
-    }
-  }
-
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// As opposed to `map`, this offers destructuring.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case Subclass2(:final field2):
-  ///     return ...;
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>(
-    TResult Function(
-            LocationPointEntity? departure,
-            MidPointEntity? destination,
-            List<MidPointEntity> midpoints,
-            String? overviewPolyline)
-        $default,
-  ) {
-    final _that = this;
-    switch (_that) {
-      case _LocationEntity():
-        return $default(_that.departure, _that.destination, _that.midpoints,
-            _that.overviewPolyline);
-      case _:
-        throw StateError('Unexpected subclass');
-    }
-  }
-
-  /// A variant of `when` that fallback to returning `null`
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(
-            LocationPointEntity? departure,
-            MidPointEntity? destination,
-            List<MidPointEntity> midpoints,
-            String? overviewPolyline)?
-        $default,
-  ) {
-    final _that = this;
-    switch (_that) {
-      case _LocationEntity() when $default != null:
-        return $default(_that.departure, _that.destination, _that.midpoints,
-            _that.overviewPolyline);
-      case _:
-        return null;
-    }
-  }
-}
-
-/// @nodoc
-
-class _LocationEntity implements LocationEntity {
-  const _LocationEntity(
-      {this.departure,
-      this.destination,
-      final List<MidPointEntity> midpoints = const [],
-      this.overviewPolyline})
-      : _midpoints = midpoints;
-
-  /// 出発地点
-  @override
-  final LocationPointEntity? departure;
-
-  /// 目的地
-  @override
-  final MidPointEntity? destination;
-
-  /// 中間地点のリスト
-  final List<MidPointEntity> _midpoints;
-
-  /// 中間地点のリスト
-  @override
-  @JsonKey()
-  List<MidPointEntity> get midpoints {
-    if (_midpoints is EqualUnmodifiableListView) return _midpoints;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_midpoints);
-  }
-
-  /// ルートのポリライン文字列
-  @override
-  final String? overviewPolyline;
-
-  /// Create a copy of LocationEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  _$LocationEntityCopyWith<_LocationEntity> get copyWith =>
-      __$LocationEntityCopyWithImpl<_LocationEntity>(this, _$identity);
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _LocationEntity &&
-            (identical(other.departure, departure) ||
-                other.departure == departure) &&
-            (identical(other.destination, destination) ||
-                other.destination == destination) &&
-            const DeepCollectionEquality()
-                .equals(other._midpoints, _midpoints) &&
-            (identical(other.overviewPolyline, overviewPolyline) ||
-                other.overviewPolyline == overviewPolyline));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, departure, destination,
-      const DeepCollectionEquality().hash(_midpoints), overviewPolyline);
-
-  @override
-  String toString() {
-    return 'LocationEntity(departure: $departure, destination: $destination, midpoints: $midpoints, overviewPolyline: $overviewPolyline)';
-  }
-}
-
-/// @nodoc
-abstract mixin class _$LocationEntityCopyWith<$Res>
-    implements $LocationEntityCopyWith<$Res> {
-  factory _$LocationEntityCopyWith(
-          _LocationEntity value, $Res Function(_LocationEntity) _then) =
-      __$LocationEntityCopyWithImpl;
-  @override
-  @useResult
-  $Res call(
-      {LocationPointEntity? departure,
-      MidPointEntity? destination,
-      List<MidPointEntity> midpoints,
-      String? overviewPolyline});
-
-  @override
-  $LocationPointEntityCopyWith<$Res>? get departure;
-  @override
-  $MidPointEntityCopyWith<$Res>? get destination;
-}
-
-/// @nodoc
-class __$LocationEntityCopyWithImpl<$Res>
-    implements _$LocationEntityCopyWith<$Res> {
-  __$LocationEntityCopyWithImpl(this._self, this._then);
-
-  final _LocationEntity _self;
-  final $Res Function(_LocationEntity) _then;
-
-  /// Create a copy of LocationEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? departure = freezed,
-    Object? destination = freezed,
-    Object? midpoints = null,
-    Object? overviewPolyline = freezed,
-  }) {
-    return _then(_LocationEntity(
-      departure: freezed == departure
-          ? _self.departure
-          : departure // ignore: cast_nullable_to_non_nullable
-              as LocationPointEntity?,
-      destination: freezed == destination
-          ? _self.destination
-          : destination // ignore: cast_nullable_to_non_nullable
-              as MidPointEntity?,
-      midpoints: null == midpoints
-          ? _self._midpoints
-          : midpoints // ignore: cast_nullable_to_non_nullable
-              as List<MidPointEntity>,
-      overviewPolyline: freezed == overviewPolyline
-          ? _self.overviewPolyline
-          : overviewPolyline // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
-  }
-
-  /// Create a copy of LocationEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $LocationPointEntityCopyWith<$Res>? get departure {
-    if (_self.departure == null) {
-      return null;
-    }
-
-    return $LocationPointEntityCopyWith<$Res>(_self.departure!, (value) {
-      return _then(_self.copyWith(departure: value));
-    });
-  }
-
-  /// Create a copy of LocationEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $MidPointEntityCopyWith<$Res>? get destination {
-    if (_self.destination == null) {
-      return null;
-    }
-
-    return $MidPointEntityCopyWith<$Res>(_self.destination!, (value) {
-      return _then(_self.copyWith(destination: value));
-    });
-  }
-}
-
-/// @nodoc
-mixin _$LocationPointEntity {
-  /// 緯度
-  double? get latitude;
-
-  /// 経度
-  double? get longitude;
-
-  /// Create a copy of LocationPointEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $LocationPointEntityCopyWith<LocationPointEntity> get copyWith =>
-      _$LocationPointEntityCopyWithImpl<LocationPointEntity>(
-          this as LocationPointEntity, _$identity);
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is LocationPointEntity &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
-
-  @override
-  String toString() {
-    return 'LocationPointEntity(latitude: $latitude, longitude: $longitude)';
-  }
-}
-
-/// @nodoc
-abstract mixin class $LocationPointEntityCopyWith<$Res> {
-  factory $LocationPointEntityCopyWith(
-          LocationPointEntity value, $Res Function(LocationPointEntity) _then) =
-      _$LocationPointEntityCopyWithImpl;
-  @useResult
-  $Res call({double? latitude, double? longitude});
-}
-
-/// @nodoc
-class _$LocationPointEntityCopyWithImpl<$Res>
-    implements $LocationPointEntityCopyWith<$Res> {
-  _$LocationPointEntityCopyWithImpl(this._self, this._then);
-
-  final LocationPointEntity _self;
-  final $Res Function(LocationPointEntity) _then;
-
-  /// Create a copy of LocationPointEntity
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? latitude = freezed,
-    Object? longitude = freezed,
-  }) {
-    return _then(_self.copyWith(
-      latitude: freezed == latitude
-          ? _self.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double?,
-      longitude: freezed == longitude
-          ? _self.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double?,
-    ));
-  }
-}
-
-/// Adds pattern-matching-related methods to [LocationPointEntity].
-extension LocationPointEntityPatterns on LocationPointEntity {
-  /// A variant of `map` that fallback to returning `orElse`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>(
-    TResult Function(_LocationPointEntity value)? $default, {
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _LocationPointEntity() when $default != null:
-        return $default(_that);
-      case _:
-        return orElse();
-    }
-  }
-
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// Callbacks receives the raw object, upcasted.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case final Subclass2 value:
-  ///     return ...;
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>(
-    TResult Function(_LocationPointEntity value) $default,
-  ) {
-    final _that = this;
-    switch (_that) {
-      case _LocationPointEntity():
-        return $default(_that);
-      case _:
-        throw StateError('Unexpected subclass');
-    }
-  }
-
-  /// A variant of `map` that fallback to returning `null`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>(
-    TResult? Function(_LocationPointEntity value)? $default,
-  ) {
-    final _that = this;
-    switch (_that) {
-      case _LocationPointEntity() when $default != null:
-        return $default(_that);
-      case _:
-        return null;
-    }
-  }
-
-  /// A variant of `when` that fallback to an `orElse` callback.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
-
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>(
     TResult Function(double? latitude, double? longitude)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _LocationPointEntity() when $default != null:
+      case _LocationEntity() when $default != null:
         return $default(_that.latitude, _that.longitude);
       case _:
         return orElse();
@@ -668,7 +656,7 @@ extension LocationPointEntityPatterns on LocationPointEntity {
   ) {
     final _that = this;
     switch (_that) {
-      case _LocationPointEntity():
+      case _LocationEntity():
         return $default(_that.latitude, _that.longitude);
       case _:
         throw StateError('Unexpected subclass');
@@ -693,7 +681,7 @@ extension LocationPointEntityPatterns on LocationPointEntity {
   ) {
     final _that = this;
     switch (_that) {
-      case _LocationPointEntity() when $default != null:
+      case _LocationEntity() when $default != null:
         return $default(_that.latitude, _that.longitude);
       case _:
         return null;
@@ -703,8 +691,8 @@ extension LocationPointEntityPatterns on LocationPointEntity {
 
 /// @nodoc
 
-class _LocationPointEntity implements LocationPointEntity {
-  const _LocationPointEntity({this.latitude, this.longitude});
+class _LocationEntity implements LocationEntity {
+  const _LocationEntity({this.latitude, this.longitude});
 
   /// 緯度
   @override
@@ -714,20 +702,19 @@ class _LocationPointEntity implements LocationPointEntity {
   @override
   final double? longitude;
 
-  /// Create a copy of LocationPointEntity
+  /// Create a copy of LocationEntity
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$LocationPointEntityCopyWith<_LocationPointEntity> get copyWith =>
-      __$LocationPointEntityCopyWithImpl<_LocationPointEntity>(
-          this, _$identity);
+  _$LocationEntityCopyWith<_LocationEntity> get copyWith =>
+      __$LocationEntityCopyWithImpl<_LocationEntity>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _LocationPointEntity &&
+            other is _LocationEntity &&
             (identical(other.latitude, latitude) ||
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
@@ -739,30 +726,30 @@ class _LocationPointEntity implements LocationPointEntity {
 
   @override
   String toString() {
-    return 'LocationPointEntity(latitude: $latitude, longitude: $longitude)';
+    return 'LocationEntity(latitude: $latitude, longitude: $longitude)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$LocationPointEntityCopyWith<$Res>
-    implements $LocationPointEntityCopyWith<$Res> {
-  factory _$LocationPointEntityCopyWith(_LocationPointEntity value,
-          $Res Function(_LocationPointEntity) _then) =
-      __$LocationPointEntityCopyWithImpl;
+abstract mixin class _$LocationEntityCopyWith<$Res>
+    implements $LocationEntityCopyWith<$Res> {
+  factory _$LocationEntityCopyWith(
+          _LocationEntity value, $Res Function(_LocationEntity) _then) =
+      __$LocationEntityCopyWithImpl;
   @override
   @useResult
   $Res call({double? latitude, double? longitude});
 }
 
 /// @nodoc
-class __$LocationPointEntityCopyWithImpl<$Res>
-    implements _$LocationPointEntityCopyWith<$Res> {
-  __$LocationPointEntityCopyWithImpl(this._self, this._then);
+class __$LocationEntityCopyWithImpl<$Res>
+    implements _$LocationEntityCopyWith<$Res> {
+  __$LocationEntityCopyWithImpl(this._self, this._then);
 
-  final _LocationPointEntity _self;
-  final $Res Function(_LocationPointEntity) _then;
+  final _LocationEntity _self;
+  final $Res Function(_LocationEntity) _then;
 
-  /// Create a copy of LocationPointEntity
+  /// Create a copy of LocationEntity
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
@@ -770,7 +757,7 @@ class __$LocationPointEntityCopyWithImpl<$Res>
     Object? latitude = freezed,
     Object? longitude = freezed,
   }) {
-    return _then(_LocationPointEntity(
+    return _then(_LocationEntity(
       latitude: freezed == latitude
           ? _self.latitude
           : latitude // ignore: cast_nullable_to_non_nullable

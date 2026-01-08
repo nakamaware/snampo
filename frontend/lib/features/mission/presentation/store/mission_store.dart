@@ -42,7 +42,7 @@ GetMissionUseCase getMissionUseCase(Ref ref) {
 @riverpod
 class MissionNotifier extends _$MissionNotifier {
   @override
-  Future<LocationEntity> build() async {
+  Future<RouteEntity> build() async {
     throw UnimplementedError('loadMission を呼び出してください');
   }
 

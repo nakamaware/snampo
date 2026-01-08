@@ -20,7 +20,7 @@ class MissionRepository implements MissionRepositoryInterface {
   /// [currentLat] は現在位置の緯度
   /// [currentLng] は現在位置の経度
   @override
-  Future<LocationEntity> getMission({
+  Future<RouteEntity> getMission({
     required double radius,
     required double currentLat,
     required double currentLng,
@@ -45,9 +45,9 @@ class MissionRepository implements MissionRepositoryInterface {
   }
 
   /// RouteResponseをエンティティに変換
-  LocationEntity _toEntity(generated.RouteResponse response) {
-    return LocationEntity(
-      departure: LocationPointEntity(
+  RouteEntity _toEntity(generated.RouteResponse response) {
+    return RouteEntity(
+      departure: LocationEntity(
         latitude: response.departure.latitude.toDouble(),
         longitude: response.departure.longitude.toDouble(),
       ),
