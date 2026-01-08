@@ -6,7 +6,7 @@ part 'dio_provider.g.dart';
 
 /// Dioインスタンスを提供するプロバイダー
 @riverpod
-Dio dio(DioRef ref) {
+Dio dio(Ref ref) {
   return Dio(
     BaseOptions(
       baseUrl: Env.apiBaseUrl,
