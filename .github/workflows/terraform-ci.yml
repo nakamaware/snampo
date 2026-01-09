@@ -4,9 +4,9 @@ name: CI - Terraform
 on:
   pull_request:
     paths:
-      - 'terraform/**'
-      - '!terraform/**.md'
-      - '.github/workflows/terraform**.yml'
+      - "terraform/**"
+      - "!terraform/**.md"
+      - ".github/workflows/terraform**.yml"
 
 permissions:
   contents: "read"
@@ -39,12 +39,6 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_SNAMPO_WIP_ID }}
           service_account: ${{ vars.GCP_SNAMPO_TERRAFORM_SA }}
 
-      - name: Terraform CI
-        uses: ./.github/actions/terraform-ci
-        with:
-          env: ${{ matrix.env }}
-          root: terraform/env/${{ matrix.env }}
-      
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
