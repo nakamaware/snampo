@@ -2,7 +2,10 @@
 name: CI - Terraform
 
 on:
-  pull_request:
+  # デバッグ用のトリガー
+  push:
+    branches:
+      - topic/terraform-cicd
     paths:
       - 'terraform/**'
       - '!terraform/**.md'
@@ -33,7 +36,7 @@ jobs:
           # 変更がある環境を判定
           declare -A flag=([dev]=0 [prod]=0)
           for d in "${dir[@]}"; do
-            diff=$(git diff --name-only origin/main origin/${{ github.ref_name }} -- terraform/$d/)
+            diff=$(git diff --name-only origin/main origin/${{ github.head_ref }} -- terraform/$d/)
             if [[ -n "$diff" && $d == "modules" ]] ; then
               echo "Changes detected in terraform/$d/"
               flag[dev]=1
