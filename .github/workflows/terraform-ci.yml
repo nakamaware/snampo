@@ -66,9 +66,6 @@ jobs:
         env: ${{ fromJSON(needs.check-diff.outputs.EVIRONMENTS) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
-    defaults:
-      run:
-        working-directory: terraform/env/${{ matrix.env }}
 
     steps:
       - name: Checkout
@@ -84,3 +81,4 @@ jobs:
         uses: ./.github/actions/terraform-ci
         with:
           env: ${{ matrix.env }}
+          root: terraform/env/${{ matrix.env }}
