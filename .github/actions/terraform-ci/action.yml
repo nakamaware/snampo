@@ -13,7 +13,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: echo "env:${{ inputs.env }} root:${{ inputs.root }}
+    - run: echo "env:${{ inputs.env }} root:${{ inputs.root }}"
       shell: bash
       working-directory: ${{ inputs.root }}
 
