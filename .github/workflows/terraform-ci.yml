@@ -30,18 +30,18 @@ jobs:
       - name: Check diff
         id: check-diff
         run: |
-          dir=('modules' 'dev' 'prod')
+          dir=('../modules' 'dev' 'prod')
 
           # 変更がある環境を判定
-          declare -A flag=([dev]=0 [prod]=0)
+          declare -A flag=(["dev"]=0 ["prod"]=0)
           for d in "${dir[@]}"; do
-            diff=$(git diff --name-only origin/main origin/${{ github.head_ref }} -- terraform/$d/)
-            if [[ -n "$diff" && $d == "modules" ]] ; then
-              echo "Changes detected in terraform/$d/"
+            diff=$(git diff --name-only origin/main origin/${{ github.head_ref }} -- terraform/env/$d/)
+            if [[ -n "$diff" && $d == "../modules" ]] ; then
+              echo "Changes detected in terraform/env/$d/"
               flag[dev]=1
               flag[prod]=1
             elif [[ -n "$diff" && $d != "modules" ]] ; then
-              echo "Changes detected in terraform/$d/"
+              echo "Changes detected in terraform/env/$d/"
               flag[$d]=1
             fi
           done
@@ -54,7 +54,7 @@ jobs:
             fi
           done
           
-          environments=$(IFS=,; echo "[${envs[*]}]")
+          environments=$(jq -cn '$ARGS.positional' --args -- "${envs[@]}")
           echo "EVIRONMENTS=$environments" >> $GITHUB_OUTPUT
 
   terraform-ci:
@@ -62,7 +62,7 @@ jobs:
     needs: check-diff
     strategy:
       matrix:
-        env: ${{ fromJSON(toJSON(needs.check-diff.outputs.EVIRONMENTS)) }}
+        env: ${{ fromJSON(needs.check-diff.outputs.EVIRONMENTS) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
     defaults:
