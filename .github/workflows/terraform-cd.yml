@@ -9,6 +9,7 @@ on:
     paths:
       - 'terraform/**'
       - '!terraform/**.md'
+      - '.github/workflows/terraform-cd.yml'
 
 permissions:
   contents: "read"
