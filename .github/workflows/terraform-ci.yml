@@ -62,7 +62,7 @@ jobs:
     needs: check-diff
     strategy:
       matrix:
-        env: ${{ fromJson(needs.check-diff.outputs.EVIRONMENTS) }}
+        env: ${{ toJson(needs.check-diff.outputs.EVIRONMENTS) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
     defaults:
