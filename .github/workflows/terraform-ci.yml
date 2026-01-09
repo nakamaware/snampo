@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CI - Terraform
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - '!terraform/**.md'
+
+permissions:
+  contents: "read"
+  id-token: "write"
+  pull-requests: "write"
+
+jobs:
+  check-diff:
+    name: Check diff
+    runs-on: ubuntu-latest
+    outputs:
+      EVIRONMENTS: ${{ steps.check-diff.outputs.EVIRONMENTS }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check diff
+        id: check-diff
+        run: |
+          dir=('modules' 'dev' 'prod')
+
+          # 変更がある環境を判定
+          declare -A flag=([dev]=0 [prod]=0)
+          for d in "${dir[@]}"; do
+            diff=$(git diff --name-only origin/main origin/${{ github.ref_name }} -- terraform/$d/)
+            if [[ -n "$diff" && $d == "modules" ]] ; then
+              echo "Changes detected in terraform/$d/"
+              flag[dev]=1
+              flag[prod]=1
+            elif [[ -n "$diff" && $d != "modules" ]] ; then
+              echo "Changes detected in terraform/$d/"
+              flag[$d]=1
+            fi
+          done
+
+          # 配列を作成
+          envs=()
+          for key in "${!flag[@]}"; do
+            if [[ ${flag[$key]} -eq 1 ]]; then
+              envs+=("$key")
+            fi
+          done
+          
+          environments=$(IFS=,; echo "[${envs[*]}]")
+          echo "EVIRONMENTS=$environments" >> $GITHUB_OUTPUT
+
+  terraform-ci:
+    name: Terraform CI
+    needs: check-diff
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.check-diff.outputs.EVIRONMENTS) }}
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    defaults:
+      run:
+        working-directory: terraform/${{ matrix.env }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Authenticate to GCP
+        uses: "google-github-actions/auth@v3"
+        with:
+          workload_identity_provider: ${{ secrets.GCP_SNAMPO_WIP_ID }}
+          service_account: ${{ vars.GCP_SNAMPO_TERRAFORM_SA }}
+
+      - name: Terraform CI
+        uses: ./.github/actions/terraform-ci
+        with:
+          env: ${{ matrix.env }}
