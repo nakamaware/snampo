@@ -16,55 +16,19 @@ permissions:
 
 jobs:
   check-diff:
-    name: Check diff
-    runs-on: ubuntu-latest
-    outputs:
-      ENVIRONMENTS: ${{ steps.check-diff.outputs.ENVIRONMENTS }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Check diff
-        id: check-diff
-        run: |
-          dir=('../modules' 'dev' 'prod')
-
-          # 変更がある環境を判定
-          declare -A flag=(["dev"]=0 ["prod"]=0)
-          for d in "${dir[@]}"; do
-            diff=$(git diff --name-only origin/main origin/${{ github.head_ref }} -- terraform/env/$d/)
-            if [[ -n "$diff" && $d == "../modules" ]] ; then
-              echo "Changes detected in terraform/env/$d/"
-              flag[dev]=1
-              flag[prod]=1
-            elif [[ -n "$diff" && $d != "modules" ]] ; then
-              echo "Changes detected in terraform/env/$d/"
-              flag[$d]=1
-            fi
-          done
-
-          # 配列を作成
-          envs=()
-          for key in "${!flag[@]}"; do
-            if [[ ${flag[$key]} -eq 1 ]]; then
-              envs+=("$key")
-            fi
-          done
-          
-          environments=$(jq -cn '$ARGS.positional' --args -- "${envs[@]}")
-          echo "ENVIRONMENTS=$environments" >> $GITHUB_OUTPUT
+    uses: ./.github/workflows/terraform-diff-check.yml
 
   terraform-ci:
     name: Terraform CI
     needs: check-diff
     strategy:
       matrix:
-        env: ${{ fromJSON(needs.check-diff.outputs.ENVIRONMENTS) }}
+        env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
+    defaults:
+      run:
+        working-directory: terraform/env/${{ matrix.env }}
 
     steps:
       - name: Checkout
@@ -81,3 +45,83 @@ jobs:
         with:
           env: ${{ matrix.env }}
           root: terraform/env/${{ matrix.env }}
+      
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.3
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style - ${{ matrix.env }}')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### Terraform Format and Style - ${{ matrix.env }} 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/env/${{ matrix.env }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
