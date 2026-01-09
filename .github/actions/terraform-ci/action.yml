@@ -9,6 +9,8 @@ inputs:
 runs:
   using: composite
   steps:
+    - run: pwd
+      shell: bash
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
       with:
