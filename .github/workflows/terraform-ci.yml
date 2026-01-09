@@ -2,7 +2,6 @@
 name: CI - Terraform
 
 on:
-  workflow_dispatch:
   pull_request:
     paths:
       - 'terraform/**'
@@ -20,7 +19,7 @@ jobs:
     name: Check diff
     runs-on: ubuntu-latest
     outputs:
-      EVIRONMENTS: ${{ steps.check-diff.outputs.EVIRONMENTS }}
+      ENVIRONMENTS: ${{ steps.check-diff.outputs.ENVIRONMENTS }}
 
     steps:
       - name: Checkout
@@ -56,14 +55,14 @@ jobs:
           done
           
           environments=$(jq -cn '$ARGS.positional' --args -- "${envs[@]}")
-          echo "EVIRONMENTS=$environments" >> $GITHUB_OUTPUT
+          echo "ENVIRONMENTS=$environments" >> $GITHUB_OUTPUT
 
   terraform-ci:
     name: Terraform CI
     needs: check-diff
     strategy:
       matrix:
-        env: ${{ fromJSON(needs.check-diff.outputs.EVIRONMENTS) }}
+        env: ${{ fromJSON(needs.check-diff.outputs.ENVIRONMENTS) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
 
