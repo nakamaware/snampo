@@ -2,13 +2,12 @@
 name: CI - Terraform
 
 on:
-  # デバッグ用のトリガー
-  push:
-    branches:
-      - topic/terraform-cicd
+  pull_request:
     paths:
       - 'terraform/**'
       - '!terraform/**.md'
+      - '.github/workflows/terraform**.yml'
+      - '.github/actions/terraform**/**'
 
 permissions:
   contents: "read"
