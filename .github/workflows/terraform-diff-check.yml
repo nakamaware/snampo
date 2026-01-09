@@ -10,7 +10,7 @@ on:
 
 jobs:
   check-diff:
-    name: Check diff
+    name: Terraform Diff Check
     runs-on: ubuntu-latest
     outputs:
       environments: ${{ steps.check-diff.outputs.envs }}
