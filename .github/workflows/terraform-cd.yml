@@ -19,7 +19,7 @@ jobs:
   check-diff:
     uses: ./.github/workflows/terraform-diff-check.yml
   
-  terraform-cd-dev:
+  terraform-cd:
     name: Terraform CD
     needs: check-diff
     runs-on: ubuntu-latest
@@ -47,9 +47,7 @@ jobs:
           terraform_version: 1.14.3
 
       - name: Terraform Init
-        working-directory: ./terraform
         run: terraform init
 
       - name: Terraform Apply
-        working-directory: ./terraform
         run: terraform apply -auto-approve
