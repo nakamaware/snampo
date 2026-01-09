@@ -68,7 +68,7 @@ jobs:
     environment: ${{ matrix.env }}
     defaults:
       run:
-        working-directory: terraform/${{ matrix.env }}
+        working-directory: terraform/env/${{ matrix.env }}
 
     steps:
       - name: Checkout
