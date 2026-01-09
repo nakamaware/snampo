@@ -1,7 +1,6 @@
-# TODO: 初期セットアップをする
-# terraform {
-#   backend "gcs" {
-#     bucket  = "tf-state-prod"
-#     prefix  = "terraform/state"
-#   }
-# }
+terraform {
+  backend "gcs" {
+    bucket = "snampo-prod-bucket"
+    prefix = "terraform/state"
+  }
+}
