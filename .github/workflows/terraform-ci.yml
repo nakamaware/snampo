@@ -4,9 +4,9 @@ name: CI - Terraform
 on:
   pull_request:
     paths:
-      - "terraform/**"
-      - "!terraform/**.md"
-      - ".github/workflows/terraform**.yml"
+      - 'terraform/**'
+      - '!terraform/**.md'
+      - '.github/workflows/terraform**.yml'
 
 permissions:
   contents: "read"
