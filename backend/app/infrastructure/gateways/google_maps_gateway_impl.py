@@ -124,6 +124,8 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             "origin": origin,
             "destination": destination,
             "key": GOOGLE_API_KEY,
+            "mode": "walking",
+            "avoid": "highways|ferries",
         }
         if waypoints:
             params["waypoints"] = waypoints
