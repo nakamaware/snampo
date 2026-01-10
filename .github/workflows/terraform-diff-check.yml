@@ -57,12 +57,6 @@ jobs:
               envs+=("$key")
             fi
           done
-
-          # 配列の長さが0の場合は終了
-          if [ ${#envs[@]} -eq 0 ]; then
-            echo "No changes detected in any environment."
-            exit 0
-          fi
           
           environments=$(jq -cn '$ARGS.positional' --args -- "${envs[@]}")
           echo "envs=$environments" >> $GITHUB_OUTPUT
