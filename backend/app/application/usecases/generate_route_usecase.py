@@ -105,6 +105,7 @@ class GenerateRouteUseCase:
                 target_count=LANDMARK_SEARCH_TARGET_COUNT,
                 max_calls=LANDMARK_SEARCH_MAX_CALLS,
             )
+            logger.info(f"Find {len(destination_landmarks)} landmarks around destination")
             if not destination_landmarks:
                 raise ExternalServiceValidationError(
                     "指定距離付近にランドマークが見つかりませんでした",
@@ -112,6 +113,8 @@ class GenerateRouteUseCase:
                 )
 
             destination_landmark = random.choice(destination_landmarks)  # noqa: S311 (ただのランダムの選択なので問題なし)
+            logger.info(f"Destination landmark: {destination_landmark}")
+
             destination_image = self._get_street_view_image_data(
                 destination_landmark.coordinate,
                 self.image_size,
@@ -127,13 +130,17 @@ class GenerateRouteUseCase:
                 radius=midpoint_search_radius,
                 rank_preference="DISTANCE",
             )
+            logger.info(f"Find {len(midpoint_landmarks)} landmarks around midpoint")
             if not midpoint_landmarks:
                 raise ExternalServiceValidationError(
                     "中間地点付近にランドマークが見つかりませんでした",
                     service_name="Places API",
                 )
 
-            midpoint_coordinate = midpoint_landmarks[0].coordinate  # 一番近いランドマークを使用
+            midpoint_landmark = midpoint_landmarks[0]  # 一番近いランドマークを使用
+            midpoint_coordinate = midpoint_landmark.coordinate
+            logger.info(f"Midpoint landmark: {midpoint_landmark}")
+
             midpoint_image = self._get_street_view_image_data(
                 midpoint_coordinate,
                 self.image_size,
