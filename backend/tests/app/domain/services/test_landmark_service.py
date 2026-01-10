@@ -37,6 +37,17 @@ def test_calculate_distance_東京駅から皇居までの距離が正しいこ�
     assert 1200 < distance < 1500, f"距離が期待範囲外です: {distance}m"
 
 
+def test_calculate_distance_順序を入れ替えても同じ距離になること() -> None:
+    """座標の順序を入れ替えても同じ距離になることを確認"""
+    coordinate1 = Coordinate(latitude=35.6812, longitude=139.7671)
+    coordinate2 = Coordinate(latitude=35.6850, longitude=139.7528)
+
+    distance1 = calculate_distance(coordinate1, coordinate2)
+    distance2 = calculate_distance(coordinate2, coordinate1)
+
+    assert distance1 == distance2
+
+
 def test_meters_to_deg_lat_111320メートルが約1度になること() -> None:
     """111320メートルが約1度になることを確認"""
     meters = 111_320
