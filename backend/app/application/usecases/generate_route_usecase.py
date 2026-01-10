@@ -123,7 +123,7 @@ class GenerateRouteUseCase:
             midpoint_coordinate = coordinate_service.calculate_geodesic_midpoint(
                 current_coordinate, destination_landmark.coordinate
             )
-            midpoint_search_radius = self._calculate_midpoint_search_radius(radius_m)
+            midpoint_search_radius = max(300, radius_m // 4)  # (300m, 最大半径の1/4) の最大値
             midpoint_landmarks = self.google_maps_gateway.search_landmarks_nearby(
                 coordinate=midpoint_coordinate,
                 radius=midpoint_search_radius,
@@ -205,23 +205,6 @@ class GenerateRouteUseCase:
             "画像を取得できませんでした",
             service_name="Street View API",
         )
-
-    def _calculate_midpoint_search_radius(self, radius_m: int) -> int:
-        """中間地点の検索半径を計算
-
-        以下のような計算になる。
-        radius_m = 500m -> 125m
-        radius_m = 1000m -> 250m
-        radius_m = 1500m -> 300m
-        radius_m = 2000m -> 300m
-
-        Args:
-            radius_m: 半径 (メートル単位)
-
-        Returns:
-            int: 中間地点の検索半径
-        """
-        return max(300, radius_m // 4)
 
     def _get_street_view_image_data(
         self, coordinate: Coordinate, image_size: ImageSize
