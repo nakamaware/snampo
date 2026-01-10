@@ -1,7 +1,7 @@
 """coordinateのテスト"""
 
 import pytest
-from pydantic import ValidationError
+from pydantic_core import ValidationError
 
 from app.domain.value_objects.coordinate import Coordinate
 

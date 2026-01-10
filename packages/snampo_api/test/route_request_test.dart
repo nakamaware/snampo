@@ -29,7 +29,7 @@ void main() {
     });
 
     // 目的地を生成する半径 (メートル単位)
-    // num radius
+    // int radius
     test('to test the property `radius`', () async {
       // TODO
     });

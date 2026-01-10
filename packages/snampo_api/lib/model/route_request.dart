@@ -33,7 +33,7 @@ class RouteRequest {
   /// 目的地を生成する半径 (メートル単位)
   ///
   /// Maximum value: 40075000
-  num radius;
+  int radius;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is RouteRequest &&
@@ -80,7 +80,7 @@ class RouteRequest {
       return RouteRequest(
         currentLat: num.parse('${json[r'current_lat']}'),
         currentLng: num.parse('${json[r'current_lng']}'),
-        radius: num.parse('${json[r'radius']}'),
+        radius: mapValueOfType<int>(json, r'radius')!,
       );
     }
     return null;

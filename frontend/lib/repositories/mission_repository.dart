@@ -23,7 +23,7 @@ class MissionRepository {
     required double currentLat,
     required double currentLng,
   }) async {
-    final radiusInMeters = radius * 1000; // km から m に変換
+    final radiusInMeters = (radius * 1000).toInt(); // km から m に変換
 
     // リクエストボディを作成
     final request = generated.RouteRequest(

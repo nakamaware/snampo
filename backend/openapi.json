@@ -154,7 +154,7 @@
             ]
           },
           "radius": {
-            "type": "number",
+            "type": "integer",
             "maximum": 40075000.0,
             "exclusiveMinimum": 0.0,
             "title": "Radius",

@@ -6,6 +6,87 @@ Google Maps APIのポリライン形式をドメインオブジェクトに変�
 from app.domain.value_objects import Coordinate
 
 
+def encode_polyline(coordinates: list[Coordinate]) -> str:
+    """座標リストをGoogle Maps APIのポリライン形式にエンコード
+
+    Args:
+        coordinates: 座標リスト
+
+    Returns:
+        str: エンコードされたポリライン文字列
+    """
+    if not coordinates:
+        return ""
+
+    result: list[str] = []
+    prev_lat = 0
+    prev_lng = 0
+
+    for coord in coordinates:
+        # 緯度・経度を1e5倍して整数化
+        lat = round(coord.latitude * 1e5)
+        lng = round(coord.longitude * 1e5)
+
+        # 差分を計算
+        d_lat = lat - prev_lat
+        d_lng = lng - prev_lng
+
+        prev_lat = lat
+        prev_lng = lng
+
+        # 各差分をエンコード
+        result.append(_encode_value(d_lat))
+        result.append(_encode_value(d_lng))
+
+    return "".join(result)
+
+
+def _encode_value(value: int) -> str:
+    """整数値をポリラインエンコード形式に変換
+
+    Args:
+        value: エンコードする整数値
+
+    Returns:
+        str: エンコードされた文字列
+    """
+    # 負の値の処理: 左シフトしてから反転
+    value = ~(value << 1) if value < 0 else value << 1
+
+    result: list[str] = []
+    while value >= 0x20:
+        result.append(chr((0x20 | (value & 0x1F)) + 63))
+        value >>= 5
+    result.append(chr(value + 63))
+
+    return "".join(result)
+
+
+def merge_polylines(polyline1: str, polyline2: str) -> str:
+    """2つのポリラインを結合
+
+    2つのポリラインをデコードし、座標リストを結合してから
+    再エンコードします。
+
+    Args:
+        polyline1: 最初のポリライン
+        polyline2: 2番目のポリライン
+
+    Returns:
+        str: 結合されたポリライン
+    """
+    coords1 = decode_polyline(polyline1) if polyline1 else []
+    coords2 = decode_polyline(polyline2) if polyline2 else []
+
+    # 座標リストを結合(重複する終点/始点がある場合は2番目の最初の座標を除く)
+    if coords1 and coords2 and coords1[-1] == coords2[0]:
+        merged = coords1 + coords2[1:]
+    else:
+        merged = coords1 + coords2
+
+    return encode_polyline(merged)
+
+
 def decode_polyline(polyline_str: str) -> list[Coordinate]:
     """Google Maps APIのポリラインをデコードして座標リストを生成
 
