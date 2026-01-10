@@ -3,6 +3,11 @@ variable "project_id" {
   type = string
 }
 
+# プロジェクト名
+variable "project_name" {
+  type = string
+}
+
 # リソースを作成するリージョン
 variable "location" {
   type    = string
@@ -12,16 +17,6 @@ variable "location" {
 # 有効にするAPI
 variable "api_list" {
   type    = list(string)
-  default = []
-}
-
-# 作成するAPIキー
-variable "api_keys" {
-  type = list(object({
-    id              = string
-    display_name    = string
-    target_services = list(string)
-  }))
   default = []
 }
 
@@ -35,7 +30,7 @@ variable "secrets" {
 }
 
 # 作成するService Account
-variable "sa_list" {
+variable "service_account_list" {
   type = list(object({
     id   = string
     desc = string
@@ -44,7 +39,7 @@ variable "sa_list" {
 }
 
 # グループの権限
-variable "grp_iam_config" {
+variable "group_iam_config" {
   type = list(object({
     email = string
     roles = list(string)
@@ -53,7 +48,7 @@ variable "grp_iam_config" {
 }
 
 # Service Accountの権限
-variable "sa_iam_config" {
+variable "service_account_iam_config" {
   type = list(object({
     email = string
     roles = list(string)
@@ -61,8 +56,8 @@ variable "sa_iam_config" {
   default = []
 }
 
-# Service AccountとGitHubリポジトリの連携
-variable "sa_gh_repo_bindings" {
+# Service AccountとGitHubリポジトリの連携（nakamawareが管理するリポジトリ限定）
+variable "sa_gh_repo_binding_list" {
   type = list(object({
     sa_id = string
     repos = list(string)
@@ -70,9 +65,14 @@ variable "sa_gh_repo_bindings" {
   default = []
 }
 
-# Cloud Storageのバケット名
-variable "gcs_bucket_names" {
-  type = list(string)
+# 作成するAPIキー
+variable "api_keys" {
+  type = list(object({
+    id              = string
+    display_name    = string
+    target_services = list(string)
+  }))
+  default = []
 }
 
 # Artifact RegistryのID（Docker）

@@ -1,4 +1,4 @@
-variable "sa_list" {
+variable "service_account_list" {
   type = list(object({
     id   = string
     desc = string

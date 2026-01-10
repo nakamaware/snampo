@@ -1,6 +1,6 @@
 locals {
-  _grp_conf = flatten([
-    for m in var.grp_iam_config : [
+  _group_config_list = flatten([
+    for m in var.group_iam_config : [
       for r in m.roles : {
         project = var.project_id
         role    = r
@@ -9,8 +9,8 @@ locals {
     ]
   ])
 
-  _sa_conf = flatten([
-    for m in var.sa_iam_config : [
+  _service_account_config_list = flatten([
+    for m in var.service_account_iam_config : [
       for r in m.roles : {
         project = var.project_id
         role    = r
@@ -19,25 +19,25 @@ locals {
     ]
   ])
 
-  grp_map = {
-    for conf in local._grp_conf : "${conf.member}:${conf.role}" => {
-      project = conf.project
-      role    = conf.role
-      member  = conf.member
+  group_map = {
+    for config in local._group_config_list : "${config.member}:${config.role}" => {
+      project = config.project
+      role    = config.role
+      member  = config.member
     }
   }
 
   sa_map = {
-    for conf in local._sa_conf : "${conf.member}:${conf.role}" => {
-      project = conf.project
-      role    = conf.role
-      member  = conf.member
+    for config in local._service_account_config_list : "${config.member}:${config.role}" => {
+      project = config.project
+      role    = config.role
+      member  = config.member
     }
   }
 }
 
 resource "google_project_iam_member" "group_members" {
-  for_each = local.grp_map
+  for_each = local.group_map
   project  = each.value.project
   role     = each.value.role
   member   = "group:${each.value.member}"
