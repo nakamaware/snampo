@@ -8,6 +8,7 @@ import random
 
 from injector import inject
 from pydantic import BaseModel, ConfigDict, Field
+from tenacity import Retrying, retry_if_exception_type, stop_after_attempt
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.application.services import LandmarkSearchService
@@ -25,6 +26,7 @@ from app.domain.services import coordinate_service
 from app.domain.value_objects import (
     Coordinate,
     ImageSize,
+    Landmark,
     StreetViewImage,
 )
 
@@ -111,12 +113,10 @@ class GenerateRouteUseCase:
                     service_name="Places API",
                 )
 
-            destination_landmark = random.choice(destination_landmarks)  # noqa: S311 (ただのランダムの選択なので問題なし)
-            logger.info(f"Destination landmark: {destination_landmark}")
-
-            destination_image = self._get_street_view_image_data(
-                destination_landmark.coordinate,
-                self.image_size,
+            # 画像が取得できる目的地を探す (ランダム順で試行)
+            random.shuffle(destination_landmarks)
+            destination_landmark, destination_image = self._select_landmark_with_image(
+                destination_landmarks
             )
 
             # 2. 中間地点付近のランドマーク検索
@@ -136,14 +136,9 @@ class GenerateRouteUseCase:
                     service_name="Places API",
                 )
 
-            midpoint_landmark = midpoint_landmarks[0]  # 一番近いランドマークを使用
+            # 画像が取得できる中間地点を探す (距離順で試行)
+            midpoint_landmark, midpoint_image = self._select_landmark_with_image(midpoint_landmarks)
             midpoint_coordinate = midpoint_landmark.coordinate
-            logger.info(f"Midpoint landmark: {midpoint_landmark}")
-
-            midpoint_image = self._get_street_view_image_data(
-                midpoint_coordinate,
-                self.image_size,
-            )
 
             # 3. 現在地→目的地のルートを取得 (中間地点をwaypointsとして指定)
             _, overview_polyline = self.google_maps_gateway.get_directions(
@@ -167,6 +162,49 @@ class GenerateRouteUseCase:
                     "Street View画像が取得可能なルートが見つかりませんでした"
                 ),
             ) from e
+
+    def _select_landmark_with_image(
+        self,
+        candidates: list[Landmark],
+    ) -> tuple[Landmark, StreetViewImage]:
+        """画像が取得できるランドマークを選択する
+
+        候補リストを順番に試行し、画像が取得できたランドマークを返す。
+
+        Args:
+            candidates: ランドマーク候補リスト
+
+        Returns:
+            (ランドマーク, 画像) のタプル
+
+        Raises:
+            ExternalServiceValidationError: すべての候補で画像取得に失敗した場合
+        """
+        for attempt in Retrying(
+            stop=stop_after_attempt(len(candidates)),
+            retry=retry_if_exception_type(ExternalServiceValidationError),
+            reraise=True,
+        ):
+            with attempt:
+                idx = attempt.retry_state.attempt_number - 1
+                candidate = candidates[idx]
+
+                try:
+                    image = self._get_street_view_image_data(
+                        candidate.coordinate,
+                        self.image_size,
+                    )
+                    logger.info(f"Selected landmark: {candidate}")
+                    return candidate, image
+                except ExternalServiceValidationError:
+                    logger.warning(f"画像取得失敗、次の候補を試行: {candidate.place_id}")
+                    raise
+
+        # reraise=True なのでここには到達しないが、型チェック用
+        raise ExternalServiceValidationError(
+            "画像を取得できませんでした",
+            service_name="Street View API",
+        )
 
     def _calculate_midpoint_search_radius(self, radius_m: int) -> int:
         """中間地点の検索半径を計算
