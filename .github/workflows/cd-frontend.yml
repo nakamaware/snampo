@@ -3,7 +3,7 @@ name: CD - Frontend (Build Development Release APK)
 on:
   push:
     branches:
-      - main # mainにマージされた時のみビルド
+      - main
     paths:
       - "frontend/**"
   workflow_dispatch: # 手動実行も可能にする
