@@ -74,11 +74,11 @@ class LandmarkSearchService:
         logger.info(f"Search landmarks around center: {center}")
         try:
             landmarks = self._gateway.search_landmarks_nearby(center, target_distance_m)
-            logger.info(f"Find {len(landmarks)} landmarks around center")
             calls += 1
             seen = self._add_landmarks(
                 seen, landmarks, min_filter_distance, max_filter_distance, center
             )
+            logger.info(f"Find {len(seen)} new landmarks around center")
             if self._should_stop(seen, target_count, calls, max_calls):
                 return list(seen.values())
         except Exception:
@@ -94,10 +94,13 @@ class LandmarkSearchService:
             try:
                 point_coordinate = Coordinate(latitude=point_lat, longitude=point_lng)
                 landmarks = self._gateway.search_landmarks_nearby(point_coordinate, search_radius)
-                logger.info(f"Find {len(landmarks)} landmarks around point: {point_coordinate}")
                 calls += 1
+                prev_seen_length = len(seen)
                 seen = self._add_landmarks(
                     seen, landmarks, min_filter_distance, max_filter_distance, center
+                )
+                logger.info(
+                    f"Find {len(seen) - prev_seen_length} new landmarks around circle points"
                 )
                 if self._should_stop(seen, target_count, calls, max_calls):
                     return list(seen.values())
