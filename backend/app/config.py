@@ -27,6 +27,7 @@ LANDMARK_SEARCH_TIME_BUDGET_MS = 3000  # タイムアウト予算 (ミリ秒)
 MIN_SEARCH_RADIUS_M = 50  # Google Maps Nearby Search APIの最小検索半径 (メートル)
 
 # ランドマーク検索対象のタイプ
+# 参考: https://developers.google.com/maps/documentation/places/web-service/place-types?hl=ja
 LANDMARK_INCLUDED_TYPES = [
     # 文化
     "cultural_landmark",
