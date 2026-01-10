@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:snampo/core/routing/app_router.dart';
+import 'package:snampo/core/router.dart';
 
 /// アプリケーションのルートウィジェット
 class MyApp extends StatelessWidget {

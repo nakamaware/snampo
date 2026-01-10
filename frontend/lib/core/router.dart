@@ -18,7 +18,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/mission/:radius',
       builder: (context, state) {
-        final radius = double.parse(state.pathParameters['radius']!);
+        final radius = int.parse(state.pathParameters['radius']!);
         return MissionPage(radius: radius);
       },
     ),

@@ -3,25 +3,26 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/features/mission/domain/mission_model.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 
 /// ミッションページを表示するウィジェット
 class MissionPage extends HookConsumerWidget {
   /// ミッションページを作成する
   ///
-  /// [radius] はミッションの検索半径（キロメートル単位）
-  const MissionPage({required this.radius, super.key});
+  /// [radius] はミッションの検索半径（メートル単位）
+  MissionPage({required int radius, super.key})
+      : _radius = Radius(meters: radius);
 
-  /// ミッションの検索半径（キロメートル単位）
-  final double radius;
+  /// ミッションの検索半径
+  final Radius _radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,35 +35,10 @@ class MissionPage extends HookConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
 
-    final missionAsync = ref.watch(missionProvider);
+    final missionAsyncValue = ref.watch(missionProvider(_radius));
 
-    // radiusが変更されたときにミッションを読み込む（ビルド後に実行）
-    useEffect(
-      () {
-        Future.microtask(() {
-          ref.read(missionProvider.notifier).loadMission(radius);
-        });
-        return null;
-      },
-      [radius],
-    );
-
-    return missionAsync.when(
+    return missionAsyncValue.when(
       data: (missionInfo) {
-        if (missionInfo.departure == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                'On MISSION',
-                style: textstyle,
-              ),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: const Center(child: Text('出発地点の情報が取得できませんでした')),
-          );
-        }
-
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -74,8 +50,11 @@ class MissionPage extends HookConsumerWidget {
           ),
           body: Stack(
             children: [
-              MapView(currentLocation: missionInfo.departure!),
-              const SnapView(),
+              MapView(
+                currentLocation: missionInfo.departure,
+                radius: _radius,
+              ),
+              SnapView(radius: _radius),
             ],
           ),
         );
@@ -113,7 +92,15 @@ class MissionPage extends HookConsumerWidget {
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
-          body: const Center(child: Text('error occurred')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('エラーが発生しました'),
+                Text('$error'),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -125,10 +112,18 @@ class MapView extends ConsumerStatefulWidget {
   /// MapViewを作成する
   ///
   /// [currentLocation] は現在位置の座標情報
-  const MapView({required this.currentLocation, super.key});
+  /// [radius] はミッションの検索半径
+  const MapView({
+    required this.currentLocation,
+    required this.radius,
+    super.key,
+  });
 
   /// 現在位置の座標情報
-  final LocationEntity currentLocation;
+  final Coordinate currentLocation;
+
+  /// ミッションの検索半径
+  final Radius radius;
 
   @override
   ConsumerState<MapView> createState() => _MapViewState();
@@ -140,7 +135,7 @@ class _MapViewState extends ConsumerState<MapView> {
   late GoogleMapController mapController;
 
   /// ポリラインの座標リスト
-  List<LatLng> polylineCoordinates = [];
+  final List<LatLng> _polylineCoordinates = [];
   final Set<Polyline> _polylines = {};
 
   @override
@@ -151,17 +146,19 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final encodedPolyline = ref.read(routeProvider);
-    if (encodedPolyline != null && polylineCoordinates.isEmpty) {
-      _decodePolyline(encodedPolyline);
-    }
+    ref.watch(missionProvider(widget.radius)).whenData((missionInfo) {
+      final encodedPolyline = missionInfo.overviewPolyline;
+      if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
+        _decodePolyline(encodedPolyline);
+      }
+    });
   }
 
   Future<void> _decodePolyline(String encodedPolyline) async {
     final result = PolylinePoints().decodePolyline(encodedPolyline);
     if (result.isNotEmpty) {
       for (final point in result) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+        _polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
 
       if (mounted) {
@@ -169,7 +166,7 @@ class _MapViewState extends ConsumerState<MapView> {
           _polylines.add(
             Polyline(
               polylineId: const PolylineId('poly'),
-              points: polylineCoordinates,
+              points: _polylineCoordinates,
               color: Colors.blue,
               width: 3,
             ),
@@ -185,18 +182,15 @@ class _MapViewState extends ConsumerState<MapView> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    final target = ref.watch(targetProvider);
+    final missionAsyncValue = ref.watch(missionProvider(widget.radius));
+    final missionInfo = missionAsyncValue.value;
+    if (missionInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    final target = missionInfo.destination;
     final currentLat = widget.currentLocation.latitude;
     final currentLng = widget.currentLocation.longitude;
-
-    // 必要な値がnullの場合はローディング表示
-    if (target == null ||
-        currentLat == null ||
-        currentLng == null ||
-        target.latitude == null ||
-        target.longitude == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return SizedBox(
       height: height,
@@ -218,8 +212,8 @@ class _MapViewState extends ConsumerState<MapView> {
                 Marker(
                   markerId: const MarkerId('marker_1'),
                   position: LatLng(
-                    target.latitude!,
-                    target.longitude!,
+                    target.coordinate.latitude,
+                    target.coordinate.longitude,
                   ),
                 ),
               },
@@ -242,8 +236,12 @@ class _MapViewState extends ConsumerState<MapView> {
 class SnapView extends StatelessWidget {
   /// SnapViewウィジェットのコンストラクタ
   const SnapView({
+    required this.radius,
     super.key,
   });
+
+  /// ミッションの検索半径
+  final Radius radius;
 
   @override
   Widget build(BuildContext context) {
@@ -266,12 +264,12 @@ class SnapView extends StatelessWidget {
                 width: MediaQuery.of(context).size.width,
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  child: const Column(
+                  child: Column(
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         height: 50,
                       ),
-                      SnapViewState(),
+                      SnapViewState(radius: radius),
                     ],
                   ),
                 ),
@@ -307,8 +305,12 @@ class SnapView extends StatelessWidget {
 class SnapViewState extends ConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
   const SnapViewState({
+    required this.radius,
     super.key,
   });
+
+  /// ミッションの検索半径
+  final Radius radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -319,64 +321,65 @@ class SnapViewState extends ConsumerWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final midpointInfoList = ref.watch(midpointInfoListProvider);
-    final destination = ref.watch(targetProvider);
+    final missionAsyncValue = ref.watch(missionProvider(radius));
 
-    // データがまだ読み込まれていない場合はローディング表示
-    if (midpointInfoList == null || midpointInfoList.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return missionAsyncValue.when(
+      data: (missionInfo) {
+        final midpointInfoList = missionInfo.waypoints;
+        final destination = missionInfo.destination;
 
-    return Column(
-      children: [
-        Text(
-          'MISSION',
-          style: titelTextstyle,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        return Column(
           children: [
-            const Text('- Spot1: '),
-            if (midpointInfoList.isNotEmpty &&
-                midpointInfoList[0].imageBase64 != null)
-              AnswerImage(imageBase64: midpointInfoList[0].imageBase64!)
-            else
-              const SizedBox(width: 150, height: 150),
-            const TakeSnap(spotIndex: 0),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('- Spot2: '),
-            if (destination != null && destination.imageBase64 != null)
-              AnswerImage(imageBase64: destination.imageBase64!)
-            else
-              const SizedBox(width: 150, height: 150),
-            const TakeSnap(spotIndex: 1),
-          ],
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-            foregroundColor: theme.colorScheme.onPrimary,
-            shape: RoundedRectangleBorder(
-              // 形を変えるか否か
-              borderRadius: BorderRadius.circular(10), // 角の丸み
+            Text(
+              'MISSION',
+              style: titelTextstyle,
             ),
-          ),
-          onPressed: () {
-            context.push('/result');
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text('到着', style: buttonTextstyle),
-          ),
-        ),
-      ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('- Spot1: '),
+                if (midpointInfoList.isNotEmpty)
+                  AnswerImage(imageBase64: midpointInfoList[0].imageBase64)
+                else
+                  const SizedBox(width: 150, height: 150),
+                const TakeSnap(spotIndex: 0),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('- Spot2: '),
+                AnswerImage(imageBase64: destination.imageBase64),
+                const TakeSnap(spotIndex: 1),
+              ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary, // ボタンの背景色
+                foregroundColor: theme.colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  // 形を変えるか否か
+                  borderRadius: BorderRadius.circular(10), // 角の丸み
+                ),
+              ),
+              onPressed: () {
+                context.push('/result');
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('到着', style: buttonTextstyle),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(
+        child: Text('エラーが発生しました: $error'),
+      ),
     );
   }
 }

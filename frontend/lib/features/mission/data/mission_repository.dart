@@ -1,37 +1,36 @@
 import 'package:snampo/config.dart';
-import 'package:snampo/features/mission/application/interface/mission_repository_interface.dart';
-import 'package:snampo/features/mission/domain/mission_model.dart';
-import 'package:snampo_api/api.dart' as generated;
+import 'package:snampo/features/mission/application/interface/mission_repository.dart';
+import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo_api/api.dart' as snampo_api;
 
 /// ミッションリポジトリ
-class MissionRepository implements MissionRepositoryInterface {
+class MissionRepository implements IMissionRepository {
   /// MissionRepositoryのコンストラクタ
-  MissionRepository({generated.DefaultApi? generatedApi})
+  MissionRepository({snampo_api.DefaultApi? generatedApi})
       : _generatedApi = generatedApi ??
-            generated.DefaultApi(
-              generated.ApiClient(basePath: Env.apiBaseUrl),
+            snampo_api.DefaultApi(
+              snampo_api.ApiClient(basePath: Env.apiBaseUrl),
             );
 
-  final generated.DefaultApi _generatedApi;
+  final snampo_api.DefaultApi _generatedApi;
 
   /// ミッション情報を取得する
   ///
-  /// [radius] はミッションの検索半径（キロメートル単位）
-  /// [currentLat] は現在位置の緯度
-  /// [currentLng] は現在位置の経度
+  /// [radius] はミッションの検索半径
+  /// [currentLocation] は現在位置の座標
   @override
-  Future<RouteEntity> getMission({
-    required double radius,
-    required double currentLat,
-    required double currentLng,
+  Future<MissionEntity> getMission({
+    required Radius radius,
+    required Coordinate currentLocation,
   }) async {
-    final radiusInMeters = radius * 1000; // km から m に変換
-
     // リクエストボディを作成
-    final request = generated.RouteRequest(
-      currentLat: currentLat,
-      currentLng: currentLng,
-      radius: radiusInMeters,
+    final request = snampo_api.RouteRequest(
+      currentLat: currentLocation.latitude,
+      currentLng: currentLocation.longitude,
+      radius: radius.meters,
     );
 
     // 生成されたAPIクライアントを直接使用
@@ -41,35 +40,51 @@ class MissionRepository implements MissionRepositoryInterface {
       throw Exception('APIレスポンスがnullです');
     }
 
-    return _toEntity(response);
+    return _toEntity(response, radius);
   }
 
   /// RouteResponseをエンティティに変換
-  RouteEntity _toEntity(generated.RouteResponse response) {
-    return RouteEntity(
-      departure: LocationEntity(
+  MissionEntity _toEntity(snampo_api.RouteResponse response, Radius radius) {
+    // 必須フィールドのnullチェック
+    if (response.overviewPolyline.isEmpty) {
+      throw Exception('ルート情報が取得できませんでした');
+    }
+
+    // imageUtf8のnullチェック（ImageCoordinateのimageBase64は必須のため）
+    if (response.destination.imageUtf8 == null ||
+        response.destination.imageUtf8!.isEmpty) {
+      throw Exception('目的地の画像情報が取得できませんでした');
+    }
+
+    return MissionEntity(
+      departure: Coordinate(
         latitude: response.departure.latitude.toDouble(),
         longitude: response.departure.longitude.toDouble(),
       ),
-      destination: MidPointEntity(
-        imageLatitude: response.destination.imageLatitude?.toDouble(),
-        imageLongitude: response.destination.imageLongitude?.toDouble(),
-        latitude: response.destination.latitude.toDouble(),
-        longitude: response.destination.longitude.toDouble(),
-        imageBase64: response.destination.imageUtf8,
+      destination: ImageCoordinate(
+        coordinate: Coordinate(
+          latitude: response.destination.latitude.toDouble(),
+          longitude: response.destination.longitude.toDouble(),
+        ),
+        imageBase64: response.destination.imageUtf8!,
       ),
-      midpoints: response.midpoints
-          .map(
-            (midpoint) => MidPointEntity(
-              imageLatitude: midpoint.imageLatitude?.toDouble(),
-              imageLongitude: midpoint.imageLongitude?.toDouble(),
+      waypoints: response.midpoints.map(
+        (midpoint) {
+          // waypointsのimageUtf8もnullチェック
+          if (midpoint.imageUtf8 == null || midpoint.imageUtf8!.isEmpty) {
+            throw Exception('通過地点の画像情報が取得できませんでした');
+          }
+          return ImageCoordinate(
+            coordinate: Coordinate(
               latitude: midpoint.latitude.toDouble(),
               longitude: midpoint.longitude.toDouble(),
-              imageBase64: midpoint.imageUtf8,
             ),
-          )
-          .toList(),
+            imageBase64: midpoint.imageUtf8!,
+          );
+        },
+      ).toList(),
       overviewPolyline: response.overviewPolyline,
+      radius: radius,
     );
   }
 }

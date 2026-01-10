@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatelessWidget {
@@ -37,7 +38,7 @@ class SliderWidget extends StatefulWidget {
 }
 
 class _SliderWidgetState extends State<SliderWidget> {
-  double slidervalue = 0.5;
+  Radius slidervalue = Radius(meters: 500); // Radius値オブジェクトを使用
 
   @override
   Widget build(BuildContext context) {
@@ -50,17 +51,17 @@ class _SliderWidgetState extends State<SliderWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '$slidervalue km',
+            '${(slidervalue.meters / 1000).toStringAsFixed(1)} km',
             style: textstyle,
           ),
           Slider(
-            value: slidervalue,
-            min: 0.5,
-            max: 10,
+            value: slidervalue.meters.toDouble(),
+            min: 500,
+            max: 10000,
             divisions: 19,
             onChanged: (radius) {
               setState(() {
-                slidervalue = radius;
+                slidervalue = Radius(meters: radius.toInt());
               });
             },
           ),
@@ -78,14 +79,14 @@ class _SliderWidgetState extends State<SliderWidget> {
 class SubmitButton extends StatefulWidget {
   /// [SubmitButton] ウィジェットを作成します。
   ///
-  /// [radius] はミッションの検索半径（km）です。
+  /// [radius] はミッションの検索半径です。
   const SubmitButton({
     required this.radius,
     super.key,
   });
 
-  /// ミッションの検索半径（km）。
-  final double radius;
+  /// ミッションの検索半径。
+  final Radius radius;
 
   @override
   State<SubmitButton> createState() => _SubmitButtonState();
@@ -108,7 +109,7 @@ class _SubmitButtonState extends State<SubmitButton> {
         // ),
       ),
       onPressed: () {
-        context.push('/mission/${widget.radius}');
+        context.push('/mission/${widget.radius.meters}');
       },
       child: Padding(
         padding: const EdgeInsets.all(15),
@@ -117,4 +118,3 @@ class _SubmitButtonState extends State<SubmitButton> {
     );
   }
 }
-
