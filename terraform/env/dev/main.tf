@@ -108,6 +108,11 @@ module "snampo_dev" {
       desc                  = "Cloud Run Source Deployments"
       package_name_prefixes = ["snampo"]
     },
+    {
+      id                    = "snampo-dev"
+      desc                  = "Cloud Run Source Deployments"
+      package_name_prefixes = ["snampo"]
+    },
   ]
   # Cloud Run Service
   cloud_run_service_configs = [

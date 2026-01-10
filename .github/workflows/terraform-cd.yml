@@ -2,6 +2,7 @@
 name: CD - Terraform
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -9,11 +10,28 @@ on:
       - 'terraform/**'
       - '!terraform/**.md'
 
+permissions:
+  contents: "read"
+  id-token: "write"
+
 jobs:
-  terraform-cd-dev:
+  check-diff:
+    uses: ./.github/workflows/terraform-diff-check.yml
+    with:
+      source_ref: HEAD^
+      target_ref: HEAD
+  
+  terraform-cd:
     name: Terraform CD
+    needs: check-diff
     runs-on: ubuntu-latest
-    environment: dev
+    strategy:
+      matrix:
+        env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
+    environment: ${{ matrix.env }}
+    defaults:
+      run:
+        working-directory: terraform/env/${{ matrix.env }}
 
     steps:
       - name: Checkout code
@@ -31,9 +49,7 @@ jobs:
           terraform_version: 1.14.3
 
       - name: Terraform Init
-        working-directory: ./terraform
         run: terraform init
 
       - name: Terraform Apply
-        working-directory: ./terraform
         run: terraform apply -auto-approve
