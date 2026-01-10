@@ -3,6 +3,16 @@ name: Terraform Diff Check
 
 on:
   workflow_call:
+    inputs:
+      source_ref:
+        required: true
+        type: string
+        description: 比較元のブランチまたはコミット
+      target_ref:
+        required: true
+        type: string
+        description: 比較先のブランチまたはコミット
+
     outputs:
       environments:
         description: 差分がある環境
@@ -29,7 +39,7 @@ jobs:
           # 変更がある環境を判定
           declare -A flag=(["dev"]=0 ["prod"]=0)
           for d in "${dir[@]}"; do
-            diff=$(git diff --name-only origin/main origin/${{ github.head_ref }} -- terraform/env/$d/)
+            diff=$(git diff --name-only ${{ inputs.source_ref }} ${{ inputs.target_ref }} -- terraform/env/$d/)
             if [[ -n "$diff" && $d == "../modules" ]] ; then
               echo "Changes detected in terraform/env/$d/"
               flag[dev]=1

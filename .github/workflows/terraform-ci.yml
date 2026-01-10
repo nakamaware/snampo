@@ -16,6 +16,9 @@ permissions:
 jobs:
   check-diff:
     uses: ./.github/workflows/terraform-diff-check.yml
+    with:
+      source_ref: origin/main
+      target_ref: origin/${{ github.head_ref }}
 
   terraform-ci:
     name: Terraform CI
