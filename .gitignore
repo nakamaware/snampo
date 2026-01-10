@@ -21,4 +21,6 @@ Thumbs.db
 CLAUDE.md
 
 # Terraformのローカル設定ファイル
-*.terraform
+*.terraform/
+*.tfstate
+*.tfstate.*
