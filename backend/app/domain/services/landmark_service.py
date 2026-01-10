@@ -33,27 +33,7 @@ def generate_equidistant_circle_points(
     # 例: 8点の場合 → [0, 4, 2, 6, 1, 5, 3, 7]
     # これにより、最初の数回で全周をカバーできる
     # 開始位置はランダムにオフセットされる
-    def generate_scattered_indices(n: int) -> list[int]:
-        """全周に散らす順番のインデックスを生成 (開始位置はランダム)"""
-        if n <= 1:
-            return [0]
-
-        indices = [0]
-        step = n
-
-        while step > 1:
-            step //= 2
-            new_indices = []
-            for idx in indices:
-                new_indices.append(idx)
-                new_indices.append((idx + step) % n)
-            indices = new_indices[:n]  # 重複を避ける
-
-        # 開始位置をランダムにオフセット
-        offset = random.randrange(n)  # noqa: S311 (ただのランダムの選択なので問題なし)
-        return [(idx + offset) % n for idx in indices]
-
-    scattered_indices = generate_scattered_indices(num_points)
+    scattered_indices = _generate_scattered_indices(num_points)
 
     points: list[tuple[float, float]] = []
     origin = (center.latitude, center.longitude)
@@ -68,6 +48,34 @@ def generate_equidistant_circle_points(
         points.append((destination.latitude, destination.longitude))
 
     return points
+
+
+def _generate_scattered_indices(n: int) -> list[int]:
+    """全周に散らす順番のインデックスを生成 (開始位置はランダム)
+
+    n と互いに素な step を使った full-cycle generation により、
+    全てのインデックス 0..n-1 を正確に1回ずつ生成します。
+
+    Args:
+        n: 生成するインデックスの総数
+
+    Returns:
+        0..n-1 のインデックスを全周に散らした順番で返すリスト
+    """
+    if n <= 1:
+        return [0]
+
+    # ランダムな開始オフセットを選択
+    offset = random.randrange(n)  # noqa: S311 (ただのランダムの選択なので問題なし)
+
+    # n と互いに素な step を 1..n-1 からランダムに選択
+    # gcd(step, n) == 1 なら step は n と互いに素
+    while True:
+        step = random.randrange(1, n)  # noqa: S311 (ただのランダムの選択なので問題なし)
+        if math.gcd(step, n) == 1:
+            break
+
+    return [(offset + i * step) % n for i in range(n)]
 
 
 def calculate_distance(coordinate1: Coordinate, coordinate2: Coordinate) -> float:

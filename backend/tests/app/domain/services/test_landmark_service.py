@@ -2,7 +2,10 @@
 
 import math
 
+import pytest
+
 from app.domain.services.landmark_service import (
+    _generate_scattered_indices,
     calculate_distance,
     generate_equidistant_circle_points,
 )
@@ -103,3 +106,68 @@ def test_generate_equidistant_circle_points_全周に散らされていること
 
     # すべての象限に少なくとも1つの点が存在することを確認
     assert all(count > 0 for count in quadrants), "全周に点が散らされていません"
+
+
+# --- generate_scattered_indices のテスト ---
+
+
+def test_generate_scattered_indices_n1の場合は0のみを返すこと() -> None:
+    """n=1の場合は [0] を返すことを確認"""
+    result = _generate_scattered_indices(1)
+
+    assert result == [0]
+
+
+def test_generate_scattered_indices_n0の場合は0のみを返すこと() -> None:
+    """n=0の場合は [0] を返すことを確認"""
+    result = _generate_scattered_indices(0)
+
+    assert result == [0]
+
+
+@pytest.mark.parametrize(
+    "n",
+    [
+        2,  # 最小の有効値
+        3,  # 素数
+        6,  # 2*3
+        7,  # 素数
+        8,  # 2のべき乗
+        9,  # 3^2
+        10,  # 2*5
+        12,  # 2^2*3
+        15,  # 3*5
+        16,  # 2のべき乗
+        63,  # 7*9 (2のべき乗でない大きな値)
+        64,  # 2のべき乗
+        100,  # 2^2*5^2
+    ],
+)
+def test_generate_scattered_indices_全てのインデックスが1回ずつ生成されること(n: int) -> None:
+    """生成されたインデックスが 0..n-1 を全て1回ずつ含むことを確認"""
+    result = _generate_scattered_indices(n)
+
+    # 長さが正しいこと
+    assert len(result) == n, f"長さが不正です: 期待={n}, 実際={len(result)}"
+
+    # 全てのインデックスが含まれていること (重複なし)
+    assert set(result) == set(range(n)), (
+        f"インデックスが不正です: 期待={set(range(n))}, 実際={set(result)}"
+    )
+
+
+def test_generate_scattered_indices_複数回呼び出しで異なる結果を返すこと() -> None:
+    """ランダム性により、複数回呼び出すと異なる結果を返すことを確認"""
+    n = 20
+    results = [tuple(_generate_scattered_indices(n)) for _ in range(10)]
+
+    # 少なくとも2つ以上の異なる結果があることを確認
+    unique_results = set(results)
+    assert len(unique_results) >= 2, "ランダム性がありません (すべて同じ結果)"
+
+
+def test_generate_scattered_indices_結果が常にリストであること() -> None:
+    """戻り値が常にリスト型であることを確認"""
+    for n in [0, 1, 5, 10]:
+        result = _generate_scattered_indices(n)
+        assert isinstance(result, list), f"戻り値がリストではありません: {type(result)}"
