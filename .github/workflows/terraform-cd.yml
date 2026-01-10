@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - topic/terraform-cicd
     paths:
       - 'terraform/**'
       - '!terraform/**.md'
@@ -26,7 +27,9 @@ jobs:
     strategy:
       matrix:
         env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
-    environment: ${{ matrix.env }}
+    # dev環境で検証    
+    # environment: ${{ matrix.env }}
+    environment: dev
     defaults:
       run:
         working-directory: terraform/env/${{ matrix.env }}
