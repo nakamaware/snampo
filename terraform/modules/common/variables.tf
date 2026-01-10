@@ -99,7 +99,7 @@ variable "cloud_run_service_configs" {
         name      = string
         secret_id = string
       }))
-      port = string
+      port = number
     })
   }))
 
