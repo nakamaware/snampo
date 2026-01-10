@@ -3,8 +3,6 @@
 import math
 
 from app.domain.services.landmark_service import (
-    _meters_to_deg_lat,
-    _meters_to_deg_lng,
     calculate_distance,
     generate_equidistant_circle_points,
 )
@@ -46,33 +44,6 @@ def test_calculate_distance_順序を入れ替えても同じ距離になるこ�
     distance2 = calculate_distance(coordinate2, coordinate1)
 
     assert distance1 == distance2
-
-
-def test_meters_to_deg_lat_111320メートルが約1度になること() -> None:
-    """111320メートルが約1度になることを確認"""
-    meters = 111_320
-
-    deg = _meters_to_deg_lat(meters)
-
-    assert abs(deg - 1.0) < 0.01, f"1度に相当するはずですが、{deg}度でした"
-
-
-def test_meters_to_deg_lng_緯度による補正が正しいこと() -> None:
-    """経度の変換が緯度による補正を正しく行うことを確認"""
-    meters = 111_320
-    # 赤道付近
-    lat_equator = 0.0
-    # 東京付近
-    lat_tokyo = 35.0
-
-    deg_equator = _meters_to_deg_lng(meters, lat_equator)
-    deg_tokyo = _meters_to_deg_lng(meters, lat_tokyo)
-
-    # 赤道付近では約1度、東京付近では約1.2度程度になるはず
-    assert abs(deg_equator - 1.0) < 0.01, (
-        f"赤道付近で1度に相当するはずですが、{deg_equator}度でした"
-    )
-    assert deg_tokyo > deg_equator, "緯度が高いほど経度の度数が大きくなるはずです"
 
 
 def test_generate_equidistant_circle_points_点の数が正しいこと() -> None:

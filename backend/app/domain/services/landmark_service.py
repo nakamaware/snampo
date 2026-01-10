@@ -6,6 +6,8 @@
 import math
 import random
 
+from geopy.distance import geodesic
+
 from app.domain.value_objects import Coordinate
 
 
@@ -54,24 +56,24 @@ def generate_equidistant_circle_points(
     scattered_indices = generate_scattered_indices(num_points)
 
     points: list[tuple[float, float]] = []
+    origin = (center.latitude, center.longitude)
 
     # 散らした順番で点を生成
     for idx in scattered_indices:
-        angle_rad = 2 * math.pi * idx / num_points
+        # 方位角を計算 (北が0度、東が90度)
+        bearing = 360.0 * idx / num_points
 
-        # target_distance分だけ移動した点を計算
-        d_lat = _meters_to_deg_lat(target_distance) * math.cos(angle_rad)
-        d_lng = _meters_to_deg_lng(target_distance, center.latitude) * math.sin(angle_rad)
-
-        point_lat = center.latitude + d_lat
-        point_lng = center.longitude + d_lng
-        points.append((point_lat, point_lng))
+        # geopyで指定距離・方位角の地点を計算 (WGS-84楕円体モデル)
+        destination = geodesic(meters=target_distance).destination(origin, bearing=bearing)
+        points.append((destination.latitude, destination.longitude))
 
     return points
 
 
 def calculate_distance(coordinate1: Coordinate, coordinate2: Coordinate) -> float:
-    """2点間の距離を計算 (ハーバーサイン公式)
+    """2点間の距離を計算 (WGS-84楕円体モデル)
+
+    geopy の geodesic を使用して高精度な距離計算を行います。
 
     Args:
         coordinate1: 地点1の座標
@@ -80,46 +82,6 @@ def calculate_distance(coordinate1: Coordinate, coordinate2: Coordinate) -> floa
     Returns:
         距離 (メートル)
     """
-    # 地球の半径 (メートル)
-    r = 6371000
-
-    # 緯度・経度をラジアンに変換
-    phi1 = math.radians(coordinate1.latitude)
-    phi2 = math.radians(coordinate2.latitude)
-    delta_phi = math.radians(coordinate2.latitude - coordinate1.latitude)
-    delta_lambda = math.radians(coordinate2.longitude - coordinate1.longitude)
-
-    # ハーバーサイン公式
-    a = (
-        math.sin(delta_phi / 2) ** 2
-        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
-    )
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    # 距離を計算
-    return r * c
-
-
-def _meters_to_deg_lat(meters: float) -> float:
-    """メートルを緯度の度数に変換
-
-    Args:
-        meters: 距離 (メートル)
-
-    Returns:
-        緯度の度数
-    """
-    return meters / 111_320
-
-
-def _meters_to_deg_lng(meters: float, at_lat_deg: float) -> float:
-    """メートルを経度の度数に変換 (緯度による補正あり)
-
-    Args:
-        meters: 距離 (メートル)
-        at_lat_deg: 基準緯度 (度数)
-
-    Returns:
-        経度の度数
-    """
-    return meters / (111_320 * math.cos(math.radians(at_lat_deg)))
+    point1 = (coordinate1.latitude, coordinate1.longitude)
+    point2 = (coordinate2.latitude, coordinate2.longitude)
+    return geodesic(point1, point2).meters
