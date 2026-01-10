@@ -82,6 +82,10 @@ class LandmarkSearchService:
             if self._should_stop(seen, target_count, calls, max_calls):
                 return list(seen.values())
         except Exception:
+            logger.warning(
+                f"中心点 ({center.latitude:.4f}, {center.longitude:.4f}) でのランドマーク検索失敗",
+                exc_info=True,
+            )
             return []
 
         # 2. 円周上に等間隔の点を8つ生成し、それぞれの点から指定した距離内のランドマークを検索
