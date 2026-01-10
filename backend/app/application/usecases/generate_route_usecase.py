@@ -4,30 +4,30 @@
 """
 
 import logging
+import random
 
 from injector import inject
 from pydantic import BaseModel, ConfigDict, Field
-from tenacity import (
-    before_sleep_log,
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-)
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
-from app.config import ROUTE_GENERATION_MAX_RETRY_COUNT
+from app.application.services import LandmarkSearchService
+from app.config import (
+    LANDMARK_SEARCH_MAX_CALLS,
+    LANDMARK_SEARCH_TARGET_COUNT,
+)
 from app.domain.exceptions import (
     ExternalServiceError,
     ExternalServiceTimeoutError,
     ExternalServiceValidationError,
     RouteGenerationError,
 )
-from app.domain.services import coordinate_service, route_service
+from app.domain.services import coordinate_service
 from app.domain.value_objects import (
     Coordinate,
     ImageSize,
     StreetViewImage,
 )
+from app.infrastructure.mappers import polyline_mapper
 
 logger = logging.getLogger(__name__)
 
@@ -66,20 +66,25 @@ class GenerateRouteUseCase:
     def __init__(
         self,
         google_maps_gateway: GoogleMapsGateway,
+        landmark_search_service: LandmarkSearchService,
     ) -> None:
         """初期化
 
         Args:
             google_maps_gateway: Google Maps Gateway
+            landmark_search_service: ランドマーク検索サービス
         """
         self.google_maps_gateway = google_maps_gateway
+        self.landmark_search_service = landmark_search_service
         self.image_size = ImageSize(width=600, height=300)
 
-    def execute(self, current_coordinate: Coordinate, radius_m: float) -> RouteResultDto:
+    def execute(self, current_coordinate: Coordinate, radius_m: int) -> RouteResultDto:
         """ルートを生成する
 
-        Street View画像が取得できない場合は、目的地を再生成してリトライします。
-        最大リトライ回数を超えた場合はRouteGenerationErrorを発生させます。
+        アプローチ:
+        1. 目的地のランドマークを決定
+        2. 中間地点付近でランドマークを検索
+        3. 初期地点→中間地点、中間地点→目的地の2つのルートを取得し、結合
 
         Args:
             current_coordinate: 現在地の座標
@@ -90,69 +95,91 @@ class GenerateRouteUseCase:
 
         Raises:
             ExternalServiceError: 外部サービスエラーが発生した場合
-            RouteGenerationError: リトライ回数を超えてもルート生成に失敗した場合
+            RouteGenerationError: ルート生成に失敗した場合
         """
         try:
-            return self._attempt_route_generation(current_coordinate, radius_m)
-        except ExternalServiceValidationError as e:
+            # 1. 目的地のランドマーク検索 (指定距離付近のランドマークを検索)
+            destination_landmarks = self.landmark_search_service.search_landmarks(
+                center=current_coordinate,
+                target_distance_m=radius_m,
+                target_count=LANDMARK_SEARCH_TARGET_COUNT,
+                max_calls=LANDMARK_SEARCH_MAX_CALLS,
+            )
+            if not destination_landmarks:
+                raise ExternalServiceValidationError(
+                    "指定距離付近にランドマークが見つかりませんでした",
+                    service_name="Places API",
+                )
+
+            destination_landmark = random.choice(destination_landmarks)  # noqa: S311 (ただのランダムの選択なので問題なし)
+            destination_image = self._get_street_view_image_data(
+                destination_landmark.coordinate,
+                self.image_size,
+            )
+
+            # 2. 中間地点付近のランドマーク検索
+            midpoint_coordinate = coordinate_service.calculate_geodesic_midpoint(
+                current_coordinate, destination_landmark.coordinate
+            )
+            midpoint_search_radius = self._calculate_midpoint_search_radius(radius_m)
+            midpoint_landmarks = self.google_maps_gateway.search_landmarks_nearby(
+                coordinate=midpoint_coordinate,
+                radius=midpoint_search_radius,
+                rank_preference="DISTANCE",
+            )
+            if not midpoint_landmarks:
+                raise ExternalServiceValidationError(
+                    "中間地点付近にランドマークが見つかりませんでした",
+                    service_name="Places API",
+                )
+
+            midpoint_coordinate = midpoint_landmarks[0].coordinate  # 一番近いランドマークを使用
+            midpoint_image = self._get_street_view_image_data(
+                midpoint_coordinate,
+                self.image_size,
+            )
+
+            # 3. 現在地→中間地点、中間地点→目的地の2つのルートを取得し、結合
+            _, polyline_1 = self.google_maps_gateway.get_directions(
+                current_coordinate, midpoint_coordinate
+            )
+            _, polyline_2 = self.google_maps_gateway.get_directions(
+                midpoint_coordinate, destination_landmark.coordinate
+            )
+            merged_polyline = polyline_mapper.merge_polylines(polyline_1, polyline_2)
+
+            return RouteResultDto(
+                departure=current_coordinate,
+                destination=destination_landmark.coordinate,
+                midpoints=[midpoint_coordinate],
+                overview_polyline=merged_polyline,
+                midpoint_images=[(midpoint_coordinate, midpoint_image)],
+                destination_image=destination_image,
+            )
+        except (ExternalServiceValidationError, ValueError) as e:
             raise RouteGenerationError(
-                message="Street View画像が取得可能なルートが見つかりませんでした",
-                retry_count=ROUTE_GENERATION_MAX_RETRY_COUNT,
+                message=(
+                    "ランドマークが見つからないか、"
+                    "Street View画像が取得可能なルートが見つかりませんでした"
+                ),
             ) from e
 
-    @retry(
-        stop=stop_after_attempt(ROUTE_GENERATION_MAX_RETRY_COUNT),
-        retry=retry_if_exception_type(ExternalServiceValidationError),
-        before_sleep=before_sleep_log(logger, logging.INFO),
-        reraise=True,
-    )
-    def _attempt_route_generation(
-        self, current_coordinate: Coordinate, radius_m: float
-    ) -> RouteResultDto:
-        """ルート生成を試みる
+    def _calculate_midpoint_search_radius(self, radius_m: int) -> int:
+        """中間地点の検索半径を計算
 
-        Street View画像が取得できない場合は、目的地を再生成してリトライします。
-        最大リトライ回数を超えた場合はRouteGenerationErrorを発生させます。
+        以下のような計算になる。
+        radius_m = 500m -> 125m
+        radius_m = 1000m -> 250m
+        radius_m = 1500m -> 300m
+        radius_m = 2000m -> 300m
 
         Args:
-            current_coordinate: 現在地の座標
             radius_m: 半径 (メートル単位)
 
         Returns:
-            RouteResultDto: ルート情報
-
-        Raises:
-            ExternalServiceValidationError: Street View画像が取得できない場合
+            int: 中間地点の検索半径
         """
-        # 目的地の座標計算
-        destination_coordinate = coordinate_service.generate_random_point(
-            current_coordinate, radius_m
-        )
-        destination_image = self._get_street_view_image_data(
-            destination_coordinate,
-            self.image_size,
-        )
-
-        # ルート情報取得
-        route_coordinates, overview_polyline = self.google_maps_gateway.get_directions(
-            current_coordinate, destination_coordinate
-        )
-
-        # 中間地点の座標計算と画像取得
-        midpoint_coordinate = route_service.calculate_midpoint(route_coordinates)
-        midpoint_image = self._get_street_view_image_data(
-            midpoint_coordinate,
-            self.image_size,
-        )
-
-        return RouteResultDto(
-            departure=current_coordinate,
-            destination=destination_coordinate,
-            midpoints=[midpoint_coordinate],
-            overview_polyline=overview_polyline,
-            midpoint_images=[(midpoint_coordinate, midpoint_image)],
-            destination_image=destination_image,
-        )
+        return max(300, radius_m // 4)
 
     def _get_street_view_image_data(
         self, coordinate: Coordinate, image_size: ImageSize

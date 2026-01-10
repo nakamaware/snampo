@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from app.domain.value_objects import Coordinate, ImageSize
+import pytest
+from requests.exceptions import HTTPError
+
+from app.domain.exceptions import ExternalServiceError
+from app.domain.value_objects import Coordinate, ImageSize, Landmark
 from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
 
 
@@ -199,3 +203,275 @@ class TestGetStreetViewImage:
 
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
+
+
+class TestSearchLandmarksNearby:
+    """SearchLandmarksNearbyのテスト"""
+
+    def test_正常なレスポンスからLandmarkリストが返されること(self) -> None:
+        """正常なレスポンスからLandmarkリストが返されることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {
+            "places": [
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                    "displayName": {"text": "東京駅"},
+                    "location": {"latitude": 35.6812, "longitude": 139.7671},
+                    "primaryType": "train_station",
+                    "rating": 4.5,
+                },
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY5",
+                    "displayName": {"text": "皇居"},
+                    "location": {"latitude": 35.6850, "longitude": 139.7528},
+                    "primaryType": "tourist_attraction",
+                    "rating": 4.7,
+                },
+            ]
+        }
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert mock_post.call_count == 1
+            assert len(landmarks) == 2
+            assert isinstance(landmarks[0], Landmark)
+            assert landmarks[0].place_id == "ChIJN1t_tDeuEmsRUsoyG83frY4"
+            assert landmarks[0].display_name == "東京駅"
+            assert landmarks[0].coordinate.latitude == 35.6812
+            assert landmarks[0].coordinate.longitude == 139.7671
+            assert landmarks[0].primary_type == "train_station"
+            assert landmarks[0].rating == 4.5
+
+    def test_空のレスポンスから空のリストが返されること(self) -> None:
+        """空のレスポンスから空のリストが返されることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {"places": []}
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert mock_post.call_count == 1
+            assert len(landmarks) == 0
+
+    def test_座標情報がない場合はスキップされること(self) -> None:
+        """座標情報がない場合はスキップされることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {
+            "places": [
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                    "displayName": {"text": "東京駅"},
+                    "location": {},  # 座標情報なし
+                    "primaryType": "train_station",
+                },
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY5",
+                    "displayName": {"text": "皇居"},
+                    "location": {"latitude": 35.6850, "longitude": 139.7528},
+                    "primaryType": "tourist_attraction",
+                },
+            ]
+        }
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert mock_post.call_count == 1
+            # 座標情報がないものはスキップされるため、1件のみ
+            assert len(landmarks) == 1
+            assert landmarks[0].place_id == "ChIJN1t_tDeuEmsRUsoyG83frY5"
+
+    def test_rank_preference_DISTANCEが指定できること(self) -> None:
+        """rank_preference="DISTANCE" が指定できることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {
+            "places": [
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                    "displayName": {"text": "東京駅"},
+                    "location": {"latitude": 35.6812, "longitude": 139.7671},
+                    "primaryType": "train_station",
+                    "rating": 4.5,
+                },
+            ]
+        }
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(
+                coordinate, radius, rank_preference="DISTANCE"
+            )
+
+            assert mock_post.call_count == 1
+            # リクエストボディで rankPreference が "DISTANCE" に設定されていることを確認
+            call_args = mock_post.call_args
+            assert call_args is not None
+            request_body = call_args.kwargs.get("json", {})
+            assert request_body.get("rankPreference") == "DISTANCE"
+            assert len(landmarks) == 1
+
+    def test_rank_preference_POPULARITYがデフォルトで使用されること(self) -> None:
+        """rank_preference を指定しない場合、デフォルトで "POPULARITY" が使用されることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {
+            "places": [
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                    "displayName": {"text": "東京駅"},
+                    "location": {"latitude": 35.6812, "longitude": 139.7671},
+                    "primaryType": "train_station",
+                    "rating": 4.5,
+                },
+            ]
+        }
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert mock_post.call_count == 1
+            # リクエストボディで rankPreference が "POPULARITY" に設定されていることを確認
+            call_args = mock_post.call_args
+            assert call_args is not None
+            request_body = call_args.kwargs.get("json", {})
+            assert request_body.get("rankPreference") == "POPULARITY"
+            assert len(landmarks) == 1
+
+    def test_同じ引数で複数回呼び出したときにキャッシュが効くこと(self) -> None:
+        """同じ引数で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {
+            "places": [
+                {
+                    "id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                    "displayName": {"text": "東京駅"},
+                    "location": {"latitude": 35.6812, "longitude": 139.7671},
+                    "primaryType": "train_station",
+                    "rating": 4.5,
+                },
+            ]
+        }
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # 同じ引数で2回呼び出す
+            landmarks1 = gateway.search_landmarks_nearby(coordinate, radius)
+            landmarks2 = gateway.search_landmarks_nearby(coordinate, radius)
+
+            # APIリクエストは1回だけ呼ばれるべき
+            assert mock_post.call_count == 1
+            # 結果が同一であることを確認
+            assert landmarks1 == landmarks2
+
+    def test_非200ステータスでHTTPErrorが発生すること(self) -> None:
+        """非200ステータスでHTTPErrorが発生することを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 500
+            mock_response.reason = "Internal Server Error"
+            http_error = HTTPError("500 Server Error", response=mock_response)
+            mock_response.raise_for_status = MagicMock(side_effect=http_error)
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # ExternalServiceErrorが発生することを確認
+            with pytest.raises(ExternalServiceError) as exc_info:
+                gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert "Places API" in str(exc_info.value)
+            assert mock_post.call_count == 1
+
+    def test_不正なJSONレスポンスでエラーが発生すること(self) -> None:
+        """不正なJSONレスポンスでエラーが発生することを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        # 予期しない形状のJSON (placesキーがない)
+        mock_response_data = {"error": "Invalid request"}
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            landmarks = gateway.search_landmarks_nearby(coordinate, radius)
+
+            # placesキーがない場合、空のリストが返される
+            assert mock_post.call_count == 1
+            assert len(landmarks) == 0

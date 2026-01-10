@@ -5,24 +5,39 @@ Google Maps API (Street View, Directions) へのリクエストを処理しま�
 
 import functools
 import logging
+from typing import Literal
 
 import requests
-from requests.exceptions import RequestException, Timeout
+from requests.exceptions import HTTPError, RequestException, Timeout
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.application.gateway_interfaces.google_maps_gateway import (
     GoogleMapsGateway,
     StreetViewMetadata,
 )
-from app.config import GOOGLE_API_KEY, REQUEST_TIMEOUT_SECONDS
+from app.config import (
+    GOOGLE_API_KEY,
+    LANDMARK_INCLUDED_TYPES,
+    REQUEST_TIMEOUT_SECONDS,
+)
 from app.domain.exceptions import (
     ExternalServiceError,
     ExternalServiceTimeoutError,
     ExternalServiceValidationError,
 )
-from app.domain.value_objects import Coordinate, ImageSize
+from app.domain.value_objects import Coordinate, ImageSize, Landmark
 from app.infrastructure import mappers
 
 logger = logging.getLogger(__name__)
+
+
+class RetryableHTTPError(HTTPError):
+    """429/503エラー用のリトライ可能な例外"""
 
 
 class GoogleMapsGatewayImpl(GoogleMapsGateway):
@@ -251,4 +266,161 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             raise ExternalServiceError(
                 f"Failed to retrieve Street View image: {e}",
                 service_name="Street View Static API",
+            ) from e
+
+    def search_landmarks_nearby(
+        self,
+        coordinate: Coordinate,
+        radius: int,
+        included_types: list[str] | None = None,
+        rank_preference: Literal["POPULARITY", "DISTANCE"] = "POPULARITY",
+    ) -> list[Landmark]:
+        """Places API v1でランドマーク検索
+
+        Args:
+            coordinate: 検索中心座標
+            radius: 検索半径 (メートル)
+            included_types: 検索対象のタイプリスト (Noneの場合はデフォルトタイプを使用)
+            rank_preference: ソート順 ("POPULARITY" または "DISTANCE")
+
+        Returns:
+            list[Landmark]: ランドマークのリスト
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
+        """
+        if included_types is None:
+            included_types = LANDMARK_INCLUDED_TYPES
+
+        places = self._search_nearby_once(coordinate, radius, included_types, rank_preference)
+
+        landmarks: list[Landmark] = []
+        for place in places:
+            place_id = place.get("id")
+            if not place_id:
+                continue
+
+            display_name_dict = place.get("displayName", {})
+            display_name = (
+                display_name_dict.get("text", "")
+                if isinstance(display_name_dict, dict)
+                else str(display_name_dict)
+            )
+
+            location = place.get("location", {})
+            if not isinstance(location, dict):
+                continue
+
+            lat_value = location.get("latitude")
+            lng_value = location.get("longitude")
+            if lat_value is None or lng_value is None:
+                continue
+
+            try:
+                landmark_coordinate = Coordinate(
+                    latitude=float(lat_value), longitude=float(lng_value)
+                )
+            except (ValueError, TypeError):
+                continue
+
+            primary_type = place.get("primaryType")
+            rating = place.get("rating")
+
+            landmark = Landmark(
+                place_id=place_id,
+                display_name=display_name,
+                coordinate=landmark_coordinate,
+                primary_type=primary_type,
+                rating=float(rating) if rating is not None else None,
+            )
+            landmarks.append(landmark)
+
+        return landmarks
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        retry=retry_if_exception_type((RetryableHTTPError, requests.exceptions.ConnectionError)),
+    )
+    def _search_nearby_once(
+        self,
+        coordinate: Coordinate,
+        radius: int,
+        included_types: list[str],
+        rank_preference: str = "POPULARITY",
+    ) -> list[dict]:
+        """Places API v1 searchNearbyを1回呼び出す (リトライ付き)
+
+        Args:
+            coordinate: 検索中心座標
+            radius: 検索半径 (メートル)
+            included_types: 検索対象のタイプリスト
+            rank_preference: ソート順 ("POPULARITY" または "DISTANCE")
+
+        Returns:
+            list[dict]: Places APIのレスポンス (placesリスト)
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
+        """
+        url = "https://places.googleapis.com/v1/places:searchNearby"
+
+        lat_float, lng_float = coordinate.to_float_tuple()
+
+        request_body = {
+            "includedPrimaryTypes": included_types,
+            "maxResultCount": 20,
+            "locationRestriction": {
+                "circle": {
+                    "center": {
+                        "latitude": lat_float,
+                        "longitude": lng_float,
+                    },
+                    "radius": max(50, radius),  # 最小半径50m
+                }
+            },
+            "languageCode": "ja",
+            "rankPreference": rank_preference,
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": GOOGLE_API_KEY,
+            "X-Goog-FieldMask": (
+                "places.id,places.displayName,places.location,"
+                "places.primaryType,places.types,places.rating,places.userRatingCount"
+            ),
+        }
+
+        try:
+            response = requests.post(
+                url, json=request_body, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
+            )
+
+            # 429/503エラーはリトライ可能な例外として発生
+            if response.status_code in [429, 503]:
+                raise RetryableHTTPError(
+                    f"HTTP {response.status_code}: {response.reason}", response=response
+                )
+
+            # その他のエラーは通常通り例外を発生 (リトライしない)
+            response.raise_for_status()
+
+            data = response.json()
+            return data.get("places", [])
+
+        except Timeout as e:
+            logger.error("Timeout error while fetching landmarks.")
+            raise ExternalServiceTimeoutError(
+                "Request timeout: Failed to retrieve landmarks",
+                service_name="Places API",
+            ) from e
+        except RetryableHTTPError:
+            # リトライ可能なエラーはそのまま再発生 (tenacityが処理)
+            raise
+        except RequestException as e:
+            logger.error(f"Request error while fetching landmarks: {e}")
+            raise ExternalServiceError(
+                f"Failed to retrieve landmarks: {e}",
+                service_name="Places API",
             ) from e
