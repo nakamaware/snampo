@@ -89,7 +89,7 @@ class GoogleMapsGateway(ABC):
         included_types: list[str] | None = None,
         rank_preference: Literal["POPULARITY", "DISTANCE"] = "POPULARITY",
     ) -> list[Landmark]:
-        """Places API v1でランドマーク検索
+        """Places API (New) でランドマーク検索
 
         Args:
             coordinate: 検索中心座標
