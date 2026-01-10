@@ -9,7 +9,7 @@ locals {
     "apikeys.googleapis.com",
     "secretmanager.googleapis.com",
     "sts.googleapis.com",
-    "cloudbuild.googleapis.com",  # TODO: GitHub Actionsに移行するため削除予定。
+    "cloudbuild.googleapis.com", # TODO: GitHub Actionsに移行するため削除予定。
   ]
 }
 
@@ -97,12 +97,12 @@ module "iam_members" {
   source     = "../gcp/iam-member"
   depends_on = [module.service_account]
 
-  project_id     = var.project_id
+  project_id = var.project_id
   group_iam_config = concat(
     local.default_group_iam_config,
     var.group_iam_config,
   )
-  service_account_iam_config  = concat(
+  service_account_iam_config = concat(
     local.default_service_account_iam_config,
     var.service_account_iam_config,
   )
@@ -181,24 +181,14 @@ module "secret_manager" {
         secret_data = val
       }
     ],
-    # その他シークレット
-    var.secrets
   )
   # シークレットの保管場所
-  user_managed_replication = merge(
-    {
-      for key, val in module.google_api_keys.key_strings : key => [{
-        location     = var.location
-        kms_key_name = null
-      }]
-    },
-    {
-      for s in var.secrets : s.name => [{
-        location     = var.location
-        kms_key_name = null
-      }]
-    }
-  )
+  user_managed_replication = {
+    for key, val in module.google_api_keys.key_strings : key => [{
+      location     = var.location
+      kms_key_name = null
+    }]
+  }
 }
 
 # Artifact Registry

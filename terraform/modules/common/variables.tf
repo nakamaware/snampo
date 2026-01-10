@@ -20,15 +20,6 @@ variable "api_list" {
   default = []
 }
 
-# Secret Managerに登録するSecret
-variable "secrets" {
-  type = list(object({
-    name        = string
-    secret_data = string
-  }))
-  default = []
-}
-
 # 作成するService Account
 variable "service_account_list" {
   type = list(object({
@@ -78,8 +69,8 @@ variable "api_keys" {
 # Artifact RegistryのID（Docker）
 variable "gar_repository_list" {
   type = list(object({
-    id   = string
-    desc = string
+    id                    = string
+    desc                  = string
     package_name_prefixes = list(string)
   }))
   default = []
