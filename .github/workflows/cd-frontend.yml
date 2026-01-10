@@ -54,3 +54,12 @@ jobs:
         with:
           name: development-release-apk
           path: frontend/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      # symbolファイルをGitHub Actionsのアーティファクトとしてアップロード
+      - name: Upload Debug Symbols
+        uses: actions/upload-artifact@v6
+        with:
+          name: development-release-symbols
+          path: frontend/build/app/outputs/symbols/
+          retention-days: 30
