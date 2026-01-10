@@ -43,12 +43,8 @@ LANDMARK_INCLUDED_TYPES = [
     "aquarium",
     "casino",
     "garden",
-    "park",
     "tourist_attraction",
     "zoo",
-    # 政府、行政機関
-    "government_office",
-    "local_government_office",
     # 自然地物
     "beach",
     # ショッピング
