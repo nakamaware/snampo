@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "frontend/**"
+      - ".github/workflows/cd-frontend.yml"
   workflow_dispatch: # 手動実行も可能にする
 
 defaults:
@@ -24,15 +25,17 @@ jobs:
       # GitHub Secretsから.envを生成
       - name: Create .env file
         run: |
-          echo "FLAVOR=${{ secrets.FLAVOR }}" >> .env
-          echo "GOOGLE_MAP_API_KEY=${{ secrets.GOOGLE_MAP_API_KEY }}" >> .env
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          umask 077
+          cat > .env <<EOF
+          FLAVOR=${{ secrets.FLAVOR }}
+          GOOGLE_MAP_API_KEY=${{ secrets.GOOGLE_MAP_API_KEY }}
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          EOF
+          cmod 600 .env
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
             frontend/android/.gradle
             frontend/android/build
           key: ${{ runner.os }}-gradle-release-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/gradle/wrapper/gradle-wrapper.properties') }}
@@ -53,7 +56,8 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: development-release-apk
-          path: frontend/build/app/outputs/flutter-apk/app-release.apk
+          path: frontend/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
           retention-days: 30
 
       # symbolファイルをGitHub Actionsのアーティファクトとしてアップロード
@@ -62,4 +66,5 @@ jobs:
         with:
           name: development-release-symbols
           path: frontend/build/app/outputs/symbols/
+          if-no-files-found: error
           retention-days: 30
