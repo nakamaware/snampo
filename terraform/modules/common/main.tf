@@ -59,7 +59,7 @@ module "workload_identity" {
   sa_gh_repo_bindings = var.sa_gh_repo_bindings
 }
 
-# Cloud Strage
+# Cloud Storage
 module "gcs_buckets" {
   source     = "terraform-google-modules/cloud-storage/google"
   version    = "~> 12.0"

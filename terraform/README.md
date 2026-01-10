@@ -63,7 +63,7 @@ terraform plan
 変更の適用（原則**ローカルではやらない**）
 
 ```bash
-terrafrom apply
+terraform apply
 ```
 
 ## 新しく環境を追加する場合（ステージング環境など）
@@ -144,7 +144,7 @@ backend.tfにリモートバックエンドを追加する。
 
 例：env/stg/main.tf
 
-```terrafrom
+```terraform
 terraform {
   backend "gcs" {
     bucket = "snampo-stg-bucket"
