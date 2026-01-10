@@ -621,7 +621,7 @@ class TestSearchLandmarksNearby:
             with pytest.raises(ExternalServiceError) as exc_info:
                 gateway.search_landmarks_nearby(coordinate, radius)
 
-            assert "Places API" in str(exc_info.value)
+            assert exc_info.value.service_name == "Places API"
             assert mock_post.call_count == 1
 
     def test_不正なJSONレスポンスでエラーが発生すること(self) -> None:

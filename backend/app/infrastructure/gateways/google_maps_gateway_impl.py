@@ -57,6 +57,13 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         self._get_street_view_image_cached = functools.lru_cache(maxsize=128)(
             lambda coordinate, image_size: self._fetch_street_view_image(coordinate, image_size)
         )
+        self._search_landmarks_nearby_cached = functools.lru_cache(maxsize=128)(
+            lambda coordinate, radius, included_types_tuple, rank_preference: (
+                self._search_nearby_once(
+                    coordinate, radius, list(included_types_tuple), rank_preference
+                )
+            )
+        )
 
     def get_directions(
         self,
@@ -311,7 +318,11 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         if included_types is None:
             included_types = LANDMARK_INCLUDED_TYPES
 
-        places = self._search_nearby_once(coordinate, radius, included_types, rank_preference)
+        # キャッシュ用にリストをタプルに変換 (リストはハッシュ不可のため)
+        included_types_tuple = tuple(included_types)
+        places = self._search_landmarks_nearby_cached(
+            coordinate, radius, included_types_tuple, rank_preference
+        )
 
         landmarks: list[Landmark] = []
         for place in places:
