@@ -47,7 +47,9 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         """初期化処理でキャッシュ関数を作成"""
         # TODO: 緯度経度の小数点以下の桁数を指定しないと、適切にキャッシュが効かなさそう
         self._get_directions_cached = functools.lru_cache(maxsize=128)(
-            lambda origin_str, destination_str: self._fetch_directions(origin_str, destination_str)
+            lambda origin_str, destination_str, waypoints_str: self._fetch_directions(
+                origin_str, destination_str, waypoints_str
+            )
         )
         self._get_street_view_metadata_cached = functools.lru_cache(maxsize=128)(
             lambda coordinate: self._fetch_street_view_metadata(coordinate)
@@ -57,13 +59,17 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         )
 
     def get_directions(
-        self, origin: Coordinate, destination: Coordinate
+        self,
+        origin: Coordinate,
+        destination: Coordinate,
+        waypoints: list[Coordinate] | None = None,
     ) -> tuple[list[Coordinate], str]:
         """ルート情報を取得
 
         Args:
             origin: 出発地の座標
             destination: 目的地の座標
+            waypoints: 経由地の座標リスト (通過点として扱われる)
 
         Returns:
             tuple[list[Coordinate], str]:
@@ -71,7 +77,11 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         """
         origin_str = f"{origin.latitude},{origin.longitude}"
         destination_str = f"{destination.latitude},{destination.longitude}"
-        data = self._get_directions_cached(origin_str, destination_str)
+        waypoints_str = ""
+        if waypoints:
+            # via: プレフィックスを使用して通過点 (pass through) として指定
+            waypoints_str = "|".join(f"via:{wp.latitude},{wp.longitude}" for wp in waypoints)
+        data = self._get_directions_cached(origin_str, destination_str, waypoints_str)
 
         if data.get("status") != "OK":
             logger.error(f"Directions API returned non-OK status: {data.get('status')}")
@@ -96,7 +106,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
 
         return route_coordinates, overview_polyline
 
-    def _fetch_directions(self, origin: str, destination: str) -> dict:
+    def _fetch_directions(self, origin: str, destination: str, waypoints: str = "") -> dict:
         """Google Directions APIからルート情報を取得
 
         API Doc: https://developers.google.com/maps/documentation/directions/get-directions?hl=ja
@@ -104,12 +114,19 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         Args:
             origin: 出発地の座標 ("緯度,経度"形式の文字列)
             destination: 目的地の座標 ("緯度,経度"形式の文字列)
+            waypoints: 経由地 ("via:緯度,経度|via:緯度,経度"形式、空文字列は経由地なし)
 
         Returns:
             dict: Directions APIのレスポンスJSON
         """
         url = "https://maps.googleapis.com/maps/api/directions/json"
-        params = {"origin": origin, "destination": destination, "key": GOOGLE_API_KEY}
+        params: dict[str, str] = {
+            "origin": origin,
+            "destination": destination,
+            "key": GOOGLE_API_KEY,
+        }
+        if waypoints:
+            params["waypoints"] = waypoints
 
         try:
             response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)

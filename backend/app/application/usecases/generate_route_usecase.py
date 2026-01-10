@@ -27,7 +27,6 @@ from app.domain.value_objects import (
     ImageSize,
     StreetViewImage,
 )
-from app.infrastructure.mappers import polyline_mapper
 
 logger = logging.getLogger(__name__)
 
@@ -146,20 +145,18 @@ class GenerateRouteUseCase:
                 self.image_size,
             )
 
-            # 3. 現在地→中間地点、中間地点→目的地の2つのルートを取得し、結合
-            _, polyline_1 = self.google_maps_gateway.get_directions(
-                current_coordinate, midpoint_coordinate
+            # 3. 現在地→目的地のルートを取得 (中間地点をwaypointsとして指定)
+            _, overview_polyline = self.google_maps_gateway.get_directions(
+                current_coordinate,
+                destination_landmark.coordinate,
+                waypoints=[midpoint_coordinate],
             )
-            _, polyline_2 = self.google_maps_gateway.get_directions(
-                midpoint_coordinate, destination_landmark.coordinate
-            )
-            merged_polyline = polyline_mapper.merge_polylines(polyline_1, polyline_2)
 
             return RouteResultDto(
                 departure=current_coordinate,
                 destination=destination_landmark.coordinate,
                 midpoints=[midpoint_coordinate],
-                overview_polyline=merged_polyline,
+                overview_polyline=overview_polyline,
                 midpoint_images=[(midpoint_coordinate, midpoint_image)],
                 destination_image=destination_image,
             )

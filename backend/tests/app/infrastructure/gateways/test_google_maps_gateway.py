@@ -77,6 +77,165 @@ class TestGetDirections:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
+    def test_waypointsを指定したときにリクエストパラメータに含まれること(self) -> None:
+        """waypointsを指定したときに、リクエストパラメータにwaypointsが含まれることを確認"""
+        origin = Coordinate(latitude=35.6812, longitude=139.7671)
+        destination = Coordinate(latitude=35.6895, longitude=139.6917)
+        waypoint = Coordinate(latitude=35.6850, longitude=139.7300)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_directions(origin, destination, waypoints=[waypoint])
+
+            # リクエストパラメータにwaypointsが含まれていることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            params = call_args.kwargs.get("params", {})
+            assert "waypoints" in params
+            assert params["waypoints"] == "via:35.685,139.73"
+
+    def test_複数のwaypointsを指定したときにパイプで連結されること(self) -> None:
+        """複数のwaypointsを指定したときに、パイプで連結されることを確認"""
+        origin = Coordinate(latitude=35.6812, longitude=139.7671)
+        destination = Coordinate(latitude=35.6895, longitude=139.6917)
+        waypoint1 = Coordinate(latitude=35.6850, longitude=139.7300)
+        waypoint2 = Coordinate(latitude=35.6870, longitude=139.7100)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_directions(origin, destination, waypoints=[waypoint1, waypoint2])
+
+            # リクエストパラメータにwaypointsがパイプで連結されて含まれていることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            params = call_args.kwargs.get("params", {})
+            assert "waypoints" in params
+            assert params["waypoints"] == "via:35.685,139.73|via:35.687,139.71"
+
+    def test_waypointsを指定しないときにリクエストパラメータに含まれないこと(self) -> None:
+        """waypointsを指定しないときに、リクエストパラメータにwaypointsが含まれないことを確認"""
+        origin = Coordinate(latitude=35.6812, longitude=139.7671)
+        destination = Coordinate(latitude=35.6895, longitude=139.6917)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_directions(origin, destination)
+
+            # リクエストパラメータにwaypointsが含まれていないことを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            params = call_args.kwargs.get("params", {})
+            assert "waypoints" not in params
+
+    def test_同じwaypointsで複数回呼び出したときにキャッシュが効くこと(self) -> None:
+        """同じwaypointsで複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+        origin = Coordinate(latitude=35.6812, longitude=139.7671)
+        destination = Coordinate(latitude=35.6895, longitude=139.6917)
+        waypoint = Coordinate(latitude=35.6850, longitude=139.7300)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # 同じ引数で3回呼び出す
+            gateway.get_directions(origin, destination, waypoints=[waypoint])
+            gateway.get_directions(origin, destination, waypoints=[waypoint])
+            gateway.get_directions(origin, destination, waypoints=[waypoint])
+
+            # APIリクエストは1回だけ呼ばれるべき
+            assert mock_get.call_count == 1
+
+    def test_異なるwaypointsで呼び出したときに別のリクエストが発生すること(self) -> None:
+        """異なるwaypointsで呼び出したときに、それぞれ別のリクエストが発生することを確認"""
+        origin = Coordinate(latitude=35.6812, longitude=139.7671)
+        destination = Coordinate(latitude=35.6895, longitude=139.6917)
+        waypoint1 = Coordinate(latitude=35.6850, longitude=139.7300)
+        waypoint2 = Coordinate(latitude=35.6870, longitude=139.7100)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # 異なるwaypointsで呼び出す
+            gateway.get_directions(origin, destination, waypoints=[waypoint1])
+            gateway.get_directions(origin, destination, waypoints=[waypoint2])
+
+            # APIリクエストは2回呼ばれるべき
+            assert mock_get.call_count == 2
+
 
 class TestGetStreetViewMetadata:
     """GetStreetViewMetadataのテスト"""

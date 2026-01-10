@@ -35,13 +35,17 @@ class GoogleMapsGateway(ABC):
 
     @abstractmethod
     def get_directions(
-        self, origin: Coordinate, destination: Coordinate
+        self,
+        origin: Coordinate,
+        destination: Coordinate,
+        waypoints: list[Coordinate] | None = None,
     ) -> tuple[list[Coordinate], str]:
         """ルート情報を取得
 
         Args:
             origin: 出発地の座標
             destination: 目的地の座標
+            waypoints: 経由地の座標リスト (通過点として扱われる)
 
         Returns:
             tuple[list[Coordinate], str]:
