@@ -1,8 +1,9 @@
-name: 'Setup Frontend'
-description: 'Setup Flutter environment for frontend. Installs dependencies and configures caching.'
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
+name: Setup Frontend
+description: Setup Flutter environment for frontend. Installs dependencies and configures caching.
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
