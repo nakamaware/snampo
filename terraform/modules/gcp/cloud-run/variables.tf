@@ -23,6 +23,6 @@ variable "container_specs" {
       name      = string
       secret_id = string
     }))
-    port = string
+    port = number
   })
 }
