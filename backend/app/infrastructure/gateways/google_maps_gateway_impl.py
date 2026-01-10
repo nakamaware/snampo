@@ -120,7 +120,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             dict: Directions APIのレスポンスJSON
         """
         url = "https://maps.googleapis.com/maps/api/directions/json"
-        params: dict[str, str] = {
+        params = {
             "origin": origin,
             "destination": destination,
             "key": GOOGLE_API_KEY,
