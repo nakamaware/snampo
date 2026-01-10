@@ -220,6 +220,12 @@ class TestSearchLandmarksNearby:
                     "displayName": {"text": "東京駅"},
                     "location": {"latitude": 35.6812, "longitude": 139.7671},
                     "primaryType": "train_station",
+                    "types": [
+                        "train_station",
+                        "transit_station",
+                        "point_of_interest",
+                        "establishment",
+                    ],
                     "rating": 4.5,
                 },
                 {
@@ -227,6 +233,7 @@ class TestSearchLandmarksNearby:
                     "displayName": {"text": "皇居"},
                     "location": {"latitude": 35.6850, "longitude": 139.7528},
                     "primaryType": "tourist_attraction",
+                    "types": ["tourist_attraction", "point_of_interest", "establishment"],
                     "rating": 4.7,
                 },
             ]
@@ -252,6 +259,12 @@ class TestSearchLandmarksNearby:
             assert landmarks[0].coordinate.latitude == 35.6812
             assert landmarks[0].coordinate.longitude == 139.7671
             assert landmarks[0].primary_type == "train_station"
+            assert landmarks[0].types == [
+                "train_station",
+                "transit_station",
+                "point_of_interest",
+                "establishment",
+            ]
             assert landmarks[0].rating == 4.5
 
     def test_空のレスポンスから空のリストが返されること(self) -> None:

@@ -324,6 +324,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 continue
 
             primary_type = place.get("primaryType")
+            types = place.get("types")
             rating = place.get("rating")
 
             landmark = Landmark(
@@ -331,6 +332,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 display_name=display_name,
                 coordinate=landmark_coordinate,
                 primary_type=primary_type,
+                types=types if isinstance(types, list) else None,
                 rating=float(rating) if rating is not None else None,
             )
             landmarks.append(landmark)
