@@ -69,7 +69,7 @@ module "snampo_dev" {
   # Service Accountの権限
   sa_iam_config = [
     {
-      email = "${local.project_name}-run@snampo-480404.iam.gserviceaccount.com"
+      email = "${local.project_name}-run@${local.project_id}.iam.gserviceaccount.com"
       roles = [
         "roles/secretmanager.secretAccessor",
         "roles/logging.logWriter",
