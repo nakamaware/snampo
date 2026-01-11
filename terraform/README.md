@@ -108,7 +108,7 @@ module "snampo_stg" {
   source = "../../modules/common"
 
   project_id = "snampo-stg"
-  project_name = "snampo-prod"
+  project_name = "snampo-stg"
 }
 ```
 
@@ -121,7 +121,7 @@ terraform apply
 
 backend.tfにリモートバックエンドを追加する。
 
-例：env/stg/main.tf
+例：env/stg/backend.tf
 
 ```terraform
 terraform {
