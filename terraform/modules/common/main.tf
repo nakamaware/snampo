@@ -263,7 +263,7 @@ locals {
         env_secret = [
           {
             name      = "GOOGLE_API_KEY"
-            secret_id = "google-api-key"
+            secret_id = "backend-api-key"
           },
         ] # ここで指定できるのは、APIキーかシークレットのID
         port = 8080
