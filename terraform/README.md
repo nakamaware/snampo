@@ -90,7 +90,7 @@ Terraform用のリソースを作成する。（別の管理用プロジェク�
 
 * Terraformのバックエンド
 
-  * Google Cloud Strage
+  * Google Cloud Storage
 
 * TerraformのCI/CD用リソース
   
