@@ -50,6 +50,7 @@ jobs:
             --split-debug-info=build/app/outputs/symbols \
             --no-tree-shake-icons \
             --dart-define-from-file=.env
+          rm .env
 
       # 作成されたAPKをGitHub Actionsのアーティファクトとしてアップロード
       - name: Upload APK
