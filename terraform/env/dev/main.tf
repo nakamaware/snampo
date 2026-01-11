@@ -27,7 +27,7 @@ module "snampo_dev" {
   # 有効化するAPI
   api_list = [
     # アプリケーション用API
-    "streetviewpublish.googleapis.com",
+    "street-view-image-backend.googleapis.com",
     "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
     "maps-ios-backend.googleapis.com",
     "maps-android-backend.googleapis.com",

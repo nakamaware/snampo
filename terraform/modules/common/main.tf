@@ -145,11 +145,20 @@ module "workload_identity" {
 locals {
   default_api_key_list = [
     {
-      id           = "google-api-key"
-      display_name = "google-api-key"
+      id           = "backend-api-key"
+      display_name = "backend-api-key"
       target_services = [
-        "streetviewpublish.googleapis.com",
+        "street-view-image-backend.googleapis.com",
         "directions-backend.googleapis.com",
+      ]
+    },
+    {
+      id           = "frontend-api-key"
+      display_name = "frontend-api-key"
+      target_services = [
+        "maps-ios-backend.googleapis.com",
+        "maps-android-backend.googleapis.com",
+        "maps-backend.googleapis.com",
       ]
     },
   ]
