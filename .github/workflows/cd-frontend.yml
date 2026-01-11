@@ -15,7 +15,7 @@ defaults:
 
 jobs:
   build-development-release-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: dev
     steps:
       - name: Checkout
@@ -32,12 +32,14 @@ jobs:
           API_BASE_URL=${{ secrets.API_BASE_URL }}
           EOF
           chmod 600 .env
+          trap 'rm -f .env' EXIT
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
             frontend/android/.gradle
-            frontend/android/build
           key: ${{ runner.os }}-gradle-release-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-release-
@@ -50,7 +52,6 @@ jobs:
             --split-debug-info=build/app/outputs/symbols \
             --no-tree-shake-icons \
             --dart-define-from-file=.env
-          rm .env
 
       # 作成されたAPKをGitHub Actionsのアーティファクトとしてアップロード
       - name: Upload APK
