@@ -68,6 +68,8 @@ terraform apply
 
 ## 新しく環境を追加する場合（ステージング環境など）
 
+**Owner権限が必要**
+
 env以下にルートモジュールを追加する。
 
 ```
@@ -101,34 +103,12 @@ Terraform用のリソースを作成する。（別の管理用プロジェク�
 ```terraform
 ...(Providerの定義)
 
+# commonモジュールの中にsnampoに必要なデフォルトの設定が入っている。
 module "snampo_stg" {
   source = "../../modules/common"
 
-  # プロジェクトのID
   project_id = "snampo-stg"
-  # GCSのバケット
-  gcs_bucket_names = ["snampo-stg-bucket"]
-  # Terraform用SA
-  sa_list = [
-    {
-      id   = "snampo-stg-terraform"
-      desc = "Terraform用サービスアカウント"
-    }
-  ]
-  # Terraform用SAの権限を設定
-  sa_iam_config = [
-    {
-      email = "snampo-stg-terraform@snampo-stg.iam.gserviceaccount.com"
-      roles = ["roles/owner"]
-    }
-  ]
-  # Workload Identity連携
-  sa_gh_repo_bindings = [
-    {
-      sa_id = "snampo-stg-terraform"
-      repos = ["nakamaware/snampo"]
-    }
-  ]
+  project_name = "snampo-prod"
 }
 ```
 
