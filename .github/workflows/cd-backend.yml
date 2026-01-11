@@ -2,6 +2,7 @@
 name: CD - Backend
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -51,8 +52,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # TODO: リポジトリ名とイメージ名を見直して、環境変数にする（TerraformのCI/CD設定後）
-          images: ${{ vars.GAR_REPOSITORY }}/snampo/snampo-be-test
+          images: ${{ vars.GAR_REPOSITORY }}/snampo-be
           tags: |
             type=semver,pattern={{version}}
             type=raw,value={{date 'YYYYMMDDHH' tz='Asia/Tokyo'}}-{{branch}}-{{sha}}
@@ -94,7 +94,6 @@ jobs:
       - name: Deploy to Cloud Run
         uses: 'google-github-actions/deploy-cloudrun@v3'
         with:
-          # TODO: サービス名を環境変数にする（TerraformのCI/CD設定後）
-          service: 'test-snampo-dev-be'
+          service: 'snampo-backend'
           image: ${{ needs.build-and-push-docker-image.outputs.image_tag }}
           region: 'asia-northeast1'
