@@ -119,7 +119,6 @@ module "snampo_stg" {
 terraform apply
 ```
 
-
 backend.tfにリモートバックエンドを追加する。
 
 例：env/stg/main.tf
