@@ -72,7 +72,7 @@ terraform apply
 
 env以下にルートモジュールを追加する。
 
-```
+```text
 env
 └── stg
     ├── backend.tf  # 空ファイル
