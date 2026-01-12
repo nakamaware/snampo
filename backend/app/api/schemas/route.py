@@ -24,7 +24,7 @@ class RouteRequest(BaseModel):
         le=180,
         examples=[139.8133963],
     )
-    radius: float = Field(
+    radius: int = Field(
         description="目的地を生成する半径 (メートル単位)",
         gt=0,
         le=40075000,  # 地球の赤道一周の長さ (メートル)
