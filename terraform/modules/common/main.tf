@@ -88,7 +88,10 @@ locals {
     },
     {
       email = "${var.project_name}-terraform@${var.project_id}.iam.gserviceaccount.com"
-      roles = ["roles/owner"]
+      roles = [
+        "roles/editor",
+        "roles/resourcemanager.projectIamAdmin",
+      ]
     },
   ]
 }
