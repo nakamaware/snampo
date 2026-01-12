@@ -1,16 +1,9 @@
 # auto-assign-action の設定ファイル
 # https://github.com/kentaro-m/auto-assign-action
 
-# レビューアーを自動的に追加するかどうか
-addReviewers: true
-
 # ドラフトPRでも実行するかどうか
 runOnDraft: true
 
 # アサインを自動的に追加するかどうか
 # "author" を指定すると、PR作成者をアサインする
 addAssignees: author
-
-# チームレビューアーを指定
-teamReviewers:
-  - developer
