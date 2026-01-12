@@ -61,13 +61,28 @@ jobs:
 
             // Reviewerを設定（まだ割り当てられていない場合）
             if (currentReviewers.length === 0 && currentTeamReviewers.length === 0) {
-              console.log('Requesting review from team: developer');
-              await github.rest.pulls.requestReviewers({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                team_reviewers: ['developer']
-              });
+              try {
+                console.log('Requesting review from team: developer');
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  team_reviewers: ['developer']
+                });
+              } catch (error) {
+                const status = error.status || error.response?.status;
+                const errorBody = error.response?.data || error.message || JSON.stringify(error);
+                const teamName = 'developer';
+
+                console.error(`Failed to request reviewers from team: ${teamName}`);
+                console.error(`PR Number: ${pr.number}`);
+                console.error(`HTTP Status: ${status}`);
+                console.error(`Error: ${JSON.stringify(errorBody)}`);
+                console.error(`Caught error: ${error}`);
+
+                // チームが存在しない場合やその他のエラーの場合は、レビューアーのリクエストをスキップ
+                console.log(`Skipping reviewer request due to error (team may not exist or insufficient permissions)`);
+              }
             } else {
               const allReviewers = [...currentReviewers, ...currentTeamReviewers.map(t => `team:${t}`)];
               console.log(`Reviewers already set: ${allReviewers.join(', ')}`);
