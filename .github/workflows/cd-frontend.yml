@@ -1,0 +1,72 @@
+name: CD - Frontend (Build Development Release APK)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/cd-frontend.yml"
+  workflow_dispatch: # 手動実行も可能にする
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  build-development-release-apk:
+    runs-on: ubuntu-24.04
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Frontend Setup
+        uses: ./.github/actions/setup-frontend
+      # GitHub Secretsから.envを生成
+      - name: Create .env file
+        run: |
+          umask 077
+          cat > .env <<EOF
+          FLAVOR=${{ secrets.FLAVOR }}
+          GOOGLE_MAP_API_KEY=${{ secrets.GOOGLE_MAP_API_KEY }}
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          EOF
+          chmod 600 .env
+          trap 'rm -f .env' EXIT
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            frontend/android/.gradle
+          key: ${{ runner.os }}-gradle-release-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-release-
+
+      # 難読化ビルドの実行
+      - name: Build APK (Development Release)
+        run: |
+          flutter build apk --release \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols \
+            --no-tree-shake-icons \
+            --dart-define-from-file=.env
+
+      # 作成されたAPKをGitHub Actionsのアーティファクトとしてアップロード
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: development-release-apk
+          path: frontend/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # symbolファイルをGitHub Actionsのアーティファクトとしてアップロード
+      - name: Upload Debug Symbols
+        uses: actions/upload-artifact@v6
+        with:
+          name: development-release-symbols
+          path: frontend/build/app/outputs/symbols/
+          if-no-files-found: error
+          retention-days: 30

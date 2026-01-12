@@ -3,7 +3,11 @@
 import pytest
 
 from app.domain.value_objects import Coordinate
-from app.infrastructure.mappers import decode_polyline
+from app.infrastructure.mappers.polyline_mapper import (
+    decode_polyline,
+    encode_polyline,
+    merge_polylines,
+)
 
 
 def test_シンプルなポリラインをデコードできること() -> None:
@@ -100,3 +104,147 @@ def test_不完全なポリライン_経度デコード中に終了する場合�
     assert "decoding longitude" in error_message
     assert "index" in error_message
     assert "current position" in error_message
+
+
+# ===== encode_polyline のテスト =====
+
+
+def test_エンコードした結果をデコードすると元の座標に戻ること() -> None:
+    """エンコードした結果をデコードすると元の座標に戻ることを確認"""
+    original_coordinates = [
+        Coordinate(latitude=35.6812, longitude=139.7671),  # 東京駅
+        Coordinate(latitude=35.6896, longitude=139.6917),  # 新宿駅
+    ]
+
+    encoded = encode_polyline(original_coordinates)
+    decoded = decode_polyline(encoded)
+
+    assert len(decoded) == len(original_coordinates)
+    for orig, dec in zip(original_coordinates, decoded, strict=True):
+        # 精度は1e-5なので、誤差は最大1e-5程度
+        assert abs(orig.latitude - dec.latitude) < 1e-4
+        assert abs(orig.longitude - dec.longitude) < 1e-4
+
+
+def test_空の座標リストをエンコードすると空文字列を返すこと() -> None:
+    """空の座標リストをエンコードすると空文字列を返すことを確認"""
+    coordinates: list[Coordinate] = []
+
+    result = encode_polyline(coordinates)
+
+    assert result == ""
+
+
+def test_1つの座標をエンコードできること() -> None:
+    """1つの座標をエンコードできることを確認"""
+    coordinates = [Coordinate(latitude=35.6812, longitude=139.7671)]
+
+    encoded = encode_polyline(coordinates)
+
+    assert isinstance(encoded, str)
+    assert len(encoded) > 0
+
+
+def test_複数の座標をエンコードできること() -> None:
+    """複数の座標をエンコードできることを確認"""
+    coordinates = [
+        Coordinate(latitude=35.6812, longitude=139.7671),
+        Coordinate(latitude=35.6896, longitude=139.6917),
+        Coordinate(latitude=35.6586, longitude=139.7014),
+    ]
+
+    encoded = encode_polyline(coordinates)
+
+    assert isinstance(encoded, str)
+    assert len(encoded) > 0
+
+    # デコードして検証
+    decoded = decode_polyline(encoded)
+    assert len(decoded) == 3
+
+
+def test_負の座標を含む場合もエンコードできること() -> None:
+    """負の座標を含む場合もエンコードできることを確認"""
+    coordinates = [
+        Coordinate(latitude=-33.8688, longitude=151.2093),  # シドニー
+        Coordinate(latitude=-37.8136, longitude=144.9631),  # メルボルン
+    ]
+
+    encoded = encode_polyline(coordinates)
+    decoded = decode_polyline(encoded)
+
+    assert len(decoded) == 2
+    # 精度チェック
+    assert abs(decoded[0].latitude - coordinates[0].latitude) < 1e-4
+    assert abs(decoded[0].longitude - coordinates[0].longitude) < 1e-4
+
+
+# ===== merge_polylines のテスト =====
+
+
+def test_2つのポリラインを結合できること() -> None:
+    """2つのポリラインを結合できることを確認"""
+    coords1 = [
+        Coordinate(latitude=35.6812, longitude=139.7671),
+        Coordinate(latitude=35.6896, longitude=139.6917),
+    ]
+    coords2 = [
+        Coordinate(latitude=35.6896, longitude=139.6917),  # 重複点
+        Coordinate(latitude=35.6586, longitude=139.7014),
+    ]
+
+    polyline1 = encode_polyline(coords1)
+    polyline2 = encode_polyline(coords2)
+
+    merged = merge_polylines(polyline1, polyline2)
+    decoded = decode_polyline(merged)
+
+    # 重複点が除去されて3点になることを確認
+    assert len(decoded) == 3
+
+
+def test_重複点がない場合もポリラインを結合できること() -> None:
+    """重複点がない場合もポリラインを結合できることを確認"""
+    coords1 = [
+        Coordinate(latitude=35.6812, longitude=139.7671),
+        Coordinate(latitude=35.6896, longitude=139.6917),
+    ]
+    coords2 = [
+        Coordinate(latitude=35.6586, longitude=139.7014),  # 異なる点から開始
+        Coordinate(latitude=35.6762, longitude=139.6503),
+    ]
+
+    polyline1 = encode_polyline(coords1)
+    polyline2 = encode_polyline(coords2)
+
+    merged = merge_polylines(polyline1, polyline2)
+    decoded = decode_polyline(merged)
+
+    # 重複点がないので4点になることを確認
+    assert len(decoded) == 4
+
+
+def test_空のポリラインと結合できること() -> None:
+    """空のポリラインと結合できることを確認"""
+    coords = [
+        Coordinate(latitude=35.6812, longitude=139.7671),
+        Coordinate(latitude=35.6896, longitude=139.6917),
+    ]
+    polyline = encode_polyline(coords)
+
+    # 1番目が空
+    merged1 = merge_polylines("", polyline)
+    decoded1 = decode_polyline(merged1)
+    assert len(decoded1) == 2
+
+    # 2番目が空
+    merged2 = merge_polylines(polyline, "")
+    decoded2 = decode_polyline(merged2)
+    assert len(decoded2) == 2
+
+
+def test_両方空のポリラインを結合すると空文字列を返すこと() -> None:
+    """両方空のポリラインを結合すると空文字列を返すことを確認"""
+    merged = merge_polylines("", "")
+
+    assert merged == ""
