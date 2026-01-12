@@ -266,7 +266,7 @@ locals {
             secret_id = "backend-api-key"
           },
         ] # ここで指定できるのは、APIキーかシークレットのID
-        port = 8080
+        port = 80
       }
     }
   ]
