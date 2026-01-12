@@ -76,14 +76,37 @@ jobs:
                 const errorBody = error.response?.data || error.message || JSON.stringify(error);
                 const teamName = 'developer';
 
-                console.error(`Failed to request reviewers from team: ${teamName}`);
-                console.error(`PR Number: ${pr.number}`);
-                console.error(`HTTP Status: ${status}`);
-                console.error(`Error: ${JSON.stringify(errorBody)}`);
-                console.error(`Caught error: ${error}`);
+                const shouldSkip =
+                  status === 404 || // チームが存在しない/見えない
+                  status === 422; // レビュー依頼が不正 (チーム指定不可など)
 
-                // チームが存在しない場合やその他のエラーの場合は、レビューアーのリクエストをスキップ
-                console.log(`Skipping reviewer request due to error (team may not exist or insufficient permissions)`);
+                if (shouldSkip) {
+                  console.warn(`Skipping reviewer request from team: ${teamName}`);
+                  console.warn(`PR Number: ${pr.number}`);
+                  console.warn(`HTTP Status: ${status}`);
+                  console.warn(`Error: ${JSON.stringify(errorBody)}`);
+
+                  const reason =
+                    status === 404
+                      ? 'チームが存在しない、または参照できません。'
+                      : status === 422
+                        ? 'チームレビューアーを指定できません。'
+                        : '不明な理由です。';
+
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: `⚠️ 自動レビュー依頼をスキップしました。team: ${teamName} / HTTP ${status}\n理由: ${reason}\nログを確認し、必要ならメンテナーが手動でレビュー依頼してください。`
+                  });
+                } else {
+                  console.error(`Failed to request reviewers from team: ${teamName}`);
+                  console.error(`PR Number: ${pr.number}`);
+                  console.error(`HTTP Status: ${status}`);
+                  console.error(`Error: ${JSON.stringify(errorBody)}`);
+                  console.error(`Caught error: ${error}`);
+                  throw error;
+                }
               }
             } else {
               const allReviewers = [...currentReviewers, ...currentTeamReviewers.map(t => `team:${t}`)];
