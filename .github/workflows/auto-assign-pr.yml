@@ -25,13 +25,36 @@ jobs:
 
             // Assigneeを設定（まだ割り当てられていない場合）
             if (currentAssignees.length === 0) {
-              console.log(`Assigning PR creator: ${creator}`);
-              await github.rest.issues.addAssignees({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                assignees: [creator]
-              });
+              try {
+                console.log(`Assigning PR creator: ${creator}`);
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  assignees: [creator]
+                });
+              } catch (error) {
+                const status = error.status || error.response?.status;
+                const errorBody = error.response?.data || error.message || JSON.stringify(error);
+
+                if (status === 422) {
+                  // 422エラー: 外部コントリビューターの場合はアサインをスキップ
+                  console.log(`Skipping assignment for external contributor: ${creator} (HTTP ${status})`);
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: `⚠️ 外部コントリビューターのため、自動アサインをスキップしました。メンテナーが手動でアサインしてください。`
+                  });
+                } else {
+                  // その他のエラー（パーミッション/APIエラーなど）は報告して再スロー
+                  console.error(`Failed to assign PR creator: ${creator}`);
+                  console.error(`HTTP Status: ${status}`);
+                  console.error(`Error Body: ${JSON.stringify(errorBody)}`);
+                  console.error(`PR Number: ${pr.number}`);
+                  throw error;
+                }
+              }
             } else {
               console.log(`Assignees already set: ${currentAssignees.join(', ')}`);
             }
