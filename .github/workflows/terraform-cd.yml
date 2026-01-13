@@ -5,7 +5,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      # - main
+      - fix/terraform-sa-role
     paths:
       - 'terraform/**'
       - '!terraform/**.md'
