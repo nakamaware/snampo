@@ -9,7 +9,14 @@ locals {
     "apikeys.googleapis.com",
     "secretmanager.googleapis.com",
     "sts.googleapis.com",
-    "cloudbuild.googleapis.com", # TODO: GitHub Actionsに移行するため削除予定。
+    # バックエンド用API
+    "places.googleapis.com",
+    "street-view-image-backend.googleapis.com",
+    "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
+    # フロントエンド用API
+    "maps-ios-backend.googleapis.com",
+    "maps-android-backend.googleapis.com",
+    "maps-backend.googleapis.com",
   ]
 }
 
@@ -151,6 +158,7 @@ locals {
       id           = "backend-api-key"
       display_name = "backend-api-key"
       target_services = [
+        "places.googleapis.com",
         "street-view-image-backend.googleapis.com",
         "directions-backend.googleapis.com",
       ]

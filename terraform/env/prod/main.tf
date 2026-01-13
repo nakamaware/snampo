@@ -24,15 +24,6 @@ module "snampo_prod" {
 
   project_id   = local.project_id
   project_name = local.project_name
-  # 有効化するAPI
-  api_list = [
-    # アプリケーション用API
-    "street-view-image-backend.googleapis.com",
-    "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
-    "maps-ios-backend.googleapis.com",
-    "maps-android-backend.googleapis.com",
-    "maps-backend.googleapis.com",
-  ]
   # グループの権限
   group_iam_config = [
     {
