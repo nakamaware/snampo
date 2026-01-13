@@ -98,6 +98,7 @@ locals {
       roles = [
         "roles/editor",
         "roles/resourcemanager.projectIamAdmin",
+        "roles/owner",
       ]
     },
   ]
