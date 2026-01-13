@@ -192,16 +192,13 @@ module "secret_manager" {
   depends_on = [module.google_api_keys]
 
   project_id = var.project_id
-  # 登録するシークレット
-  secrets = concat(
-    # APIキー
-    [
-      for key, val in module.google_api_keys.key_strings : {
-        name        = key
-        secret_data = val
-      }
-    ],
-  )
+  # 登録するシークレット（APIキーに限定）
+  secrets = [
+    for key, val in module.google_api_keys.key_strings : {
+      name        = key
+      secret_data = val
+    }
+  ]
   # シークレットの保管場所
   user_managed_replication = {
     for key, val in module.google_api_keys.key_strings : key => [{
