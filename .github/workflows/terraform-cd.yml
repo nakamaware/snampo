@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CD - Terraform
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+      - '!terraform/**.md'
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
+jobs:
+  check-diff:
+    uses: ./.github/workflows/terraform-diff-check.yml
+    with:
+      source_ref: HEAD^
+      target_ref: HEAD
+  
+  terraform-cd:
+    name: Terraform CD
+    needs: check-diff
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
+    environment: ${{ matrix.env }}
+    defaults:
+      run:
+        working-directory: terraform/env/${{ matrix.env }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Authenticate to GCP
+        uses: "google-github-actions/auth@v3"
+        with:
+          workload_identity_provider: ${{ secrets.GCP_SNAMPO_WIP_ID }}
+          service_account: ${{ vars.GCP_SNAMPO_TERRAFORM_SA }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve

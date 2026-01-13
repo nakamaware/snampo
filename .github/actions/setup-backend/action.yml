@@ -1,8 +1,9 @@
-name: 'Setup Backend'
-description: 'Setup Python environment with uv for backend. Installs dependencies and configures caching.'
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
+name: Setup Backend
+description: Setup Python environment with uv for backend. Installs dependencies and configures caching.
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Setup uv
       uses: astral-sh/setup-uv@v7

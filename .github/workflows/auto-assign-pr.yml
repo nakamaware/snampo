@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Auto Assign PR
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kentaro-m/auto-assign-action@v2.0.0
