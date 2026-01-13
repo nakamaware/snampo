@@ -25,7 +25,7 @@ module "project_services" {
   version = "~> 18.2"
 
   project_id = var.project_id
-  activate_apis = concat(
+  activate_apis = distinct(
     local.default_api_list,
     var.api_list,
   )
@@ -68,7 +68,7 @@ module "service_account" {
   source     = "../gcp/service-account"
   depends_on = [module.project_services]
 
-  service_account_list = concat(
+  service_account_list = distinct(
     local.default_service_account_list,
     var.service_account_list,
   )
@@ -108,11 +108,11 @@ module "iam_members" {
   depends_on = [module.service_account]
 
   project_id = var.project_id
-  group_iam_config = concat(
+  group_iam_config = distinct(
     local.default_group_iam_config,
     var.group_iam_config,
   )
-  service_account_iam_config = concat(
+  service_account_iam_config = distinct(
     local.default_service_account_iam_config,
     var.service_account_iam_config,
   )
@@ -145,7 +145,7 @@ module "workload_identity" {
       repo_owner  = "nakamaware"
     }
   ]
-  sa_gh_repo_bindings = concat(
+  sa_gh_repo_bindings = distinct(
     local.default_sa_gh_repo_binding_list,
     var.sa_gh_repo_binding_list,
   )
@@ -179,7 +179,7 @@ module "google_api_keys" {
   source     = "../gcp/api-key"
   depends_on = [module.project_services]
 
-  api_keys = concat(
+  api_keys = distinct(
     local.default_api_key_list,
     var.api_keys
   )
@@ -192,16 +192,13 @@ module "secret_manager" {
   depends_on = [module.google_api_keys]
 
   project_id = var.project_id
-  # 登録するシークレット
-  secrets = concat(
-    # APIキー
-    [
-      for key, val in module.google_api_keys.key_strings : {
-        name        = key
-        secret_data = val
-      }
-    ],
-  )
+  # 登録するシークレット（APIキーに限定）
+  secrets = [
+    for key, val in module.google_api_keys.key_strings : {
+      name        = key
+      secret_data = val
+    }
+  ]
   # シークレットの保管場所
   user_managed_replication = {
     for key, val in module.google_api_keys.key_strings : key => [{
@@ -221,7 +218,7 @@ locals {
     },
   ]
 
-  gar_repository_list = concat(
+  gar_repository_list = distinct(
     local.default_gar_repository_list,
     var.gar_repository_list
   )
@@ -282,7 +279,7 @@ locals {
     }
   ]
 
-  cloud_run_service_config_list = concat(
+  cloud_run_service_config_list = distinct(
     local.default_cloud_run_service_config_list,
     var.cloud_run_service_configs,
   )
