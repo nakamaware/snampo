@@ -94,6 +94,6 @@ jobs:
       - name: Deploy to Cloud Run
         uses: 'google-github-actions/deploy-cloudrun@v3'
         with:
-          service: 'snampo-backend'
+          service: ${{ vars.SNAMPO_SERVICE }}
           image: ${{ needs.build-and-push-docker-image.outputs.image_tag }}
           region: 'asia-northeast1'
