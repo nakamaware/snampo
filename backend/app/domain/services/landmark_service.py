@@ -44,7 +44,12 @@ def generate_equidistant_circle_points(
     Returns:
         円周上の点のリスト [(lat, lng), ...] (全周に散らす順番)
     """
-    # 点数を自動計算
+    # 点数は円周をちょうど良い数で分割できるよう自動的に決定する
+    # NOTE: int(target_distance * tolerance) >= MIN_SEARCH_RADIUS_M のとき、num_points は固定値
+    #   search_radius = target_distance * tolerance
+    #   num_points = math.ceil( 2π * target_distance / search_radius )
+    #              = math.ceil( 2π * target_distance / (target_distance * tolerance) )
+    #              = math.ceil( 2π / tolerance )
     num_points = max(6, math.ceil(2 * math.pi * target_distance / search_radius))
 
     # 全周に散らす順番のインデックスを生成
