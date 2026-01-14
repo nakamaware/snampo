@@ -48,7 +48,7 @@ class LandmarkSearchService:
         Nearby APIでは注目度順で最大20件までしか取得できないため、段階的に取得する
 
         1. まずは中心地から指定した距離内のランドマークを20件検索
-        2. 円周上に等間隔の点を8つ生成し、それぞれの点から指定した距離内のランドマークを20件検索
+        2. 円周上に等間隔の点を動的に生成し、それぞれの点から指定した距離内のランドマークを20件検索
         3. 2つの検索結果を結合して、目標件数に達するまで繰り返す
 
         Args:
@@ -88,7 +88,7 @@ class LandmarkSearchService:
             )
             return []
 
-        # 2. 円周上に等間隔の点を8つ生成し、それぞれの点から指定した距離内のランドマークを検索
+        # 2. 円周上に等間隔の点を動的に生成し、それぞれの点から指定した距離内のランドマークを検索
         search_radius = max(MIN_SEARCH_RADIUS_M, int(target_distance_m * tolerance))
         circle_points = generate_equidistant_circle_points(center, target_distance_m, search_radius)
 
