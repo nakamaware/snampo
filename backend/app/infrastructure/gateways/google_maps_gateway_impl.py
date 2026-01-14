@@ -223,13 +223,14 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             dict: メタデータ
         """
         lat_float, lng_float = coordinate.to_float_tuple()
-        url = (
-            f"https://maps.googleapis.com/maps/api/streetview/metadata"
-            f"?location={lat_float},{lng_float}&key={GOOGLE_API_KEY}"
-        )
+        url = "https://maps.googleapis.com/maps/api/streetview/metadata"
+        params = {
+            "location": f"{lat_float},{lng_float}",
+            "key": GOOGLE_API_KEY,
+        }
 
         try:
-            metadata_response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
+            metadata_response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
             metadata_response.raise_for_status()
             return metadata_response.json()
         except Timeout as e:
