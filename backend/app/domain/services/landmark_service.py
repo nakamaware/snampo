@@ -11,6 +11,24 @@ from geopy.distance import geodesic
 from app.domain.value_objects import Coordinate
 
 
+def calculate_search_radius(
+    target_distance_m: int,
+    tolerance: float,
+    min_search_radius: int,
+) -> int:
+    """検索半径を計算
+
+    Args:
+        target_distance_m: 目標距離 (メートル)
+        tolerance: 許容誤差 (0-1の範囲)
+        min_search_radius: 最小検索半径 (メートル)
+
+    Returns:
+        検索半径 (メートル)
+    """
+    return max(min_search_radius, int(target_distance_m * tolerance))
+
+
 def generate_equidistant_circle_points(
     center: Coordinate,
     target_distance: int,
