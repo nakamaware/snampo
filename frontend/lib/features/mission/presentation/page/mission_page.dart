@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -12,6 +11,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
+import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// ミッションページを表示するウィジェット
 class MissionPage extends HookConsumerWidget {
@@ -149,31 +149,25 @@ class _MapViewState extends ConsumerState<MapView> {
     ref.watch(missionProvider(widget.radius)).whenData((missionInfo) {
       final encodedPolyline = missionInfo.overviewPolyline;
       if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
-        _decodePolyline(encodedPolyline);
+        final coordinates = decodePolyline(encodedPolyline);
+        if (coordinates.isNotEmpty) {
+          _polylineCoordinates.addAll(coordinates);
+
+          if (mounted) {
+            setState(() {
+              _polylines.add(
+                Polyline(
+                  polylineId: const PolylineId('poly'),
+                  points: _polylineCoordinates,
+                  color: Colors.blue,
+                  width: 3,
+                ),
+              );
+            });
+          }
+        }
       }
     });
-  }
-
-  Future<void> _decodePolyline(String encodedPolyline) async {
-    final result = PolylinePoints().decodePolyline(encodedPolyline);
-    if (result.isNotEmpty) {
-      for (final point in result) {
-        _polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      }
-
-      if (mounted) {
-        setState(() {
-          _polylines.add(
-            Polyline(
-              polylineId: const PolylineId('poly'),
-              points: _polylineCoordinates,
-              color: Colors.blue,
-              width: 3,
-            ),
-          );
-        });
-      }
-    }
   }
 
   @override
