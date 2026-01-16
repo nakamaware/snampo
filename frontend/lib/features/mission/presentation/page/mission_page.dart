@@ -35,7 +35,7 @@ class MissionPage extends HookConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
 
-    final missionAsyncValue = ref.watch(missionProvider(_radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(_radius));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
@@ -146,7 +146,7 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    ref.watch(missionProvider(widget.radius)).whenData((missionInfo) {
+    ref.watch(missionStoreProvider(widget.radius)).whenData((missionInfo) {
       final encodedPolyline = missionInfo.overviewPolyline;
       if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
         final coordinates = decodePolyline(encodedPolyline);
@@ -176,7 +176,7 @@ class _MapViewState extends ConsumerState<MapView> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    final missionAsyncValue = ref.watch(missionProvider(widget.radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(widget.radius));
     final missionInfo = missionAsyncValue.value;
     if (missionInfo == null) {
       return const SizedBox.shrink();
@@ -315,7 +315,7 @@ class SnapViewState extends ConsumerWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final missionAsyncValue = ref.watch(missionProvider(radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(radius));
 
     return missionAsyncValue.when(
       data: (missionInfo) {

@@ -10,41 +10,41 @@ part of 'mission_store.dart';
 // ignore_for_file: type=lint, type=warning
 /// ミッション情報を管理するストア
 
-@ProviderFor(MissionNotifier)
-final missionProvider = MissionNotifierFamily._();
+@ProviderFor(MissionStoreNotifier)
+final missionStoreProvider = MissionStoreNotifierFamily._();
 
 /// ミッション情報を管理するストア
-final class MissionNotifierProvider
-    extends $AsyncNotifierProvider<MissionNotifier, MissionEntity> {
+final class MissionStoreNotifierProvider
+    extends $AsyncNotifierProvider<MissionStoreNotifier, MissionEntity> {
   /// ミッション情報を管理するストア
-  MissionNotifierProvider._(
-      {required MissionNotifierFamily super.from,
+  MissionStoreNotifierProvider._(
+      {required MissionStoreNotifierFamily super.from,
       required Radius super.argument})
       : super(
           retry: null,
-          name: r'missionProvider',
+          name: r'missionStoreProvider',
           isAutoDispose: true,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
 
   @override
-  String debugGetCreateSourceHash() => _$missionNotifierHash();
+  String debugGetCreateSourceHash() => _$missionStoreNotifierHash();
 
   @override
   String toString() {
-    return r'missionProvider'
+    return r'missionStoreProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  MissionNotifier create() => MissionNotifier();
+  MissionStoreNotifier create() => MissionStoreNotifier();
 
   @override
   bool operator ==(Object other) {
-    return other is MissionNotifierProvider && other.argument == argument;
+    return other is MissionStoreNotifierProvider && other.argument == argument;
   }
 
   @override
@@ -53,18 +53,19 @@ final class MissionNotifierProvider
   }
 }
 
-String _$missionNotifierHash() => r'763b57933bc9c58c6a36c7c16b5f2d36ed2b651e';
+String _$missionStoreNotifierHash() =>
+    r'4658451a214eee4efbfb590886769417bbef363a';
 
 /// ミッション情報を管理するストア
 
-final class MissionNotifierFamily extends $Family
+final class MissionStoreNotifierFamily extends $Family
     with
-        $ClassFamilyOverride<MissionNotifier, AsyncValue<MissionEntity>,
+        $ClassFamilyOverride<MissionStoreNotifier, AsyncValue<MissionEntity>,
             MissionEntity, FutureOr<MissionEntity>, Radius> {
-  MissionNotifierFamily._()
+  MissionStoreNotifierFamily._()
       : super(
           retry: null,
-          name: r'missionProvider',
+          name: r'missionStoreProvider',
           dependencies: null,
           $allTransitiveDependencies: null,
           isAutoDispose: true,
@@ -72,18 +73,18 @@ final class MissionNotifierFamily extends $Family
 
   /// ミッション情報を管理するストア
 
-  MissionNotifierProvider call(
+  MissionStoreNotifierProvider call(
     Radius radius,
   ) =>
-      MissionNotifierProvider._(argument: radius, from: this);
+      MissionStoreNotifierProvider._(argument: radius, from: this);
 
   @override
-  String toString() => r'missionProvider';
+  String toString() => r'missionStoreProvider';
 }
 
 /// ミッション情報を管理するストア
 
-abstract class _$MissionNotifier extends $AsyncNotifier<MissionEntity> {
+abstract class _$MissionStoreNotifier extends $AsyncNotifier<MissionEntity> {
   late final _$args = ref.$arg as Radius;
   Radius get radius => _$args;
 

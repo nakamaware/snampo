@@ -7,7 +7,7 @@ part 'mission_store.g.dart';
 
 /// ミッション情報を管理するストア
 @riverpod
-class MissionNotifier extends _$MissionNotifier {
+class MissionStoreNotifier extends _$MissionStoreNotifier {
   @override
   Future<MissionEntity> build(Radius radius) async {
     final useCase = ref.read(getMissionUseCaseProvider);
