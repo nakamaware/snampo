@@ -359,11 +359,7 @@ class AnswerImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    log('answer image utf8 is');
-    log(imageBase64);
     final imageUint8 = base64Decode(imageBase64);
-    log('imageUint8 is');
-    log(imageUint8.toString());
     return SizedBox(
       width: 150,
       height: 150,
