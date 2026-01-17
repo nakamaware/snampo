@@ -17,16 +17,16 @@ final missionStoreProvider = MissionStoreNotifierFamily._();
 final class MissionStoreNotifierProvider
     extends $AsyncNotifierProvider<MissionStoreNotifier, MissionEntity> {
   /// ミッション情報を管理するストア
-  MissionStoreNotifierProvider._(
-      {required MissionStoreNotifierFamily super.from,
-      required Radius super.argument})
-      : super(
-          retry: null,
-          name: r'missionStoreProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  MissionStoreNotifierProvider._({
+    required MissionStoreNotifierFamily super.from,
+    required Radius super.argument,
+  }) : super(
+         retry: null,
+         name: r'missionStoreProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$missionStoreNotifierHash();
@@ -60,22 +60,25 @@ String _$missionStoreNotifierHash() =>
 
 final class MissionStoreNotifierFamily extends $Family
     with
-        $ClassFamilyOverride<MissionStoreNotifier, AsyncValue<MissionEntity>,
-            MissionEntity, FutureOr<MissionEntity>, Radius> {
+        $ClassFamilyOverride<
+          MissionStoreNotifier,
+          AsyncValue<MissionEntity>,
+          MissionEntity,
+          FutureOr<MissionEntity>,
+          Radius
+        > {
   MissionStoreNotifierFamily._()
-      : super(
-          retry: null,
-          name: r'missionStoreProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'missionStoreProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// ミッション情報を管理するストア
 
-  MissionStoreNotifierProvider call(
-    Radius radius,
-  ) =>
+  MissionStoreNotifierProvider call(Radius radius) =>
       MissionStoreNotifierProvider._(argument: radius, from: this);
 
   @override
@@ -88,22 +91,19 @@ abstract class _$MissionStoreNotifier extends $AsyncNotifier<MissionEntity> {
   late final _$args = ref.$arg as Radius;
   Radius get radius => _$args;
 
-  FutureOr<MissionEntity> build(
-    Radius radius,
-  );
+  FutureOr<MissionEntity> build(Radius radius);
   @$mustCallSuper
   @override
   void runBuild() {
     final ref = this.ref as $Ref<AsyncValue<MissionEntity>, MissionEntity>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<MissionEntity>, MissionEntity>,
-        AsyncValue<MissionEntity>,
-        Object?,
-        Object?>;
-    element.handleCreate(
-        ref,
-        () => build(
-              _$args,
-            ));
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<MissionEntity>, MissionEntity>,
+              AsyncValue<MissionEntity>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
   }
 }

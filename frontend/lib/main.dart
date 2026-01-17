@@ -29,8 +29,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 34, 255, 38),
         ),
-        textTheme:
-            GoogleFonts.sawarabiGothicTextTheme(Theme.of(context).textTheme),
+        textTheme: GoogleFonts.sawarabiGothicTextTheme(
+          Theme.of(context).textTheme,
+        ),
       ),
       routerConfig: appRouter,
     );

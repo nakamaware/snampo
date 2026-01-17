@@ -9,10 +9,7 @@ class GetMissionUseCase {
   ///
   /// [_locationService] は位置情報サービス
   /// [_repository] はミッションリポジトリ
-  GetMissionUseCase(
-    this._locationService,
-    this._repository,
-  );
+  GetMissionUseCase(this._locationService, this._repository);
 
   final ILocationService _locationService;
   final IMissionRepository _repository;

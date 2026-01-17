@@ -11,10 +11,7 @@ abstract class Coordinate with _$Coordinate {
   /// [longitude] は経度（-180から180の範囲）
   ///
   /// 範囲外の値が渡された場合は[ArgumentError]をスローします
-  factory Coordinate({
-    required double latitude,
-    required double longitude,
-  }) {
+  factory Coordinate({required double latitude, required double longitude}) {
     if (latitude < -90 || latitude > 90) {
       throw ArgumentError.value(
         latitude,
@@ -29,10 +26,7 @@ abstract class Coordinate with _$Coordinate {
         '経度は-180から180の範囲である必要があります',
       );
     }
-    return Coordinate.internal(
-      latitude: latitude,
-      longitude: longitude,
-    );
+    return Coordinate.internal(latitude: latitude, longitude: longitude);
   }
   const Coordinate._();
 

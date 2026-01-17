@@ -16,10 +16,7 @@ class SetupPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'SETUP',
-          style: textstyle,
-        ),
+        title: Text('SETUP', style: textstyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -65,9 +62,7 @@ class _SliderWidgetState extends State<SliderWidget> {
               });
             },
           ),
-          const SizedBox(
-            height: 20,
-          ),
+          const SizedBox(height: 20),
           SubmitButton(radius: slidervalue),
         ],
       ),
@@ -80,10 +75,7 @@ class SubmitButton extends StatefulWidget {
   /// [SubmitButton] ウィジェットを作成します。
   ///
   /// [radius] はミッションの検索半径です。
-  const SubmitButton({
-    required this.radius,
-    super.key,
-  });
+  const SubmitButton({required this.radius, super.key});
 
   /// ミッションの検索半径。
   final Radius radius;

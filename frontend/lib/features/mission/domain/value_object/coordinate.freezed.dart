@@ -11,309 +11,264 @@ part of 'coordinate.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$Coordinate {
-  double get latitude;
-  double get longitude;
 
-  /// Create a copy of Coordinate
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $CoordinateCopyWith<Coordinate> get copyWith =>
-      _$CoordinateCopyWithImpl<Coordinate>(this as Coordinate, _$identity);
+ double get latitude; double get longitude;
+/// Create a copy of Coordinate
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CoordinateCopyWith<Coordinate> get copyWith => _$CoordinateCopyWithImpl<Coordinate>(this as Coordinate, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is Coordinate &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
-  }
 
-  @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
 
-  @override
-  String toString() {
-    return 'Coordinate(latitude: $latitude, longitude: $longitude)';
-  }
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coordinate&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,latitude,longitude);
+
+@override
+String toString() {
+  return 'Coordinate(latitude: $latitude, longitude: $longitude)';
+}
+
+
 }
 
 /// @nodoc
-abstract mixin class $CoordinateCopyWith<$Res> {
-  factory $CoordinateCopyWith(
-          Coordinate value, $Res Function(Coordinate) _then) =
-      _$CoordinateCopyWithImpl;
-  @useResult
-  $Res call({double latitude, double longitude});
-}
+abstract mixin class $CoordinateCopyWith<$Res>  {
+  factory $CoordinateCopyWith(Coordinate value, $Res Function(Coordinate) _then) = _$CoordinateCopyWithImpl;
+@useResult
+$Res call({
+ double latitude, double longitude
+});
 
+
+
+
+}
 /// @nodoc
-class _$CoordinateCopyWithImpl<$Res> implements $CoordinateCopyWith<$Res> {
+class _$CoordinateCopyWithImpl<$Res>
+    implements $CoordinateCopyWith<$Res> {
   _$CoordinateCopyWithImpl(this._self, this._then);
 
   final Coordinate _self;
   final $Res Function(Coordinate) _then;
 
-  /// Create a copy of Coordinate
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? latitude = null,
-    Object? longitude = null,
-  }) {
-    return _then(_self.copyWith(
-      latitude: null == latitude
-          ? _self.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _self.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
-  }
+/// Create a copy of Coordinate
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? latitude = null,Object? longitude = null,}) {
+  return _then(_self.copyWith(
+latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
 }
+
+}
+
 
 /// Adds pattern-matching-related methods to [Coordinate].
 extension CoordinatePatterns on Coordinate {
-  /// A variant of `map` that fallback to returning `orElse`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_Coordinate value)? internal,
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate() when internal != null:
-        return internal(_that);
-      case _:
-        return orElse();
-    }
-  }
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Coordinate value)?  internal,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Coordinate() when internal != null:
+return internal(_that);case _:
+  return orElse();
 
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// Callbacks receives the raw object, upcasted.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case final Subclass2 value:
-  ///     return ...;
-  /// }
-  /// ```
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_Coordinate value) internal,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate():
-        return internal(_that);
-      case _:
-        throw StateError('Unexpected subclass');
-    }
-  }
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Coordinate value)  internal,}){
+final _that = this;
+switch (_that) {
+case _Coordinate():
+return internal(_that);case _:
+  throw StateError('Unexpected subclass');
 
-  /// A variant of `map` that fallback to returning `null`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_Coordinate value)? internal,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate() when internal != null:
-        return internal(_that);
-      case _:
-        return null;
-    }
-  }
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Coordinate value)?  internal,}){
+final _that = this;
+switch (_that) {
+case _Coordinate() when internal != null:
+return internal(_that);case _:
+  return null;
 
-  /// A variant of `when` that fallback to an `orElse` callback.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double latitude, double longitude)? internal,
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate() when internal != null:
-        return internal(_that.latitude, _that.longitude);
-      case _:
-        return orElse();
-    }
-  }
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double latitude,  double longitude)?  internal,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Coordinate() when internal != null:
+return internal(_that.latitude,_that.longitude);case _:
+  return orElse();
 
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// As opposed to `map`, this offers destructuring.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case Subclass2(:final field2):
-  ///     return ...;
-  /// }
-  /// ```
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(double latitude, double longitude) internal,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate():
-        return internal(_that.latitude, _that.longitude);
-      case _:
-        throw StateError('Unexpected subclass');
-    }
-  }
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double latitude,  double longitude)  internal,}) {final _that = this;
+switch (_that) {
+case _Coordinate():
+return internal(_that.latitude,_that.longitude);case _:
+  throw StateError('Unexpected subclass');
 
-  /// A variant of `when` that fallback to returning `null`
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(double latitude, double longitude)? internal,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case _Coordinate() when internal != null:
-        return internal(_that.latitude, _that.longitude);
-      case _:
-        return null;
-    }
-  }
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double latitude,  double longitude)?  internal,}) {final _that = this;
+switch (_that) {
+case _Coordinate() when internal != null:
+return internal(_that.latitude,_that.longitude);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
+
 
 class _Coordinate extends Coordinate {
-  const _Coordinate({required this.latitude, required this.longitude})
-      : super._();
+  const _Coordinate({required this.latitude, required this.longitude}): super._();
+  
 
-  @override
-  final double latitude;
-  @override
-  final double longitude;
+@override final  double latitude;
+@override final  double longitude;
 
-  /// Create a copy of Coordinate
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  _$CoordinateCopyWith<_Coordinate> get copyWith =>
-      __$CoordinateCopyWithImpl<_Coordinate>(this, _$identity);
+/// Create a copy of Coordinate
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CoordinateCopyWith<_Coordinate> get copyWith => __$CoordinateCopyWithImpl<_Coordinate>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _Coordinate &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
-  }
 
-  @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
 
-  @override
-  String toString() {
-    return 'Coordinate.internal(latitude: $latitude, longitude: $longitude)';
-  }
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coordinate&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,latitude,longitude);
+
+@override
+String toString() {
+  return 'Coordinate.internal(latitude: $latitude, longitude: $longitude)';
+}
+
+
 }
 
 /// @nodoc
-abstract mixin class _$CoordinateCopyWith<$Res>
-    implements $CoordinateCopyWith<$Res> {
-  factory _$CoordinateCopyWith(
-          _Coordinate value, $Res Function(_Coordinate) _then) =
-      __$CoordinateCopyWithImpl;
-  @override
-  @useResult
-  $Res call({double latitude, double longitude});
-}
+abstract mixin class _$CoordinateCopyWith<$Res> implements $CoordinateCopyWith<$Res> {
+  factory _$CoordinateCopyWith(_Coordinate value, $Res Function(_Coordinate) _then) = __$CoordinateCopyWithImpl;
+@override @useResult
+$Res call({
+ double latitude, double longitude
+});
 
+
+
+
+}
 /// @nodoc
-class __$CoordinateCopyWithImpl<$Res> implements _$CoordinateCopyWith<$Res> {
+class __$CoordinateCopyWithImpl<$Res>
+    implements _$CoordinateCopyWith<$Res> {
   __$CoordinateCopyWithImpl(this._self, this._then);
 
   final _Coordinate _self;
   final $Res Function(_Coordinate) _then;
 
-  /// Create a copy of Coordinate
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? latitude = null,
-    Object? longitude = null,
-  }) {
-    return _then(_Coordinate(
-      latitude: null == latitude
-          ? _self.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _self.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
-  }
+/// Create a copy of Coordinate
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? latitude = null,Object? longitude = null,}) {
+  return _then(_Coordinate(
+latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
 }
 
 // dart format on

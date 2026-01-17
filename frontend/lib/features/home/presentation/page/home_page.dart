@@ -17,9 +17,7 @@ class HomePage extends StatelessWidget {
               width: 300,
               child: Image.asset('images/snampo.png', fit: BoxFit.contain),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             const StartButton(),
             const SizedBox(height: 10), // 2つの間を空ける
             const HistoryButton(),
@@ -33,9 +31,7 @@ class HomePage extends StatelessWidget {
 /// スタートボタンウィジェット
 class StartButton extends StatelessWidget {
   /// StartButtonのコンストラクタ
-  const StartButton({
-    super.key,
-  });
+  const StartButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +59,7 @@ class StartButton extends StatelessWidget {
 /// 履歴ボタンウィジェット
 class HistoryButton extends StatelessWidget {
   /// HistoryButtonのコンストラクタ
-  const HistoryButton({
-    super.key,
-  });
+  const HistoryButton({super.key});
 
   @override
   Widget build(BuildContext context) {

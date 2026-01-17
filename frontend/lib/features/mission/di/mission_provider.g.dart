@@ -15,21 +15,25 @@ final locationServiceProvider = LocationServiceProvider._();
 
 /// 位置情報サービスのプロバイダー
 
-final class LocationServiceProvider extends $FunctionalProvider<
-    ILocationService,
-    ILocationService,
-    ILocationService> with $Provider<ILocationService> {
+final class LocationServiceProvider
+    extends
+        $FunctionalProvider<
+          ILocationService,
+          ILocationService,
+          ILocationService
+        >
+    with $Provider<ILocationService> {
   /// 位置情報サービスのプロバイダー
   LocationServiceProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'locationServiceProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'locationServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$locationServiceHash();
@@ -62,21 +66,25 @@ final missionRepositoryProvider = MissionRepositoryProvider._();
 
 /// ミッションリポジトリのプロバイダー
 
-final class MissionRepositoryProvider extends $FunctionalProvider<
-    IMissionRepository,
-    IMissionRepository,
-    IMissionRepository> with $Provider<IMissionRepository> {
+final class MissionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          IMissionRepository,
+          IMissionRepository,
+          IMissionRepository
+        >
+    with $Provider<IMissionRepository> {
   /// ミッションリポジトリのプロバイダー
   MissionRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'missionRepositoryProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'missionRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$missionRepositoryHash();
@@ -84,8 +92,8 @@ final class MissionRepositoryProvider extends $FunctionalProvider<
   @$internal
   @override
   $ProviderElement<IMissionRepository> $createElement(
-          $ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   IMissionRepository create(Ref ref) {
@@ -110,21 +118,25 @@ final getMissionUseCaseProvider = GetMissionUseCaseProvider._();
 
 /// ミッション情報を取得するユースケースのプロバイダー
 
-final class GetMissionUseCaseProvider extends $FunctionalProvider<
-    GetMissionUseCase,
-    GetMissionUseCase,
-    GetMissionUseCase> with $Provider<GetMissionUseCase> {
+final class GetMissionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetMissionUseCase,
+          GetMissionUseCase,
+          GetMissionUseCase
+        >
+    with $Provider<GetMissionUseCase> {
   /// ミッション情報を取得するユースケースのプロバイダー
   GetMissionUseCaseProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'getMissionUseCaseProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getMissionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$getMissionUseCaseHash();
@@ -132,8 +144,8 @@ final class GetMissionUseCaseProvider extends $FunctionalProvider<
   @$internal
   @override
   $ProviderElement<GetMissionUseCase> $createElement(
-          $ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   GetMissionUseCase create(Ref ref) {

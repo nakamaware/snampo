@@ -19,7 +19,7 @@ class MissionPage extends HookConsumerWidget {
   ///
   /// [radius] はミッションの検索半径（メートル単位）
   MissionPage({required int radius, super.key})
-      : _radius = Radius(meters: radius);
+    : _radius = Radius(meters: radius);
 
   /// ミッションの検索半径
   final Radius _radius;
@@ -31,9 +31,7 @@ class MissionPage extends HookConsumerWidget {
     final textstyle = (theme.textTheme.displaySmall ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
-        .copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
+        .copyWith(color: theme.colorScheme.onPrimary);
 
     final missionAsyncValue = ref.watch(missionStoreProvider(_radius));
 
@@ -41,64 +39,50 @@ class MissionPage extends HookConsumerWidget {
       data: (missionInfo) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              'On MISSION',
-              style: textstyle,
-            ),
+            title: Text('On MISSION', style: textstyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
           body: Stack(
             children: [
-              MapView(
-                currentLocation: missionInfo.departure,
-                radius: _radius,
-              ),
+              MapView(currentLocation: missionInfo.departure, radius: _radius),
               SnapView(radius: _radius),
             ],
           ),
         );
       },
-      loading: () => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'On MISSION',
-            style: textstyle,
-          ),
-          centerTitle: true,
-          backgroundColor: theme.colorScheme.primary,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              LoadingAnimationWidget.staggeredDotsWave(
-                color: Colors.blue,
-                size: 100,
+      loading:
+          () => Scaffold(
+            appBar: AppBar(
+              title: Text('On MISSION', style: textstyle),
+              centerTitle: true,
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LoadingAnimationWidget.staggeredDotsWave(
+                    color: Colors.blue,
+                    size: 100,
+                  ),
+                  const Text('NOW LOADING'),
+                ],
               ),
-              const Text('NOW LOADING'),
-            ],
+            ),
           ),
-        ),
-      ),
       error: (error, stackTrace) {
         log('error: $error');
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              'On MISSION',
-              style: textstyle,
-            ),
+            title: Text('On MISSION', style: textstyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('エラーが発生しました'),
-                Text('$error'),
-              ],
+              children: [const Text('エラーが発生しました'), Text('$error')],
             ),
           ),
         );
@@ -229,10 +213,7 @@ class _MapViewState extends ConsumerState<MapView> {
 /// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({
-    required this.radius,
-    super.key,
-  });
+  const SnapView({required this.radius, super.key});
 
   /// ミッションの検索半径
   final Radius radius;
@@ -260,9 +241,7 @@ class SnapView extends StatelessWidget {
                   controller: scrollController,
                   child: Column(
                     children: [
-                      const SizedBox(
-                        height: 50,
-                      ),
+                      const SizedBox(height: 50),
                       SnapViewState(radius: radius),
                     ],
                   ),
@@ -298,10 +277,7 @@ class SnapView extends StatelessWidget {
 /// SnapView内でミッション情報を表示するウィジェット
 class SnapViewState extends ConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({
-    required this.radius,
-    super.key,
-  });
+  const SnapViewState({required this.radius, super.key});
 
   /// ミッションの検索半径
   final Radius radius;
@@ -324,10 +300,7 @@ class SnapViewState extends ConsumerWidget {
 
         return Column(
           children: [
-            Text(
-              'MISSION',
-              style: titelTextstyle,
-            ),
+            Text('MISSION', style: titelTextstyle),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -347,9 +320,7 @@ class SnapViewState extends ConsumerWidget {
                 const TakeSnap(spotIndex: 1),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary, // ボタンの背景色
@@ -371,9 +342,7 @@ class SnapViewState extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(
-        child: Text('エラーが発生しました: $error'),
-      ),
+      error: (error, stackTrace) => Center(child: Text('エラーが発生しました: $error')),
     );
   }
 }
@@ -383,10 +352,7 @@ class AnswerImage extends StatelessWidget {
   /// AnswerImageウィジェットのコンストラクタ
   ///
   /// [imageBase64] Base64エンコードされた画像データの文字列
-  const AnswerImage({
-    required this.imageBase64,
-    super.key,
-  });
+  const AnswerImage({required this.imageBase64, super.key});
 
   /// Base64エンコードされた画像データの文字列
   final String imageBase64;
@@ -417,10 +383,7 @@ class AnswerImage extends StatelessWidget {
 /// 写真を撮影するためのボタンを表示するウィジェット
 class TakeSnap extends StatefulWidget {
   /// TakeSnapウィジェットのコンストラクタ
-  const TakeSnap({
-    required this.spotIndex,
-    super.key,
-  });
+  const TakeSnap({required this.spotIndex, super.key});
 
   /// スポットのインデックス
   final int spotIndex;
@@ -447,18 +410,18 @@ class _TakeSnapState extends State<TakeSnap> {
   Widget build(BuildContext context) {
     return _image == null
         ? FloatingActionButton(
-            heroTag: 'take_snap_spot_${widget.spotIndex}',
-            onPressed: getImage,
-            child: const Icon(Icons.add_a_photo),
-          )
+          heroTag: 'take_snap_spot_${widget.spotIndex}',
+          onPressed: getImage,
+          child: const Icon(Icons.add_a_photo),
+        )
         : SizedBox(
-            width: 150,
-            height: 150,
-            child: SetImage(
-              // picture_name: "images/test1.jpeg",
-              picture: _image!,
-            ),
-          );
+          width: 150,
+          height: 150,
+          child: SetImage(
+            // picture_name: "images/test1.jpeg",
+            picture: _image!,
+          ),
+        );
   }
 }
 

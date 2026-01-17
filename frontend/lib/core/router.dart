@@ -7,14 +7,8 @@ import 'package:snampo/features/mission/presentation/page/setup_page.dart';
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/setup',
-      builder: (context, state) => const SetupPage(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
     GoRoute(
       path: '/mission/:radius',
       builder: (context, state) {
@@ -22,9 +16,6 @@ final GoRouter appRouter = GoRouter(
         return MissionPage(radius: radius);
       },
     ),
-    GoRoute(
-      path: '/result',
-      builder: (context, state) => const ResultPage(),
-    ),
+    GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
   ],
 );

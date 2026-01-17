@@ -10,10 +10,9 @@ import 'package:snampo_api/api.dart' as snampo_api;
 class MissionRepository implements IMissionRepository {
   /// MissionRepositoryのコンストラクタ
   MissionRepository({snampo_api.DefaultApi? generatedApi})
-      : _generatedApi = generatedApi ??
-            snampo_api.DefaultApi(
-              snampo_api.ApiClient(basePath: Env.apiBaseUrl),
-            );
+    : _generatedApi =
+          generatedApi ??
+          snampo_api.DefaultApi(snampo_api.ApiClient(basePath: Env.apiBaseUrl));
 
   final snampo_api.DefaultApi _generatedApi;
 
@@ -68,21 +67,20 @@ class MissionRepository implements IMissionRepository {
         ),
         imageBase64: response.destination.imageUtf8!,
       ),
-      waypoints: response.midpoints.map(
-        (midpoint) {
-          // waypointsのimageUtf8もnullチェック
-          if (midpoint.imageUtf8 == null || midpoint.imageUtf8!.isEmpty) {
-            throw Exception('通過地点の画像情報が取得できませんでした');
-          }
-          return ImageCoordinate(
-            coordinate: Coordinate(
-              latitude: midpoint.latitude.toDouble(),
-              longitude: midpoint.longitude.toDouble(),
-            ),
-            imageBase64: midpoint.imageUtf8!,
-          );
-        },
-      ).toList(),
+      waypoints:
+          response.midpoints.map((midpoint) {
+            // waypointsのimageUtf8もnullチェック
+            if (midpoint.imageUtf8 == null || midpoint.imageUtf8!.isEmpty) {
+              throw Exception('通過地点の画像情報が取得できませんでした');
+            }
+            return ImageCoordinate(
+              coordinate: Coordinate(
+                latitude: midpoint.latitude.toDouble(),
+                longitude: midpoint.longitude.toDouble(),
+              ),
+              imageBase64: midpoint.imageUtf8!,
+            );
+          }).toList(),
       overviewPolyline: response.overviewPolyline,
       radius: radius,
     );
