@@ -4,10 +4,11 @@ Google Maps APIへのアクセスを抽象化するポートです。
 """
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.value_objects import Coordinate, ImageSize
+from app.domain.value_objects import Coordinate, ImageSize, Landmark
 
 
 class StreetViewMetadata(BaseModel):
@@ -34,13 +35,17 @@ class GoogleMapsGateway(ABC):
 
     @abstractmethod
     def get_directions(
-        self, origin: Coordinate, destination: Coordinate
+        self,
+        origin: Coordinate,
+        destination: Coordinate,
+        waypoints: list[Coordinate] | None = None,
     ) -> tuple[list[Coordinate], str]:
         """ルート情報を取得
 
         Args:
             origin: 出発地の座標
             destination: 目的地の座標
+            waypoints: 経由地の座標リスト (通過点として扱われる)
 
         Returns:
             tuple[list[Coordinate], str]:
@@ -73,5 +78,29 @@ class GoogleMapsGateway(ABC):
 
         Returns:
             bytes: 画像データ
+        """
+        ...
+
+    @abstractmethod
+    def search_landmarks_nearby(
+        self,
+        coordinate: Coordinate,
+        radius: int,
+        included_types: list[str] | None = None,
+        rank_preference: Literal["POPULARITY", "DISTANCE"] = "POPULARITY",
+    ) -> list[Landmark]:
+        """Places API (New) でランドマーク検索
+
+        Args:
+            coordinate: 検索中心座標
+            radius: 検索半径 (メートル)
+            included_types: 検索対象のタイプリスト (Noneの場合はデフォルトタイプを使用)
+            rank_preference: ソート順 ("POPULARITY" または "DISTANCE")
+
+        Returns:
+            list[Landmark]: ランドマークのリスト
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
         """
         ...
