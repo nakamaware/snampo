@@ -22,11 +22,7 @@ build-backend = "hatchling.build"
 packages = ["app"]
 
 [dependency-groups]
-dev = [
-    "ruff>=0.14.10",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-]
+dev = ["ruff>=0.14.10", "pytest>=9.0.2", "pytest-cov>=7.0.0"]
 
 [tool.ruff]
 line-length = 100
@@ -94,6 +90,13 @@ known-first-party = ["app"]
 [tool.ruff.lint.per-file-ignores]
 # テストファイルではassert文の使用を許可、関数名に日本語を使用可能にする
 "tests/**/*.py" = ["S101", "N802"]
+
+[tool.uv]
+# 間接依存のバージョンを指定する
+# ref: https://docs.astral.sh/uv/reference/settings/#constraint-dependencies
+constraint-dependencies = [
+    "urllib3>=2.6.3", # CVE-2026-21441 (https://github.com/nakamaware/snampo/security/dependabot/1)
+]
 
 [tool.pyright]
 pythonVersion = "3.13"
