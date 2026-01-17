@@ -216,6 +216,8 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
     def _fetch_street_view_metadata(self, coordinate: Coordinate) -> dict:
         """Street View Metadata APIからメタデータを取得
 
+        API Doc: https://developers.google.com/maps/documentation/streetview/metadata?hl=ja
+
         Args:
             coordinate: 座標
 
@@ -226,6 +228,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         url = "https://maps.googleapis.com/maps/api/streetview/metadata"
         params = {
             "location": f"{lat_float},{lng_float}",
+            "source": "outdoor",
             "key": GOOGLE_API_KEY,
         }
 
@@ -263,6 +266,8 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
     def _fetch_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
         """Street View Static APIから画像を取得
 
+        API Doc: https://developers.google.com/maps/documentation/streetview/request-streetview?hl=ja
+
         Args:
             coordinate: 座標
             image_size: 画像サイズ
@@ -275,6 +280,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         params = {
             "size": image_size.to_string(),
             "location": f"{lat_float},{lng_float}",
+            "source": "outdoor",
             "key": GOOGLE_API_KEY,
         }
 

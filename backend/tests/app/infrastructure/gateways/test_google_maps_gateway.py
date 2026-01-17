@@ -290,6 +290,30 @@ class TestGetStreetViewMetadata:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
+    def test_メタデータAPIリクエストにsource_outdoorパラメータが含まれること(self) -> None:
+        """メタデータAPIリクエストに source=outdoor パラメータが含まれることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        mock_response_data = {
+            "status": "OK",
+            "location": {"lat": 35.6812, "lng": 139.7671},
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_street_view_metadata(coordinate)
+
+            # リクエストパラメータに source=outdoor が含まれることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            assert "params" in call_args.kwargs
+            assert call_args.kwargs["params"]["source"] == "outdoor"
+
 
 class TestGetStreetViewImage:
     """GetStreetViewImageのテスト"""
@@ -362,6 +386,28 @@ class TestGetStreetViewImage:
 
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
+
+    def test_画像APIリクエストにsource_outdoorパラメータが含まれること(self) -> None:
+        """画像APIリクエストに source=outdoor パラメータが含まれることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_street_view_image(coordinate, image_size)
+
+            # リクエストパラメータに source=outdoor が含まれることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            assert "params" in call_args.kwargs
+            assert call_args.kwargs["params"]["source"] == "outdoor"
 
 
 class TestSearchLandmarksNearby:
