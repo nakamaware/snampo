@@ -64,6 +64,9 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 )
             )
         )
+        self._snap_to_road_cached = functools.lru_cache(maxsize=128)(
+            lambda coordinate: self._snap_to_road(coordinate)
+        )
 
     def get_directions(
         self,
@@ -462,4 +465,80 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             raise ExternalServiceError(
                 f"Failed to retrieve landmarks: {e}",
                 service_name="Places API",
+            ) from e
+
+    def snap_to_road(self, coordinate: Coordinate) -> Coordinate | None:
+        """Roads API (Nearest Roads) を使用して、指定された座標を最寄りの道路中心線にスナップする
+
+        Args:
+            coordinate: スナップする座標
+
+        Returns:
+            Coordinate | None: スナップされた座標。道路が見つからない場合は None
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
+            ExternalServiceTimeoutError: API呼び出しがタイムアウトした場合
+        """
+        return self._snap_to_road_cached(coordinate)
+
+    def _snap_to_road(self, coordinate: Coordinate) -> Coordinate | None:
+        """Roads API (Nearest Roads) から座標を道路上にスナップ
+
+        API Doc: https://developers.google.com/maps/documentation/roads/nearest?hl=ja
+
+        Args:
+            coordinate: スナップする座標
+
+        Returns:
+            Coordinate | None: スナップされた座標。道路が見つからない場合は None
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
+            ExternalServiceTimeoutError: API呼び出しがタイムアウトした場合
+        """
+        lat_float, lng_float = coordinate.to_float_tuple()
+        url = "https://roads.googleapis.com/v1/nearestRoads"
+        params = {
+            "points": f"{lat_float},{lng_float}",
+            "key": GOOGLE_API_KEY,
+        }
+
+        try:
+            response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+            response.raise_for_status()
+            data = response.json()
+
+            snapped_points = data.get("snappedPoints", [])
+            if not snapped_points:
+                logger.info(f"No road found near coordinate: {coordinate}")
+                return None
+
+            # 0番目の座標を使用する
+            location = snapped_points[0].get("location", {})
+            if not isinstance(location, dict):
+                logger.warning(f"Invalid location data in Roads API response: {location}")
+                return None
+
+            lat_value = location.get("latitude")
+            lng_value = location.get("longitude")
+            if lat_value is None or lng_value is None:
+                logger.warning(f"Missing latitude or longitude in Roads API response: {location}")
+                return None
+
+            snapped_coordinate = Coordinate(latitude=float(lat_value), longitude=float(lng_value))
+            logger.info(f"Snapped coordinate {coordinate} to {snapped_coordinate}")
+            return snapped_coordinate
+
+        except Timeout as e:
+            logger.error("Timeout error while snapping coordinate to road.")
+            raise ExternalServiceTimeoutError(
+                "Request timeout: Failed to snap coordinate to road",
+                service_name="Roads API",
+            ) from e
+        except RequestException as e:
+            logger.error(f"Request error while snapping coordinate to road: {e}")
+            raise ExternalServiceError(
+                f"Failed to snap coordinate to road: {e}",
+                service_name="Roads API",
             ) from e

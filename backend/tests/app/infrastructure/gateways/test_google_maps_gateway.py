@@ -410,6 +410,122 @@ class TestGetStreetViewImage:
             assert call_args.kwargs["params"]["source"] == "outdoor"
 
 
+class TestSnapToRoad:
+    """SnapToRoadのテスト"""
+
+    def test_道路上にスナップできること(self) -> None:
+        """Roads APIが成功した場合にスナップされた座標が返されることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        mock_response_data = {
+            "snappedPoints": [
+                {
+                    "location": {"latitude": 35.6813, "longitude": 139.7672},
+                    "originalIndex": 0,
+                    "placeId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                }
+            ]
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            result = gateway.snap_to_road(coordinate)
+
+            assert result is not None
+            assert result.latitude == 35.6813
+            assert result.longitude == 139.7672
+
+    def test_道路が見つからない場合はNoneを返すこと(self) -> None:
+        """道路が見つからない場合 (snappedPointsが空) にNoneが返されることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        mock_response_data = {"snappedPoints": []}
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            result = gateway.snap_to_road(coordinate)
+
+            assert result is None
+
+    def test_同じ座標でキャッシュが効くこと(self) -> None:
+        """同じ座標で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        mock_response_data = {
+            "snappedPoints": [
+                {
+                    "location": {"latitude": 35.6813, "longitude": 139.7672},
+                    "originalIndex": 0,
+                    "placeId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                }
+            ]
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # 同じ引数で3回呼び出す
+            gateway.snap_to_road(coordinate)
+            gateway.snap_to_road(coordinate)
+            gateway.snap_to_road(coordinate)
+
+            # APIリクエストは1回だけ呼ばれるべき
+            assert mock_get.call_count == 1
+
+    def test_タイムアウト時は例外を発生させること(self) -> None:
+        """Timeoutエラー時にExternalServiceTimeoutErrorを発生させることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            from requests.exceptions import Timeout
+
+            mock_get.side_effect = Timeout("Request timeout")
+
+            gateway = GoogleMapsGatewayImpl()
+
+            with pytest.raises(Exception) as exc_info:
+                gateway.snap_to_road(coordinate)
+
+            # ExternalServiceTimeoutErrorが発生することを確認
+            from app.domain.exceptions import ExternalServiceTimeoutError
+
+            assert isinstance(exc_info.value, ExternalServiceTimeoutError)
+            assert exc_info.value.service_name == "Roads API"
+
+    def test_リクエストエラー時は例外を発生させること(self) -> None:
+        """RequestException時にExternalServiceErrorを発生させることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            from requests.exceptions import RequestException
+
+            mock_get.side_effect = RequestException("Request failed")
+
+            gateway = GoogleMapsGatewayImpl()
+
+            with pytest.raises(Exception) as exc_info:
+                gateway.snap_to_road(coordinate)
+
+            # ExternalServiceErrorが発生することを確認
+            assert isinstance(exc_info.value, ExternalServiceError)
+            assert exc_info.value.service_name == "Roads API"
+
+
 class TestSearchLandmarksNearby:
     """SearchLandmarksNearbyのテスト"""
 
