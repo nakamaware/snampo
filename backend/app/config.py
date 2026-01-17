@@ -7,19 +7,21 @@ import os
 
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# .envファイルから環境変数を読み込む
 load_dotenv()
 
-# Request timeout constant (in seconds)
+# リクエストタイムアウト定数 (秒)
 REQUEST_TIMEOUT_SECONDS = 15
 
-# Cache TTL constant (in seconds) - 1 hour
-CACHE_TTL_SECONDS = 3600
+# ルート生成のリトライ回数
+ROUTE_GENERATION_MAX_RETRY_COUNT = 3
 
-# Get Google API key from environment variable
+# キャッシュTTL定数 (秒) - 24時間
+CACHE_TTL_SECONDS = 86400
+
+# 環境変数からGoogle APIキーを取得
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise ValueError(
-        "GOOGLE_API_KEY environment variable is not set. "
-        "Please set it in your .env file or environment variables."
+        "GOOGLE_API_KEY環境変数が設定されていません。.envファイルまたは環境変数に設定してください。"
     )

@@ -17,18 +17,9 @@ void main() {
   // final instance = DefaultApi();
 
   group('tests for DefaultApi', () {
-    // Get Street View Image
-    //
-    // Street View Image Metadata APIを使用して画像のメタデータを取得  Args:     latitude: 緯度     longitude: 経度     size: 画像サイズ  Returns:     StreetViewImageResponse: メタデータと画像データ
-    //
-    //Future<StreetViewImageResponse> getStreetViewImageStreetviewGet(num latitude, num longitude, { String size }) async
-    test('test getStreetViewImageStreetviewGet', () async {
-      // TODO
-    });
-
     // Route
     //
-    // ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)  Returns:     RouteResponse: ルート情報
+    // ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
     //
     //Future<RouteResponse> routeRoutePost(RouteRequest routeRequest) async
     test('test routeRoutePost', () async {
