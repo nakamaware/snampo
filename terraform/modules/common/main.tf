@@ -13,6 +13,7 @@ locals {
     "places.googleapis.com",
     "street-view-image-backend.googleapis.com",
     "directions-backend.googleapis.com", # TODO: Legacyになったので、Routes APIに置き換える。
+    "roads.googleapis.com",
     # フロントエンド用API
     "maps-ios-backend.googleapis.com",
     "maps-android-backend.googleapis.com",
@@ -161,6 +162,7 @@ locals {
         "places.googleapis.com",
         "street-view-image-backend.googleapis.com",
         "directions-backend.googleapis.com",
+        "roads.googleapis.com",
       ]
     },
     {

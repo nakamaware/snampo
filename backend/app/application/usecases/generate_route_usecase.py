@@ -98,6 +98,7 @@ class GenerateRouteUseCase:
             ExternalServiceError: 外部サービスエラーが発生した場合
             RouteGenerationError: ルート生成に失敗した場合
         """
+        # TODO: 全体的にロジックがわかりづらくなっているのでリファクタリングする
         try:
             # 1. 目的地のランドマーク検索 (指定距離付近のランドマークを検索)
             destination_landmarks = self.landmark_search_service.search_landmarks(
@@ -115,13 +116,12 @@ class GenerateRouteUseCase:
 
             # 画像が取得できる目的地を探す (ランダム順で試行)
             random.shuffle(destination_landmarks)
-            destination_landmark, destination_image = self._select_landmark_with_image(
-                destination_landmarks
-            )
+            _, destination_image = self._select_landmark_with_image(destination_landmarks)
+            destination_coordinate = destination_image.metadata_coordinate
 
             # 2. 中間地点付近のランドマーク検索
             midpoint_coordinate = coordinate_service.calculate_geodesic_midpoint(
-                current_coordinate, destination_landmark.coordinate
+                current_coordinate, destination_coordinate
             )
             midpoint_search_radius = max(300, radius_m // 4)  # (300m, 最大半径の1/4) の最大値
             midpoint_landmarks = self.google_maps_gateway.search_landmarks_nearby(
@@ -137,19 +137,19 @@ class GenerateRouteUseCase:
                 )
 
             # 画像が取得できる中間地点を探す (距離順で試行)
-            midpoint_landmark, midpoint_image = self._select_landmark_with_image(midpoint_landmarks)
-            midpoint_coordinate = midpoint_landmark.coordinate
+            _, midpoint_image = self._select_landmark_with_image(midpoint_landmarks)
+            midpoint_coordinate = midpoint_image.metadata_coordinate
 
             # 3. 現在地→目的地のルートを取得 (中間地点をwaypointsとして指定)
             _, overview_polyline = self.google_maps_gateway.get_directions(
                 current_coordinate,
-                destination_landmark.coordinate,
+                destination_coordinate,
                 waypoints=[midpoint_coordinate],
             )
 
             return RouteResultDto(
                 departure=current_coordinate,
-                destination=destination_landmark.coordinate,
+                destination=destination_coordinate,
                 midpoints=[midpoint_coordinate],
                 overview_polyline=overview_polyline,
                 midpoint_images=[(midpoint_coordinate, midpoint_image)],
@@ -221,9 +221,13 @@ class GenerateRouteUseCase:
         Raises:
             ExternalServiceValidationError: Street View画像が取得できない場合
         """
+        # ランドマークの座標だと屋内の画像が取得される可能性があるため、近くの道路上の座標を取得する
+        # NOTE: ただし道路の真下に地下道があると、地下道が出てしまうケースが多い
+        target_coordinate = self._get_nearest_road_coordinate(coordinate)
+
         # 対象座標にストリートビューが存在するかを確認するためにメタデータを取得
         try:
-            metadata = self.google_maps_gateway.get_street_view_metadata(coordinate)
+            metadata = self.google_maps_gateway.get_street_view_metadata(target_coordinate)
         except ExternalServiceValidationError as e:
             logger.error(f"Street View metadata validation failed: {e}")
             raise ExternalServiceValidationError(str(e), service_name="Street View API") from e
@@ -265,3 +269,33 @@ class GenerateRouteUseCase:
             original_coordinate=coordinate,
             image_data=image_content,
         )
+
+    def _get_nearest_road_coordinate(self, coordinate: Coordinate) -> Coordinate:
+        """座標の近くにある道路上の座標を取得する
+
+        Args:
+            coordinate: 対象座標
+
+        Returns:
+            Coordinate: 最寄りの道路上の座標、または元の座標 (道路が見つからない場合は元の座標)
+
+        Raises:
+            ExternalServiceError: Roads API呼び出しエラーが発生した場合
+            ExternalServiceTimeoutError: Roads API呼び出しがタイムアウトした場合
+        """
+        try:
+            snapped_coordinate = self.google_maps_gateway.snap_to_road(coordinate)
+            if snapped_coordinate is not None:
+                logger.info(
+                    f"Using nearest road coordinate {snapped_coordinate} "
+                    f"for Street View (original: {coordinate})"
+                )
+                return snapped_coordinate
+
+            logger.info(
+                f"No road found near {coordinate}, using original coordinate for Street View"
+            )
+            return coordinate
+        except (ExternalServiceError, ExternalServiceTimeoutError) as e:
+            logger.error(f"Roads API error while getting nearest road coordinate: {e}")
+            raise

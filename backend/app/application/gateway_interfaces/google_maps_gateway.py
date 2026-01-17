@@ -104,3 +104,19 @@ class GoogleMapsGateway(ABC):
             ExternalServiceError: API呼び出しエラーが発生した場合
         """
         ...
+
+    @abstractmethod
+    def snap_to_road(self, coordinate: Coordinate) -> Coordinate | None:
+        """Roads API (Nearest Roads) を使用して、指定された座標を最寄りの道路中心線にスナップする
+
+        Args:
+            coordinate: スナップする座標
+
+        Returns:
+            Coordinate | None: スナップされた座標。道路が見つからない場合は None
+
+        Raises:
+            ExternalServiceError: API呼び出しエラーが発生した場合
+            ExternalServiceTimeoutError: API呼び出しがタイムアウトした場合
+        """
+        ...
