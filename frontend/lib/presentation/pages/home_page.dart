@@ -126,7 +126,7 @@ class HistoryButton extends StatelessWidget {
         ),
       ),
       onPressed: () {
-        // TODO(kawayama): 履歴機能を実装する
+        context.push('/history');
       },
       child: Padding(
         padding: const EdgeInsets.all(20),

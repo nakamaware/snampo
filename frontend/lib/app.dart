@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:snampo/presentation/pages/history_detail_page.dart';
+import 'package:snampo/presentation/pages/history_list_page.dart';
 import 'package:snampo/presentation/pages/home_page.dart';
 import 'package:snampo/presentation/pages/mission_page.dart';
 import 'package:snampo/presentation/pages/result_page.dart';
@@ -54,6 +56,17 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/result',
       builder: (context, state) => const ResultPage(),
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryListPage(),
+    ),
+    GoRoute(
+      path: '/history/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return HistoryDetailPage(historyId: id);
+      },
     ),
   ],
 );

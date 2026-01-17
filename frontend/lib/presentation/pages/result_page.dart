@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:snampo/models/game_session.dart';
+import 'package:snampo/models/walk_history.dart';
 import 'package:snampo/presentation/controllers/game_session_controller.dart';
+import 'package:snampo/presentation/controllers/walk_history_controller.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -90,7 +93,20 @@ class HomeButton extends ConsumerWidget {
         foregroundColor: theme.colorScheme.onPrimary,
       ),
       onPressed: () async {
-        // ゲームセッションと写真状態をクリア (念のため)
+        // ゲームセッションを取得して履歴に保存
+        final session = await ref.read(gameSessionControllerProvider.future);
+        if (session != null && session.status == GameStatus.completed) {
+          try {
+            final history = WalkHistory.fromGameSession(session);
+            await ref
+                .read(walkHistoryControllerProvider.notifier)
+                .addHistory(history);
+          } catch (_) {
+            // 履歴の保存に失敗しても続行
+          }
+        }
+
+        // ゲームセッションと写真状態をクリア
         await ref.read(gameSessionControllerProvider.notifier).clearSession();
         ref.invalidate(hasSavedSessionProvider);
         if (context.mounted) {
