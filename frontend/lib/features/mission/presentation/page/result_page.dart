@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:snampo/presentation/controllers/game_session_controller.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -16,28 +14,19 @@ class ResultPage extends StatelessWidget {
     final titleTextstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
-        .copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
+        .copyWith(color: theme.colorScheme.onPrimary);
     final textstyleLarge = (theme.textTheme.displayLarge ??
             theme.textTheme.headlineLarge ??
             const TextStyle())
-        .copyWith(
-      color: theme.colorScheme.primary,
-    );
+        .copyWith(color: theme.colorScheme.primary);
     final textstyleMid = (theme.textTheme.bodyLarge ??
             theme.textTheme.bodyMedium ??
             const TextStyle())
-        .copyWith(
-      color: theme.colorScheme.primary,
-    );
+        .copyWith(color: theme.colorScheme.primary);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'RESULT',
-          style: titleTextstyle,
-        ),
+        title: Text('RESULT', style: titleTextstyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -45,20 +34,10 @@ class ResultPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'GOAL!!',
-              style: textstyleLarge,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Text(
-              'Congratulations!',
-              style: textstyleMid,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
+            Text('GOAL!!', style: textstyleLarge),
+            const SizedBox(height: 20),
+            Text('Congratulations!', style: textstyleMid),
+            const SizedBox(height: 20),
             const HomeButton(),
           ],
         ),
@@ -68,34 +47,25 @@ class ResultPage extends StatelessWidget {
 }
 
 /// ホームに戻るボタンウィジェット
-class HomeButton extends ConsumerWidget {
+class HomeButton extends StatelessWidget {
   /// HomeButtonのコンストラクタ
-  const HomeButton({
-    super.key,
-  });
+  const HomeButton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
-        .copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
+        .copyWith(color: theme.colorScheme.onPrimary);
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: theme.colorScheme.primary, //ボタンの背景色
         foregroundColor: theme.colorScheme.onPrimary,
       ),
-      onPressed: () async {
-        // ゲームセッションと写真状態をクリア (念のため)
-        await ref.read(gameSessionControllerProvider.notifier).clearSession();
-        ref.invalidate(hasSavedSessionProvider);
-        if (context.mounted) {
-          context.go('/');
-        }
+      onPressed: () {
+        context.go('/');
       },
       child: Padding(
         padding: const EdgeInsets.all(20),

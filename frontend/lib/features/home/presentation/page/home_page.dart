@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/presentation/controllers/game_session_controller.dart';
 
 /// アプリケーションのトップページ
-class HomePage extends ConsumerWidget {
+class HomePage extends StatelessWidget {
   /// HomePageのコンストラクタ
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasSavedSession = ref.watch(hasSavedSessionProvider);
-
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -21,19 +17,9 @@ class HomePage extends ConsumerWidget {
               width: 300,
               child: Image.asset('images/snampo.png', fit: BoxFit.contain),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             const StartButton(),
-            const SizedBox(height: 10),
-            // 保存されたセッションがある場合のみ「続きから」ボタンを表示
-            hasSavedSession.when(
-              data: (hasSession) =>
-                  hasSession ? const ResumeButton() : const SizedBox.shrink(),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 10), // 2つの間を空ける
             const HistoryButton(),
           ],
         ),
@@ -45,9 +31,7 @@ class HomePage extends ConsumerWidget {
 /// スタートボタンウィジェット
 class StartButton extends StatelessWidget {
   /// StartButtonのコンストラクタ
-  const StartButton({
-    super.key,
-  });
+  const StartButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -72,42 +56,10 @@ class StartButton extends StatelessWidget {
   }
 }
 
-/// 続きからボタンウィジェット
-class ResumeButton extends StatelessWidget {
-  /// ResumeButtonのコンストラクタ
-  const ResumeButton({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onSecondary,
-    );
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.secondary,
-        foregroundColor: theme.colorScheme.onSecondary,
-      ),
-      onPressed: () {
-        context.push('/mission/resume');
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('続きから', style: style),
-      ),
-    );
-  }
-}
-
 /// 履歴ボタンウィジェット
 class HistoryButton extends StatelessWidget {
   /// HistoryButtonのコンストラクタ
-  const HistoryButton({
-    super.key,
-  });
+  const HistoryButton({super.key});
 
   @override
   Widget build(BuildContext context) {
