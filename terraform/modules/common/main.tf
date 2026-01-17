@@ -161,6 +161,7 @@ locals {
         "places.googleapis.com",
         "street-view-image-backend.googleapis.com",
         "directions-backend.googleapis.com",
+        "roads.googleapis.com",
       ]
     },
     {
