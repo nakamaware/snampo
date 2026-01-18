@@ -59,6 +59,7 @@ workflows:
         # ref: https://docs.codemagic.io/knowledge-codemagic/build-versioning/#build-versioning-in-codemagic
         script: |
           flutter build ipa --release \
+            --export-options-plist /Users/builder/export_options.plist \
             --dart-define=GOOGLE_MAP_API_KEY=$GOOGLE_MAP_API_KEY \
             --dart-define=FLAVOR=$FLAVOR \
             --dart-define=API_BASE_URL=$API_BASE_URL \
