@@ -46,6 +46,7 @@ class _CameraPageState extends State<CameraPage> {
   Future<void> _setupCamera() async {
     try {
       final cameras = await availableCameras();
+      if (!mounted) return;
       if (cameras.isEmpty) {
         await _showErrorDialog('カメラが見つかりませんでした。');
         return;
@@ -64,12 +65,14 @@ class _CameraPageState extends State<CameraPage> {
         _isInitialized = true;
       });
     } on CameraException catch (e) {
+      if (!mounted) return;
       var message = 'カメラの起動に失敗しました。';
       if (e.code == 'CameraAccessDenied') {
         message = 'カメラへのアクセスが拒否されています。設定から許可してください。';
       }
       await _showErrorDialog(message);
     } catch (e) {
+      if (!mounted) return;
       // その他の予期せぬエラー
       await _showErrorDialog('予期せぬエラーが発生しました: $e');
     }
