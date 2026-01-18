@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
+import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
@@ -16,6 +17,7 @@ final GoRouter appRouter = GoRouter(
         return MissionPage(radius: radius);
       },
     ),
+    GoRoute(path: '/camera', builder: (context, state) => const CameraPage()),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
   ],
 );
