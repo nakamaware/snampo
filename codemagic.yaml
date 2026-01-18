@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=https://codemagic.io/codemagic-schema.json
+workflows:
+  deploy-ios-dev:
+    name: Deploy iOS Dev Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    working_directory: frontend
+    integrations:
+      app_store_connect: Publisher  # Code MagicのWebサイトで設定したKeyの名前
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store  # App StoreやTestFlightに配布する場合は app_store を使用
+        bundle_identifier: com.nakamaware.snampo  # frontend/ios/Runner.xcodeproj/project.pbxproj の PRODUCT_BUNDLE_IDENTIFIER で指定した値
+      groups:
+        - ios-dev  # Code MagicのWebサイトで設定した環境変数のグループ: FLAVOR, API_BASE_URL, GOOGLE_MAP_API_KEY を含む
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      tag_patterns:
+        - pattern: "v[0-9]+.[0-9]+.[0-9]+"
+          include: true
+      cancel_previous_builds: true
+    when:
+      changeset:
+        includes:
+          - "frontend/**"
+          - "packages/**"
+          - "codemagic.yaml"
+    cache:
+      # キャッシュ設定は公式サイトを参考
+      # ref: https://docs.codemagic.io/knowledge-codemagic/caching/
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+        - ~/Library/Developer/Xcode/DerivedData/CompilationCache.noindex
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Flutter analyze
+        script: |
+          flutter analyze --no-fatal-infos
+      - name: Flutter build ipa
+        # build-numberでビルドバージョンの衝突を防ぐ
+        # ref: https://docs.codemagic.io/knowledge-codemagic/build-versioning/#build-versioning-in-codemagic
+        script: |
+          flutter build ipa --release \
+            --export-options-plist /Users/builder/export_options.plist \
+            --dart-define=GOOGLE_MAP_API_KEY=$GOOGLE_MAP_API_KEY \
+            --dart-define=FLAVOR=$FLAVOR \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
+            --build-number=$PROJECT_BUILD_NUMBER
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
