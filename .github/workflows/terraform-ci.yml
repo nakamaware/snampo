@@ -24,6 +24,7 @@ jobs:
     name: Terraform CI
     needs: check-diff
     strategy:
+      fail-fast: false
       matrix:
         env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
     runs-on: ubuntu-latest
