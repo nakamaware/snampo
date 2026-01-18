@@ -26,6 +26,7 @@ jobs:
     needs: check-diff
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         env: ${{ fromJSON(needs.check-diff.outputs.environments) }}
     environment: ${{ matrix.env }}
