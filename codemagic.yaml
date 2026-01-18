@@ -54,11 +54,6 @@ workflows:
       - name: Flutter analyze
         script: |
           flutter analyze --no-fatal-infos
-      - name: Check environment variables
-        script: |
-          echo "FLAVOR: $FLAVOR"
-          echo "API_BASE_URL: $API_BASE_URL"
-          echo "PROJECT_BUILD_NUMBER: $PROJECT_BUILD_NUMBER"
       - name: Flutter build ipa
         # build-numberでビルドバージョンの衝突を防ぐ
         # ref: https://docs.codemagic.io/knowledge-codemagic/build-versioning/#build-versioning-in-codemagic
