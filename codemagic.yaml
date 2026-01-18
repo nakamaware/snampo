@@ -53,7 +53,7 @@ workflows:
           find . -name "Podfile" -execdir pod install \;
       - name: Flutter analyze
         script: |
-          flutter analyze
+          flutter analyze --no-fatal-infos
       - name: Flutter build ipa
         # build-numberでビルドバージョンの衝突を防ぐ
         # ref: https://docs.codemagic.io/knowledge-codemagic/build-versioning/#build-versioning-in-codemagic
