@@ -6,7 +6,7 @@ workflows:
     instance_type: mac_mini_m2
     working_directory: frontend
     integrations:
-      app_store_connect: Publisher 2  # Code MagicのWebサイトで設定したKeyの名前
+      app_store_connect: Publisher  # Code MagicのWebサイトで設定したKeyの名前
     environment:
       flutter: stable
       xcode: latest
