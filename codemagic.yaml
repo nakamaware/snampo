@@ -19,14 +19,14 @@ workflows:
     triggering:
       events:
         - push
-        # - tag
+        - tag
       branch_patterns:
-        - pattern: test/72-codemagic-iac-test
+        - pattern: main
           include: true
           source: true
-      # tag_patterns:
-      #   - pattern: "v[0-9]+.[0-9]+.[0-9]+"
-      #     include: true
+      tag_patterns:
+        - pattern: "v[0-9]+.[0-9]+.[0-9]+"
+          include: true
       cancel_previous_builds: true
     when:
       changeset:
