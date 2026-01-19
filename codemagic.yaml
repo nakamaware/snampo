@@ -55,10 +55,15 @@ workflows:
         script: |
           flutter analyze --no-fatal-infos
       - name: Flutter build ipa
+        # 難読化をしている
+        # ref: https://docs.flutter.dev/deployment/obfuscate
         # build-numberでビルドバージョンの衝突を防ぐ
         # ref: https://docs.codemagic.io/knowledge-codemagic/build-versioning/#build-versioning-in-codemagic
         script: |
           flutter build ipa --release \
+            --obfuscate \
+            --split-debug-info=build/ios/symbols \
+            --no-tree-shake-icons \
             --export-options-plist /Users/builder/export_options.plist \
             --dart-define=GOOGLE_MAP_API_KEY=$GOOGLE_MAP_API_KEY \
             --dart-define=FLAVOR=$FLAVOR \
@@ -66,6 +71,7 @@ workflows:
             --build-number=$PROJECT_BUILD_NUMBER
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/symbols/
       - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
     publishing:
