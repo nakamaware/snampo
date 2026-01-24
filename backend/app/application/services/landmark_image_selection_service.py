@@ -7,7 +7,6 @@ import logging
 import random
 
 from injector import inject
-from tenacity import Retrying, retry_if_exception_type, stop_after_attempt
 
 from app.application.services.street_view_image_fetch_service import StreetViewImageFetchService
 from app.domain.exceptions import ExternalServiceValidationError
@@ -61,27 +60,21 @@ class LandmarkImageSelectionService:
         # シャッフルが必要な場合は非破壊的にランダムな順序を取得
         candidates_to_use = random.sample(candidates, len(candidates)) if shuffle else candidates
 
-        for attempt in Retrying(
-            stop=stop_after_attempt(len(candidates_to_use)),
-            retry=retry_if_exception_type(ExternalServiceValidationError),
-            reraise=True,
-        ):
-            with attempt:
-                idx = attempt.retry_state.attempt_number - 1
-                candidate = candidates_to_use[idx]
+        for idx, candidate in enumerate(candidates_to_use):
+            try:
+                image = self._street_view_service.get_image(
+                    candidate.coordinate,
+                    image_size,
+                )
+                logger.info(f"Successfully selected landmark: {candidate}")
+                return candidate, image
+            except ExternalServiceValidationError:
+                logger.warning(
+                    f"Failed to fetch image for candidate {idx + 1}/{len(candidates_to_use)} "
+                    f"(place_id: {candidate.place_id}), trying next candidate"
+                )
+                continue
 
-                try:
-                    image = self._street_view_service.get_image(
-                        candidate.coordinate,
-                        image_size,
-                    )
-                    logger.info(f"Selected landmark: {candidate}")
-                    return candidate, image
-                except ExternalServiceValidationError:
-                    logger.warning(f"画像取得失敗、次の候補を試行: {candidate.place_id}")
-                    raise
-
-        # reraise=True なのでここには到達しないが、型チェック用
         raise ExternalServiceValidationError(
             "画像を取得できませんでした",
             service_name="Street View API",
