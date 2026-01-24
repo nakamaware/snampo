@@ -113,6 +113,11 @@ class GenerateRouteUseCase:
             ExternalServiceError: 外部サービスエラーが発生した場合
             RouteGenerationError: ルート生成に失敗した場合
         """
+        if destination_coordinate is None and radius_m is None:
+            raise ValueError("radius_m または destination_coordinate のいずれかを指定してください")
+        if destination_coordinate is not None and radius_m is not None:
+            raise ValueError("radius_m と destination_coordinate は同時に指定できません")
+
         try:
             destination_image: StreetViewImage | None = None
 
