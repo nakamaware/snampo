@@ -4,6 +4,7 @@ import 'package:snampo/features/mission/application/interface/mission_repository
 import 'package:snampo/features/mission/application/usecase/get_mission_use_case.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/mission_repository.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_provider.g.dart';
 
@@ -11,6 +12,13 @@ part 'mission_provider.g.dart';
 @riverpod
 ILocationService locationService(Ref ref) {
   return LocationService();
+}
+
+/// 現在位置を取得するプロバイダー
+@riverpod
+Future<Coordinate> currentPosition(Ref ref) async {
+  final locationService = ref.read(locationServiceProvider);
+  return locationService.getCurrentPosition();
 }
 
 /// ミッションリポジトリのプロバイダー

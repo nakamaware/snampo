@@ -18,21 +18,35 @@ class MissionRepository implements IMissionRepository {
 
   /// ミッション情報を取得する
   ///
-  /// [radius] はミッションの検索半径
   /// [currentLocation] は現在位置の座標
+  /// [radius] はミッションの検索半径 (ランダムモード用、目的地指定時は null)
+  /// [destination] は目的地の座標 (目的地指定モード用、ランダムモード時は null)
   @override
   Future<MissionEntity> getMission({
-    required Radius radius,
     required Coordinate currentLocation,
+    Radius? radius,
+    Coordinate? destination,
   }) async {
     // リクエストボディを作成
-    final request = snampo_api.RouteRequest(
-      currentLat: currentLocation.latitude,
-      currentLng: currentLocation.longitude,
-      radius: radius.meters,
-    );
+    final request =
+        destination != null
+            ? snampo_api.Request(
+              currentLat: currentLocation.latitude,
+              currentLng: currentLocation.longitude,
+              mode: 'destination',
+              radius: null,
+              destinationLat: destination.latitude,
+              destinationLng: destination.longitude,
+            )
+            : snampo_api.Request(
+              currentLat: currentLocation.latitude,
+              currentLng: currentLocation.longitude,
+              mode: 'random',
+              radius: radius!.meters,
+              destinationLat: null,
+              destinationLng: null,
+            );
 
-    // 生成されたAPIクライアントを直接使用
     final response = await _generatedApi.routeRoutePost(request);
 
     if (response == null) {
@@ -43,7 +57,7 @@ class MissionRepository implements IMissionRepository {
   }
 
   /// RouteResponseをエンティティに変換
-  MissionEntity _toEntity(snampo_api.RouteResponse response, Radius radius) {
+  MissionEntity _toEntity(snampo_api.RouteResponse response, Radius? radius) {
     // 必須フィールドのnullチェック
     if (response.overviewPolyline.isEmpty) {
       throw Exception('ルート情報が取得できませんでした');

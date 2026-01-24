@@ -12,10 +12,12 @@ import 'package:snampo/features/mission/domain/value_object/radius.dart';
 abstract class IMissionRepository {
   /// ミッション情報を取得する
   ///
-  /// [radius] はミッションの検索半径
   /// [currentLocation] は現在位置の座標
+  /// [radius] はミッションの検索半径 (ランダムモード用、目的地指定時は null)
+  /// [destination] は目的地の座標 (目的地指定モード用、ランダムモード時は null)
   Future<MissionEntity> getMission({
-    required Radius radius,
     required Coordinate currentLocation,
+    Radius? radius,
+    Coordinate? destination,
   });
 }

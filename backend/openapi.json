@@ -8,13 +8,28 @@
     "/route": {
       "post": {
         "summary": "Route",
-        "description": "ルートを生成\n\nArgs:\n    request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)\n    usecase: ルート生成ユースケース\n\nReturns:\n    RouteResponse: ルート情報\n\nRaises:\n    HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合",
+        "description": "ルートを生成\n\nArgs:\n    request: ルート生成リクエスト(現在地の緯度・経度、半径または目的地座標を含む)\n    usecase: ルート生成ユースケース\n\nReturns:\n    RouteResponse: ルート情報\n\nRaises:\n    HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合",
         "operationId": "route_route_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RouteRequest"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RouteRequestRandom"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RouteRequestDestination"
+                  }
+                ],
+                "title": "Request",
+                "discriminator": {
+                  "propertyName": "mode",
+                  "mapping": {
+                    "random": "#/components/schemas/RouteRequestRandom",
+                    "destination": "#/components/schemas/RouteRequestDestination"
+                  }
+                }
               }
             }
           },
@@ -131,7 +146,7 @@
         "title": "Point",
         "description": "座標点を表すモデル"
       },
-      "RouteRequest": {
+      "RouteRequestDestination": {
         "properties": {
           "current_lat": {
             "type": "number",
@@ -153,6 +168,78 @@
               139.8133963
             ]
           },
+          "mode": {
+            "type": "string",
+            "const": "destination",
+            "title": "Mode",
+            "description": "ルート生成モード",
+            "examples": [
+              "destination"
+            ]
+          },
+          "destination_lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Destination Lat",
+            "description": "目的地の緯度",
+            "examples": [
+              35.689487
+            ]
+          },
+          "destination_lng": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Destination Lng",
+            "description": "目的地の経度",
+            "examples": [
+              139.691706
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_lat",
+          "current_lng",
+          "mode",
+          "destination_lat",
+          "destination_lng"
+        ],
+        "title": "RouteRequestDestination",
+        "description": "目的地指定モードのルート生成リクエスト\n\n指定された座標を目的地として使用します。"
+      },
+      "RouteRequestRandom": {
+        "properties": {
+          "current_lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Current Lat",
+            "description": "現在地の緯度",
+            "examples": [
+              35.6870958
+            ]
+          },
+          "current_lng": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Current Lng",
+            "description": "現在地の経度",
+            "examples": [
+              139.8133963
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "const": "random",
+            "title": "Mode",
+            "description": "ルート生成モード",
+            "examples": [
+              "random"
+            ]
+          },
           "radius": {
             "type": "integer",
             "maximum": 40075000.0,
@@ -168,10 +255,11 @@
         "required": [
           "current_lat",
           "current_lng",
+          "mode",
           "radius"
         ],
-        "title": "RouteRequest",
-        "description": "ルート生成リクエストを表すモデル"
+        "title": "RouteRequestRandom",
+        "description": "ランダムモードのルート生成リクエスト\n\n指定された半径内でランダムに目的地を選択します。"
       },
       "RouteResponse": {
         "properties": {

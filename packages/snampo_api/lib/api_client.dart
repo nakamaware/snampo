@@ -188,8 +188,12 @@ class ApiClient {
           return MidPoint.fromJson(value);
         case 'Point':
           return Point.fromJson(value);
-        case 'RouteRequest':
-          return RouteRequest.fromJson(value);
+        case 'Request':
+          return Request.fromJson(value);
+        case 'RouteRequestDestination':
+          return RouteRequestDestination.fromJson(value);
+        case 'RouteRequestRandom':
+          return RouteRequestRandom.fromJson(value);
         case 'RouteResponse':
           return RouteResponse.fromJson(value);
         case 'ValidationError':
