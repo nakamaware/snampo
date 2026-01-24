@@ -27,6 +27,16 @@ class MissionRepository implements IMissionRepository {
     Radius? radius,
     Coordinate? destination,
   }) async {
+    // destinationとradiusの両方がnull、または両方とも値が入っている場合はエラー
+    if (destination == null && radius == null) {
+      throw ArgumentError('ランダムモードではradiusが必須です。destinationとradiusの両方がnullです。');
+    }
+    if (destination != null && radius != null) {
+      throw ArgumentError(
+        '目的地指定モードとランダムモードは同時に指定できません。destinationとradiusの両方に値が設定されています。',
+      );
+    }
+
     // リクエストボディを作成
     final request =
         destination != null
@@ -42,7 +52,8 @@ class MissionRepository implements IMissionRepository {
               currentLat: currentLocation.latitude,
               currentLng: currentLocation.longitude,
               mode: 'random',
-              radius: radius!.meters,
+              radius:
+                  radius?.meters ?? (throw Exception('ランダムモードではradiusが必須です')),
               destinationLat: null,
               destinationLng: null,
             );
