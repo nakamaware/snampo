@@ -109,10 +109,11 @@ class _CameraPageState extends State<CameraPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            final image = await _controller!.takePicture();
+            final file = await _controller!.takePicture();
             if (!context.mounted) return;
-            Navigator.pop(context, image); // 撮影した画像を返す
+            Navigator.pop(context, file); // 撮影した画像を返す
           } catch (e) {
+            if (!context.mounted) return;
             await _showErrorDialog('写真の撮影に失敗しました。');
           }
         },

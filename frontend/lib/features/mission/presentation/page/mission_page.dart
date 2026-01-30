@@ -411,13 +411,11 @@ class TakeSnap extends HookConsumerWidget {
 
   Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
     // カメラ画面へ遷移
-    final pickedFile = await context.push<XFile?>('/camera');
+    final capturedFile = await context.push<XFile?>('/camera');
 
-    if (pickedFile != null && context.mounted) {
-      // savePhoto メソッドを使用して保存
-      ref
-          .read(cameraStoreProvider.notifier)
-          .savePhoto(spotIndex, pickedFile.path);
+    if (capturedFile != null && context.mounted) {
+      final path = capturedFile.path;
+      ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
     }
   }
 }
