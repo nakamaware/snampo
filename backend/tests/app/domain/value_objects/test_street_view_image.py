@@ -195,3 +195,57 @@ def test_同じ座標でも画像データが異なれば異なるオブジェ�
 
     assert street_view_image1 != street_view_image2
     assert hash(street_view_image1) != hash(street_view_image2)
+
+
+def test_headingフィールドがオプショナルであること() -> None:
+    """headingフィールドがオプショナルで、デフォルト値がNoneであることを確認"""
+    metadata_coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+    original_coordinate = Coordinate(latitude=35.6813, longitude=139.7672)
+    image_data = b"fake image data"
+
+    street_view_image = StreetViewImage(
+        metadata_coordinate=metadata_coordinate,
+        original_coordinate=original_coordinate,
+        image_data=image_data,
+    )
+
+    assert street_view_image.heading is None
+
+
+def test_headingフィールドを指定できること() -> None:
+    """headingフィールドを指定できることを確認"""
+    metadata_coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+    original_coordinate = Coordinate(latitude=35.6813, longitude=139.7672)
+    image_data = b"fake image data"
+    heading = 90.0
+
+    street_view_image = StreetViewImage(
+        metadata_coordinate=metadata_coordinate,
+        original_coordinate=original_coordinate,
+        image_data=image_data,
+        heading=heading,
+    )
+
+    assert street_view_image.heading == heading
+
+
+def test_headingが異なる場合は異なるハッシュ値を持つこと() -> None:
+    """headingが異なる場合は異なるハッシュ値を持つことを確認"""
+    metadata_coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+    original_coordinate = Coordinate(latitude=35.6813, longitude=139.7672)
+    image_data = b"fake image data"
+
+    street_view_image1 = StreetViewImage(
+        metadata_coordinate=metadata_coordinate,
+        original_coordinate=original_coordinate,
+        image_data=image_data,
+        heading=90.0,
+    )
+    street_view_image2 = StreetViewImage(
+        metadata_coordinate=metadata_coordinate,
+        original_coordinate=original_coordinate,
+        image_data=image_data,
+        heading=180.0,
+    )
+
+    assert hash(street_view_image1) != hash(street_view_image2)

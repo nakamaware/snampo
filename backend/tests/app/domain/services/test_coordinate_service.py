@@ -6,6 +6,7 @@ import pytest
 from geographiclib.geodesic import Geodesic
 
 from app.domain.services.coordinate_service import (
+    calculate_bearing,
     calculate_distance,
     calculate_geodesic_midpoint,
 )
@@ -315,3 +316,109 @@ def test_計算結果のmidpointにlatitudeとlongitude属性がない場合の�
         # 2回目の呼び出し(destination)ではmock_geodesic_destinationを返す
         mock_geodesic.side_effect = [mock_geodesic_distance, mock_geodesic_destination]
         calculate_geodesic_midpoint(start, end)
+
+
+# ===== calculate_bearing のテスト =====
+
+
+def test_calculate_bearing_北方向の方位角が0度に近いこと() -> None:
+    """北方向の方位角が0度に近いことを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 東京駅の北側
+    end = Coordinate(latitude=35.6912, longitude=139.7671)
+
+    bearing = calculate_bearing(start, end)
+
+    # 北方向なので0度に近い (許容誤差: 5度)
+    assert 0 <= bearing < 5 or 355 < bearing <= 360, f"方位角が期待範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_東方向の方位角が90度に近いこと() -> None:
+    """東方向の方位角が90度に近いことを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 東京駅の東側
+    end = Coordinate(latitude=35.6812, longitude=139.7771)
+
+    bearing = calculate_bearing(start, end)
+
+    # 東方向なので90度に近い (許容誤差: 5度)
+    assert 85 < bearing < 95, f"方位角が期待範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_南方向の方位角が180度に近いこと() -> None:
+    """南方向の方位角が180度に近いことを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 東京駅の南側
+    end = Coordinate(latitude=35.6712, longitude=139.7671)
+
+    bearing = calculate_bearing(start, end)
+
+    # 南方向なので180度に近い (許容誤差: 5度)
+    assert 175 < bearing < 185, f"方位角が期待範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_西方向の方位角が270度に近いこと() -> None:
+    """西方向の方位角が270度に近いことを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 東京駅の西側
+    end = Coordinate(latitude=35.6812, longitude=139.7571)
+
+    bearing = calculate_bearing(start, end)
+
+    # 西方向なので270度に近い (許容誤差: 5度)
+    assert 265 < bearing < 275, f"方位角が期待範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_同じ座標の場合は0度を返すこと() -> None:
+    """同じ座標の場合は0度を返すことを確認"""
+    coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+
+    bearing = calculate_bearing(coordinate, coordinate)
+
+    # 同じ座標なので0度 (または360度)
+    assert bearing == 0.0 or bearing == 360.0, f"方位角が期待値外です: {bearing}度"
+
+
+def test_calculate_bearing_方位角が0から360度の範囲内であること() -> None:
+    """方位角が0から360度の範囲内であることを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 新宿駅
+    end = Coordinate(latitude=35.6896, longitude=139.6917)
+
+    bearing = calculate_bearing(start, end)
+
+    # 0-360度の範囲内であることを確認
+    assert 0 <= bearing <= 360, f"方位角が範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_負の値が正規化されること() -> None:
+    """負の値が0-360度の範囲に正規化されることを確認"""
+    # 東京駅
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 東京駅の西側
+    end = Coordinate(latitude=35.6812, longitude=139.7571)
+
+    bearing = calculate_bearing(start, end)
+
+    # 0-360度の範囲内であることを確認
+    assert 0 <= bearing <= 360, f"方位角が範囲外です: {bearing}度"
+
+
+def test_calculate_bearing_順序を入れ替えると逆方向になること() -> None:
+    """座標の順序を入れ替えると逆方向になることを確認"""
+    start = Coordinate(latitude=35.6812, longitude=139.7671)
+    end = Coordinate(latitude=35.6896, longitude=139.6917)
+
+    bearing1 = calculate_bearing(start, end)
+    bearing2 = calculate_bearing(end, start)
+
+    # 逆方向なので180度の差がある (許容誤差: 10度)
+    diff = abs(bearing1 - bearing2)
+    assert 170 < diff < 190 or diff < 10, (
+        f"方位角の差が期待範囲外です: bearing1={bearing1}度, bearing2={bearing2}度, diff={diff}度"
+    )

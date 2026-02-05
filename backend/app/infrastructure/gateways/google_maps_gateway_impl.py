@@ -55,7 +55,9 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             lambda coordinate: self._fetch_street_view_metadata(coordinate)
         )
         self._get_street_view_image_cached = functools.lru_cache(maxsize=128)(
-            lambda coordinate, image_size: self._fetch_street_view_image(coordinate, image_size)
+            lambda coordinate, image_size, heading: self._fetch_street_view_image(
+                coordinate, image_size, heading
+            )
         )
         self._search_landmarks_nearby_cached = functools.lru_cache(maxsize=128)(
             lambda coordinate, radius, included_types_tuple, rank_preference: (
@@ -254,19 +256,24 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 service_name="Street View Metadata API",
             ) from e
 
-    def get_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
+    def get_street_view_image(
+        self, coordinate: Coordinate, image_size: ImageSize, heading: float | None = None
+    ) -> bytes:
         """Street View画像を取得
 
         Args:
             coordinate: 座標
             image_size: 画像サイズ
+            heading: カメラの方向 (0-360度、北が0度、時計回り)。Noneの場合はデフォルト方向
 
         Returns:
             bytes: 画像データ
         """
-        return self._get_street_view_image_cached(coordinate, image_size)
+        return self._get_street_view_image_cached(coordinate, image_size, heading)
 
-    def _fetch_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
+    def _fetch_street_view_image(
+        self, coordinate: Coordinate, image_size: ImageSize, heading: float | None = None
+    ) -> bytes:
         """Street View Static APIから画像を取得
 
         API Doc: https://developers.google.com/maps/documentation/streetview/request-streetview?hl=ja
@@ -274,6 +281,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         Args:
             coordinate: 座標
             image_size: 画像サイズ
+            heading: カメラの方向 (0-360度、北が0度、時計回り)。Noneの場合はデフォルト方向
 
         Returns:
             bytes: 画像データ
@@ -286,6 +294,11 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             "source": "outdoor",
             "key": GOOGLE_API_KEY,
         }
+
+        # headingが指定されている場合、APIリクエストに追加
+        if heading is not None:
+            # Google Street View APIの仕様に従い、headingは0-360度の整数値
+            params["heading"] = str(int(heading))
 
         try:
             response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
