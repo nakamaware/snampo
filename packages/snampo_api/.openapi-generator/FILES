@@ -7,7 +7,9 @@ doc/DefaultApi.md
 doc/HTTPValidationError.md
 doc/MidPoint.md
 doc/Point.md
-doc/RouteRequest.md
+doc/Request.md
+doc/RouteRequestDestination.md
+doc/RouteRequestRandom.md
 doc/RouteResponse.md
 doc/ValidationError.md
 git_push.sh
@@ -24,7 +26,9 @@ lib/auth/oauth.dart
 lib/model/http_validation_error.dart
 lib/model/mid_point.dart
 lib/model/point.dart
-lib/model/route_request.dart
+lib/model/request.dart
+lib/model/route_request_destination.dart
+lib/model/route_request_random.dart
 lib/model/route_response.dart
 lib/model/validation_error.dart
 pubspec.yaml
@@ -32,6 +36,8 @@ test/default_api_test.dart
 test/http_validation_error_test.dart
 test/mid_point_test.dart
 test/point_test.dart
-test/route_request_test.dart
+test/request_test.dart
+test/route_request_destination_test.dart
+test/route_request_random_test.dart
 test/route_response_test.dart
 test/validation_error_test.dart

@@ -1,16 +1,17 @@
 """ルートAPIスキーマ定義"""
 
 import base64
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Discriminator, Field
 
 from app.application.usecases.generate_route_usecase import RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
 from app.domain.value_objects.street_view_image import StreetViewImage
 
 
-class RouteRequest(BaseModel):
-    """ルート生成リクエストを表すモデル"""
+class RouteRequestBase(BaseModel):
+    """ルート生成リクエストの基底クラス (共通フィールド)"""
 
     current_lat: float = Field(
         description="現在地の緯度",
@@ -24,12 +25,55 @@ class RouteRequest(BaseModel):
         le=180,
         examples=[139.8133963],
     )
+
+
+class RouteRequestRandom(RouteRequestBase):
+    """ランダムモードのルート生成リクエスト
+
+    指定された半径内でランダムに目的地を選択します。
+    """
+
+    mode: Literal["random"] = Field(
+        description="ルート生成モード",
+        examples=["random"],
+    )
     radius: int = Field(
         description="目的地を生成する半径 (メートル単位)",
         gt=0,
         le=40075000,  # 地球の赤道一周の長さ (メートル)
         examples=[5000],
     )
+
+
+class RouteRequestDestination(RouteRequestBase):
+    """目的地指定モードのルート生成リクエスト
+
+    指定された座標を目的地として使用します。
+    """
+
+    mode: Literal["destination"] = Field(
+        description="ルート生成モード",
+        examples=["destination"],
+    )
+    destination_lat: float = Field(
+        description="目的地の緯度",
+        ge=-90.0,
+        le=90.0,
+        examples=[35.689487],
+    )
+    destination_lng: float = Field(
+        description="目的地の経度",
+        ge=-180,
+        le=180,
+        examples=[139.691706],
+    )
+
+
+# Discriminated Union: mode フィールドに基づいて自動的に適切なクラスを選択
+RouteRequest = Annotated[
+    RouteRequestRandom | RouteRequestDestination,
+    Discriminator("mode"),
+]
 
 
 class Point(BaseModel):

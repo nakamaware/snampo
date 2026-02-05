@@ -59,6 +59,49 @@ final class LocationServiceProvider
 
 String _$locationServiceHash() => r'dd6fb819a5b2471f9d6e687a739bbd7a66f973e4';
 
+/// 現在位置を取得するプロバイダー
+
+@ProviderFor(currentPosition)
+final currentPositionProvider = CurrentPositionProvider._();
+
+/// 現在位置を取得するプロバイダー
+
+final class CurrentPositionProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Coordinate>,
+          Coordinate,
+          FutureOr<Coordinate>
+        >
+    with $FutureModifier<Coordinate>, $FutureProvider<Coordinate> {
+  /// 現在位置を取得するプロバイダー
+  CurrentPositionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentPositionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentPositionHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Coordinate> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Coordinate> create(Ref ref) {
+    return currentPosition(ref);
+  }
+}
+
+String _$currentPositionHash() => r'344c8e9924e9512ec45f91ba979e456bf162fc6b';
+
 /// ミッションリポジトリのプロバイダー
 
 @ProviderFor(missionRepository)
