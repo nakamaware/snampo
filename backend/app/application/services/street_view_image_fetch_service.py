@@ -86,10 +86,10 @@ class StreetViewImageFetchService:
             )
 
         # ランドマーク座標から道路座標への方向を計算
-        heading = coordinate_service.calculate_bearing(coordinate, metadata_coordinate)
+        heading = coordinate_service.calculate_bearing(metadata_coordinate, coordinate)
         logger.info(
-            f"Calculated heading from landmark {coordinate} "
-            f"to road {metadata_coordinate}: {heading} degrees"
+            f"Calculated heading from road {metadata_coordinate} "
+            f"to landmark {coordinate}: {heading} degrees"
         )
 
         # ストリートビュー画像を取得
