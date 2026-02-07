@@ -30,10 +30,15 @@ sealed class MissionStoreParams with _$MissionStoreParams {
 class MissionStoreNotifier extends _$MissionStoreNotifier {
   @override
   Future<MissionEntity> build(MissionStoreParams params) async {
-    final useCase = ref.read(getMissionUseCaseProvider);
     return params.when(
-      random: (radius) => useCase.call(radius: radius),
-      destination: (destination) => useCase.call(destination: destination),
+      random: (radius) {
+        final useCase = ref.read(createRandomMissionUseCaseProvider);
+        return useCase.call(radius);
+      },
+      destination: (destination) {
+        final useCase = ref.read(createDestinationMissionUseCaseProvider);
+        return useCase.call(destination);
+      },
     );
   }
 }
