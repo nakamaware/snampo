@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
@@ -377,47 +378,45 @@ class AnswerImage extends StatelessWidget {
 }
 
 /// 写真を撮影するためのボタンを表示するウィジェット
-class TakeSnap extends StatefulWidget {
+class TakeSnap extends HookConsumerWidget {
   /// TakeSnapウィジェットのコンストラクタ
+  ///
+  /// [spotIndex] 写真を撮影するスポットのインデックス
   const TakeSnap({required this.spotIndex, super.key});
 
-  /// スポットのインデックス
+  /// 写真を撮影するスポットのインデックス
   final int spotIndex;
 
   @override
-  State<TakeSnap> createState() => _TakeSnapState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // cameraStoreProvider を監視
+    final cameraPath = ref.watch(
+      cameraStoreProvider.select((map) => map[spotIndex]),
+    );
 
-class _TakeSnapState extends State<TakeSnap> {
-  File? _image;
-  final picker = ImagePicker();
+    if (cameraPath == null) {
+      return FloatingActionButton(
+        heroTag: 'take_snap_spot_$spotIndex',
+        onPressed: () => _handleCameraCapture(context, ref),
+        child: const Icon(Icons.add_a_photo),
+      );
+    }
 
-  Future<void> getImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: SetImage(picture: File(cameraPath)),
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _image == null
-        ? FloatingActionButton(
-          heroTag: 'take_snap_spot_${widget.spotIndex}',
-          onPressed: getImage,
-          child: const Icon(Icons.add_a_photo),
-        )
-        : SizedBox(
-          width: 150,
-          height: 150,
-          child: SetImage(
-            // picture_name: "images/test1.jpeg",
-            picture: _image!,
-          ),
-        );
+  Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
+    // カメラ画面へ遷移
+    final capturedFile = await context.push<XFile?>('/camera');
+
+    if (capturedFile != null && context.mounted) {
+      final path = capturedFile.path;
+      ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
+    }
   }
 }
 
