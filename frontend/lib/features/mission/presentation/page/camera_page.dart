@@ -91,14 +91,14 @@ class _CameraPageState extends State<CameraPage> {
     }
 
     final theme = Theme.of(context);
-    final textstyle = (theme.textTheme.displaySmall ??
+    final textStyle = (theme.textTheme.displaySmall ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Take SNAP', style: textstyle),
+        title: Text('Take SNAP', style: textStyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),

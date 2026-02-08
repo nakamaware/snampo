@@ -29,7 +29,7 @@ class MissionPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
     final theme = Theme.of(context);
-    final textstyle = (theme.textTheme.displaySmall ??
+    final textStyle = (theme.textTheme.displaySmall ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
@@ -40,7 +40,7 @@ class MissionPage extends HookConsumerWidget {
       data: (missionInfo) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('On MISSION', style: textstyle),
+            title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
@@ -55,7 +55,7 @@ class MissionPage extends HookConsumerWidget {
       loading:
           () => Scaffold(
             appBar: AppBar(
-              title: Text('On MISSION', style: textstyle),
+              title: Text('On MISSION', style: textStyle),
               centerTitle: true,
               backgroundColor: theme.colorScheme.primary,
             ),
@@ -76,7 +76,7 @@ class MissionPage extends HookConsumerWidget {
         log('error: $error');
         return Scaffold(
           appBar: AppBar(
-            title: Text('On MISSION', style: textstyle),
+            title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
@@ -286,10 +286,10 @@ class SnapViewState extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final titelTextstyle = theme.textTheme.displaySmall!.copyWith(
+    final titleTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.secondary,
     );
-    final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
+    final buttonTextStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
     final missionAsyncValue = ref.watch(missionStoreProvider(radius));
@@ -301,7 +301,7 @@ class SnapViewState extends ConsumerWidget {
 
         return Column(
           children: [
-            Text('MISSION', style: titelTextstyle),
+            Text('MISSION', style: titleTextStyle),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -336,7 +336,7 @@ class SnapViewState extends ConsumerWidget {
               },
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('到着', style: buttonTextstyle),
+                child: Text('到着', style: buttonTextStyle),
               ),
             ),
           ],
