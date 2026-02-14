@@ -5,7 +5,7 @@ import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 part 'mission_store.g.dart';
 
-/// リトライを無効化する ( 1 回の失敗で即座にエラー状態にする )
+/// リトライを無効化する (1 回の失敗で即座にエラー状態にする)
 Duration? _noRetry(int count, Object error) => null;
 
 /// ミッション情報を管理するストア
