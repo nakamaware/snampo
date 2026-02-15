@@ -19,7 +19,7 @@ final class MissionStoreNotifierProvider
   /// ミッション情報を管理するストア
   MissionStoreNotifierProvider._({
     required MissionStoreNotifierFamily super.from,
-    required Radius super.argument,
+    required MissionStoreParams super.argument,
   }) : super(
          retry: _noRetry,
          name: r'missionStoreProvider',
@@ -54,7 +54,7 @@ final class MissionStoreNotifierProvider
 }
 
 String _$missionStoreNotifierHash() =>
-    r'de5b5d0899ab2ea48983871d0032a21147d28540';
+    r'6b60eb8cfe26ee136585e8cbd38a7b1c5cdaa54b';
 
 /// ミッション情報を管理するストア
 
@@ -65,7 +65,7 @@ final class MissionStoreNotifierFamily extends $Family
           AsyncValue<MissionEntity>,
           MissionEntity,
           FutureOr<MissionEntity>,
-          Radius
+          MissionStoreParams
         > {
   MissionStoreNotifierFamily._()
     : super(
@@ -78,8 +78,8 @@ final class MissionStoreNotifierFamily extends $Family
 
   /// ミッション情報を管理するストア
 
-  MissionStoreNotifierProvider call(Radius radius) =>
-      MissionStoreNotifierProvider._(argument: radius, from: this);
+  MissionStoreNotifierProvider call(MissionStoreParams params) =>
+      MissionStoreNotifierProvider._(argument: params, from: this);
 
   @override
   String toString() => r'missionStoreProvider';
@@ -88,10 +88,10 @@ final class MissionStoreNotifierFamily extends $Family
 /// ミッション情報を管理するストア
 
 abstract class _$MissionStoreNotifier extends $AsyncNotifier<MissionEntity> {
-  late final _$args = ref.$arg as Radius;
-  Radius get radius => _$args;
+  late final _$args = ref.$arg as MissionStoreParams;
+  MissionStoreParams get params => _$args;
 
-  FutureOr<MissionEntity> build(Radius radius);
+  FutureOr<MissionEntity> build(MissionStoreParams params);
   @$mustCallSuper
   @override
   void runBuild() {

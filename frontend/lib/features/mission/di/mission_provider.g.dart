@@ -59,6 +59,49 @@ final class LocationServiceProvider
 
 String _$locationServiceHash() => r'dd6fb819a5b2471f9d6e687a739bbd7a66f973e4';
 
+/// 現在位置を取得するプロバイダー
+
+@ProviderFor(currentPosition)
+final currentPositionProvider = CurrentPositionProvider._();
+
+/// 現在位置を取得するプロバイダー
+
+final class CurrentPositionProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Coordinate>,
+          Coordinate,
+          FutureOr<Coordinate>
+        >
+    with $FutureModifier<Coordinate>, $FutureProvider<Coordinate> {
+  /// 現在位置を取得するプロバイダー
+  CurrentPositionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentPositionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentPositionHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Coordinate> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Coordinate> create(Ref ref) {
+    return currentPosition(ref);
+  }
+}
+
+String _$currentPositionHash() => r'344c8e9924e9512ec45f91ba979e456bf162fc6b';
+
 /// ミッションリポジトリのプロバイダー
 
 @ProviderFor(missionRepository)
@@ -111,54 +154,112 @@ final class MissionRepositoryProvider
 
 String _$missionRepositoryHash() => r'5d3ffc6b9fdb5a9846ec98cb368d9408cba1e58a';
 
-/// ミッション情報を取得するユースケースのプロバイダー
+/// ランダムモードでミッション情報を取得するユースケースのプロバイダー
 
-@ProviderFor(getMissionUseCase)
-final getMissionUseCaseProvider = GetMissionUseCaseProvider._();
+@ProviderFor(createRandomMissionUseCase)
+final createRandomMissionUseCaseProvider =
+    CreateRandomMissionUseCaseProvider._();
 
-/// ミッション情報を取得するユースケースのプロバイダー
+/// ランダムモードでミッション情報を取得するユースケースのプロバイダー
 
-final class GetMissionUseCaseProvider
+final class CreateRandomMissionUseCaseProvider
     extends
         $FunctionalProvider<
-          GetMissionUseCase,
-          GetMissionUseCase,
-          GetMissionUseCase
+          CreateRandomMissionUseCase,
+          CreateRandomMissionUseCase,
+          CreateRandomMissionUseCase
         >
-    with $Provider<GetMissionUseCase> {
-  /// ミッション情報を取得するユースケースのプロバイダー
-  GetMissionUseCaseProvider._()
+    with $Provider<CreateRandomMissionUseCase> {
+  /// ランダムモードでミッション情報を取得するユースケースのプロバイダー
+  CreateRandomMissionUseCaseProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'getMissionUseCaseProvider',
+        name: r'createRandomMissionUseCaseProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$getMissionUseCaseHash();
+  String debugGetCreateSourceHash() => _$createRandomMissionUseCaseHash();
 
   @$internal
   @override
-  $ProviderElement<GetMissionUseCase> $createElement(
+  $ProviderElement<CreateRandomMissionUseCase> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  GetMissionUseCase create(Ref ref) {
-    return getMissionUseCase(ref);
+  CreateRandomMissionUseCase create(Ref ref) {
+    return createRandomMissionUseCase(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(GetMissionUseCase value) {
+  Override overrideWithValue(CreateRandomMissionUseCase value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<GetMissionUseCase>(value),
+      providerOverride: $SyncValueProvider<CreateRandomMissionUseCase>(value),
     );
   }
 }
 
-String _$getMissionUseCaseHash() => r'1fbf4b776fbce908d596e747160f6b7348849be5';
+String _$createRandomMissionUseCaseHash() =>
+    r'ea243de9f3199b0730d287500fc8bee0c8a811a2';
+
+/// 目的地指定モードでミッション情報を取得するユースケースのプロバイダー
+
+@ProviderFor(createDestinationMissionUseCase)
+final createDestinationMissionUseCaseProvider =
+    CreateDestinationMissionUseCaseProvider._();
+
+/// 目的地指定モードでミッション情報を取得するユースケースのプロバイダー
+
+final class CreateDestinationMissionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreateDestinationMissionUseCase,
+          CreateDestinationMissionUseCase,
+          CreateDestinationMissionUseCase
+        >
+    with $Provider<CreateDestinationMissionUseCase> {
+  /// 目的地指定モードでミッション情報を取得するユースケースのプロバイダー
+  CreateDestinationMissionUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createDestinationMissionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createDestinationMissionUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateDestinationMissionUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateDestinationMissionUseCase create(Ref ref) {
+    return createDestinationMissionUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateDestinationMissionUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateDestinationMissionUseCase>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$createDestinationMissionUseCaseHash() =>
+    r'8e771728c257f7cc349c74180fb5a47b03448dd4';

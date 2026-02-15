@@ -3,18 +3,18 @@ import 'package:snampo/features/mission/application/interface/mission_repository
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
-/// ミッション情報を取得するユースケース
-class GetMissionUseCase {
-  /// GetMissionUseCaseのコンストラクタ
+/// ランダムモードでミッション情報を取得するユースケース
+class CreateRandomMissionUseCase {
+  /// CreateRandomMissionUseCaseのコンストラクタ
   ///
   /// [_locationService] は位置情報サービス
   /// [_repository] はミッションリポジトリ
-  GetMissionUseCase(this._locationService, this._repository);
+  CreateRandomMissionUseCase(this._locationService, this._repository);
 
   final ILocationService _locationService;
   final IMissionRepository _repository;
 
-  /// ミッション情報を取得する
+  /// ランダムモードでミッション情報を取得する
   ///
   /// [radius] はミッションの検索半径
   Future<MissionEntity> call(Radius radius) async {
@@ -23,9 +23,9 @@ class GetMissionUseCase {
       final currentLocation = await _locationService.getCurrentPosition();
 
       // ミッション情報を取得
-      final missionInfo = await _repository.getMission(
-        radius: radius,
+      final missionInfo = await _repository.createRandomMission(
         currentLocation: currentLocation,
+        radius: radius,
       );
 
       return missionInfo;
