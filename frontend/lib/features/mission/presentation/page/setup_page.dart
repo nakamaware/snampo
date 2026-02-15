@@ -17,11 +17,17 @@ class SetupPage extends StatefulWidget {
 class _SetupPageState extends State<SetupPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() => _currentIndex = _tabController.index);
+      }
+    });
   }
 
   @override
@@ -32,74 +38,130 @@ class _SetupPageState extends State<SetupPage>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displaySmall!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text('SETUP', style: textstyle),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white,
-          tabs: const [Tab(text: 'ランダム'), Tab(text: '目的地指定')],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        // TODO: SliderWidgetとDestinationPickerWidgetをそれぞれ別ファイルに分離する
-        children: const [SliderWidget(), DestinationPickerWidget()],
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: TabBar(
+              controller: _tabController,
+              tabs: const [Tab(text: 'ランダム'), Tab(text: '目的地指定')],
+            ),
+          ),
+          Expanded(
+            // TabBarView を使わず IndexedStack も使わず、
+            // アクティブなタブだけをツリーに乗せることで
+            // GoogleMap を同時に2つ保持しないようにする
+            child:
+                _currentIndex == 0
+                    ? const SliderWidget(key: ValueKey(0))
+                    : const DestinationPickerWidget(key: ValueKey(1)),
+          ),
+        ],
       ),
     );
   }
 }
 
 /// 半径を設定するためのスライダーウィジェット。
-class SliderWidget extends StatefulWidget {
+class SliderWidget extends ConsumerStatefulWidget {
   /// [SliderWidget] ウィジェットを作成します。
   const SliderWidget({super.key});
 
   @override
-  State<SliderWidget> createState() => _SliderWidgetState();
+  ConsumerState<SliderWidget> createState() => _SliderWidgetState();
 }
 
-class _SliderWidgetState extends State<SliderWidget> {
-  Radius slidervalue = Radius(meters: 500); // Radius値オブジェクトを使用
+class _SliderWidgetState extends ConsumerState<SliderWidget> {
+  Radius _radius = Radius(meters: 500);
+  LatLng _center = const LatLng(35.6812, 139.7671);
+  GoogleMapController? _mapController;
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displayLarge!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '${(slidervalue.meters / 1000).toStringAsFixed(1)} km',
-            style: textstyle,
+
+    ref.listen(currentPositionProvider, (_, next) {
+      if (next.hasValue) {
+        final pos = next.value!;
+        final latLng = LatLng(pos.latitude, pos.longitude);
+        setState(() => _center = latLng);
+        _mapController?.animateCamera(CameraUpdate.newLatLng(latLng));
+      }
+    });
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('散歩の範囲', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    (_radius.meters / 1000).toStringAsFixed(1),
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'km',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              Slider(
+                value: _radius.meters.toDouble(),
+                min: 500,
+                max: 10000,
+                divisions: 19,
+                onChanged: (value) {
+                  setState(() => _radius = Radius(meters: value.toInt()));
+                },
+              ),
+            ],
           ),
-          Slider(
-            value: slidervalue.meters.toDouble(),
-            min: 500,
-            max: 10000,
-            divisions: 19,
-            onChanged: (radius) {
-              setState(() {
-                slidervalue = Radius(meters: radius.toInt());
-              });
+        ),
+        Expanded(
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(target: _center, zoom: 13),
+            onMapCreated: (controller) => _mapController = controller,
+            circles: {
+              Circle(
+                circleId: const CircleId('radius'),
+                center: _center,
+                radius: _radius.meters.toDouble(),
+                fillColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                strokeColor: theme.colorScheme.primary,
+                strokeWidth: 2,
+              ),
             },
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            tiltGesturesEnabled: false,
+            zoomControlsEnabled: false,
           ),
-          const SizedBox(height: 20),
-          SubmitButton(radius: slidervalue),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          child: SubmitButton(radius: _radius),
+        ),
+      ],
     );
   }
 }
@@ -122,24 +184,23 @@ class _SubmitButtonState extends State<SubmitButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
 
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-        foregroundColor: theme.colorScheme.onPrimary,
-        // shape: RoundedRectangleBorder( // 形を変えるか否か
-        //   borderRadius: BorderRadius.circular(10), // 角の丸み
-        // ),
-      ),
-      onPressed: () {
-        context.push('/mission/${widget.radius.meters}');
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Text('GO', style: style),
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: const StadiumBorder(),
+        ),
+        onPressed: () => context.push('/mission/${widget.radius.meters}'),
+        child: Text(
+          'はじめる',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
       ),
     );
   }
@@ -185,9 +246,6 @@ class _DestinationPickerWidgetState
 
   Widget _buildMapContent(LatLng initialPosition) {
     final theme = Theme.of(context);
-    final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
 
     return Stack(
       children: [
@@ -202,28 +260,29 @@ class _DestinationPickerWidgetState
           tiltGesturesEnabled: false, // 傾きの変更を禁止
         ),
         Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                elevation: 8,
-                shadowColor: Colors.black.withValues(alpha: 0.3),
-              ),
-              onPressed:
-                  _selectedDestination != null
-                      ? () {
-                        context.push(
-                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
-                        );
-                      }
-                      : null,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Text('GO', style: smallTextStyle),
+          bottom: 24,
+          left: 24,
+          right: 24,
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: const StadiumBorder(),
+              elevation: 4,
+            ),
+            onPressed:
+                _selectedDestination != null
+                    ? () {
+                      context.push(
+                        '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
+                      );
+                    }
+                    : null,
+            child: Text(
+              'はじめる',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
               ),
             ),
           ),
