@@ -1,15 +1,49 @@
 import 'package:go_router/go_router.dart';
-import 'package:snampo/features/home/presentation/page/home_page.dart';
+import 'package:snampo/core/shell/main_shell.dart';
+import 'package:snampo/features/history/presentation/page/history_page.dart';
+import 'package:snampo/features/map/presentation/page/map_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
+import 'package:snampo/features/profile/presentation/page/profile_page.dart';
 
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomePage()),
-    GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
+    StatefulShellRoute.indexedStack(
+      builder:
+          (context, state, navigationShell) =>
+              MainShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/', builder: (context, state) => const SetupPage()),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/map', builder: (context, state) => const MapPage()),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/history',
+              builder: (context, state) => const HistoryPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfilePage(),
+            ),
+          ],
+        ),
+      ],
+    ),
     GoRoute(
       path: '/mission/:radius',
       builder: (context, state) {
