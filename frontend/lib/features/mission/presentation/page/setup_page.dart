@@ -10,13 +10,13 @@ class SetupPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displaySmall!.copyWith(
+    final textStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('SETUP', style: textstyle),
+        title: Text('SETUP', style: textStyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -40,7 +40,7 @@ class _SliderWidgetState extends State<SliderWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = theme.textTheme.displayLarge!.copyWith(
+    final textStyle = theme.textTheme.displayLarge!.copyWith(
       color: theme.colorScheme.secondary,
     );
     return Center(
@@ -49,7 +49,7 @@ class _SliderWidgetState extends State<SliderWidget> {
         children: [
           Text(
             '${(slidervalue.meters / 1000).toStringAsFixed(1)} km',
-            style: textstyle,
+            style: textStyle,
           ),
           Slider(
             value: slidervalue.meters.toDouble(),
