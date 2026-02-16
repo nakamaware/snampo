@@ -13,16 +13,32 @@ import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
+// TODO: ミッションロードのページを分離する
 /// ミッションページを表示するウィジェット
 class MissionPage extends HookConsumerWidget {
-  /// ミッションページを作成する
+  /// ランダムモードでミッションページを作成する
   ///
   /// [radius] はミッションの検索半径（メートル単位）
   MissionPage({required int radius, super.key})
-    : _radius = Radius(meters: radius);
+    : _params = MissionStoreParams.random(radius: Radius(meters: radius));
 
-  /// ミッションの検索半径
-  final Radius _radius;
+  /// 目的地指定モードでミッションページを作成する
+  ///
+  /// [destinationLat] は目的地の緯度
+  /// [destinationLng] は目的地の経度
+  MissionPage.withDestination({
+    required double destinationLat,
+    required double destinationLng,
+    super.key,
+  }) : _params = MissionStoreParams.destination(
+         destination: Coordinate(
+           latitude: destinationLat,
+           longitude: destinationLng,
+         ),
+       );
+
+  /// ミッションストアのパラメータ
+  final MissionStoreParams _params;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +49,7 @@ class MissionPage extends HookConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final missionAsyncValue = ref.watch(missionStoreProvider(_radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
@@ -45,8 +61,8 @@ class MissionPage extends HookConsumerWidget {
           ),
           body: Stack(
             children: [
-              MapView(currentLocation: missionInfo.departure, radius: _radius),
-              SnapView(radius: _radius),
+              MapView(currentLocation: missionInfo.departure, params: _params),
+              SnapView(params: _params),
             ],
           ),
         );
@@ -96,18 +112,18 @@ class MapView extends ConsumerStatefulWidget {
   /// MapViewを作成する
   ///
   /// [currentLocation] は現在位置の座標情報
-  /// [radius] はミッションの検索半径
+  /// [params] はミッションストアのパラメータ
   const MapView({
     required this.currentLocation,
-    required this.radius,
+    required this.params,
     super.key,
   });
 
   /// 現在位置の座標情報
   final Coordinate currentLocation;
 
-  /// ミッションの検索半径
-  final Radius radius;
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
 
   @override
   ConsumerState<MapView> createState() => _MapViewState();
@@ -130,7 +146,7 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    ref.watch(missionStoreProvider(widget.radius)).whenData((missionInfo) {
+    ref.watch(missionStoreProvider(widget.params)).whenData((missionInfo) {
       final encodedPolyline = missionInfo.overviewPolyline;
       if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
         final coordinates = decodePolyline(encodedPolyline);
@@ -160,7 +176,7 @@ class _MapViewState extends ConsumerState<MapView> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    final missionAsyncValue = ref.watch(missionStoreProvider(widget.radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(widget.params));
     final missionInfo = missionAsyncValue.value;
     if (missionInfo == null) {
       return const SizedBox.shrink();
@@ -213,10 +229,10 @@ class _MapViewState extends ConsumerState<MapView> {
 /// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.radius, super.key});
+  const SnapView({required this.params, super.key});
 
-  /// ミッションの検索半径
-  final Radius radius;
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +258,7 @@ class SnapView extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 50),
-                      SnapViewState(radius: radius),
+                      SnapViewState(params: params),
                     ],
                   ),
                 ),
@@ -277,10 +293,10 @@ class SnapView extends StatelessWidget {
 /// SnapView内でミッション情報を表示するウィジェット
 class SnapViewState extends ConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({required this.radius, super.key});
+  const SnapViewState({required this.params, super.key});
 
-  /// ミッションの検索半径
-  final Radius radius;
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -291,7 +307,7 @@ class SnapViewState extends ConsumerWidget {
     final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
-    final missionAsyncValue = ref.watch(missionStoreProvider(radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider(params));
 
     return missionAsyncValue.when(
       data: (missionInfo) {

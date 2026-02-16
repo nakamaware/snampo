@@ -17,8 +17,8 @@ mixin _$MissionEntity {
 /// 出発地点
  Coordinate get departure;/// 目的地
  ImageCoordinate get destination;/// ルートのポリライン文字列
- String get overviewPolyline;/// ミッションの検索半径
- Radius get radius;/// 通過地点のリスト
+ String get overviewPolyline;/// ミッションの検索半径 (目的地指定モードの場合は null)
+ Radius? get radius;/// 通過地点のリスト
  List<ImageCoordinate> get waypoints;
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
@@ -50,11 +50,11 @@ abstract mixin class $MissionEntityCopyWith<$Res>  {
   factory $MissionEntityCopyWith(MissionEntity value, $Res Function(MissionEntity) _then) = _$MissionEntityCopyWithImpl;
 @useResult
 $Res call({
- Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius radius, List<ImageCoordinate> waypoints
+ Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius? radius, List<ImageCoordinate> waypoints
 });
 
 
-$CoordinateCopyWith<$Res> get departure;$ImageCoordinateCopyWith<$Res> get destination;$RadiusCopyWith<$Res> get radius;
+$CoordinateCopyWith<$Res> get departure;$ImageCoordinateCopyWith<$Res> get destination;$RadiusCopyWith<$Res>? get radius;
 
 }
 /// @nodoc
@@ -67,13 +67,13 @@ class _$MissionEntityCopyWithImpl<$Res>
 
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = null,Object? waypoints = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = freezed,Object? waypoints = null,}) {
   return _then(_self.copyWith(
 departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,destination: null == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ImageCoordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
-as String,radius: null == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius,waypoints: null == waypoints ? _self.waypoints : waypoints // ignore: cast_nullable_to_non_nullable
+as String,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
+as Radius?,waypoints: null == waypoints ? _self.waypoints : waypoints // ignore: cast_nullable_to_non_nullable
 as List<ImageCoordinate>,
   ));
 }
@@ -82,7 +82,7 @@ as List<ImageCoordinate>,
 @override
 @pragma('vm:prefer-inline')
 $CoordinateCopyWith<$Res> get departure {
-  
+
   return $CoordinateCopyWith<$Res>(_self.departure, (value) {
     return _then(_self.copyWith(departure: value));
   });
@@ -91,7 +91,7 @@ $CoordinateCopyWith<$Res> get departure {
 @override
 @pragma('vm:prefer-inline')
 $ImageCoordinateCopyWith<$Res> get destination {
-  
+
   return $ImageCoordinateCopyWith<$Res>(_self.destination, (value) {
     return _then(_self.copyWith(destination: value));
   });
@@ -99,9 +99,12 @@ $ImageCoordinateCopyWith<$Res> get destination {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-  
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
+$RadiusCopyWith<$Res>? get radius {
+    if (_self.radius == null) {
+    return null;
+  }
+
+  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
     return _then(_self.copyWith(radius: value));
   });
 }
@@ -186,7 +189,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius? radius,  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -207,7 +210,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius? radius,  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity():
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -227,7 +230,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius? radius,  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -242,8 +245,8 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 
 
 class _MissionEntity implements MissionEntity {
-  const _MissionEntity({required this.departure, required this.destination, required this.overviewPolyline, required this.radius, final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints;
-  
+  const _MissionEntity({required this.departure, required this.destination, required this.overviewPolyline, this.radius, final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints;
+
 
 /// 出発地点
 @override final  Coordinate departure;
@@ -251,8 +254,8 @@ class _MissionEntity implements MissionEntity {
 @override final  ImageCoordinate destination;
 /// ルートのポリライン文字列
 @override final  String overviewPolyline;
-/// ミッションの検索半径
-@override final  Radius radius;
+/// ミッションの検索半径 (目的地指定モードの場合は null)
+@override final  Radius? radius;
 /// 通過地点のリスト
  final  List<ImageCoordinate> _waypoints;
 /// 通過地点のリスト
@@ -293,11 +296,11 @@ abstract mixin class _$MissionEntityCopyWith<$Res> implements $MissionEntityCopy
   factory _$MissionEntityCopyWith(_MissionEntity value, $Res Function(_MissionEntity) _then) = __$MissionEntityCopyWithImpl;
 @override @useResult
 $Res call({
- Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius radius, List<ImageCoordinate> waypoints
+ Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius? radius, List<ImageCoordinate> waypoints
 });
 
 
-@override $CoordinateCopyWith<$Res> get departure;@override $ImageCoordinateCopyWith<$Res> get destination;@override $RadiusCopyWith<$Res> get radius;
+@override $CoordinateCopyWith<$Res> get departure;@override $ImageCoordinateCopyWith<$Res> get destination;@override $RadiusCopyWith<$Res>? get radius;
 
 }
 /// @nodoc
@@ -310,13 +313,13 @@ class __$MissionEntityCopyWithImpl<$Res>
 
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = null,Object? waypoints = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = freezed,Object? waypoints = null,}) {
   return _then(_MissionEntity(
 departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,destination: null == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ImageCoordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
-as String,radius: null == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius,waypoints: null == waypoints ? _self._waypoints : waypoints // ignore: cast_nullable_to_non_nullable
+as String,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
+as Radius?,waypoints: null == waypoints ? _self._waypoints : waypoints // ignore: cast_nullable_to_non_nullable
 as List<ImageCoordinate>,
   ));
 }
@@ -326,7 +329,7 @@ as List<ImageCoordinate>,
 @override
 @pragma('vm:prefer-inline')
 $CoordinateCopyWith<$Res> get departure {
-  
+
   return $CoordinateCopyWith<$Res>(_self.departure, (value) {
     return _then(_self.copyWith(departure: value));
   });
@@ -335,7 +338,7 @@ $CoordinateCopyWith<$Res> get departure {
 @override
 @pragma('vm:prefer-inline')
 $ImageCoordinateCopyWith<$Res> get destination {
-  
+
   return $ImageCoordinateCopyWith<$Res>(_self.destination, (value) {
     return _then(_self.copyWith(destination: value));
   });
@@ -343,9 +346,12 @@ $ImageCoordinateCopyWith<$Res> get destination {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-  
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
+$RadiusCopyWith<$Res>? get radius {
+    if (_self.radius == null) {
+    return null;
+  }
+
+  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
     return _then(_self.copyWith(radius: value));
   });
 }

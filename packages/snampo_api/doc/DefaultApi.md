@@ -13,21 +13,21 @@ Method | HTTP request | Description
 
 
 # **routeRoutePost**
-> RouteResponse routeRoutePost(routeRequest)
+> RouteResponse routeRoutePost(request)
 
 Route
 
-ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径または目的地座標を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
 
 ### Example
 ```dart
 import 'package:snampo_api/api.dart';
 
 final api_instance = DefaultApi();
-final routeRequest = RouteRequest(); // RouteRequest | 
+final request = Request(); // Request | 
 
 try {
-    final result = api_instance.routeRoutePost(routeRequest);
+    final result = api_instance.routeRoutePost(request);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->routeRoutePost: $e\n');
@@ -38,7 +38,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **routeRequest** | [**RouteRequest**](RouteRequest.md)|  | 
+ **request** | [**Request**](Request.md)|  | 
 
 ### Return type
 

@@ -1,4 +1,4 @@
-# snampo_api.model.RouteRequest
+# snampo_api.model.RouteRequestDestination
 
 ## Load the model package
 ```dart
@@ -10,7 +10,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **currentLat** | **num** | 現在地の緯度 | 
 **currentLng** | **num** | 現在地の経度 | 
-**radius** | **int** | 目的地を生成する半径 (メートル単位) | 
+**mode** | **String** | ルート生成モード | 
+**destinationLat** | **num** | 目的地の緯度 | 
+**destinationLng** | **num** | 目的地の経度 | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -12,8 +12,8 @@ from app.config import (
     LANDMARK_DISTANCE_TOLERANCE_PERCENT,
     MIN_SEARCH_RADIUS_M,
 )
+from app.domain.services.coordinate_service import calculate_distance
 from app.domain.services.landmark_service import (
-    calculate_distance,
     calculate_search_radius,
     generate_equidistant_circle_points,
 )
