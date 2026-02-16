@@ -21,7 +21,7 @@ final class MissionStoreNotifierProvider
     required MissionStoreNotifierFamily super.from,
     required Radius super.argument,
   }) : super(
-         retry: null,
+         retry: _noRetry,
          name: r'missionStoreProvider',
          isAutoDispose: true,
          dependencies: null,
@@ -54,7 +54,7 @@ final class MissionStoreNotifierProvider
 }
 
 String _$missionStoreNotifierHash() =>
-    r'4658451a214eee4efbfb590886769417bbef363a';
+    r'de5b5d0899ab2ea48983871d0032a21147d28540';
 
 /// ミッション情報を管理するストア
 
@@ -69,7 +69,7 @@ final class MissionStoreNotifierFamily extends $Family
         > {
   MissionStoreNotifierFamily._()
     : super(
-        retry: null,
+        retry: _noRetry,
         name: r'missionStoreProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
