@@ -62,7 +62,7 @@ def route(
                     latitude=request.destination_lat, longitude=request.destination_lng
                 )
             case _:
-                raise HTTPException(status_code=400, detail="Invalid mode")
+                raise ValidationError(f"Invalid mode: {request.mode}")
     except ValidationError as e:
         extra_log = _build_extra_log(request, validation_error=e)
         logger.error(f"ValidationError in /route: {e}", extra=extra_log)
