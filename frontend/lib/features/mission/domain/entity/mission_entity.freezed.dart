@@ -11,21 +11,24 @@ part of 'mission_entity.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$MissionEntity {
 
 /// 出発地点
- Coordinate get departure;/// 目的地
- ImageCoordinate get destination;/// ルートのポリライン文字列
+@CoordinateConverter() Coordinate get departure;/// 目的地
+@JsonKey(toJson: _destinationToJson) ImageCoordinate get destination;/// ルートのポリライン文字列
  String get overviewPolyline;/// ミッションの検索半径
- Radius get radius;/// 通過地点のリスト
- List<ImageCoordinate> get waypoints;
+@RadiusConverter() Radius get radius;/// 通過地点のリスト
+@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> get waypoints;
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MissionEntityCopyWith<MissionEntity> get copyWith => _$MissionEntityCopyWithImpl<MissionEntity>(this as MissionEntity, _$identity);
 
+  /// Serializes this MissionEntity to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -33,7 +36,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionEntity&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&(identical(other.radius, radius) || other.radius == radius)&&const DeepCollectionEquality().equals(other.waypoints, waypoints));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,departure,destination,overviewPolyline,radius,const DeepCollectionEquality().hash(waypoints));
 
@@ -50,7 +53,7 @@ abstract mixin class $MissionEntityCopyWith<$Res>  {
   factory $MissionEntityCopyWith(MissionEntity value, $Res Function(MissionEntity) _then) = _$MissionEntityCopyWithImpl;
 @useResult
 $Res call({
- Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius radius, List<ImageCoordinate> waypoints
+@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
 });
 
 
@@ -186,7 +189,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -207,7 +210,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity():
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -227,7 +230,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate departure,  ImageCoordinate destination,  String overviewPolyline,  Radius radius,  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -239,24 +242,24 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 }
 
 /// @nodoc
+@JsonSerializable()
 
-
-class _MissionEntity implements MissionEntity {
-  const _MissionEntity({required this.departure, required this.destination, required this.overviewPolyline, required this.radius, final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints;
-  
+class _MissionEntity extends MissionEntity {
+  const _MissionEntity({@CoordinateConverter() required this.departure, @JsonKey(toJson: _destinationToJson) required this.destination, required this.overviewPolyline, @RadiusConverter() required this.radius, @JsonKey(toJson: _waypointsToJson) final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints,super._();
+  factory _MissionEntity.fromJson(Map<String, dynamic> json) => _$MissionEntityFromJson(json);
 
 /// 出発地点
-@override final  Coordinate departure;
+@override@CoordinateConverter() final  Coordinate departure;
 /// 目的地
-@override final  ImageCoordinate destination;
+@override@JsonKey(toJson: _destinationToJson) final  ImageCoordinate destination;
 /// ルートのポリライン文字列
 @override final  String overviewPolyline;
 /// ミッションの検索半径
-@override final  Radius radius;
+@override@RadiusConverter() final  Radius radius;
 /// 通過地点のリスト
  final  List<ImageCoordinate> _waypoints;
 /// 通過地点のリスト
-@override@JsonKey() List<ImageCoordinate> get waypoints {
+@override@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> get waypoints {
   if (_waypoints is EqualUnmodifiableListView) return _waypoints;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_waypoints);
@@ -269,14 +272,17 @@ class _MissionEntity implements MissionEntity {
 @pragma('vm:prefer-inline')
 _$MissionEntityCopyWith<_MissionEntity> get copyWith => __$MissionEntityCopyWithImpl<_MissionEntity>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$MissionEntityToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _MissionEntity&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&(identical(other.radius, radius) || other.radius == radius)&&const DeepCollectionEquality().equals(other._waypoints, _waypoints));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,departure,destination,overviewPolyline,radius,const DeepCollectionEquality().hash(_waypoints));
 
@@ -293,7 +299,7 @@ abstract mixin class _$MissionEntityCopyWith<$Res> implements $MissionEntityCopy
   factory _$MissionEntityCopyWith(_MissionEntity value, $Res Function(_MissionEntity) _then) = __$MissionEntityCopyWithImpl;
 @override @useResult
 $Res call({
- Coordinate departure, ImageCoordinate destination, String overviewPolyline, Radius radius, List<ImageCoordinate> waypoints
+@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
 });
 
 

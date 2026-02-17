@@ -4,10 +4,13 @@ import 'package:snampo/features/mission/domain/value_object/image_coordinate.dar
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 part 'mission_entity.freezed.dart';
+part 'mission_entity.g.dart';
 
 /// ミッション情報エンティティ
 @freezed
 abstract class MissionEntity with _$MissionEntity {
+  const MissionEntity._();
+
   /// ミッション情報を作成する
   ///
   /// [departure] は出発地点の座標
@@ -17,18 +20,26 @@ abstract class MissionEntity with _$MissionEntity {
   /// [radius] はミッションの検索半径
   const factory MissionEntity({
     /// 出発地点
-    required Coordinate departure,
+    @CoordinateConverter() required Coordinate departure,
 
     /// 目的地
-    required ImageCoordinate destination,
+    @JsonKey(toJson: _destinationToJson) required ImageCoordinate destination,
 
     /// ルートのポリライン文字列
     required String overviewPolyline,
 
     /// ミッションの検索半径
-    required Radius radius,
+    @RadiusConverter() required Radius radius,
 
     /// 通過地点のリスト
-    @Default([]) List<ImageCoordinate> waypoints,
+    @Default([]) @JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints,
   }) = _MissionEntity;
+
+  factory MissionEntity.fromJson(Map<String, dynamic> json) =>
+      _$MissionEntityFromJson(json);
 }
+
+Map<String, dynamic> _destinationToJson(ImageCoordinate c) => c.toJson();
+
+List<Map<String, dynamic>> _waypointsToJson(List<ImageCoordinate> list) =>
+    list.map((e) => e.toJson()).toList();

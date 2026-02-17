@@ -2,6 +2,18 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'radius.freezed.dart';
 
+/// Radius の JSON 変換（バリデーションをスキップして .internal() を使用）
+class RadiusConverter implements JsonConverter<Radius, Map<String, dynamic>> {
+  const RadiusConverter();
+
+  @override
+  Radius fromJson(Map<String, dynamic> json) =>
+      Radius.internal(meters: json['meters'] as int);
+
+  @override
+  Map<String, dynamic> toJson(Radius object) => {'meters': object.meters};
+}
+
 /// 半径値オブジェクト
 @freezed
 abstract class Radius with _$Radius {

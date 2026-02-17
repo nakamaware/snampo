@@ -2,6 +2,24 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'coordinate.freezed.dart';
 
+/// Coordinate の JSON 変換（バリデーションをスキップして .internal() を使用）
+class CoordinateConverter
+    implements JsonConverter<Coordinate, Map<String, dynamic>> {
+  const CoordinateConverter();
+
+  @override
+  Coordinate fromJson(Map<String, dynamic> json) => Coordinate.internal(
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+      );
+
+  @override
+  Map<String, dynamic> toJson(Coordinate object) => {
+        'latitude': object.latitude,
+        'longitude': object.longitude,
+      };
+}
+
 /// 座標値オブジェクト
 @freezed
 abstract class Coordinate with _$Coordinate {
