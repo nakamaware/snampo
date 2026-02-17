@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatelessWidget {
@@ -71,7 +73,7 @@ class _SliderWidgetState extends State<SliderWidget> {
 }
 
 /// ミッションを開始するための送信ボタンウィジェット。
-class SubmitButton extends StatefulWidget {
+class SubmitButton extends ConsumerWidget {
   /// [SubmitButton] ウィジェットを作成します。
   ///
   /// [radius] はミッションの検索半径です。
@@ -81,12 +83,7 @@ class SubmitButton extends StatefulWidget {
   final Radius radius;
 
   @override
-  State<SubmitButton> createState() => _SubmitButtonState();
-}
-
-class _SubmitButtonState extends State<SubmitButton> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -94,14 +91,12 @@ class _SubmitButtonState extends State<SubmitButton> {
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, // ボタンの背景色
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
-        // shape: RoundedRectangleBorder( // 形を変えるか否か
-        //   borderRadius: BorderRadius.circular(10), // 角の丸み
-        // ),
       ),
       onPressed: () {
-        context.push('/mission/${widget.radius.meters}');
+        ref.read(missionStoreProvider.notifier).startNewMission(radius);
+        context.push('/mission');
       },
       child: Padding(
         padding: const EdgeInsets.all(15),

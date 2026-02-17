@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -47,12 +49,11 @@ class ResultPage extends StatelessWidget {
 }
 
 /// ホームに戻るボタンウィジェット
-class HomeButton extends StatelessWidget {
-  /// HomeButtonのコンストラクタ
+class HomeButton extends ConsumerWidget {
   const HomeButton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
@@ -61,10 +62,11 @@ class HomeButton extends StatelessWidget {
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, //ボタンの背景色
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
       ),
       onPressed: () {
+        ref.read(missionStoreProvider.notifier).clearMission();
         context.go('/');
       },
       child: Padding(

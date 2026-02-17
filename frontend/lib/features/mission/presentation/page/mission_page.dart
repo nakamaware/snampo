@@ -3,26 +3,18 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// ミッションページを表示するウィジェット
-class MissionPage extends HookConsumerWidget {
-  /// ミッションページを作成する
-  ///
-  /// [radius] はミッションの検索半径（メートル単位）
-  MissionPage({required int radius, super.key})
-    : _radius = Radius(meters: radius);
-
-  /// ミッションの検索半径
-  final Radius _radius;
+class MissionPage extends ConsumerWidget {
+  const MissionPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,45 +25,54 @@ class MissionPage extends HookConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final missionAsyncValue = ref.watch(missionStoreProvider(_radius));
+    final missionAsyncValue = ref.watch(missionStoreProvider);
 
     return missionAsyncValue.when(
       data: (missionInfo) {
+        if (missionInfo == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('On MISSION', style: textstyle),
+              centerTitle: true,
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
         return Scaffold(
           appBar: AppBar(
             title: Text('On MISSION', style: textstyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
-          body: Stack(
+          body: const Stack(
             children: [
-              MapView(currentLocation: missionInfo.departure, radius: _radius),
-              SnapView(radius: _radius),
+              MapView(),
+              SnapView(),
             ],
           ),
         );
       },
-      loading:
-          () => Scaffold(
-            appBar: AppBar(
-              title: Text('On MISSION', style: textstyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LoadingAnimationWidget.staggeredDotsWave(
-                    color: Colors.blue,
-                    size: 100,
-                  ),
-                  const Text('NOW LOADING'),
-                ],
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: Text('On MISSION', style: textstyle),
+          centerTitle: true,
+          backgroundColor: theme.colorScheme.primary,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue,
+                size: 100,
               ),
-            ),
+              const Text('NOW LOADING'),
+            ],
           ),
-      error: (error, stackTrace) {
+        ),
+      ),
+      error: (Object error, StackTrace stackTrace) {
         log('error: $error');
         return Scaffold(
           appBar: AppBar(
@@ -82,7 +83,10 @@ class MissionPage extends HookConsumerWidget {
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [const Text('エラーが発生しました'), Text('$error')],
+              children: [
+                const Text('エラーが発生しました'),
+                Text('$error'),
+              ],
             ),
           ),
         );
@@ -92,83 +96,35 @@ class MissionPage extends HookConsumerWidget {
 }
 
 /// Googleマップを表示するウィジェット
-class MapView extends ConsumerStatefulWidget {
-  /// MapViewを作成する
-  ///
-  /// [currentLocation] は現在位置の座標情報
-  /// [radius] はミッションの検索半径
-  const MapView({
-    required this.currentLocation,
-    required this.radius,
-    super.key,
-  });
-
-  /// 現在位置の座標情報
-  final Coordinate currentLocation;
-
-  /// ミッションの検索半径
-  final Radius radius;
+class MapView extends ConsumerWidget {
+  const MapView({super.key});
 
   @override
-  ConsumerState<MapView> createState() => _MapViewState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final missionInfo = ref.watch(missionStoreProvider).value;
+    if (missionInfo == null) return const SizedBox.shrink();
 
-/// MapViewの状態を管理するクラス
-class _MapViewState extends ConsumerState<MapView> {
-  /// マップの表示制御用
-  late GoogleMapController mapController;
+    final currentLat = missionInfo.departure.latitude;
+    final currentLng = missionInfo.departure.longitude;
+    final target = missionInfo.destination;
 
-  /// ポリラインの座標リスト
-  final List<LatLng> _polylineCoordinates = [];
-  final Set<Polyline> _polylines = {};
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    ref.watch(missionStoreProvider(widget.radius)).whenData((missionInfo) {
-      final encodedPolyline = missionInfo.overviewPolyline;
-      if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
-        final coordinates = decodePolyline(encodedPolyline);
-        if (coordinates.isNotEmpty) {
-          _polylineCoordinates.addAll(coordinates);
-
-          if (mounted) {
-            setState(() {
-              _polylines.add(
-                Polyline(
-                  polylineId: const PolylineId('poly'),
-                  points: _polylineCoordinates,
-                  color: Colors.blue,
-                  width: 3,
-                ),
-              );
-            });
-          }
-        }
+    final polylines = <Polyline>{};
+    if (missionInfo.overviewPolyline.isNotEmpty) {
+      final coordinates = decodePolyline(missionInfo.overviewPolyline);
+      if (coordinates.isNotEmpty) {
+        polylines.add(
+          Polyline(
+            polylineId: const PolylineId('poly'),
+            points: coordinates,
+            color: Colors.blue,
+            width: 3,
+          ),
+        );
       }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // 画面の幅と高さを決定する
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-
-    final missionAsyncValue = ref.watch(missionStoreProvider(widget.radius));
-    final missionInfo = missionAsyncValue.value;
-    if (missionInfo == null) {
-      return const SizedBox.shrink();
     }
 
-    final target = missionInfo.destination;
-    final currentLat = widget.currentLocation.latitude;
-    final currentLng = widget.currentLocation.longitude;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return SizedBox(
       height: height,
@@ -178,13 +134,8 @@ class _MapViewState extends ConsumerState<MapView> {
           children: <Widget>[
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                //マップの初期位置を指定
-                zoom: 17, //ズーム
-                target: LatLng(
-                  //緯度, 経度
-                  currentLat,
-                  currentLng,
-                ),
+                zoom: 17,
+                target: LatLng(currentLat, currentLng),
               ),
               markers: {
                 Marker(
@@ -195,13 +146,10 @@ class _MapViewState extends ConsumerState<MapView> {
                   ),
                 ),
               },
-              polylines: _polylines,
+              polylines: polylines,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
-              onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
-              },
             ),
           ],
         ),
@@ -211,23 +159,17 @@ class _MapViewState extends ConsumerState<MapView> {
 }
 
 /// mission_pageで表示するsnapのメニューウィジェット
-class SnapView extends StatelessWidget {
-  /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.radius, super.key});
-
-  /// ミッションの検索半径
-  final Radius radius;
+class SnapView extends ConsumerWidget {
+  const SnapView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final missionAsyncValue = ref.watch(missionStoreProvider);
 
     return DraggableScrollableSheet(
-      // 初期の表示割合
       initialChildSize: 0.15,
-      // 最小の表示割合
       minChildSize: 0.15,
-      // snapで止める時の割合
       snapSizes: const [0.15, 0.6, 1.0],
       builder: (BuildContext context, ScrollController scrollController) {
         return ColoredBox(
@@ -242,7 +184,72 @@ class SnapView extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 50),
-                      SnapViewState(radius: radius),
+                      missionAsyncValue.when(
+                        data: (MissionEntity? missionInfo) {
+                          if (missionInfo == null) {
+                            return const SizedBox.shrink();
+                          }
+                          final midpointInfoList = missionInfo.waypoints;
+                          final destination = missionInfo.destination;
+                          final titelTextstyle =
+                              theme.textTheme.displaySmall!.copyWith(
+                            color: theme.colorScheme.secondary,
+                          );
+                          final buttonTextstyle =
+                              theme.textTheme.bodyLarge!.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          );
+
+                          return Column(
+                            children: [
+                              Text('MISSION', style: titelTextstyle),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text('- Spot1: '),
+                                  if (midpointInfoList.isNotEmpty)
+                                    AnswerImage(
+                                        imageBase64:
+                                            midpointInfoList[0].imageBase64)
+                                  else
+                                    const SizedBox(width: 150, height: 150),
+                                  const TakeSnap(spotIndex: 0),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text('- Spot2: '),
+                                  AnswerImage(
+                                      imageBase64: destination.imageBase64),
+                                  const TakeSnap(spotIndex: 1),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor:
+                                      theme.colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () => context.push('/result'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Text('到着', style: buttonTextstyle),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (Object error, StackTrace stackTrace) =>
+                            Center(
+                                child: Text('エラーが発生しました: $error')),
+                      ),
                     ],
                   ),
                 ),
@@ -274,87 +281,10 @@ class SnapView extends StatelessWidget {
   }
 }
 
-/// SnapView内でミッション情報を表示するウィジェット
-class SnapViewState extends ConsumerWidget {
-  /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({required this.radius, super.key});
-
-  /// ミッションの検索半径
-  final Radius radius;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final titelTextstyle = theme.textTheme.displaySmall!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
-    final buttonTextstyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    final missionAsyncValue = ref.watch(missionStoreProvider(radius));
-
-    return missionAsyncValue.when(
-      data: (missionInfo) {
-        final midpointInfoList = missionInfo.waypoints;
-        final destination = missionInfo.destination;
-
-        return Column(
-          children: [
-            Text('MISSION', style: titelTextstyle),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('- Spot1: '),
-                if (midpointInfoList.isNotEmpty)
-                  AnswerImage(imageBase64: midpointInfoList[0].imageBase64)
-                else
-                  const SizedBox(width: 150, height: 150),
-                const TakeSnap(spotIndex: 0),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('- Spot2: '),
-                AnswerImage(imageBase64: destination.imageBase64),
-                const TakeSnap(spotIndex: 1),
-              ],
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  // 形を変えるか否か
-                  borderRadius: BorderRadius.circular(10), // 角の丸み
-                ),
-              ),
-              onPressed: () {
-                context.push('/result');
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('到着', style: buttonTextstyle),
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text('エラーが発生しました: $error')),
-    );
-  }
-}
-
 /// Base64エンコードされた画像データを表示するウィジェット
 class AnswerImage extends StatelessWidget {
-  /// AnswerImageウィジェットのコンストラクタ
-  ///
-  /// [imageBase64] Base64エンコードされた画像データの文字列
   const AnswerImage({required this.imageBase64, super.key});
 
-  /// Base64エンコードされた画像データの文字列
   final String imageBase64;
 
   @override
@@ -364,7 +294,6 @@ class AnswerImage extends StatelessWidget {
       width: 150,
       height: 150,
       child: FittedBox(
-        // child: Image.asset(picture_name),
         child: Image.memory(
           imageUint8,
           width: 150,
@@ -378,10 +307,8 @@ class AnswerImage extends StatelessWidget {
 
 /// 写真を撮影するためのボタンを表示するウィジェット
 class TakeSnap extends StatefulWidget {
-  /// TakeSnapウィジェットのコンストラクタ
   const TakeSnap({required this.spotIndex, super.key});
 
-  /// スポットのインデックス
   final int spotIndex;
 
   @override
@@ -406,68 +333,26 @@ class _TakeSnapState extends State<TakeSnap> {
   Widget build(BuildContext context) {
     return _image == null
         ? FloatingActionButton(
-          heroTag: 'take_snap_spot_${widget.spotIndex}',
-          onPressed: getImage,
-          child: const Icon(Icons.add_a_photo),
-        )
+            heroTag: 'take_snap_spot_${widget.spotIndex}',
+            onPressed: getImage,
+            child: const Icon(Icons.add_a_photo),
+          )
         : SizedBox(
-          width: 150,
-          height: 150,
-          child: SetImage(
-            // picture_name: "images/test1.jpeg",
-            picture: _image!,
-          ),
-        );
+            width: 150,
+            height: 150,
+            child: SetImage(picture: _image!),
+          );
   }
 }
 
 /// ファイルから読み込んだ画像を表示するウィジェット
 class SetImage extends StatelessWidget {
-  /// SetImageウィジェットのコンストラクタ
-  ///
-  /// [picture] 表示する画像ファイル
-  const SetImage({
-    // required this.picture_name,
-    required this.picture,
-    super.key,
-  });
-  // final String picture_name;
-  /// 表示する画像ファイル
+  const SetImage({required this.picture, super.key});
+
   final File picture;
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      // child: Image.asset(picture_name),
-      child: Image.file(picture),
-    );
-  }
-}
-
-/// アセットから読み込んだ画像を表示するウィジェット
-class SetTestImage extends StatelessWidget {
-  // final File picture;
-  /// SetTestImageウィジェットのコンストラクタ
-  ///
-  /// [picture] 表示する画像のアセットパス
-  const SetTestImage({
-    // required this.picture_name,
-    required this.picture,
-    super.key,
-  });
-
-  /// 表示する画像のアセットパス
-  final String picture;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: FittedBox(
-        // child: Image.asset(picture_name),
-        child: Image.asset(picture),
-      ),
-    );
+    return FittedBox(child: Image.file(picture));
   }
 }
