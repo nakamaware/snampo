@@ -13,6 +13,7 @@ from app.domain.exceptions import (
     ExternalServiceTimeoutError,
     ExternalServiceValidationError,
 )
+from app.domain.services import coordinate_service
 from app.domain.value_objects import Coordinate, ImageSize, StreetViewImage
 
 logger = logging.getLogger(__name__)
@@ -84,11 +85,19 @@ class StreetViewImageFetchService:
                 service_name="Street View API",
             )
 
+        # ランドマーク座標から道路座標への方向を計算
+        heading = coordinate_service.calculate_bearing(metadata_coordinate, coordinate)
+        logger.info(
+            f"Calculated heading from road {metadata_coordinate} "
+            f"to landmark {coordinate}: {heading} degrees"
+        )
+
         # ストリートビュー画像を取得
         try:
             image_content = self._gateway.get_street_view_image(
                 coordinate=metadata_coordinate,
                 image_size=image_size,
+                heading=heading,
             )
         except ExternalServiceTimeoutError as e:
             logger.error(f"Street View image timeout: {e}")
@@ -101,6 +110,7 @@ class StreetViewImageFetchService:
             metadata_coordinate=metadata_coordinate,
             original_coordinate=coordinate,
             image_data=image_content,
+            heading=heading,
         )
 
     def _get_nearest_road_coordinate(self, coordinate: Coordinate) -> Coordinate:
