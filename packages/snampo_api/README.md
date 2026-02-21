@@ -41,10 +41,10 @@ import 'package:snampo_api/api.dart';
 
 
 final api_instance = DefaultApi();
-final routeRequest = RouteRequest(); // RouteRequest | 
+final request = Request(); // Request | 
 
 try {
-    final result = api_instance.routeRoutePost(routeRequest);
+    final result = api_instance.routeRoutePost(request);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->routeRoutePost: $e\n');
@@ -66,7 +66,9 @@ Class | Method | HTTP request | Description
  - [HTTPValidationError](doc//HTTPValidationError.md)
  - [MidPoint](doc//MidPoint.md)
  - [Point](doc//Point.md)
- - [RouteRequest](doc//RouteRequest.md)
+ - [Request](doc//Request.md)
+ - [RouteRequestDestination](doc//RouteRequestDestination.md)
+ - [RouteRequestRandom](doc//RouteRequestRandom.md)
  - [RouteResponse](doc//RouteResponse.md)
  - [ValidationError](doc//ValidationError.md)
 

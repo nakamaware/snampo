@@ -6,9 +6,48 @@ import pytest
 from geographiclib.geodesic import Geodesic
 
 from app.domain.services.coordinate_service import (
+    calculate_distance,
     calculate_geodesic_midpoint,
 )
 from app.domain.value_objects import Coordinate
+
+# ===== calculate_distance のテスト =====
+
+
+def test_calculate_distance_同じ座標の場合は0を返すこと() -> None:
+    """同じ座標の場合は距離0を返すことを確認"""
+    default_latitude = 35.6870958
+    default_longitude = 139.8133963
+    coordinate = Coordinate(latitude=default_latitude, longitude=default_longitude)
+
+    distance = calculate_distance(coordinate, coordinate)
+
+    assert abs(distance) < 0.01  # ほぼ0であることを確認
+
+
+def test_calculate_distance_東京駅から皇居までの距離が正しいこと() -> None:
+    """東京駅から皇居までの距離が正しいことを確認"""
+    # 東京駅
+    coordinate1 = Coordinate(latitude=35.6812, longitude=139.7671)
+    # 皇居
+    coordinate2 = Coordinate(latitude=35.6850, longitude=139.7528)
+
+    distance = calculate_distance(coordinate1, coordinate2)
+
+    # 実際の距離は約1.3km
+    assert 1200 < distance < 1500, f"距離が期待範囲外です: {distance}m"
+
+
+def test_calculate_distance_順序を入れ替えても同じ距離になること() -> None:
+    """座標の順序を入れ替えても同じ距離になることを確認"""
+    coordinate1 = Coordinate(latitude=35.6812, longitude=139.7671)
+    coordinate2 = Coordinate(latitude=35.6850, longitude=139.7528)
+
+    distance1 = calculate_distance(coordinate1, coordinate2)
+    distance2 = calculate_distance(coordinate2, coordinate1)
+
+    assert distance1 == distance2
+
 
 # ===== calculate_geodesic_midpoint のテスト =====
 

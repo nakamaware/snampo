@@ -25,8 +25,8 @@ abstract class MissionEntity with _$MissionEntity {
     /// ルートのポリライン文字列
     required String overviewPolyline,
 
-    /// ミッションの検索半径
-    required Radius radius,
+    /// ミッションの検索半径 (目的地指定モードの場合は null)
+    Radius? radius,
 
     /// 通過地点のリスト
     @Default([]) List<ImageCoordinate> waypoints,

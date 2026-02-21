@@ -1,11 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
-class SetupPage extends StatelessWidget {
+class SetupPage extends StatefulWidget {
   /// [SetupPage] ウィジェットを作成します。
   const SetupPage({super.key});
+
+  @override
+  State<SetupPage> createState() => _SetupPageState();
+}
+
+class _SetupPageState extends State<SetupPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +42,19 @@ class SetupPage extends StatelessWidget {
         title: Text('SETUP', style: textstyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white,
+          tabs: const [Tab(text: 'ランダム'), Tab(text: '目的地指定')],
+        ),
       ),
-      body: const SliderWidget(),
+      body: TabBarView(
+        controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
+        // TODO: SliderWidgetとDestinationPickerWidgetをそれぞれ別ファイルに分離する
+        children: const [SliderWidget(), DestinationPickerWidget()],
+      ),
     );
   }
 }
@@ -107,6 +141,115 @@ class _SubmitButtonState extends State<SubmitButton> {
         padding: const EdgeInsets.all(15),
         child: Text('GO', style: style),
       ),
+    );
+  }
+}
+
+/// 目的地を地図上で選択するウィジェット
+class DestinationPickerWidget extends HookConsumerWidget {
+  /// [DestinationPickerWidget] ウィジェットを作成します。
+  const DestinationPickerWidget({super.key});
+
+  /// デフォルト位置 (東京駅)
+  static const LatLng _defaultPosition = LatLng(35.6812, 139.7671);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentPosition = useCurrentPosition(ref);
+
+    return currentPosition.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const _MapContent(initialPosition: _defaultPosition),
+      data:
+          (coord) => _MapContent(
+            initialPosition: LatLng(coord.latitude, coord.longitude),
+          ),
+    );
+  }
+}
+
+/// 地図と目的地選択の UI を担当するウィジェット。
+///
+/// 状態を子ウィジェットに閉じ込めることで、タップ時の再ビルド範囲を
+/// 親の [DestinationPickerWidget] まで広げずに済む。
+class _MapContent extends StatefulWidget {
+  const _MapContent({required this.initialPosition});
+
+  final LatLng initialPosition;
+
+  @override
+  State<_MapContent> createState() => _MapContentState();
+}
+
+class _MapContentState extends State<_MapContent> {
+  LatLng? _selectedDestination;
+
+  Set<Marker> get _markers =>
+      _selectedDestination != null
+          ? {
+            Marker(
+              markerId: const MarkerId('destination'),
+              position: _selectedDestination!,
+            ),
+          }
+          : {};
+
+  void _onMapTap(LatLng position) {
+    setState(() => _selectedDestination = position);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+
+    return Stack(
+      children: [
+        RepaintBoundary(
+          child: GoogleMap(
+            key: ValueKey(
+              'map_${widget.initialPosition.latitude}_${widget.initialPosition.longitude}',
+            ),
+            initialCameraPosition: CameraPosition(
+              target: widget.initialPosition,
+              zoom: 14,
+            ),
+            onTap: _onMapTap,
+            markers: _markers,
+            myLocationEnabled: true, // 現在位置を表示
+            tiltGesturesEnabled: false, // 傾きの変更を禁止
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                elevation: 8,
+                shadowColor: Colors.black.withValues(alpha: 0.3),
+              ),
+              onPressed:
+                  _selectedDestination != null
+                      ? () {
+                        context.push(
+                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
+                        );
+                      }
+                      : null,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text('GO', style: smallTextStyle),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

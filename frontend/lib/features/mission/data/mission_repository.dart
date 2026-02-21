@@ -16,23 +16,25 @@ class MissionRepository implements IMissionRepository {
 
   final snampo_api.DefaultApi _generatedApi;
 
-  /// ミッション情報を取得する
+  /// ランダムモードでミッション情報を取得する
   ///
-  /// [radius] はミッションの検索半径
   /// [currentLocation] は現在位置の座標
+  /// [radius] はミッションの検索半径
   @override
-  Future<MissionEntity> getMission({
-    required Radius radius,
+  Future<MissionEntity> createRandomMission({
     required Coordinate currentLocation,
+    required Radius radius,
   }) async {
     // リクエストボディを作成
-    final request = snampo_api.RouteRequest(
+    final request = snampo_api.Request(
       currentLat: currentLocation.latitude,
       currentLng: currentLocation.longitude,
+      mode: 'random',
       radius: radius.meters,
+      destinationLat: null,
+      destinationLng: null,
     );
 
-    // 生成されたAPIクライアントを直接使用
     final response = await _generatedApi.routeRoutePost(request);
 
     if (response == null) {
@@ -42,8 +44,36 @@ class MissionRepository implements IMissionRepository {
     return _toEntity(response, radius);
   }
 
+  /// 目的地指定モードでミッション情報を取得する
+  ///
+  /// [currentLocation] は現在位置の座標
+  /// [destination] は目的地の座標
+  @override
+  Future<MissionEntity> createDestinationMission({
+    required Coordinate currentLocation,
+    required Coordinate destination,
+  }) async {
+    // リクエストボディを作成
+    final request = snampo_api.Request(
+      currentLat: currentLocation.latitude,
+      currentLng: currentLocation.longitude,
+      mode: 'destination',
+      radius: null,
+      destinationLat: destination.latitude,
+      destinationLng: destination.longitude,
+    );
+
+    final response = await _generatedApi.routeRoutePost(request);
+
+    if (response == null) {
+      throw Exception('APIレスポンスがnullです');
+    }
+
+    return _toEntity(response, null);
+  }
+
   /// RouteResponseをエンティティに変換
-  MissionEntity _toEntity(snampo_api.RouteResponse response, Radius radius) {
+  MissionEntity _toEntity(snampo_api.RouteResponse response, Radius? radius) {
     // 必須フィールドのnullチェック
     if (response.overviewPolyline.isEmpty) {
       throw Exception('ルート情報が取得できませんでした');

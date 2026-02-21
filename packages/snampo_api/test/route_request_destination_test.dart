@@ -11,11 +11,11 @@
 import 'package:snampo_api/api.dart';
 import 'package:test/test.dart';
 
-// tests for RouteRequest
+// tests for RouteRequestDestination
 void main() {
-  // final instance = RouteRequest();
+  // final instance = RouteRequestDestination();
 
-  group('test RouteRequest', () {
+  group('test RouteRequestDestination', () {
     // 現在地の緯度
     // num currentLat
     test('to test the property `currentLat`', () async {
@@ -28,9 +28,21 @@ void main() {
       // TODO
     });
 
-    // 目的地を生成する半径 (メートル単位)
-    // int radius
-    test('to test the property `radius`', () async {
+    // ルート生成モード
+    // String mode
+    test('to test the property `mode`', () async {
+      // TODO
+    });
+
+    // 目的地の緯度
+    // num destinationLat
+    test('to test the property `destinationLat`', () async {
+      // TODO
+    });
+
+    // 目的地の経度
+    // num destinationLng
+    test('to test the property `destinationLng`', () async {
       // TODO
     });
 
