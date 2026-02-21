@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:snampo/features/mission/di/mission_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatefulWidget {
@@ -146,44 +147,54 @@ class _SubmitButtonState extends State<SubmitButton> {
 }
 
 /// 目的地を地図上で選択するウィジェット
-class DestinationPickerWidget extends ConsumerStatefulWidget {
+class DestinationPickerWidget extends HookConsumerWidget {
   /// [DestinationPickerWidget] ウィジェットを作成します。
   const DestinationPickerWidget({super.key});
-
-  @override
-  ConsumerState<DestinationPickerWidget> createState() =>
-      _DestinationPickerWidgetState();
-}
-
-class _DestinationPickerWidgetState
-    extends ConsumerState<DestinationPickerWidget> {
-  LatLng? _selectedDestination;
-  Set<Marker> _markers = {};
 
   /// デフォルト位置 (東京駅)
   static const LatLng _defaultPosition = LatLng(35.6812, 139.7671);
 
-  void _updateMarker(LatLng position) {
-    _selectedDestination = position;
-    _markers = {
-      Marker(markerId: const MarkerId('destination'), position: position),
-    };
-    setState(() {});
-  }
-
   @override
-  Widget build(BuildContext context) {
-    final currentPosition = ref.watch(currentPositionProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentPosition = useCurrentPosition(ref);
+    final selectedDestination = useState<LatLng?>(null);
+    final markers = useState<Set<Marker>>({});
+
+    void updateMarker(LatLng position) {
+      selectedDestination.value = position;
+      markers.value = {
+        Marker(markerId: const MarkerId('destination'), position: position),
+      };
+    }
 
     return currentPosition.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _buildMapContent(_defaultPosition),
+      error:
+          (_, __) => _buildMapContent(
+            context,
+            _defaultPosition,
+            markers.value,
+            selectedDestination.value,
+            updateMarker,
+          ),
       data:
-          (coord) => _buildMapContent(LatLng(coord.latitude, coord.longitude)),
+          (coord) => _buildMapContent(
+            context,
+            LatLng(coord.latitude, coord.longitude),
+            markers.value,
+            selectedDestination.value,
+            updateMarker,
+          ),
     );
   }
 
-  Widget _buildMapContent(LatLng initialPosition) {
+  Widget _buildMapContent(
+    BuildContext context,
+    LatLng initialPosition,
+    Set<Marker> markers,
+    LatLng? selectedDestination,
+    void Function(LatLng) updateMarker,
+  ) {
     final theme = Theme.of(context);
     final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -196,8 +207,8 @@ class _DestinationPickerWidgetState
             target: initialPosition,
             zoom: 14,
           ),
-          onTap: _updateMarker,
-          markers: _markers,
+          onTap: updateMarker,
+          markers: markers,
           myLocationEnabled: true, // 現在位置を表示
           tiltGesturesEnabled: false, // 傾きの変更を禁止
         ),
@@ -214,10 +225,10 @@ class _DestinationPickerWidgetState
                 shadowColor: Colors.black.withValues(alpha: 0.3),
               ),
               onPressed:
-                  _selectedDestination != null
+                  selectedDestination != null
                       ? () {
                         context.push(
-                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
+                          '/mission/destination/${selectedDestination.latitude}/${selectedDestination.longitude}',
                         );
                       }
                       : null,
