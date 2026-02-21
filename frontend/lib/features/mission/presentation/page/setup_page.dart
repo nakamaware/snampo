@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -157,44 +156,50 @@ class DestinationPickerWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentPosition = useCurrentPosition(ref);
-    final selectedDestination = useState<LatLng?>(null);
-    final markers = useState<Set<Marker>>({});
-
-    void updateMarker(LatLng position) {
-      selectedDestination.value = position;
-      markers.value = {
-        Marker(markerId: const MarkerId('destination'), position: position),
-      };
-    }
 
     return currentPosition.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error:
-          (_, __) => _buildMapContent(
-            context,
-            _defaultPosition,
-            markers.value,
-            selectedDestination.value,
-            updateMarker,
-          ),
+      error: (_, __) => const _MapContent(initialPosition: _defaultPosition),
       data:
-          (coord) => _buildMapContent(
-            context,
-            LatLng(coord.latitude, coord.longitude),
-            markers.value,
-            selectedDestination.value,
-            updateMarker,
+          (coord) => _MapContent(
+            initialPosition: LatLng(coord.latitude, coord.longitude),
           ),
     );
   }
+}
 
-  Widget _buildMapContent(
-    BuildContext context,
-    LatLng initialPosition,
-    Set<Marker> markers,
-    LatLng? selectedDestination,
-    void Function(LatLng) updateMarker,
-  ) {
+/// 地図と目的地選択の UI を担当するウィジェット。
+///
+/// 状態を子ウィジェットに閉じ込めることで、タップ時の再ビルド範囲を
+/// 親の [DestinationPickerWidget] まで広げずに済む。
+class _MapContent extends StatefulWidget {
+  const _MapContent({required this.initialPosition});
+
+  final LatLng initialPosition;
+
+  @override
+  State<_MapContent> createState() => _MapContentState();
+}
+
+class _MapContentState extends State<_MapContent> {
+  LatLng? _selectedDestination;
+
+  Set<Marker> get _markers =>
+      _selectedDestination != null
+          ? {
+            Marker(
+              markerId: const MarkerId('destination'),
+              position: _selectedDestination!,
+            ),
+          }
+          : {};
+
+  void _onMapTap(LatLng position) {
+    setState(() => _selectedDestination = position);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -202,15 +207,20 @@ class DestinationPickerWidget extends HookConsumerWidget {
 
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: initialPosition,
-            zoom: 14,
+        RepaintBoundary(
+          child: GoogleMap(
+            key: ValueKey(
+              'map_${widget.initialPosition.latitude}_${widget.initialPosition.longitude}',
+            ),
+            initialCameraPosition: CameraPosition(
+              target: widget.initialPosition,
+              zoom: 14,
+            ),
+            onTap: _onMapTap,
+            markers: _markers,
+            myLocationEnabled: true, // 現在位置を表示
+            tiltGesturesEnabled: false, // 傾きの変更を禁止
           ),
-          onTap: updateMarker,
-          markers: markers,
-          myLocationEnabled: true, // 現在位置を表示
-          tiltGesturesEnabled: false, // 傾きの変更を禁止
         ),
         Positioned(
           bottom: 20,
@@ -225,10 +235,10 @@ class DestinationPickerWidget extends HookConsumerWidget {
                 shadowColor: Colors.black.withValues(alpha: 0.3),
               ),
               onPressed:
-                  selectedDestination != null
+                  _selectedDestination != null
                       ? () {
                         context.push(
-                          '/mission/destination/${selectedDestination.latitude}/${selectedDestination.longitude}',
+                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
                         );
                       }
                       : null,
