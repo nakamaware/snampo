@@ -9,7 +9,7 @@ import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 /// AsyncValue を返します。
 /// loading / error / data の状態を AsyncValue.when で扱えます。
 AsyncValue<Coordinate> useCurrentPosition(WidgetRef ref) {
-  final locationService = ref.watch(locationServiceProvider);
+  final locationService = ref.read(locationServiceProvider);
   final future = useMemoized(locationService.getCurrentPosition);
   final snapshot = useFuture(future);
 
