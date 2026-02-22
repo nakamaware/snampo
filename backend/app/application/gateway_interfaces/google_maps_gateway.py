@@ -69,12 +69,15 @@ class GoogleMapsGateway(ABC):
         ...
 
     @abstractmethod
-    def get_street_view_image(self, coordinate: Coordinate, image_size: ImageSize) -> bytes:
+    def get_street_view_image(
+        self, coordinate: Coordinate, image_size: ImageSize, heading: float | None = None
+    ) -> bytes:
         """Street View画像を取得
 
         Args:
             coordinate: 座標
             image_size: 画像サイズ
+            heading: カメラの方向 (0-360度、北が0度、時計回り)。Noneの場合はデフォルト方向
 
         Returns:
             bytes: 画像データ
