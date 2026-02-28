@@ -296,31 +296,23 @@ class SnapViewState extends ConsumerWidget {
 
     return missionAsyncValue.when(
       data: (missionInfo) {
-        final midpointInfoList = missionInfo.waypoints;
-        final destination = missionInfo.destination;
+        final missionSpots = [
+          ...missionInfo.waypoints,
+          missionInfo.destination,
+        ];
 
         return Column(
           children: [
             Text('MISSION', style: titleTextStyle),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('- Spot1: '),
-                if (midpointInfoList.isNotEmpty)
-                  AnswerImage(imageBase64: midpointInfoList[0].imageBase64)
-                else
-                  const SizedBox(width: 150, height: 150),
-                const TakeSnap(spotIndex: 0),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('- Spot2: '),
-                AnswerImage(imageBase64: destination.imageBase64),
-                const TakeSnap(spotIndex: 1),
-              ],
-            ),
+            for (var i = 0; i < missionSpots.length; i++)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('- Spot${i + 1}: '),
+                  AnswerImage(imageBase64: missionSpots[i].imageBase64),
+                  TakeSnap(spotIndex: i),
+                ],
+              ),
             const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
