@@ -18,19 +18,19 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径または目的地座標を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [RouteRequest] routeRequest (required):
-  Future<Response> routeRoutePostWithHttpInfo(RouteRequest routeRequest,) async {
+  /// * [Request] request (required):
+  Future<Response> routeRoutePostWithHttpInfo(Request request,) async {
     // ignore: prefer_const_declarations
     final path = r'/route';
 
     // ignore: prefer_final_locals
-    Object? postBody = routeRequest;
+    Object? postBody = request;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
@@ -52,13 +52,13 @@ class DefaultApi {
 
   /// Route
   ///
-  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
+  /// ルートを生成  Args:     request: ルート生成リクエスト(現在地の緯度・経度、半径または目的地座標を含む)     usecase: ルート生成ユースケース  Returns:     RouteResponse: ルート情報  Raises:     HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
   ///
   /// Parameters:
   ///
-  /// * [RouteRequest] routeRequest (required):
-  Future<RouteResponse?> routeRoutePost(RouteRequest routeRequest,) async {
-    final response = await routeRoutePostWithHttpInfo(routeRequest,);
+  /// * [Request] request (required):
+  Future<RouteResponse?> routeRoutePost(Request request,) async {
+    final response = await routeRoutePostWithHttpInfo(request,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

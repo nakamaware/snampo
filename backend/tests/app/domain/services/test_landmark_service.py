@@ -4,9 +4,9 @@ import math
 
 import pytest
 
+from app.domain.services.coordinate_service import calculate_distance
 from app.domain.services.landmark_service import (
     _generate_scattered_indices,
-    calculate_distance,
     generate_equidistant_circle_points,
 )
 from app.domain.value_objects import Coordinate
@@ -14,39 +14,6 @@ from app.domain.value_objects import Coordinate
 # テストで使用する共通の座標
 DEFAULT_LATITUDE = 35.6870958
 DEFAULT_LONGITUDE = 139.8133963
-
-
-def test_calculate_distance_同じ座標の場合は0を返すこと() -> None:
-    """同じ座標の場合は距離0を返すことを確認"""
-    coordinate = Coordinate(latitude=DEFAULT_LATITUDE, longitude=DEFAULT_LONGITUDE)
-
-    distance = calculate_distance(coordinate, coordinate)
-
-    assert abs(distance) < 0.01  # ほぼ0であることを確認
-
-
-def test_calculate_distance_東京駅から皇居までの距離が正しいこと() -> None:
-    """東京駅から皇居までの距離が正しいことを確認"""
-    # 東京駅
-    coordinate1 = Coordinate(latitude=35.6812, longitude=139.7671)
-    # 皇居
-    coordinate2 = Coordinate(latitude=35.6850, longitude=139.7528)
-
-    distance = calculate_distance(coordinate1, coordinate2)
-
-    # 実際の距離は約1.3km
-    assert 1200 < distance < 1500, f"距離が期待範囲外です: {distance}m"
-
-
-def test_calculate_distance_順序を入れ替えても同じ距離になること() -> None:
-    """座標の順序を入れ替えても同じ距離になることを確認"""
-    coordinate1 = Coordinate(latitude=35.6812, longitude=139.7671)
-    coordinate2 = Coordinate(latitude=35.6850, longitude=139.7528)
-
-    distance1 = calculate_distance(coordinate1, coordinate2)
-    distance2 = calculate_distance(coordinate2, coordinate1)
-
-    assert distance1 == distance2
 
 
 def test_generate_equidistant_circle_points_点の数が正しいこと() -> None:
