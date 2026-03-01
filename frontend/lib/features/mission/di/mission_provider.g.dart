@@ -220,3 +220,56 @@ final class CreateDestinationMissionUseCaseProvider
 
 String _$createDestinationMissionUseCaseHash() =>
     r'8e771728c257f7cc349c74180fb5a47b03448dd4';
+
+/// 現在位置を取得するユースケースのプロバイダー
+
+@ProviderFor(getCurrentPositionUseCase)
+final getCurrentPositionUseCaseProvider = GetCurrentPositionUseCaseProvider._();
+
+/// 現在位置を取得するユースケースのプロバイダー
+
+final class GetCurrentPositionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetCurrentPositionUseCase,
+          GetCurrentPositionUseCase,
+          GetCurrentPositionUseCase
+        >
+    with $Provider<GetCurrentPositionUseCase> {
+  /// 現在位置を取得するユースケースのプロバイダー
+  GetCurrentPositionUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCurrentPositionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCurrentPositionUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCurrentPositionUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCurrentPositionUseCase create(Ref ref) {
+    return getCurrentPositionUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCurrentPositionUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCurrentPositionUseCase>(value),
+    );
+  }
+}
+
+String _$getCurrentPositionUseCaseHash() =>
+    r'fad01b4707dc85fcbac4f1f6f9500449007eb397';

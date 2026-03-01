@@ -3,8 +3,10 @@ import 'package:snampo/features/mission/application/interface/location_service.d
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
 import 'package:snampo/features/mission/application/usecase/create_destination_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_random_mission_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/mission_repository.dart';
+
 part 'mission_provider.g.dart';
 
 /// 位置情報サービスのプロバイダー
@@ -35,4 +37,10 @@ CreateDestinationMissionUseCase createDestinationMissionUseCase(Ref ref) {
     ref.read(locationServiceProvider),
     ref.read(missionRepositoryProvider),
   );
+}
+
+/// 現在位置を取得するユースケースのプロバイダー
+@riverpod
+GetCurrentPositionUseCase getCurrentPositionUseCase(Ref ref) {
+  return GetCurrentPositionUseCase(ref.read(locationServiceProvider));
 }
