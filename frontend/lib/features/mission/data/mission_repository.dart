@@ -16,47 +16,24 @@ class MissionRepository implements IMissionRepository {
 
   final snampo_api.DefaultApi _generatedApi;
 
-  /// ミッション情報を取得する
+  /// ランダムモードでミッション情報を取得する
   ///
   /// [currentLocation] は現在位置の座標
-  /// [radius] はミッションの検索半径 (ランダムモード用、目的地指定時は null)
-  /// [destination] は目的地の座標 (目的地指定モード用、ランダムモード時は null)
+  /// [radius] はミッションの検索半径
   @override
-  Future<MissionEntity> getMission({
+  Future<MissionEntity> createRandomMission({
     required Coordinate currentLocation,
-    Radius? radius,
-    Coordinate? destination,
+    required Radius radius,
   }) async {
-    // destinationとradiusの両方がnull、または両方とも値が入っている場合はエラー
-    if (destination == null && radius == null) {
-      throw ArgumentError('ランダムモードではradiusが必須です。destinationとradiusの両方がnullです。');
-    }
-    if (destination != null && radius != null) {
-      throw ArgumentError(
-        '目的地指定モードとランダムモードは同時に指定できません。destinationとradiusの両方に値が設定されています。',
-      );
-    }
-
     // リクエストボディを作成
-    final request =
-        destination != null
-            ? snampo_api.Request(
-              currentLat: currentLocation.latitude,
-              currentLng: currentLocation.longitude,
-              mode: 'destination',
-              radius: null,
-              destinationLat: destination.latitude,
-              destinationLng: destination.longitude,
-            )
-            : snampo_api.Request(
-              currentLat: currentLocation.latitude,
-              currentLng: currentLocation.longitude,
-              mode: 'random',
-              radius:
-                  radius?.meters ?? (throw Exception('ランダムモードではradiusが必須です')),
-              destinationLat: null,
-              destinationLng: null,
-            );
+    final request = snampo_api.Request(
+      currentLat: currentLocation.latitude,
+      currentLng: currentLocation.longitude,
+      mode: 'random',
+      radius: radius.meters,
+      destinationLat: null,
+      destinationLng: null,
+    );
 
     final response = await _generatedApi.routeRoutePost(request);
 
@@ -65,6 +42,34 @@ class MissionRepository implements IMissionRepository {
     }
 
     return _toEntity(response, radius);
+  }
+
+  /// 目的地指定モードでミッション情報を取得する
+  ///
+  /// [currentLocation] は現在位置の座標
+  /// [destination] は目的地の座標
+  @override
+  Future<MissionEntity> createDestinationMission({
+    required Coordinate currentLocation,
+    required Coordinate destination,
+  }) async {
+    // リクエストボディを作成
+    final request = snampo_api.Request(
+      currentLat: currentLocation.latitude,
+      currentLng: currentLocation.longitude,
+      mode: 'destination',
+      radius: null,
+      destinationLat: destination.latitude,
+      destinationLng: destination.longitude,
+    );
+
+    final response = await _generatedApi.routeRoutePost(request);
+
+    if (response == null) {
+      throw Exception('APIレスポンスがnullです');
+    }
+
+    return _toEntity(response, null);
   }
 
   /// RouteResponseをエンティティに変換

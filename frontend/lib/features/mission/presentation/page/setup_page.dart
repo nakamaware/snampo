@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:snampo/features/mission/di/mission_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatefulWidget {
@@ -146,44 +146,60 @@ class _SubmitButtonState extends State<SubmitButton> {
 }
 
 /// 目的地を地図上で選択するウィジェット
-class DestinationPickerWidget extends ConsumerStatefulWidget {
+class DestinationPickerWidget extends HookConsumerWidget {
   /// [DestinationPickerWidget] ウィジェットを作成します。
   const DestinationPickerWidget({super.key});
-
-  @override
-  ConsumerState<DestinationPickerWidget> createState() =>
-      _DestinationPickerWidgetState();
-}
-
-class _DestinationPickerWidgetState
-    extends ConsumerState<DestinationPickerWidget> {
-  LatLng? _selectedDestination;
-  Set<Marker> _markers = {};
 
   /// デフォルト位置 (東京駅)
   static const LatLng _defaultPosition = LatLng(35.6812, 139.7671);
 
-  void _updateMarker(LatLng position) {
-    _selectedDestination = position;
-    _markers = {
-      Marker(markerId: const MarkerId('destination'), position: position),
-    };
-    setState(() {});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentPosition = useCurrentPosition(ref);
+
+    return currentPosition.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const _MapContent(initialPosition: _defaultPosition),
+      data:
+          (coord) => _MapContent(
+            initialPosition: LatLng(coord.latitude, coord.longitude),
+          ),
+    );
+  }
+}
+
+/// 地図と目的地選択の UI を担当するウィジェット。
+///
+/// 状態を子ウィジェットに閉じ込めることで、タップ時の再ビルド範囲を
+/// 親の [DestinationPickerWidget] まで広げずに済む。
+class _MapContent extends StatefulWidget {
+  const _MapContent({required this.initialPosition});
+
+  final LatLng initialPosition;
+
+  @override
+  State<_MapContent> createState() => _MapContentState();
+}
+
+class _MapContentState extends State<_MapContent> {
+  LatLng? _selectedDestination;
+
+  Set<Marker> get _markers =>
+      _selectedDestination != null
+          ? {
+            Marker(
+              markerId: const MarkerId('destination'),
+              position: _selectedDestination!,
+            ),
+          }
+          : {};
+
+  void _onMapTap(LatLng position) {
+    setState(() => _selectedDestination = position);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentPosition = ref.watch(currentPositionProvider);
-
-    return currentPosition.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _buildMapContent(_defaultPosition),
-      data:
-          (coord) => _buildMapContent(LatLng(coord.latitude, coord.longitude)),
-    );
-  }
-
-  Widget _buildMapContent(LatLng initialPosition) {
     final theme = Theme.of(context);
     final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -191,15 +207,20 @@ class _DestinationPickerWidgetState
 
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: initialPosition,
-            zoom: 14,
+        RepaintBoundary(
+          child: GoogleMap(
+            key: ValueKey(
+              'map_${widget.initialPosition.latitude}_${widget.initialPosition.longitude}',
+            ),
+            initialCameraPosition: CameraPosition(
+              target: widget.initialPosition,
+              zoom: 14,
+            ),
+            onTap: _onMapTap,
+            markers: _markers,
+            myLocationEnabled: true, // 現在位置を表示
+            tiltGesturesEnabled: false, // 傾きの変更を禁止
           ),
-          onTap: _updateMarker,
-          markers: _markers,
-          myLocationEnabled: true, // 現在位置を表示
-          tiltGesturesEnabled: false, // 傾きの変更を禁止
         ),
         Positioned(
           bottom: 20,

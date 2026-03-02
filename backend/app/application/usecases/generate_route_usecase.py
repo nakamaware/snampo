@@ -199,7 +199,7 @@ class GenerateRouteUseCase:
                 midpoints=[midpoint_coordinate],
                 overview_polyline=overview_polyline,
                 midpoint_images=[(midpoint_coordinate, midpoint_image)],
-                destination_image=destination_image,  # ランダムモード時のみ設定
+                destination_image=destination_image,
             )
         except (ExternalServiceValidationError, ExternalServiceError, ValueError) as e:
             raise RouteGenerationError(
