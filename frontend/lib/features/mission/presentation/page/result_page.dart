@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
 /// resultpageに遷移する時にバグるので要修正
-class ResultPage extends StatelessWidget {
+class ResultPage extends HookConsumerWidget {
   /// ResultPageのコンストラクタ
   const ResultPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 到着画面が初めて表示されたタイミングで1回だけ missionStore をクリアする（ビルド完了後に遅延実行）
+    useEffect(() {
+      Future(() {
+        ref.read(missionStoreProvider.notifier).clearMission();
+      });
+      return null;
+    }, const []);
+
     final theme = Theme.of(context);
     final titleTextstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
@@ -49,11 +58,12 @@ class ResultPage extends StatelessWidget {
 }
 
 /// ホームに戻るボタンウィジェット
-class HomeButton extends ConsumerWidget {
+class HomeButton extends StatelessWidget {
+  /// HomeButtonのコンストラクタ
   const HomeButton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textstyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
@@ -65,10 +75,7 @@ class HomeButton extends ConsumerWidget {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
       ),
-      onPressed: () {
-        ref.read(missionStoreProvider.notifier).clearMission();
-        context.go('/');
-      },
+      onPressed: () => context.go('/'),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text('ホーム', style: textstyle),

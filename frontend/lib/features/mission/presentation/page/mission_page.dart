@@ -235,7 +235,7 @@ class SnapView extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                onPressed: () => context.push('/result'),
+                                onPressed: () => context.pushReplacement('/result'),
                                 child: Padding(
                                   padding: const EdgeInsets.all(20),
                                   child: Text('到着', style: buttonTextstyle),
