@@ -9,20 +9,25 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 300,
-              child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+                ),
+                const SizedBox(height: 20),
+                const StartButton(),
+                const SizedBox(height: 10), // 2つの間を空ける
+                const HistoryButton(),
+              ],
             ),
-            const SizedBox(height: 20),
-            const StartButton(),
-            const SizedBox(height: 10), // 2つの間を空ける
-            const HistoryButton(),
-          ],
-        ),
+          ),
+          const Positioned(bottom: 20, right: 20, child: InfoIconButton()),
+        ],
       ),
     );
   }
@@ -84,6 +89,25 @@ class HistoryButton extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Text('履歴', style: style),
       ),
+    );
+  }
+}
+
+/// ライセンスのアイコンウィジェット
+class InfoIconButton extends StatelessWidget {
+  /// InfoIconButtonのコンストラクタ
+  const InfoIconButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return IconButton(
+      icon: const Icon(Icons.info),
+      color: theme.colorScheme.primary,
+      onPressed: () {
+        showLicensePage(context: context);
+      },
     );
   }
 }

@@ -11,22 +11,22 @@ class ResultPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titleTextstyle = (theme.textTheme.displayMedium ??
+    final titleTextStyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
-    final textstyleLarge = (theme.textTheme.displayLarge ??
+    final textStyleLarge = (theme.textTheme.displayLarge ??
             theme.textTheme.headlineLarge ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.primary);
-    final textstyleMid = (theme.textTheme.bodyLarge ??
+    final textStyleMid = (theme.textTheme.bodyLarge ??
             theme.textTheme.bodyMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.primary);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('RESULT', style: titleTextstyle),
+        title: Text('RESULT', style: titleTextStyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -34,9 +34,9 @@ class ResultPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('GOAL!!', style: textstyleLarge),
+            Text('GOAL!!', style: textStyleLarge),
             const SizedBox(height: 20),
-            Text('Congratulations!', style: textstyleMid),
+            Text('Congratulations!', style: textStyleMid),
             const SizedBox(height: 20),
             const HomeButton(),
           ],
@@ -54,7 +54,7 @@ class HomeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = (theme.textTheme.displayMedium ??
+    final textStyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
@@ -69,7 +69,7 @@ class HomeButton extends StatelessWidget {
       },
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Text('ホーム', style: textstyle),
+        child: Text('ホーム', style: textStyle),
       ),
     );
   }

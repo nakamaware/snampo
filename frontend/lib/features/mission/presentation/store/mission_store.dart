@@ -8,6 +8,9 @@ import 'package:snampo/features/mission/domain/value_object/radius.dart';
 part 'mission_store.freezed.dart';
 part 'mission_store.g.dart';
 
+/// リトライを無効化する (1 回の失敗で即座にエラー状態にする)
+Duration? _noRetry(int count, Object error) => null;
+
 /// ミッションストアのパラメータ (Union型)
 @freezed
 sealed class MissionStoreParams with _$MissionStoreParams {
@@ -26,7 +29,7 @@ sealed class MissionStoreParams with _$MissionStoreParams {
 }
 
 /// ミッション情報を管理するストア
-@riverpod
+@Riverpod(retry: _noRetry)
 class MissionStoreNotifier extends _$MissionStoreNotifier {
   @override
   Future<MissionEntity> build(MissionStoreParams params) async {
