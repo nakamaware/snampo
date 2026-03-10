@@ -15,7 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CheckpointProgress {
 
-@NullableCoordinateConverter() Coordinate? get guessPosition; String? get userPhotoPath; DateTime? get achievedAt;
+/// 撮影時の位置（将来用、現状は null）
+@NullableCoordinateConverter() Coordinate? get guessPosition;/// 保存した写真のファイルパス
+ String? get userPhotoPath;/// 達成した日時
+ DateTime? get achievedAt;
 /// Create a copy of CheckpointProgress
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -226,8 +229,11 @@ class _CheckpointProgress implements CheckpointProgress {
   const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.achievedAt});
   factory _CheckpointProgress.fromJson(Map<String, dynamic> json) => _$CheckpointProgressFromJson(json);
 
+/// 撮影時の位置（将来用、現状は null）
 @override@NullableCoordinateConverter() final  Coordinate? guessPosition;
+/// 保存した写真のファイルパス
 @override final  String? userPhotoPath;
+/// 達成した日時
 @override final  DateTime? achievedAt;
 
 /// Create a copy of CheckpointProgress
@@ -308,7 +314,9 @@ $CoordinateCopyWith<$Res>? get guessPosition {
 /// @nodoc
 mixin _$MissionProgressEntity {
 
- DateTime get startedAt; List<CheckpointProgress?> get checkpoints;
+/// ミッション開始時刻
+ DateTime get startedAt;/// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
+ List<CheckpointProgress?> get checkpoints;
 /// Create a copy of MissionProgressEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -506,8 +514,11 @@ class _MissionProgressEntity extends MissionProgressEntity {
   const _MissionProgressEntity({required this.startedAt, final  List<CheckpointProgress?> checkpoints = const []}): _checkpoints = checkpoints,super._();
   factory _MissionProgressEntity.fromJson(Map<String, dynamic> json) => _$MissionProgressEntityFromJson(json);
 
+/// ミッション開始時刻
 @override final  DateTime startedAt;
+/// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
  final  List<CheckpointProgress?> _checkpoints;
+/// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
 @override@JsonKey() List<CheckpointProgress?> get checkpoints {
   if (_checkpoints is EqualUnmodifiableListView) return _checkpoints;
   // ignore: implicit_dynamic_type
