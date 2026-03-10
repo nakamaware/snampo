@@ -9,11 +9,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
+import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// ミッションページを表示するウィジェット
 class MissionPage extends ConsumerWidget {
+  /// [MissionPage] ウィジェットを作成する
   const MissionPage({super.key});
 
   @override
@@ -24,6 +26,17 @@ class MissionPage extends ConsumerWidget {
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
+
+    // ミッションが読み込まれたら、撮影スポット数分の進捗を用意する。これがないと写真を撮っても保存されない。
+    ref.listen(missionStoreProvider, (prev, next) {
+      next.whenData((mission) {
+        if (mission != null) {
+          ref
+              .read(missionProgressStoreProvider.notifier)
+              .startProgress(mission.waypoints.length + 1);
+        }
+      });
+    });
 
     final missionAsyncValue = ref.watch(missionStoreProvider);
 
@@ -306,49 +319,54 @@ class AnswerImage extends StatelessWidget {
 }
 
 /// 写真を撮影するためのボタンを表示するウィジェット
-class TakeSnap extends StatefulWidget {
+class TakeSnap extends ConsumerWidget {
+  /// [TakeSnap] ウィジェットを作成する
+  ///
+  /// [spotIndex] は撮影するスポットのインデックス（0: 経由地, 1: 目的地）
   const TakeSnap({required this.spotIndex, super.key});
 
+  /// 撮影するスポットのインデックス
   final int spotIndex;
 
   @override
-  State<TakeSnap> createState() => _TakeSnapState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(missionProgressStoreProvider).value;
+    final photoPath =
+        progress?.checkpoints.elementAtOrNull(spotIndex)?.userPhotoPath;
 
-class _TakeSnapState extends State<TakeSnap> {
-  File? _image;
-  final picker = ImagePicker();
-
-  Future<void> getImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
+    if (photoPath != null) {
+      return SizedBox(
+        width: 150,
+        height: 150,
+        child: FittedBox(child: Image.file(File(photoPath))),
+      );
+    }
+    return FloatingActionButton(
+      heroTag: 'take_snap_spot_$spotIndex',
+      onPressed: () => _getImage(ref),
+      child: const Icon(Icons.add_a_photo),
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _image == null
-        ? FloatingActionButton(
-            heroTag: 'take_snap_spot_${widget.spotIndex}',
-            onPressed: getImage,
-            child: const Icon(Icons.add_a_photo),
-          )
-        : SizedBox(
-            width: 150,
-            height: 150,
-            child: SetImage(picture: _image!),
-          );
+  Future<void> _getImage(WidgetRef ref) async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      await ref
+          .read(missionProgressStoreProvider.notifier)
+          .savePhoto(spotIndex, pickedFile.path);
+    }
   }
 }
 
 /// ファイルから読み込んだ画像を表示するウィジェット
 class SetImage extends StatelessWidget {
+  /// [SetImage] ウィジェットを作成する
+  ///
+  /// [picture] は表示する画像ファイル
   const SetImage({required this.picture, super.key});
 
+  /// 表示する画像ファイル
   final File picture;
 
   @override

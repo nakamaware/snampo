@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 
 /// ミッション完了後の結果を表示するページ
@@ -13,9 +14,10 @@ class ResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 到着画面が初めて表示されたタイミングで1回だけ missionStore をクリアする（ビルド完了後に遅延実行）
+    // 到着画面が初めて表示されたタイミングで1回だけ missionStore と progressStore をクリアする（ビルド完了後に遅延実行）
     useEffect(() {
-      Future(() {
+      Future(() async {
+        await ref.read(missionProgressStoreProvider.notifier).clearProgress();
         ref.read(missionStoreProvider.notifier).clearMission();
       });
       return null;
