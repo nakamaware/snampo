@@ -40,3 +40,22 @@ def calculate_geodesic_midpoint(start: Coordinate, end: Coordinate) -> Coordinat
     midpoint = geodesic(meters=total.meters / 2).destination(start_point, bearing)
 
     return Coordinate(latitude=midpoint.latitude, longitude=midpoint.longitude)
+
+
+def calculate_distance(start: Coordinate, end: Coordinate) -> float:
+    """2点間の測地線距離を計算
+
+    地球表面上の最短経路(測地線)に沿った距離をメートル単位で返します。
+
+    Args:
+        start: 始点の座標
+        end: 終点の座標
+
+    Returns:
+        float: 2点間の距離 (メートル単位)
+    """
+    start_point = (start.latitude, start.longitude)
+    end_point = (end.latitude, end.longitude)
+
+    distance = geodesic(start_point, end_point)
+    return distance.meters

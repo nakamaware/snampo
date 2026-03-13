@@ -33,7 +33,9 @@ part 'api/default_api.dart';
 part 'model/http_validation_error.dart';
 part 'model/mid_point.dart';
 part 'model/point.dart';
-part 'model/route_request.dart';
+part 'model/request.dart';
+part 'model/route_request_destination.dart';
+part 'model/route_request_random.dart';
 part 'model/route_response.dart';
 part 'model/validation_error.dart';
 

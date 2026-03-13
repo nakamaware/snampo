@@ -18,6 +18,17 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/camera', builder: (context, state) => const CameraPage()),
+    GoRoute(
+      path: '/mission/destination/:lat/:lng',
+      builder: (context, state) {
+        final lat = double.parse(state.pathParameters['lat']!);
+        final lng = double.parse(state.pathParameters['lng']!);
+        return MissionPage.withDestination(
+          destinationLat: lat,
+          destinationLng: lng,
+        );
+      },
+    ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
   ],
 );
