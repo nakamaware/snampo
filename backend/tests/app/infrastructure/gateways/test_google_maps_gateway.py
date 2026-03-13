@@ -409,6 +409,97 @@ class TestGetStreetViewImage:
             assert "params" in call_args.kwargs
             assert call_args.kwargs["params"]["source"] == "outdoor"
 
+    def test_headingパラメータが指定されたときにリクエストに含まれること(self) -> None:
+        """headingパラメータが指定されたときに、APIリクエストにheadingが含まれることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+        heading = 90.0
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_street_view_image(coordinate, image_size, heading=heading)
+
+            # リクエストパラメータに heading が含まれることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            assert "params" in call_args.kwargs
+            assert "heading" in call_args.kwargs["params"]
+            assert call_args.kwargs["params"]["heading"] == "90"
+
+    def test_headingパラメータがNoneの場合はリクエストに含まれないこと(self) -> None:
+        """headingパラメータがNoneの場合は、APIリクエストにheadingが含まれないことを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_street_view_image(coordinate, image_size, heading=None)
+
+            # リクエストパラメータに heading が含まれないことを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            assert "params" in call_args.kwargs
+            assert "heading" not in call_args.kwargs["params"]
+
+    def test_異なるheadingで別リクエストが発生すること(self) -> None:
+        """異なるheadingで呼び出したときに、それぞれ別のリクエストが発生することを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            # 異なるheadingで呼び出す
+            gateway.get_street_view_image(coordinate, image_size, heading=90.0)
+            gateway.get_street_view_image(coordinate, image_size, heading=180.0)
+
+            # APIリクエストは2回呼ばれるべき
+            assert mock_get.call_count == 2
+
+    def test_headingが整数に変換されること(self) -> None:
+        """headingが浮動小数点数の場合、整数に変換されてリクエストに含まれることを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+        heading = 90.7  # 浮動小数点数
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.get_street_view_image(coordinate, image_size, heading=heading)
+
+            # リクエストパラメータに heading が整数として含まれることを確認
+            call_args = mock_get.call_args
+            assert call_args is not None
+            assert "params" in call_args.kwargs
+            assert call_args.kwargs["params"]["heading"] == "90"
+
 
 class TestSnapToRoad:
     """SnapToRoadのテスト"""
