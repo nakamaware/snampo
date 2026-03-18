@@ -29,7 +29,7 @@ Refs: #123
 
 ## issue番号の取得
 
-ブランチ名からissue番号を取得して、descriptionの末尾に `Refs: #<issue-num>` を追加。
+ブランチ名からissue番号を取得して、コミットメッセージ末尾のフッター行に `Refs: #<issue-num>` を追加。
 
 ```bash
 # ブランチ名からissue番号を抽出
