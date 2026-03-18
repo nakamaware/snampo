@@ -1,0 +1,10 @@
+---
+description: Flutter/Dart ファイルの解析・編集時に analysis_options.yaml に従う
+globs: frontend/**/*.dart
+alwaysApply: false
+---
+
+# Flutter/Dart の解析ルール
+
+- Flutter の Dart ファイルを読む・編集するときは、@frontend/analysis_options.yaml に従ってください
+- このプロジェクトでは `very_good_analysis` をベースとした解析設定を使用しています

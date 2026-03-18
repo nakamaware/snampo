@@ -1,0 +1,21 @@
+---
+description: Python ファイルの解析・編集時に pyproject.toml のスタイルに従う
+globs: backend/**/*.py
+alwaysApply: false
+---
+
+# Python の解析・スタイルルール
+
+- Python ファイルを読む・編集するときは、@backend/pyproject.toml に記載したスタイルに従ってください
+- Ruff (line-length 100, target Python 3.13) および Pyright の設定を参照してください
+
+# コマンド
+
+- 実行するときは `python` コマンドや `python3` コマンドではなく、 `uv run python` コマンドを使うようにしてください
+- pytest を実行するときには sandbox 環境ではなく、実際の環境で実行するようにしてください
+
+# 型アノテーション
+
+- typing.List などを使わずに list などを使うようにしてください (list, dict, tuple, set など)
+- typing.Optional を使わずに `| None` を使うようにしてください
+- typing.Union を使わずに `|` を使うようにしてください
