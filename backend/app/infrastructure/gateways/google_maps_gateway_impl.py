@@ -458,6 +458,10 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                     f"HTTP {response.status_code}: {response.reason}", response=response
                 )
 
+            # エラーレスポンスの詳細をログ出力
+            if response.status_code >= 400:
+                logger.error(f"Places API error response: {response.text}")
+
             # その他のエラーは通常通り例外を発生 (リトライしない)
             response.raise_for_status()
 
