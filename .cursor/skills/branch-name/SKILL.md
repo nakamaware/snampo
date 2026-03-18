@@ -7,7 +7,7 @@ description: Use when creating new branches, extracting issue numbers from branc
 
 ## 命名規則
 
-```
+```plaintext
 <type>/<issue-num>-<description>
 ```
 
