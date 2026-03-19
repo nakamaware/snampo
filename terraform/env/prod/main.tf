@@ -42,46 +42,46 @@ module "snampo_prod" {
 # - 対象プロジェクト      → parent = "projects/<project-id>"
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_directions_api" {
-    service      = "directions-backend.googleapis.com"
-    quota_id     = "BillableDefaultPerDayPerProject"
-    parent       = "projects/snampo-480404"
-    quota_config {
-        preferred_value = 15000
-    }
+  service  = "directions-backend.googleapis.com"
+  quota_id = "BillableDefaultPerDayPerProject"
+  parent   = "projects/snampo-prod"
+  quota_config {
+    preferred_value = 15000
+  }
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_new_places_api" {
-    service      = "places.googleapis.com"
-    quota_id     = "SearchNearbyRequestPerDayPerProject"
-    parent       = "projects/snampo-480404"
-    quota_config {
-        preferred_value = 15000
-    }
+  service  = "places.googleapis.com"
+  quota_id = "SearchNearbyRequestPerDayPerProject"
+  parent   = "projects/snampo-prod"
+  quota_config {
+    preferred_value = 15000
+  }
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_api" {
-    service      = "roads.googleapis.com"
-    quota_id     = "BillableDefaultPerDayPerProject"
-    parent       = "projects/snampo-480404"
-    quota_config {
-        preferred_value = 15000
-    }
+  service  = "roads.googleapis.com"
+  quota_id = "BillableDefaultPerDayPerProject"
+  parent   = "projects/snampo-prod"
+  quota_config {
+    preferred_value = 15000
+  }
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_be" {
-    service      = "directions-backend.googleapis.com"
-    quota_id     = "StreetViewMetadataPerDayPerProject"
-    parent       = "projects/snampo-480404"
-    quota_config {
-        preferred_value = 15000
-    }
+  service  = "directions-backend.googleapis.com"
+  quota_id = "StreetViewMetadataPerDayPerProject"
+  parent   = "projects/snampo-prod"
+  quota_config {
+    preferred_value = 15000
+  }
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_app" {
-    service      = "directions-backend.googleapis.com"
-    quota_id     = "BillableUnsignedbucketPerDayPerProject"
-    parent       = "projects/snampo-480404"
-    quota_config {
-        preferred_value = 15000
-    }
+  service  = "directions-backend.googleapis.com"
+  quota_id = "BillableUnsignedbucketPerDayPerProject"
+  parent   = "projects/snampo-prod"
+  quota_config {
+    preferred_value = 15000
+  }
 }
