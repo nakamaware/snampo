@@ -37,13 +37,13 @@ module "snampo_dev" {
   ]
   # GARのリポジトリ
   # 削除予定
-  gar_repository_list = [
-    {
-      id                    = "cloud-run-source-deploy"
-      desc                  = "Cloud Run Source Deployments"
-      package_name_prefixes = ["snampo"]
-    },
-  ]
+  # gar_repository_list = [
+  #   {
+  #     id                    = "cloud-run-source-deploy"
+  #     desc                  = "Cloud Run Source Deployments"
+  #     package_name_prefixes = ["snampo"]
+  #   },
+  # ]
 }
 
 # Cloud Quotas コンソールとの対応
@@ -57,7 +57,8 @@ module "snampo_dev" {
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_directions_api" {
   service  = "directions-backend.googleapis.com"
   quota_id = "BillableDefaultPerDayPerProject"
-  parent   = local.project_id
+  parent   = "projects/${local.project_id}"
+  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
@@ -66,7 +67,8 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_directio
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_new_places_api" {
   service  = "places.googleapis.com"
   quota_id = "SearchNearbyRequestPerDayPerProject"
-  parent   = local.project_id
+  parent   = "projects/${local.project_id}"
+  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
@@ -75,7 +77,8 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_new_plac
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_api" {
   service  = "roads.googleapis.com"
   quota_id = "BillableDefaultPerDayPerProject"
-  parent   = local.project_id
+  parent   = "projects/${local.project_id}"
+  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
@@ -84,7 +87,8 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_ap
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_be" {
   service  = "street-view-image-backend.googleapis.com"
   quota_id = "StreetViewMetadataPerDayPerProject"
-  parent   = local.project_id
+  parent   = "projects/${local.project_id}"
+  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
@@ -93,7 +97,8 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_v
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_app" {
   service  = "street-view-image-backend.googleapis.com"
   quota_id = "BillableUnsignedbucketPerDayPerProject"
-  parent   = local.project_id
+  parent   = "projects/${local.project_id}"
+  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
