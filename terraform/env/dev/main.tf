@@ -58,48 +58,48 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_directio
   service  = "directions-backend.googleapis.com"
   quota_id = "BillableDefaultPerDayPerProject"
   parent   = "projects/${local.project_id}"
-  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
+  ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_new_places_api" {
   service  = "places.googleapis.com"
   quota_id = "SearchNearbyRequestPerDayPerProject"
   parent   = "projects/${local.project_id}"
-  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
+  ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_api" {
   service  = "roads.googleapis.com"
   quota_id = "BillableDefaultPerDayPerProject"
   parent   = "projects/${local.project_id}"
-  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
+  ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_be" {
   service  = "street-view-image-backend.googleapis.com"
   quota_id = "StreetViewMetadataPerDayPerProject"
   parent   = "projects/${local.project_id}"
-  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
+  ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_app" {
   service  = "street-view-image-backend.googleapis.com"
   quota_id = "BillableUnsignedbucketPerDayPerProject"
   parent   = "projects/${local.project_id}"
-  ignore_safety_checks = ["QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"]
   quota_config {
     preferred_value = 15000
   }
+  ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
