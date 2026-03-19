@@ -37,13 +37,13 @@ module "snampo_dev" {
   ]
   # GARのリポジトリ
   # 削除予定
-  # gar_repository_list = [
-  #   {
-  #     id                    = "cloud-run-source-deploy"
-  #     desc                  = "Cloud Run Source Deployments"
-  #     package_name_prefixes = ["snampo"]
-  #   },
-  # ]
+  gar_repository_list = [
+    {
+      id                    = "cloud-run-source-deploy"
+      desc                  = "Cloud Run Source Deployments"
+      package_name_prefixes = ["snampo"]
+    },
+  ]
 }
 
 # Cloud Quotas コンソールとの対応
