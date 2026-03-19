@@ -82,7 +82,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_ap
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_be" {
-  service  = "directions-backend.googleapis.com"
+  service  = "street-view-image-backend.googleapis.com"
   quota_id = "StreetViewMetadataPerDayPerProject"
   parent   = "projects/snampo-480404"
   quota_config {
@@ -91,7 +91,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_v
 }
 
 resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_app" {
-  service  = "directions-backend.googleapis.com"
+  service  = "street-view-image-backend.googleapis.com"
   quota_id = "BillableUnsignedbucketPerDayPerProject"
   parent   = "projects/snampo-480404"
   quota_config {
