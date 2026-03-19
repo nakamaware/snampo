@@ -6,7 +6,6 @@
 import logging
 
 from injector import inject
-from pydantic import BaseModel, ConfigDict, Field
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.application.services import (
@@ -14,7 +13,9 @@ from app.application.services import (
     LandmarkSearchService,
     StreetViewImageFetchService,
 )
+from app.application.usecases.route_result_dto import RouteResultDto
 from app.config import (
+    DIRECTIONS_API_MAX_WAYPOINTS,
     LANDMARK_SEARCH_MAX_CALLS,
     LANDMARK_SEARCH_TARGET_COUNT,
     MIDPOINT_MIN_SEARCH_RADIUS_M,
@@ -25,40 +26,13 @@ from app.domain.exceptions import (
     RouteGenerationError,
 )
 from app.domain.services import coordinate_service
-from app.domain.services.mission_point_calculator import MissionPointCalculator
+from app.domain.services.mission_point_calculation_service import calculate_mission_point_count
 from app.domain.value_objects import (
     Coordinate,
     StreetViewImage,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class RouteResultDto(BaseModel):
-    """ルート生成結果DTO
-
-    Application層から返されるルート情報を表します。
-
-    Attributes:
-        departure: 出発地点の座標
-        destination: 目的地の座標
-        midpoints: 中間地点の座標リスト
-        overview_polyline: ルートの概要ポリライン文字列
-        midpoint_images: 中間地点の画像情報リスト
-            ((座標, StreetViewImage)のリスト、順序を保持)
-        destination_image: 目的地の画像情報
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    departure: Coordinate = Field(description="出発地点の座標")
-    destination: Coordinate = Field(description="目的地の座標")
-    midpoints: list[Coordinate] = Field(description="中間地点の座標リスト")
-    overview_polyline: str = Field(description="ルートの概要ポリライン文字列")
-    midpoint_images: list[tuple[Coordinate, StreetViewImage]] = Field(
-        description="中間地点の画像情報リスト ((座標, StreetViewImage)のリスト、順序を保持)"
-    )
-    destination_image: StreetViewImage | None = Field(default=None, description="目的地の画像情報")
 
 
 class GenerateRouteUseCase:
@@ -155,33 +129,47 @@ class GenerateRouteUseCase:
                 destination_coordinate = destination_image.metadata_coordinate
                 logger.info("Successfully fetched Street View image for random destination")
 
-            # 2. 必要なmission地点数を計算
-            required_mission_points = MissionPointCalculator.calculate_mission_point_count(radius_m)
-            midpoint_target_count = max(required_mission_points - 1, 0)
-            logger.info(
-                "Required mission points(total): %s, midpoint targets: %s for radius %sm",
-                required_mission_points,
-                midpoint_target_count,
-                radius_m,
-            )
-
-            # 中間地点の検索半径を決定
+            # 2. 目的地指定モードでは、現在地〜目的地の距離から半径を計算
             if radius_m is None:
-                # 目的地指定モード: 現在地〜目的地の距離から計算
                 radius_m = int(
                     coordinate_service.calculate_distance(
                         current_coordinate, destination_coordinate
                     )
                 )
 
-            # 3. ルートを等分割して複数の中間地点候補を生成
-            candidate_coordinates = coordinate_service.divide_route_into_segments(
-                start=current_coordinate,
-                end=destination_coordinate,
-                num_segments=midpoint_target_count,
+            # 3. 必要なmission地点数を計算
+            required_midpoint_count = calculate_mission_point_count(radius_m)
+            midpoint_target_count = min(required_midpoint_count, DIRECTIONS_API_MAX_WAYPOINTS)
+            if midpoint_target_count != required_midpoint_count:
+                logger.info(
+                    (
+                        "Required midpoint count %s exceeded limit, "
+                        "capped to %s due to waypoint constraint"
+                    ),
+                    required_midpoint_count,
+                    midpoint_target_count,
+                )
+            logger.info(
+                (
+                    "Required midpoint count: %s, capped midpoint count: %s, "
+                    "total missions: %s for radius %sm"
+                ),
+                required_midpoint_count,
+                midpoint_target_count,
+                midpoint_target_count + 1,
+                radius_m,
             )
 
-            # 4. 各中間地点付近でランドマーク検索
+            # 4. ルートを等分割して複数の中間地点候補を生成
+            candidate_coordinates = []
+            if midpoint_target_count > 0:
+                candidate_coordinates = coordinate_service.divide_route_into_segments(
+                    start=current_coordinate,
+                    end=destination_coordinate,
+                    num_segments=midpoint_target_count,
+                )
+
+            # 5. 各中間地点付近でランドマーク検索
             midpoint_results = []
             midpoint_search_radius = max(MIDPOINT_MIN_SEARCH_RADIUS_M, radius_m // 4)
 

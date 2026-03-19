@@ -25,7 +25,11 @@ LANDMARK_SEARCH_MAX_CALLS = 8  # 最大API呼び出し回数
 LANDMARK_DISTANCE_TOLERANCE_PERCENT = 15.0  # 許容誤差 (%)
 LANDMARK_SEARCH_TIME_BUDGET_MS = 3000  # タイムアウト予算 (ミリ秒)
 MIN_SEARCH_RADIUS_M = 50  # Google Maps Nearby Search APIの最小検索半径 (メートル)
+PLACES_API_MAX_SEARCH_RADIUS_M = 50000  # Places API searchNearby の最大検索半径 (メートル)
 MIDPOINT_MIN_SEARCH_RADIUS_M = 300  # 中間地点検索の最小半径 (メートル)
+
+# Directions API制約
+DIRECTIONS_API_MAX_WAYPOINTS = 25  # origin/destination を除く waypoint 最大数
 
 # ランドマーク検索対象のタイプ
 # 参考: https://developers.google.com/maps/documentation/places/web-service/place-types?hl=ja

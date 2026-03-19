@@ -1,5 +1,6 @@
 """FastAPIのエントリーポイント"""
 
+import functools
 import logging
 
 from fastapi import FastAPI
@@ -12,9 +13,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 app = FastAPI()
 
-# OpenAPIスキーマをカスタマイズ
-# TODO: できれば削除したい
-# NOTE: ラムダでラップしないと即座に実行されて呼び出し不可になる
-app.openapi = lambda: custom_openapi(app)
+app.openapi = functools.partial(custom_openapi, app)
 
 app.include_router(route.router)

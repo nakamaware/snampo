@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator, Field
 
-from app.application.usecases.generate_route_usecase import RouteResultDto
+from app.application.usecases.route_result_dto import RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
 from app.domain.value_objects.street_view_image import StreetViewImage
 
