@@ -3,7 +3,6 @@
 Google Maps API (Street View, Directions) へのリクエストを処理します。
 """
 
-import functools
 import logging
 from typing import Literal
 
@@ -46,34 +45,8 @@ class RetryableHTTPError(HTTPError):
 class GoogleMapsGatewayImpl(GoogleMapsGateway):
     """Google Maps API Gatewayの実装"""
 
-    def __init__(self) -> None:
-        """初期化処理でキャッシュ関数を作成"""
-        self._get_directions_cached = functools.lru_cache(maxsize=128)(
-            lambda origin_str, destination_str, waypoints_str: self._fetch_directions(
-                origin_str, destination_str, waypoints_str
-            )
-        )
-        self._get_street_view_metadata_cached = functools.lru_cache(maxsize=128)(
-            lambda coordinate: self._fetch_street_view_metadata(coordinate)
-        )
-        self._get_street_view_image_cached = functools.lru_cache(maxsize=128)(
-            lambda coordinate, image_size, heading: self._fetch_street_view_image(
-                coordinate, image_size, heading
-            )
-        )
-        self._search_landmarks_nearby_cached = functools.lru_cache(maxsize=128)(
-            lambda coordinate, radius, included_types_tuple, rank_preference: (
-                self._search_nearby_once(
-                    coordinate, radius, list(included_types_tuple), rank_preference
-                )
-            )
-        )
-        self._snap_to_road_cached = functools.lru_cache(maxsize=128)(
-            lambda coordinate: self._snap_to_road(coordinate)
-        )
-
     def _normalize_coordinate(self, coordinate: Coordinate) -> Coordinate:
-        """キャッシュキーとAPI送信値で使う座標を丸める"""
+        """API送信値で使う座標を丸める"""
         return Coordinate(
             latitude=round(coordinate.latitude, COORDINATE_DECIMAL_PLACES),
             longitude=round(coordinate.longitude, COORDINATE_DECIMAL_PLACES),
@@ -117,7 +90,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         if waypoints:
             # via: プレフィックスを使用して通過点 (pass through) として指定
             waypoints_str = "|".join(f"via:{self._format_coordinate(wp)}" for wp in waypoints)
-        data = self._get_directions_cached(origin_str, destination_str, waypoints_str)
+        data = self._fetch_directions(origin_str, destination_str, waypoints_str)
 
         if data.get("status") != "OK":
             logger.error(f"Directions API returned non-OK status: {data.get('status')}")
@@ -196,7 +169,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             ExternalServiceValidationError: メタデータが不完全または無効な場合
         """
         normalized_coordinate = self._normalize_coordinate(coordinate)
-        metadata_dict = self._get_street_view_metadata_cached(normalized_coordinate)
+        metadata_dict = self._fetch_street_view_metadata(normalized_coordinate)
 
         status = metadata_dict.get("status", "")
         location_coordinate: Coordinate | None = None
@@ -296,9 +269,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         """
         normalized_coordinate = self._normalize_coordinate(coordinate)
         normalized_heading = self._normalize_heading(heading)
-        return self._get_street_view_image_cached(
-            normalized_coordinate, image_size, normalized_heading
-        )
+        return self._fetch_street_view_image(normalized_coordinate, image_size, normalized_heading)
 
     def _fetch_street_view_image(
         self, coordinate: Coordinate, image_size: ImageSize, heading: float | None = None
@@ -370,11 +341,9 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
         if included_types is None:
             included_types = LANDMARK_INCLUDED_TYPES
 
-        # キャッシュ用にリストをタプルに変換 (リストはハッシュ不可のため)
-        included_types_tuple = tuple(included_types)
         normalized_coordinate = self._normalize_coordinate(coordinate)
-        places = self._search_landmarks_nearby_cached(
-            normalized_coordinate, radius, included_types_tuple, rank_preference
+        places = self._search_nearby_once(
+            normalized_coordinate, radius, included_types, rank_preference
         )
 
         landmarks: list[Landmark] = []
@@ -529,7 +498,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             ExternalServiceTimeoutError: API呼び出しがタイムアウトした場合
         """
         normalized_coordinate = self._normalize_coordinate(coordinate)
-        return self._snap_to_road_cached(normalized_coordinate)
+        return self._snap_to_road(normalized_coordinate)
 
     def _snap_to_road(self, coordinate: Coordinate) -> Coordinate | None:
         """Roads API (Nearest Roads) から座標を道路上にスナップ

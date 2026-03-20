@@ -74,9 +74,10 @@ class GenerateRouteUseCase:
         アプローチ:
         1. 目的地のランドマークを決定 (ランダムモードの場合)
         2. 必要なmission地点数を計算(距離に応じて)
-        3. ルートを等分割して複数の中間地点候補を生成
-        4. 各中間地点付近でランドマークを検索
-        5. 初期地点→目的地のルートを取得(waypoints=[地点1, 地点2, ...])
+        3. 現在地→目的地のルートを先に取得
+        4. ルート上を等分割して複数の中間地点候補を生成
+        5. 各中間地点付近でランドマークを検索
+        6. 初期地点→目的地のルートを取得(waypoints=[地点1, 地点2, ...])
 
         Args:
             current_coordinate: 現在地の座標
@@ -160,12 +161,16 @@ class GenerateRouteUseCase:
                 radius_m,
             )
 
-            # 4. ルートを等分割して複数の中間地点候補を生成
+            # 4. 現在地→目的地の実ルート上から複数の中間地点候補を生成
             candidate_coordinates = []
             if midpoint_target_count > 0:
+                route_coordinates, _ = self.google_maps_gateway.get_directions(
+                    origin=current_coordinate,
+                    destination=destination_coordinate,
+                    waypoints=None,
+                )
                 candidate_coordinates = coordinate_service.divide_route_into_segments(
-                    start=current_coordinate,
-                    end=destination_coordinate,
+                    route_coordinates=route_coordinates,
                     num_segments=midpoint_target_count,
                 )
 
@@ -201,7 +206,7 @@ class GenerateRouteUseCase:
                     "mission points could be generated"
                 )
 
-            # 5. ルート全体を取得(waypointsとして全midpointを渡す)
+            # 6. ルート全体を取得(waypointsとして全midpointを渡す)
             midpoint_coords = [coord for coord, _ in midpoint_results]
             _, overview_polyline = self.google_maps_gateway.get_directions(
                 origin=current_coordinate,

@@ -17,8 +17,17 @@ def test_execute_目的地指定モードでは距離算出後にミッション
         image_data=b"destination-image",
     )
 
+    route_coordinates = [
+        current_coordinate,
+        Coordinate(latitude=35.6850, longitude=139.7300),
+        destination_coordinate,
+    ]
+
     google_maps_gateway = MagicMock()
-    google_maps_gateway.get_directions.return_value = ([], "overview-polyline")
+    google_maps_gateway.get_directions.side_effect = [
+        (route_coordinates, "initial-overview-polyline"),
+        ([], "overview-polyline"),
+    ]
     landmark_search_service = MagicMock()
     landmark_selector = MagicMock()
     street_view_image_fetch_service = MagicMock()
@@ -53,15 +62,20 @@ def test_execute_目的地指定モードでは距離算出後にミッション
     mock_calculate_distance.assert_called_once_with(current_coordinate, destination_coordinate)
     mock_calculate_mission_point_count.assert_called_once_with(1200)
     mock_divide_route_into_segments.assert_called_once_with(
-        start=current_coordinate,
-        end=destination_coordinate,
+        route_coordinates=route_coordinates,
         num_segments=4,
     )
-    google_maps_gateway.get_directions.assert_called_once_with(
-        origin=current_coordinate,
-        destination=destination_coordinate,
-        waypoints=[],
-    )
+    assert google_maps_gateway.get_directions.call_count == 2
+    assert google_maps_gateway.get_directions.call_args_list[0].kwargs == {
+        "origin": current_coordinate,
+        "destination": destination_coordinate,
+        "waypoints": None,
+    }
+    assert google_maps_gateway.get_directions.call_args_list[1].kwargs == {
+        "origin": current_coordinate,
+        "destination": destination_coordinate,
+        "waypoints": [],
+    }
     assert result.destination == destination_coordinate
     assert result.destination_image == destination_image
     assert result.midpoints == []
@@ -77,8 +91,17 @@ def test_execute_ミッション総数が上限超過なら最大件数にクラ
         image_data=b"destination-image",
     )
 
+    route_coordinates = [
+        current_coordinate,
+        Coordinate(latitude=35.6850, longitude=139.7300),
+        destination_coordinate,
+    ]
+
     google_maps_gateway = MagicMock()
-    google_maps_gateway.get_directions.return_value = ([], "overview-polyline")
+    google_maps_gateway.get_directions.side_effect = [
+        (route_coordinates, "initial-overview-polyline"),
+        ([], "overview-polyline"),
+    ]
     google_maps_gateway.search_landmarks_nearby.return_value = []
     landmark_search_service = MagicMock()
     landmark_selector = MagicMock()
@@ -113,8 +136,7 @@ def test_execute_ミッション総数が上限超過なら最大件数にクラ
 
     mock_calculate_mission_point_count.assert_called_once_with(20000)
     mock_divide_route_into_segments.assert_called_once_with(
-        start=current_coordinate,
-        end=destination_coordinate,
+        route_coordinates=route_coordinates,
         num_segments=DIRECTIONS_API_MAX_WAYPOINTS,
     )
     assert result.destination == destination_coordinate
@@ -172,3 +194,60 @@ def test_execute_中間地点数が0なら分割関数を呼ばないこと() ->
         waypoints=[],
     )
     assert result.midpoints == []
+
+
+def test_execute_実ルート上の候補地点生成にルート座標列を使うこと() -> None:
+    """候補地点の生成が始点終点の直線ではなく取得したルート座標列ベースで行われることを確認"""
+    current_coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+    destination_coordinate = Coordinate(latitude=35.6895, longitude=139.6917)
+    destination_image = StreetViewImage(
+        metadata_coordinate=destination_coordinate,
+        original_coordinate=destination_coordinate,
+        image_data=b"destination-image",
+    )
+    route_coordinates = [
+        current_coordinate,
+        Coordinate(latitude=35.6850, longitude=139.7300),
+        destination_coordinate,
+    ]
+
+    google_maps_gateway = MagicMock()
+    google_maps_gateway.get_directions.side_effect = [
+        (route_coordinates, "initial-overview-polyline"),
+        ([], "overview-polyline"),
+    ]
+    landmark_search_service = MagicMock()
+    landmark_selector = MagicMock()
+    street_view_image_fetch_service = MagicMock()
+    street_view_image_fetch_service.get_image.return_value = destination_image
+
+    usecase = GenerateRouteUseCase(
+        google_maps_gateway=google_maps_gateway,
+        landmark_search_service=landmark_search_service,
+        landmark_selector=landmark_selector,
+        street_view_image_fetch_service=street_view_image_fetch_service,
+    )
+
+    with (
+        patch(
+            "app.application.usecases.generate_route_usecase.coordinate_service.calculate_distance",
+            return_value=1200,
+        ),
+        patch(
+            "app.application.usecases.generate_route_usecase.coordinate_service.divide_route_into_segments",
+            return_value=[],
+        ) as mock_divide_route_into_segments,
+        patch(
+            "app.application.usecases.generate_route_usecase.calculate_mission_point_count",
+            return_value=1,
+        ),
+    ):
+        usecase.execute(
+            current_coordinate=current_coordinate,
+            destination_coordinate=destination_coordinate,
+        )
+
+    mock_divide_route_into_segments.assert_called_once_with(
+        route_coordinates=route_coordinates,
+        num_segments=1,
+    )

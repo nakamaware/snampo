@@ -1,4 +1,4 @@
-"""Google Maps Gatewayのキャッシュ機能のテスト"""
+"""Google Maps Gatewayのテスト"""
 
 from unittest.mock import MagicMock, patch
 
@@ -14,8 +14,8 @@ from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatew
 class TestGetDirections:
     """GetDirectionsのテスト"""
 
-    def test_同じ引数で複数回呼び出したときにキャッシュが効くこと(self) -> None:
-        """同じ引数で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じ引数で複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じ引数でもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         origin = Coordinate(latitude=35.6812, longitude=139.7671)
         destination = Coordinate(latitude=35.6895, longitude=139.6917)
 
@@ -42,8 +42,7 @@ class TestGetDirections:
             gateway.get_directions(origin, destination)
             gateway.get_directions(origin, destination)
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 3
 
     def test_異なる引数で呼び出したときにそれぞれ別のリクエストが発生すること(self) -> None:
         """異なる引数で呼び出したときに、それぞれ別のリクエストが発生することを確認"""
@@ -78,8 +77,8 @@ class TestGetDirections:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
-    def test_座標差分が丸め精度内なら同じキャッシュキーになること(self) -> None:
-        """丸め後に同一座標となる場合はDirections APIリクエストを再利用することを確認"""
+    def test_座標差分が丸め精度内なら同じリクエストパラメータになること(self) -> None:
+        """丸め後に同一座標となる場合は、毎回同じDirections APIパラメータで送ることを確認"""
         origin1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
         destination1 = Coordinate(latitude=35.6895001, longitude=139.6917001)
         origin2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
@@ -106,7 +105,10 @@ class TestGetDirections:
             gateway.get_directions(origin1, destination1)
             gateway.get_directions(origin2, destination2)
 
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 2
+            first_params = mock_get.call_args_list[0].kwargs["params"]
+            second_params = mock_get.call_args_list[1].kwargs["params"]
+            assert first_params == second_params
 
     def test_waypointsを指定したときにリクエストパラメータに含まれること(self) -> None:
         """waypointsを指定したときに、リクエストパラメータにwaypointsが含まれることを確認"""
@@ -203,8 +205,8 @@ class TestGetDirections:
             params = call_args.kwargs.get("params", {})
             assert "waypoints" not in params
 
-    def test_同じwaypointsで複数回呼び出したときにキャッシュが効くこと(self) -> None:
-        """同じwaypointsで複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じwaypointsで複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じwaypointsでもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         origin = Coordinate(latitude=35.6812, longitude=139.7671)
         destination = Coordinate(latitude=35.6895, longitude=139.6917)
         waypoint = Coordinate(latitude=35.6850, longitude=139.7300)
@@ -232,8 +234,7 @@ class TestGetDirections:
             gateway.get_directions(origin, destination, waypoints=[waypoint])
             gateway.get_directions(origin, destination, waypoints=[waypoint])
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 3
 
     def test_異なるwaypointsで呼び出したときに別のリクエストが発生すること(self) -> None:
         """異なるwaypointsで呼び出したときに、それぞれ別のリクエストが発生することを確認"""
@@ -271,8 +272,8 @@ class TestGetDirections:
 class TestGetStreetViewMetadata:
     """GetStreetViewMetadataのテスト"""
 
-    def test_同じ引数で複数回呼び出したときにキャッシュが効くこと(self) -> None:
-        """同じ引数で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じ引数で複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じ引数でもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
 
         mock_response_data = {
@@ -293,8 +294,7 @@ class TestGetStreetViewMetadata:
             gateway.get_street_view_metadata(coordinate)
             gateway.get_street_view_metadata(coordinate)
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 3
 
     def test_異なる引数で別リクエストが発生すること(self) -> None:
         """異なる引数で呼び出したときに、それぞれ別のリクエストが発生することを確認"""
@@ -321,8 +321,8 @@ class TestGetStreetViewMetadata:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
-    def test_座標差分が丸め精度内ならメタデータキャッシュが再利用されること(self) -> None:
-        """丸め後に同一座標ならStreet View Metadata APIリクエストを再利用することを確認"""
+    def test_座標差分が丸め精度内ならメタデータのリクエストパラメータが一致すること(self) -> None:
+        """丸め後に同一座標なら、Street View Metadata APIへ同じパラメータで送ることを確認"""
         coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
         coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
 
@@ -342,7 +342,10 @@ class TestGetStreetViewMetadata:
             gateway.get_street_view_metadata(coordinate1)
             gateway.get_street_view_metadata(coordinate2)
 
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 2
+            first_params = mock_get.call_args_list[0].kwargs["params"]
+            second_params = mock_get.call_args_list[1].kwargs["params"]
+            assert first_params == second_params
 
     def test_メタデータAPIリクエストにsource_outdoorパラメータが含まれること(self) -> None:
         """メタデータAPIリクエストに source=outdoor パラメータが含まれることを確認"""
@@ -372,8 +375,8 @@ class TestGetStreetViewMetadata:
 class TestGetStreetViewImage:
     """GetStreetViewImageのテスト"""
 
-    def test_同じ引数で複数回呼び出したときにキャッシュが効くこと(self) -> None:
-        """同じ引数で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じ引数で複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じ引数でもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
         image_size = ImageSize(width=640, height=640)
 
@@ -392,8 +395,7 @@ class TestGetStreetViewImage:
             gateway.get_street_view_image(coordinate, image_size)
             gateway.get_street_view_image(coordinate, image_size)
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 3
 
     def test_異なる引数で別リクエストが発生すること(self) -> None:
         """異なる引数で呼び出したときに、それぞれ別のリクエストが発生することを確認"""
@@ -531,8 +533,8 @@ class TestGetStreetViewImage:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
-    def test_丸め後に同一座標なら画像キャッシュが再利用されること(self) -> None:
-        """丸め後に同一座標ならStreet View画像キャッシュを再利用することを確認"""
+    def test_丸め後に同一座標なら画像リクエストパラメータが一致すること(self) -> None:
+        """丸め後に同一座標なら、Street View画像APIへ同じパラメータで送ることを確認"""
         coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
         coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
         image_size = ImageSize(width=640, height=640)
@@ -550,10 +552,15 @@ class TestGetStreetViewImage:
             gateway.get_street_view_image(coordinate1, image_size)
             gateway.get_street_view_image(coordinate2, image_size)
 
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 2
+            first_params = mock_get.call_args_list[0].kwargs["params"]
+            second_params = mock_get.call_args_list[1].kwargs["params"]
+            assert first_params == second_params
 
-    def test_headingが同じ整数値に正規化される場合は画像キャッシュが再利用されること(self) -> None:
-        """同じheading整数値へ丸め込まれる場合はStreet View画像キャッシュを再利用することを確認"""
+    def test_headingが同じ整数値に正規化される場合は画像リクエストパラメータが一致すること(
+        self,
+    ) -> None:
+        """同じ整数 heading なら同一パラメータで送ることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
         image_size = ImageSize(width=640, height=640)
 
@@ -570,7 +577,10 @@ class TestGetStreetViewImage:
             gateway.get_street_view_image(coordinate, image_size, heading=90.1)
             gateway.get_street_view_image(coordinate, image_size, heading=90.9)
 
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 2
+            first_params = mock_get.call_args_list[0].kwargs["params"]
+            second_params = mock_get.call_args_list[1].kwargs["params"]
+            assert first_params == second_params
 
     def test_headingが整数に変換されること(self) -> None:
         """headingが浮動小数点数の場合、整数に変換されてリクエストに含まれることを確認"""
@@ -643,8 +653,8 @@ class TestSnapToRoad:
 
             assert result is None
 
-    def test_同じ座標でキャッシュが効くこと(self) -> None:
-        """同じ座標で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じ座標で複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じ座標でもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
 
         mock_response_data = {
@@ -670,11 +680,10 @@ class TestSnapToRoad:
             gateway.snap_to_road(coordinate)
             gateway.snap_to_road(coordinate)
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 3
 
-    def test_座標差分が丸め精度内なら道路スナップキャッシュが再利用されること(self) -> None:
-        """丸め後に同一座標ならRoads APIリクエストを再利用することを確認"""
+    def test_座標差分が丸め精度内なら道路スナップのリクエストパラメータが一致すること(self) -> None:
+        """丸め後に同一座標なら、Roads APIへ同じパラメータで送ることを確認"""
         coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
         coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
 
@@ -699,7 +708,10 @@ class TestSnapToRoad:
             gateway.snap_to_road(coordinate1)
             gateway.snap_to_road(coordinate2)
 
-            assert mock_get.call_count == 1
+            assert mock_get.call_count == 2
+            first_params = mock_get.call_args_list[0].kwargs["params"]
+            second_params = mock_get.call_args_list[1].kwargs["params"]
+            assert first_params == second_params
 
     def test_タイムアウト時は例外を発生させること(self) -> None:
         """Timeoutエラー時にExternalServiceTimeoutErrorを発生させることを確認"""
@@ -965,8 +977,8 @@ class TestSearchLandmarksNearby:
             assert request_body.get("rankPreference") == "POPULARITY"
             assert len(landmarks) == 1
 
-    def test_同じ引数で複数回呼び出したときにキャッシュが効くこと(self) -> None:
-        """同じ引数で複数回呼び出したときに、APIリクエストが1回だけになることを確認"""
+    def test_同じ引数で複数回呼び出したときも都度リクエストすること(self) -> None:
+        """同じ引数でもキャッシュせず、呼び出しのたびにAPIリクエストすることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
         radius = 1000
 
@@ -997,8 +1009,7 @@ class TestSearchLandmarksNearby:
             landmarks1 = gateway.search_landmarks_nearby(coordinate, radius)
             landmarks2 = gateway.search_landmarks_nearby(coordinate, radius)
 
-            # APIリクエストは1回だけ呼ばれるべき
-            assert mock_post.call_count == 1
+            assert mock_post.call_count == 2
             # 結果が同一であることを確認
             assert landmarks1 == landmarks2
 

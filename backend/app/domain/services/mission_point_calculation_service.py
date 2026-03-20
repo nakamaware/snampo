@@ -40,25 +40,3 @@ def calculate_mission_point_count(radius_m: int) -> int:
     # 切り上げで計算(500m以下で2件、501-1000mで4件、...)
     multiplier = (radius_m + base_distance - 1) // base_distance
     return multiplier * points_per_base
-
-
-def calculate_interval_distance(radius_m: int, num_points: int) -> float:
-    """ミッション地点間の理想的な間隔距離を計算する
-
-    Args:
-        radius_m: 散歩の半径距離(メートル)
-        num_points: ミッション地点数
-
-    Returns:
-        地点間の間隔距離(メートル)
-
-    Examples:
-        >>> calculate_interval_distance(1000, 4)
-        400.0
-    """
-    if num_points <= 0:
-        raise ValueError("num_points must be positive")
-
-    # 往復の総距離を地点数+1で割る(スタート→地点1→地点2→...→ゴール)
-    total_distance = radius_m * 2  # 往復
-    return total_distance / (num_points + 1)
