@@ -1,0 +1,10 @@
+---
+description: Terraform ファイルの編集時に terraform fmt に従う
+globs: terraform/**/*.tf
+alwaysApply: false
+---
+
+# Terraform のルール
+
+- @terraform/ のスタイルに従う
+- 編集後は `terraform fmt -recursive` を実行する

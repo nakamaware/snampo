@@ -1,0 +1,8 @@
+---
+description: YAML ファイルの編集時のインデント・スタイルルール
+globs: **/*.yaml,**/*.yml
+alwaysApply: false
+---
+# YAML のルール
+
+- @.pre-commit-config.yaml および @.github/workflows/ のスタイルに従う

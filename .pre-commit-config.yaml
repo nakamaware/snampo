@@ -15,6 +15,7 @@ repos:
       - id: check-added-large-files
         description: 大きなファイル（>500KB）の検出
         args: [--maxkb=500]
+        exclude: ^frontend/assets/images/
       - id: check-merge-conflict
         description: マージコンフリクトマーカーの検出
       - id: check-case-conflict
