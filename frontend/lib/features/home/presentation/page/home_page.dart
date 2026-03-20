@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:snampo/features/mission/presentation/store/mission_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// アプリケーションのトップページ
 class HomePage extends ConsumerWidget {
@@ -10,28 +10,33 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final missionAsync = ref.watch(missionStoreProvider);
-    final hasSavedMission = missionAsync.value != null;
+    final savedMissionAsync = ref.watch(persistedMissionProvider);
+    final hasSavedMission = savedMissionAsync.value != null;
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 300,
-              child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+                ),
+                const SizedBox(height: 20),
+                if (hasSavedMission) ...[
+                  const ResumeButton(),
+                  const SizedBox(height: 10),
+                ],
+                const StartButton(),
+                const SizedBox(height: 10), // 2つの間を空ける
+                const HistoryButton(),
+              ],
             ),
-            const SizedBox(height: 20),
-            if (hasSavedMission) ...[
-              const ResumeButton(),
-              const SizedBox(height: 10),
-            ],
-            const StartButton(),
-            const SizedBox(height: 10),
-            const HistoryButton(),
-          ],
-        ),
+          ),
+          const Positioned(bottom: 20, right: 20, child: InfoIconButton()),
+        ],
       ),
     );
   }
@@ -118,6 +123,25 @@ class HistoryButton extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Text('履歴', style: style),
       ),
+    );
+  }
+}
+
+/// ライセンスのアイコンウィジェット
+class InfoIconButton extends StatelessWidget {
+  /// InfoIconButtonのコンストラクタ
+  const InfoIconButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return IconButton(
+      icon: const Icon(Icons.info),
+      color: theme.colorScheme.primary,
+      onPressed: () {
+        showLicensePage(context: context);
+      },
     );
   }
 }

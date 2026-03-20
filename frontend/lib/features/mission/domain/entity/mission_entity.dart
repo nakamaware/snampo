@@ -9,8 +9,6 @@ part 'mission_entity.g.dart';
 /// ミッション情報エンティティ
 @freezed
 abstract class MissionEntity with _$MissionEntity {
-  const MissionEntity._();
-
   /// ミッション情報を作成する
   ///
   /// [departure] は出発地点の座標
@@ -28,12 +26,15 @@ abstract class MissionEntity with _$MissionEntity {
     /// ルートのポリライン文字列
     required String overviewPolyline,
 
-    /// ミッションの検索半径
-    @RadiusConverter() required Radius radius,
+    /// ミッションの検索半径 (目的地指定モードの場合は null)
+    @RadiusConverter() Radius? radius,
 
     /// 通過地点のリスト
-    @Default([]) @JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints,
+    @Default([])
+    @JsonKey(toJson: _waypointsToJson)
+    List<ImageCoordinate> waypoints,
   }) = _MissionEntity;
+  const MissionEntity._();
 
   factory MissionEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionEntityFromJson(json);

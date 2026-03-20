@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
+import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
@@ -10,8 +11,27 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/', builder: (context, state) => const HomePage()),
     GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
     GoRoute(
+      path: '/mission/random/:radius',
+      builder: (context, state) {
+        final meters = int.parse(state.pathParameters['radius']!);
+        return MissionPage(radius: meters);
+      },
+    ),
+    GoRoute(
       path: '/mission',
-      builder: (context, state) => const MissionPage(),
+      builder: (context, state) => const MissionPage.resume(),
+    ),
+    GoRoute(path: '/camera', builder: (context, state) => const CameraPage()),
+    GoRoute(
+      path: '/mission/destination/:lat/:lng',
+      builder: (context, state) {
+        final lat = double.parse(state.pathParameters['lat']!);
+        final lng = double.parse(state.pathParameters['lng']!);
+        return MissionPage.withDestination(
+          destinationLat: lat,
+          destinationLng: lng,
+        );
+      },
     ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
   ],

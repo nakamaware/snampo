@@ -2,104 +2,135 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
-/// ミッションページを表示するウィジェット
-class MissionPage extends ConsumerWidget {
-  /// [MissionPage] ウィジェットを作成する
-  const MissionPage({super.key});
+// 競合解消メモ（main × 再開機能の統合）:
+// - main 系: MissionStoreParams + 専用カメラ画面 + cameraStore で取得〜撮影 UI
+// - feature 系: missionProgressStore でスポット数・撮影の永続、
+//   persistedMissionProvider でホームからの再開
+// TODO(kawayama): ミッションロードのページを分離する
+
+/// ミッション画面（ルートごとに `MissionStoreParams` が決まる）。
+///
+/// 次の3モードをすべて提供する。
+/// - **半径指定（ランダム）**: コンストラクタ … API が半径内で目的地を決める
+/// - **目的地指定**: `MissionPage.withDestination` … 地図で選んだ座標でルート生成
+/// - **再開**: `MissionPage.resume` … 永続ストアのミッションを復元（API 呼び出しなし）
+class MissionPage extends HookConsumerWidget {
+  /// 半径指定（ランダム）モード。
+  ///
+  /// [radius] は検索半径（メートル）。`/mission/random/:radius` から遷移する想定。
+  MissionPage({required int radius, super.key})
+    : _params = MissionStoreParams.random(radius: Radius(meters: radius));
+
+  /// 目的地指定モード。
+  ///
+  /// [destinationLat] / [destinationLng] はユーザーが地図で選択した緯度経度。
+  MissionPage.withDestination({
+    required double destinationLat,
+    required double destinationLng,
+    super.key,
+  }) : _params = MissionStoreParams.destination(
+         destination: Coordinate(
+           latitude: destinationLat,
+           longitude: destinationLng,
+         ),
+       );
+
+  /// ゲーム再開モード（永続化済みミッションの復元）。
+  const MissionPage.resume({super.key})
+    : _params = const MissionStoreParams.resume();
+
+  /// ミッションストアのパラメータ
+  final MissionStoreParams _params;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
     final theme = Theme.of(context);
-    final textstyle = (theme.textTheme.displaySmall ??
+    final textStyle = (theme.textTheme.displaySmall ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    // ミッションが読み込まれたら、撮影スポット数分の進捗を用意する。これがないと写真を撮っても保存されない。
-    ref.listen(missionStoreProvider, (prev, next) {
+    // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
+    // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
+    //
+    // さらに API で新規取得した場合のみ persistedMissionProvider へ書き込み、
+    // ホームの「再開」と整合させる。resume 時は既に DB に同一内容があるのでスキップ。
+    ref.listen(missionStoreProvider(_params), (prev, next) {
       next.whenData((mission) {
-        if (mission != null) {
-          ref
-              .read(missionProgressStoreProvider.notifier)
-              .startProgress(mission.waypoints.length + 1);
+        ref
+            .read(missionProgressStoreProvider.notifier)
+            .startProgress(mission.waypoints.length + 1);
+        if (_params is! MissionStoreParamsResume) {
+          ref.read(persistedMissionProvider.notifier).setMission(mission);
         }
       });
     });
 
-    final missionAsyncValue = ref.watch(missionStoreProvider);
+    final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
-        if (missionInfo == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('On MISSION', style: textstyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
         return Scaffold(
           appBar: AppBar(
-            title: Text('On MISSION', style: textstyle),
+            title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
-          body: const Stack(
+          body: Stack(
             children: [
-              MapView(),
-              SnapView(),
+              MapView(currentLocation: missionInfo.departure, params: _params),
+              SnapView(params: _params),
             ],
           ),
         );
       },
-      loading: () => Scaffold(
-        appBar: AppBar(
-          title: Text('On MISSION', style: textstyle),
-          centerTitle: true,
-          backgroundColor: theme.colorScheme.primary,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              LoadingAnimationWidget.staggeredDotsWave(
-                color: Colors.blue,
-                size: 100,
+      loading:
+          () => Scaffold(
+            appBar: AppBar(
+              title: Text('On MISSION', style: textStyle),
+              centerTitle: true,
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LoadingAnimationWidget.staggeredDotsWave(
+                    color: Colors.blue,
+                    size: 100,
+                  ),
+                  const Text('NOW LOADING'),
+                ],
               ),
-              const Text('NOW LOADING'),
-            ],
+            ),
           ),
-        ),
-      ),
-      error: (Object error, StackTrace stackTrace) {
+      error: (error, stackTrace) {
         log('error: $error');
         return Scaffold(
           appBar: AppBar(
-            title: Text('On MISSION', style: textstyle),
+            title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
           ),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('エラーが発生しました'),
-                Text('$error'),
-              ],
+              children: [const Text('エラーが発生しました'), Text('$error')],
             ),
           ),
         );
@@ -109,35 +140,84 @@ class MissionPage extends ConsumerWidget {
 }
 
 /// Googleマップを表示するウィジェット
-class MapView extends ConsumerWidget {
-  const MapView({super.key});
+class MapView extends ConsumerStatefulWidget {
+  /// MapViewを作成する
+  ///
+  /// [currentLocation] は現在位置の座標情報
+  /// [params] はミッションストアのパラメータ
+  const MapView({
+    required this.currentLocation,
+    required this.params,
+    super.key,
+  });
+
+  /// 現在位置の座標情報
+  final Coordinate currentLocation;
+
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final missionInfo = ref.watch(missionStoreProvider).value;
-    if (missionInfo == null) return const SizedBox.shrink();
+  ConsumerState<MapView> createState() => _MapViewState();
+}
 
-    final currentLat = missionInfo.departure.latitude;
-    final currentLng = missionInfo.departure.longitude;
-    final target = missionInfo.destination;
+/// MapViewの状態を管理するクラス
+class _MapViewState extends ConsumerState<MapView> {
+  /// マップの表示制御用
+  late GoogleMapController mapController;
 
-    final polylines = <Polyline>{};
-    if (missionInfo.overviewPolyline.isNotEmpty) {
-      final coordinates = decodePolyline(missionInfo.overviewPolyline);
-      if (coordinates.isNotEmpty) {
-        polylines.add(
-          Polyline(
-            polylineId: const PolylineId('poly'),
-            points: coordinates,
-            color: Colors.blue,
-            width: 3,
-          ),
-        );
+  /// ポリラインの座標リスト
+  final List<LatLng> _polylineCoordinates = [];
+  final Set<Polyline> _polylines = {};
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // main: [missionStoreProvider]（params 付き）でポリラインを一度だけデコードして描画
+    ref.watch(missionStoreProvider(widget.params)).whenData((missionInfo) {
+      final encodedPolyline = missionInfo.overviewPolyline;
+      if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
+        final coordinates = decodePolyline(encodedPolyline);
+        if (coordinates.isNotEmpty) {
+          _polylineCoordinates.addAll(coordinates);
+
+          if (mounted) {
+            setState(() {
+              _polylines.add(
+                Polyline(
+                  polylineId: const PolylineId('poly'),
+                  points: _polylineCoordinates,
+                  color: Colors.blue,
+                  width: 3,
+                ),
+              );
+            });
+          }
+        }
       }
-    }
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    // 画面の幅と高さを決定する
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
+
+    final missionAsyncValue = ref.watch(missionStoreProvider(widget.params));
+    final missionInfo = missionAsyncValue.value;
+    if (missionInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    final target = missionInfo.destination;
+    final currentLat = widget.currentLocation.latitude;
+    final currentLng = widget.currentLocation.longitude;
 
     return SizedBox(
       height: height,
@@ -147,8 +227,13 @@ class MapView extends ConsumerWidget {
           children: <Widget>[
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                zoom: 17,
-                target: LatLng(currentLat, currentLng),
+                //マップの初期位置を指定
+                zoom: 17, //ズーム
+                target: LatLng(
+                  //緯度, 経度
+                  currentLat,
+                  currentLng,
+                ),
               ),
               markers: {
                 Marker(
@@ -159,10 +244,13 @@ class MapView extends ConsumerWidget {
                   ),
                 ),
               },
-              polylines: polylines,
+              polylines: _polylines,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+              },
             ),
           ],
         ),
@@ -172,17 +260,23 @@ class MapView extends ConsumerWidget {
 }
 
 /// mission_pageで表示するsnapのメニューウィジェット
-class SnapView extends ConsumerWidget {
-  const SnapView({super.key});
+class SnapView extends StatelessWidget {
+  /// SnapViewウィジェットのコンストラクタ
+  const SnapView({required this.params, super.key});
+
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final missionAsyncValue = ref.watch(missionStoreProvider);
 
     return DraggableScrollableSheet(
+      // 初期の表示割合
       initialChildSize: 0.15,
+      // 最小の表示割合
       minChildSize: 0.15,
+      // snapで止める時の割合
       snapSizes: const [0.15, 0.6, 1.0],
       builder: (BuildContext context, ScrollController scrollController) {
         return ColoredBox(
@@ -197,72 +291,7 @@ class SnapView extends ConsumerWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 50),
-                      missionAsyncValue.when(
-                        data: (MissionEntity? missionInfo) {
-                          if (missionInfo == null) {
-                            return const SizedBox.shrink();
-                          }
-                          final midpointInfoList = missionInfo.waypoints;
-                          final destination = missionInfo.destination;
-                          final titelTextstyle =
-                              theme.textTheme.displaySmall!.copyWith(
-                            color: theme.colorScheme.secondary,
-                          );
-                          final buttonTextstyle =
-                              theme.textTheme.bodyLarge!.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                          );
-
-                          return Column(
-                            children: [
-                              Text('MISSION', style: titelTextstyle),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text('- Spot1: '),
-                                  if (midpointInfoList.isNotEmpty)
-                                    AnswerImage(
-                                        imageBase64:
-                                            midpointInfoList[0].imageBase64)
-                                  else
-                                    const SizedBox(width: 150, height: 150),
-                                  const TakeSnap(spotIndex: 0),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text('- Spot2: '),
-                                  AnswerImage(
-                                      imageBase64: destination.imageBase64),
-                                  const TakeSnap(spotIndex: 1),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor:
-                                      theme.colorScheme.onPrimary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () => context.pushReplacement('/result'),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Text('到着', style: buttonTextstyle),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (Object error, StackTrace stackTrace) =>
-                            Center(
-                                child: Text('エラーが発生しました: $error')),
-                      ),
+                      SnapViewState(params: params),
                     ],
                   ),
                 ),
@@ -294,10 +323,80 @@ class SnapView extends ConsumerWidget {
   }
 }
 
+/// SnapView内でミッション情報を表示するウィジェット
+class SnapViewState extends ConsumerWidget {
+  /// SnapViewStateウィジェットのコンストラクタ
+  const SnapViewState({required this.params, super.key});
+
+  /// ミッションストアのパラメータ
+  final MissionStoreParams params;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final titleTextStyle = theme.textTheme.displaySmall!.copyWith(
+      color: theme.colorScheme.secondary,
+    );
+    final buttonTextStyle = theme.textTheme.bodyLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+    final missionAsyncValue = ref.watch(missionStoreProvider(params));
+
+    return missionAsyncValue.when(
+      data: (missionInfo) {
+        // main: 経由地 + 目的地を可変長スポットとして列挙
+        final missionSpots = [
+          ...missionInfo.waypoints,
+          missionInfo.destination,
+        ];
+
+        return Column(
+          children: [
+            Text('MISSION', style: titleTextStyle),
+            for (var i = 0; i < missionSpots.length; i++)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('- Spot${i + 1}: '),
+                  AnswerImage(imageBase64: missionSpots[i].imageBase64),
+                  TakeSnap(spotIndex: i),
+                ],
+              ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary, // ボタンの背景色
+                foregroundColor: theme.colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  // 形を変えるか否か
+                  borderRadius: BorderRadius.circular(10), // 角の丸み
+                ),
+              ),
+              onPressed: () {
+                context.push('/result');
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('到着', style: buttonTextStyle),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(child: Text('エラーが発生しました: $error')),
+    );
+  }
+}
+
 /// Base64エンコードされた画像データを表示するウィジェット
 class AnswerImage extends StatelessWidget {
+  /// AnswerImageウィジェットのコンストラクタ
+  ///
+  /// [imageBase64] Base64エンコードされた画像データの文字列
   const AnswerImage({required this.imageBase64, super.key});
 
+  /// Base64エンコードされた画像データの文字列
   final String imageBase64;
 
   @override
@@ -307,6 +406,7 @@ class AnswerImage extends StatelessWidget {
       width: 150,
       height: 150,
       child: FittedBox(
+        // child: Image.asset(picture_name),
         child: Image.memory(
           imageUint8,
           width: 150,
@@ -318,11 +418,15 @@ class AnswerImage extends StatelessWidget {
   }
 }
 
-/// 写真を撮影するためのボタンを表示するウィジェット
-class TakeSnap extends ConsumerWidget {
+/// スポットごとの撮影 UI。
+///
+/// - main: カメラ画面へ遷移し `cameraStore` でセッション中プレビュー
+/// - feature（旧 HEAD）: 撮影後 `missionProgressStore.savePhoto` で永続パスを記録
+///   （再開後もプレビュー可能）
+class TakeSnap extends HookConsumerWidget {
   /// [TakeSnap] ウィジェットを作成する
   ///
-  /// [spotIndex] は撮影するスポットのインデックス（0: 経由地, 1: 目的地）
+  /// [spotIndex] は撮影対象スポットのインデックス（0 から連番）
   const TakeSnap({required this.spotIndex, super.key});
 
   /// 撮影するスポットのインデックス
@@ -330,47 +434,104 @@ class TakeSnap extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progress = ref.watch(missionProgressStoreProvider).value;
-    final photoPath =
-        progress?.checkpoints.elementAtOrNull(spotIndex)?.userPhotoPath;
+    // main: 今セッションで撮った直後のプレビュー用パス
+    final cameraPath = ref.watch(
+      cameraStoreProvider.select((map) => map[spotIndex]),
+    );
 
-    if (photoPath != null) {
-      return SizedBox(
-        width: 150,
-        height: 150,
-        child: FittedBox(child: Image.file(File(photoPath))),
+    // feature: 再開後も表示できるよう、進捗ストアに保存済みのパスを優先
+    final progressAsync = ref.watch(missionProgressStoreProvider);
+    final progressPath = progressAsync.maybeWhen(
+      data: (progress) {
+        if (progress == null || spotIndex >= progress.checkpoints.length) {
+          return null;
+        }
+        return progress.checkpoints[spotIndex]?.userPhotoPath;
+      },
+      orElse: () => null,
+    );
+
+    final displayPath = progressPath ?? cameraPath;
+
+    if (displayPath == null) {
+      return FloatingActionButton(
+        heroTag: 'take_snap_spot_$spotIndex',
+        onPressed: () => _handleCameraCapture(context, ref),
+        child: const Icon(Icons.add_a_photo),
       );
     }
-    return FloatingActionButton(
-      heroTag: 'take_snap_spot_$spotIndex',
-      onPressed: () => _getImage(ref),
-      child: const Icon(Icons.add_a_photo),
+
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: SetImage(picture: File(displayPath)),
     );
   }
 
-  Future<void> _getImage(WidgetRef ref) async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      await ref
-          .read(missionProgressStoreProvider.notifier)
-          .savePhoto(spotIndex, pickedFile.path);
+  Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
+    // main: 専用カメラページへ遷移
+    final capturedFile = await context.push<XFile?>('/camera');
+
+    if (capturedFile != null && context.mounted) {
+      final path = capturedFile.path;
+      // プレビュー用（メモリ上の Map）
+      ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
+      // 旧 HEAD 相当: SavePhotoUseCase 経由で永続化しチェックポイントを更新
+      await ref.read(missionProgressStoreProvider.notifier).savePhoto(
+            spotIndex,
+            path,
+          );
     }
   }
 }
 
 /// ファイルから読み込んだ画像を表示するウィジェット
 class SetImage extends StatelessWidget {
-  /// [SetImage] ウィジェットを作成する
+  /// SetImageウィジェットのコンストラクタ
   ///
-  /// [picture] は表示する画像ファイル
-  const SetImage({required this.picture, super.key});
-
+  /// [picture] 表示する画像ファイル
+  const SetImage({
+    // required this.picture_name,
+    required this.picture,
+    super.key,
+  });
+  // final String picture_name;
   /// 表示する画像ファイル
   final File picture;
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(child: Image.file(picture));
+    return FittedBox(
+      // child: Image.asset(picture_name),
+      child: Image.file(picture),
+    );
+  }
+}
+
+/// アセットから読み込んだ画像を表示するウィジェット
+class SetTestImage extends StatelessWidget {
+  // final File picture;
+  /// SetTestImageウィジェットのコンストラクタ
+  ///
+  /// [picture] 表示する画像のアセットパス
+  const SetTestImage({
+    // required this.picture_name,
+    required this.picture,
+    super.key,
+  });
+
+  /// 表示する画像のアセットパス
+  final String picture;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: FittedBox(
+        // child: Image.asset(picture_name),
+        child: Image.asset(picture),
+      ),
+    );
   }
 }

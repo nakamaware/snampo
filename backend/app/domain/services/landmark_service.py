@@ -99,20 +99,3 @@ def _generate_scattered_indices(n: int) -> list[int]:
             break
 
     return [(offset + i * step) % n for i in range(n)]
-
-
-def calculate_distance(coordinate1: Coordinate, coordinate2: Coordinate) -> float:
-    """2点間の距離を計算 (WGS-84楕円体モデル)
-
-    geopy の geodesic を使用して高精度な距離計算を行います。
-
-    Args:
-        coordinate1: 地点1の座標
-        coordinate2: 地点2の座標
-
-    Returns:
-        距離 (メートル)
-    """
-    point1 = (coordinate1.latitude, coordinate1.longitude)
-    point2 = (coordinate2.latitude, coordinate2.longitude)
-    return geodesic(point1, point2).meters

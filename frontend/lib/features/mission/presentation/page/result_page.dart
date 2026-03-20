@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
-import 'package:snampo/features/mission/presentation/store/mission_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
@@ -14,32 +14,32 @@ class ResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 到着画面が初めて表示されたタイミングで1回だけ missionStore と progressStore をクリアする（ビルド完了後に遅延実行）
+    // 到着画面が初めて表示されたタイミングで1回だけ永続ミッションと進捗をクリアする（ビルド完了後に遅延実行）
     useEffect(() {
       Future(() async {
         await ref.read(missionProgressStoreProvider.notifier).clearProgress();
-        ref.read(missionStoreProvider.notifier).clearMission();
+        ref.read(persistedMissionProvider.notifier).clearMission();
       });
       return null;
     }, const []);
 
     final theme = Theme.of(context);
-    final titleTextstyle = (theme.textTheme.displayMedium ??
+    final titleTextStyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
-    final textstyleLarge = (theme.textTheme.displayLarge ??
+    final textStyleLarge = (theme.textTheme.displayLarge ??
             theme.textTheme.headlineLarge ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.primary);
-    final textstyleMid = (theme.textTheme.bodyLarge ??
+    final textStyleMid = (theme.textTheme.bodyLarge ??
             theme.textTheme.bodyMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.primary);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('RESULT', style: titleTextstyle),
+        title: Text('RESULT', style: titleTextStyle),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -47,9 +47,9 @@ class ResultPage extends HookConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('GOAL!!', style: textstyleLarge),
+            Text('GOAL!!', style: textStyleLarge),
             const SizedBox(height: 20),
-            Text('Congratulations!', style: textstyleMid),
+            Text('Congratulations!', style: textStyleMid),
             const SizedBox(height: 20),
             const HomeButton(),
           ],
@@ -67,7 +67,7 @@ class HomeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textstyle = (theme.textTheme.displayMedium ??
+    final textStyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
@@ -80,7 +80,7 @@ class HomeButton extends StatelessWidget {
       onPressed: () => context.go('/'),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Text('ホーム', style: textstyle),
+        child: Text('ホーム', style: textStyle),
       ),
     );
   }

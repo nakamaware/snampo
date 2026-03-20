@@ -15,8 +15,9 @@ _MissionEntity _$MissionEntityFromJson(Map<String, dynamic> json) =>
         json['destination'] as Map<String, dynamic>,
       ),
       overviewPolyline: json['overviewPolyline'] as String,
-      radius: const RadiusConverter().fromJson(
-        json['radius'] as Map<String, dynamic>,
+      radius: _$JsonConverterFromJson<Map<String, dynamic>, Radius>(
+        json['radius'],
+        const RadiusConverter().fromJson,
       ),
       waypoints:
           (json['waypoints'] as List<dynamic>?)
@@ -30,6 +31,19 @@ Map<String, dynamic> _$MissionEntityToJson(_MissionEntity instance) =>
       'departure': const CoordinateConverter().toJson(instance.departure),
       'destination': _destinationToJson(instance.destination),
       'overviewPolyline': instance.overviewPolyline,
-      'radius': const RadiusConverter().toJson(instance.radius),
+      'radius': _$JsonConverterToJson<Map<String, dynamic>, Radius>(
+        instance.radius,
+        const RadiusConverter().toJson,
+      ),
       'waypoints': _waypointsToJson(instance.waypoints),
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

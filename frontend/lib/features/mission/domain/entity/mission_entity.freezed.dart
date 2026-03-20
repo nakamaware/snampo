@@ -18,8 +18,8 @@ mixin _$MissionEntity {
 /// 出発地点
 @CoordinateConverter() Coordinate get departure;/// 目的地
 @JsonKey(toJson: _destinationToJson) ImageCoordinate get destination;/// ルートのポリライン文字列
- String get overviewPolyline;/// ミッションの検索半径
-@RadiusConverter() Radius get radius;/// 通過地点のリスト
+ String get overviewPolyline;/// ミッションの検索半径 (目的地指定モードの場合は null)
+@RadiusConverter() Radius? get radius;/// 通過地点のリスト
 @JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> get waypoints;
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
@@ -53,11 +53,11 @@ abstract mixin class $MissionEntityCopyWith<$Res>  {
   factory $MissionEntityCopyWith(MissionEntity value, $Res Function(MissionEntity) _then) = _$MissionEntityCopyWithImpl;
 @useResult
 $Res call({
-@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
+@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius? radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
 });
 
 
-$CoordinateCopyWith<$Res> get departure;$ImageCoordinateCopyWith<$Res> get destination;$RadiusCopyWith<$Res> get radius;
+$CoordinateCopyWith<$Res> get departure;$ImageCoordinateCopyWith<$Res> get destination;$RadiusCopyWith<$Res>? get radius;
 
 }
 /// @nodoc
@@ -70,13 +70,13 @@ class _$MissionEntityCopyWithImpl<$Res>
 
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = null,Object? waypoints = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = freezed,Object? waypoints = null,}) {
   return _then(_self.copyWith(
 departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,destination: null == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ImageCoordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
-as String,radius: null == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius,waypoints: null == waypoints ? _self.waypoints : waypoints // ignore: cast_nullable_to_non_nullable
+as String,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
+as Radius?,waypoints: null == waypoints ? _self.waypoints : waypoints // ignore: cast_nullable_to_non_nullable
 as List<ImageCoordinate>,
   ));
 }
@@ -102,9 +102,12 @@ $ImageCoordinateCopyWith<$Res> get destination {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-  
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
+$RadiusCopyWith<$Res>? get radius {
+    if (_self.radius == null) {
+    return null;
+  }
+
+  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
     return _then(_self.copyWith(radius: value));
   });
 }
@@ -189,7 +192,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius? radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -210,7 +213,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius? radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity():
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -230,7 +233,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate departure, @JsonKey(toJson: _destinationToJson)  ImageCoordinate destination,  String overviewPolyline, @RadiusConverter()  Radius? radius, @JsonKey(toJson: _waypointsToJson)  List<ImageCoordinate> waypoints)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionEntity() when $default != null:
 return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.radius,_that.waypoints);case _:
@@ -245,7 +248,7 @@ return $default(_that.departure,_that.destination,_that.overviewPolyline,_that.r
 @JsonSerializable()
 
 class _MissionEntity extends MissionEntity {
-  const _MissionEntity({@CoordinateConverter() required this.departure, @JsonKey(toJson: _destinationToJson) required this.destination, required this.overviewPolyline, @RadiusConverter() required this.radius, @JsonKey(toJson: _waypointsToJson) final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints,super._();
+  const _MissionEntity({@CoordinateConverter() required this.departure, @JsonKey(toJson: _destinationToJson) required this.destination, required this.overviewPolyline, @RadiusConverter() this.radius, @JsonKey(toJson: _waypointsToJson) final  List<ImageCoordinate> waypoints = const []}): _waypoints = waypoints,super._();
   factory _MissionEntity.fromJson(Map<String, dynamic> json) => _$MissionEntityFromJson(json);
 
 /// 出発地点
@@ -254,8 +257,8 @@ class _MissionEntity extends MissionEntity {
 @override@JsonKey(toJson: _destinationToJson) final  ImageCoordinate destination;
 /// ルートのポリライン文字列
 @override final  String overviewPolyline;
-/// ミッションの検索半径
-@override@RadiusConverter() final  Radius radius;
+/// ミッションの検索半径 (目的地指定モードの場合は null)
+@override@RadiusConverter() final  Radius? radius;
 /// 通過地点のリスト
  final  List<ImageCoordinate> _waypoints;
 /// 通過地点のリスト
@@ -299,11 +302,11 @@ abstract mixin class _$MissionEntityCopyWith<$Res> implements $MissionEntityCopy
   factory _$MissionEntityCopyWith(_MissionEntity value, $Res Function(_MissionEntity) _then) = __$MissionEntityCopyWithImpl;
 @override @useResult
 $Res call({
-@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
+@CoordinateConverter() Coordinate departure,@JsonKey(toJson: _destinationToJson) ImageCoordinate destination, String overviewPolyline,@RadiusConverter() Radius? radius,@JsonKey(toJson: _waypointsToJson) List<ImageCoordinate> waypoints
 });
 
 
-@override $CoordinateCopyWith<$Res> get departure;@override $ImageCoordinateCopyWith<$Res> get destination;@override $RadiusCopyWith<$Res> get radius;
+@override $CoordinateCopyWith<$Res> get departure;@override $ImageCoordinateCopyWith<$Res> get destination;@override $RadiusCopyWith<$Res>? get radius;
 
 }
 /// @nodoc
@@ -316,13 +319,13 @@ class __$MissionEntityCopyWithImpl<$Res>
 
 /// Create a copy of MissionEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = null,Object? waypoints = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? departure = null,Object? destination = null,Object? overviewPolyline = null,Object? radius = freezed,Object? waypoints = null,}) {
   return _then(_MissionEntity(
 departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,destination: null == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ImageCoordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
-as String,radius: null == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius,waypoints: null == waypoints ? _self._waypoints : waypoints // ignore: cast_nullable_to_non_nullable
+as String,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
+as Radius?,waypoints: null == waypoints ? _self._waypoints : waypoints // ignore: cast_nullable_to_non_nullable
 as List<ImageCoordinate>,
   ));
 }
@@ -349,9 +352,12 @@ $ImageCoordinateCopyWith<$Res> get destination {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-  
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
+$RadiusCopyWith<$Res>? get radius {
+    if (_self.radius == null) {
+    return null;
+  }
+
+  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
     return _then(_self.copyWith(radius: value));
   });
 }
