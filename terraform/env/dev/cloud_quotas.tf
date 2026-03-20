@@ -1,8 +1,8 @@
 # Cloud Quotas コンソールとの対応
 # - サービスID            → service
 # - 上限名                → quota_id
-# - 名前                  → service + quota_id から自動生成（Terraform からは指定しない）
-# - 項目（ロケーション等）→ dimensions
+# - 名前                  → service + quota_id から自動生成 (Terraform からは指定しない)
+# - 項目 (ロケーション等) → dimensions
 # - 値                    → quota_config.preferred_value
 # - 対象プロジェクト      → parent = "projects/<project-id>"
 
