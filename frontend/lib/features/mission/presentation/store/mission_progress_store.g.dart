@@ -29,7 +29,7 @@ final class MissionProgressStoreNotifierProvider
         argument: null,
         retry: null,
         name: r'missionProgressStoreProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -43,7 +43,7 @@ final class MissionProgressStoreNotifierProvider
 }
 
 String _$missionProgressStoreNotifierHash() =>
-    r'cee709647674c3ef055c30e00ee527d276aa9e68';
+    r'ae5b16eaa774aff28d99437244e45297cc17893c';
 
 /// ミッション進捗を管理するストア
 

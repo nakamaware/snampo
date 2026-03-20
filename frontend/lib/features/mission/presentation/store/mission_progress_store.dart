@@ -7,7 +7,7 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 part 'mission_progress_store.g.dart';
 
 /// ミッション進捗を管理するストア
-@riverpod
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   @override
@@ -32,6 +32,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   Future<void> savePhoto(int index, String tempPhotoPath) async {
     final current = state.value;
     if (current == null) return;
+    if (index < 0 || index >= current.checkpoints.length) return;
 
     final useCase = ref.read(savePhotoUseCaseProvider);
     final checkpoint = await useCase.call(
@@ -48,10 +49,15 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   Future<void> clearProgress() async {
     final current = state.value;
     if (current != null) {
+      // await の前に同期で取得し、非同期ギャップ後に ref.read しない
       final photoStorage = ref.read(photoStorageProvider);
       for (final cp in current.checkpoints) {
         if (cp?.userPhotoPath != null) {
-          await photoStorage.deletePhoto(cp!.userPhotoPath!);
+          try {
+            await photoStorage.deletePhoto(cp!.userPhotoPath!);
+          } on Object {
+            // 1 件の削除失敗でループを止めない
+          }
         }
       }
     }
