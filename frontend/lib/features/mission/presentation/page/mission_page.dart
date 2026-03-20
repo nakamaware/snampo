@@ -75,10 +75,18 @@ class MissionPage extends HookConsumerWidget {
         // 再開時は missionProgressStore が SQLite から復元済みなので、
         // startProgress するとチェックポイントが空に上書きされ写真が消える。
         if (_params is! MissionStoreParamsResume) {
-          ref
-              .read(missionProgressStoreProvider.notifier)
-              .startProgress(mission.waypoints.length + 1);
-          ref.read(persistedMissionProvider.notifier).setMission(mission);
+          // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
+          // （startProgress だけだとパス参照が失われオーファンが残る）
+          final progressNotifier =
+              ref.read(missionProgressStoreProvider.notifier);
+          final persistedNotifier =
+              ref.read(persistedMissionProvider.notifier);
+          final checkpointCount = mission.waypoints.length + 1;
+          Future(() async {
+            await progressNotifier.clearProgress();
+            progressNotifier.startProgress(checkpointCount);
+            persistedNotifier.setMission(mission);
+          });
         }
       });
     });
