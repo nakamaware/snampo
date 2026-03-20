@@ -51,7 +51,9 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
     /// ミッション開始時刻
     required DateTime startedAt,
     /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
-    @Default([]) List<CheckpointProgress?> checkpoints,
+    @Default([])
+    @JsonKey(toJson: _missionProgressCheckpointsToJson)
+    List<CheckpointProgress?> checkpoints,
   }) = _MissionProgressEntity;
 
   const MissionProgressEntity._();
@@ -60,3 +62,8 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   factory MissionProgressEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionProgressEntityFromJson(json);
 }
+
+List<Object?> _missionProgressCheckpointsToJson(
+  List<CheckpointProgress?> list,
+) =>
+    list.map((e) => e?.toJson()).toList();

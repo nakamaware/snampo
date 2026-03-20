@@ -72,10 +72,12 @@ class MissionPage extends HookConsumerWidget {
     // ホームの「再開」と整合させる。resume 時は既に DB に同一内容があるのでスキップ。
     ref.listen(missionStoreProvider(_params), (prev, next) {
       next.whenData((mission) {
-        ref
-            .read(missionProgressStoreProvider.notifier)
-            .startProgress(mission.waypoints.length + 1);
+        // 再開時は missionProgressStore が SQLite から復元済みなので、
+        // startProgress するとチェックポイントが空に上書きされ写真が消える。
         if (_params is! MissionStoreParamsResume) {
+          ref
+              .read(missionProgressStoreProvider.notifier)
+              .startProgress(mission.waypoints.length + 1);
           ref.read(persistedMissionProvider.notifier).setMission(mission);
         }
       });

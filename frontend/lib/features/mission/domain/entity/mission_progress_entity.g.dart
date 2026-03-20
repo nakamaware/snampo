@@ -47,5 +47,5 @@ Map<String, dynamic> _$MissionProgressEntityToJson(
   _MissionProgressEntity instance,
 ) => <String, dynamic>{
   'startedAt': instance.startedAt.toIso8601String(),
-  'checkpoints': instance.checkpoints,
+  'checkpoints': _missionProgressCheckpointsToJson(instance.checkpoints),
 };
