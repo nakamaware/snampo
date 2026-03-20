@@ -40,14 +40,21 @@ class PhotoStorage implements IPhotoStorage {
   @override
   Future<void> deletePhoto(String path) async {
     // 保存用ディレクトリ配下のパスのみ削除対象とする（壊れた進捗データ等による誤削除を防ぐ）
+    // normalize + absolute で `.../mission_photos/../` などのパストラバーサルを潰してから判定する
     final dir = await _photoDirectory();
-    final expectedPrefix = '${dir.path}${Platform.pathSeparator}';
-    if (!path.startsWith(expectedPrefix)) {
+    final dirPath = normalize(absolute(dir.path));
+    final targetPath = normalize(absolute(path));
+    final expectedPrefix = '$dirPath${Platform.pathSeparator}';
+    if (!targetPath.startsWith(expectedPrefix)) {
       return;
     }
-    final file = File(path);
-    if (file.existsSync()) {
-      file.deleteSync();
+    final file = File(targetPath);
+    try {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } on FileSystemException {
+      // 削除失敗は無視（clearProgress が他ファイルの削除を続けられる）
     }
   }
 }
