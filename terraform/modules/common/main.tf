@@ -9,6 +9,8 @@ locals {
     "apikeys.googleapis.com",
     "secretmanager.googleapis.com",
     "sts.googleapis.com",
+    # Cloud Quotas API
+    "cloudquotas.googleapis.com",
     # バックエンド用API
     "places.googleapis.com",
     "street-view-image-backend.googleapis.com",
