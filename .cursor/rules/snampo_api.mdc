@@ -1,0 +1,10 @@
+---
+description: packages/snampo_api は OpenAPI Generator の生成コード
+globs: packages/snampo_api/**/*
+alwaysApply: false
+---
+
+# snampo_api パッケージ
+
+- `packages/snampo_api/` は OpenAPI Generator の自動生成コード。直接編集しない
+- 再生成・整合性チェックは @.mise.toml の `generate-api` / `check-api` タスクを参照
