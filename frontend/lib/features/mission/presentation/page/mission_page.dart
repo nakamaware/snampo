@@ -441,7 +441,7 @@ class TakeSnap extends HookConsumerWidget {
       cameraStoreProvider.select((map) => map[spotIndex]),
     );
 
-    // feature: 再開後も表示できるよう、進捗ストアに保存済みのパスを優先
+    // feature: 再開後は進捗の永続パスで表示。撮り直し中は camera が先に更新されるため camera を優先する
     final progressAsync = ref.watch(missionProgressStoreProvider);
     final progressPath = progressAsync.maybeWhen(
       data: (progress) {
@@ -453,7 +453,7 @@ class TakeSnap extends HookConsumerWidget {
       orElse: () => null,
     );
 
-    final displayPath = progressPath ?? cameraPath;
+    final displayPath = cameraPath ?? progressPath;
 
     if (displayPath == null) {
       return FloatingActionButton(
