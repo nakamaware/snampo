@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from requests.exceptions import HTTPError
 
+from app.config import PLACES_API_MAX_SEARCH_RADIUS_M
 from app.domain.exceptions import ExternalServiceError
 from app.domain.value_objects import Coordinate, ImageSize, Landmark
 from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
@@ -77,6 +78,36 @@ class TestGetDirections:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
+    def test_座標差分が丸め精度内なら同じキャッシュキーになること(self) -> None:
+        """丸め後に同一座標となる場合はDirections APIリクエストを再利用することを確認"""
+        origin1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
+        destination1 = Coordinate(latitude=35.6895001, longitude=139.6917001)
+        origin2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
+        destination2 = Coordinate(latitude=35.6895002, longitude=139.6917002)
+
+        mock_response_data = {
+            "status": "OK",
+            "routes": [
+                {
+                    "legs": [{"steps": [{"polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]}],
+                    "overview_polyline": {"points": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"},
+                }
+            ],
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            gateway.get_directions(origin1, destination1)
+            gateway.get_directions(origin2, destination2)
+
+            assert mock_get.call_count == 1
+
     def test_waypointsを指定したときにリクエストパラメータに含まれること(self) -> None:
         """waypointsを指定したときに、リクエストパラメータにwaypointsが含まれることを確認"""
         origin = Coordinate(latitude=35.6812, longitude=139.7671)
@@ -107,7 +138,7 @@ class TestGetDirections:
             assert call_args is not None
             params = call_args.kwargs.get("params", {})
             assert "waypoints" in params
-            assert params["waypoints"] == "via:35.685,139.73"
+            assert params["waypoints"] == "via:35.685000,139.730000"
 
     def test_複数のwaypointsを指定したときにパイプで連結されること(self) -> None:
         """複数のwaypointsを指定したときに、パイプで連結されることを確認"""
@@ -140,7 +171,7 @@ class TestGetDirections:
             assert call_args is not None
             params = call_args.kwargs.get("params", {})
             assert "waypoints" in params
-            assert params["waypoints"] == "via:35.685,139.73|via:35.687,139.71"
+            assert params["waypoints"] == "via:35.685000,139.730000|via:35.687000,139.710000"
 
     def test_waypointsを指定しないときにリクエストパラメータに含まれないこと(self) -> None:
         """waypointsを指定しないときに、リクエストパラメータにwaypointsが含まれないことを確認"""
@@ -289,6 +320,29 @@ class TestGetStreetViewMetadata:
 
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
+
+    def test_座標差分が丸め精度内ならメタデータキャッシュが再利用されること(self) -> None:
+        """丸め後に同一座標ならStreet View Metadata APIリクエストを再利用することを確認"""
+        coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
+        coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
+
+        mock_response_data = {
+            "status": "OK",
+            "location": {"lat": 35.6812, "lng": 139.7671},
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            gateway.get_street_view_metadata(coordinate1)
+            gateway.get_street_view_metadata(coordinate2)
+
+            assert mock_get.call_count == 1
 
     def test_メタデータAPIリクエストにsource_outdoorパラメータが含まれること(self) -> None:
         """メタデータAPIリクエストに source=outdoor パラメータが含まれることを確認"""
@@ -477,6 +531,47 @@ class TestGetStreetViewImage:
             # APIリクエストは2回呼ばれるべき
             assert mock_get.call_count == 2
 
+    def test_丸め後に同一座標なら画像キャッシュが再利用されること(self) -> None:
+        """丸め後に同一座標ならStreet View画像キャッシュを再利用することを確認"""
+        coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
+        coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
+        image_size = ImageSize(width=640, height=640)
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            gateway.get_street_view_image(coordinate1, image_size)
+            gateway.get_street_view_image(coordinate2, image_size)
+
+            assert mock_get.call_count == 1
+
+    def test_headingが同じ整数値に正規化される場合は画像キャッシュが再利用されること(self) -> None:
+        """同じheading整数値へ丸め込まれる場合はStreet View画像キャッシュを再利用することを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        image_size = ImageSize(width=640, height=640)
+
+        mock_image_data = b"fake_image_data"
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.content = mock_image_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            gateway.get_street_view_image(coordinate, image_size, heading=90.1)
+            gateway.get_street_view_image(coordinate, image_size, heading=90.9)
+
+            assert mock_get.call_count == 1
+
     def test_headingが整数に変換されること(self) -> None:
         """headingが浮動小数点数の場合、整数に変換されてリクエストに含まれることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
@@ -578,6 +673,34 @@ class TestSnapToRoad:
             # APIリクエストは1回だけ呼ばれるべき
             assert mock_get.call_count == 1
 
+    def test_座標差分が丸め精度内なら道路スナップキャッシュが再利用されること(self) -> None:
+        """丸め後に同一座標ならRoads APIリクエストを再利用することを確認"""
+        coordinate1 = Coordinate(latitude=35.6812001, longitude=139.7671001)
+        coordinate2 = Coordinate(latitude=35.6812002, longitude=139.7671002)
+
+        mock_response_data = {
+            "snappedPoints": [
+                {
+                    "location": {"latitude": 35.6813, "longitude": 139.7672},
+                    "originalIndex": 0,
+                    "placeId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+                }
+            ]
+        }
+
+        with patch("app.infrastructure.gateways.google_maps_gateway_impl.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status = MagicMock()
+            mock_get.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+
+            gateway.snap_to_road(coordinate1)
+            gateway.snap_to_road(coordinate2)
+
+            assert mock_get.call_count == 1
+
     def test_タイムアウト時は例外を発生させること(self) -> None:
         """Timeoutエラー時にExternalServiceTimeoutErrorを発生させることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
@@ -619,6 +742,32 @@ class TestSnapToRoad:
 
 class TestSearchLandmarksNearby:
     """SearchLandmarksNearbyのテスト"""
+
+    def test_検索半径が上限超過でもPlacesAPI上限にクランプされること(self) -> None:
+        """極端に大きい半径でも searchNearby に 50,000m を超えて渡さないことを確認"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 100000
+
+        mock_response_data = {"places": []}
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.search_landmarks_nearby(coordinate, radius)
+
+            assert mock_post.call_count == 1
+            call_args = mock_post.call_args
+            assert call_args is not None
+            request_body = call_args.kwargs.get("json", {})
+            circle = request_body.get("locationRestriction", {}).get("circle", {})
+            assert circle.get("radius") == PLACES_API_MAX_SEARCH_RADIUS_M
 
     def test_正常なレスポンスからLandmarkリストが返されること(self) -> None:
         """正常なレスポンスからLandmarkリストが返されることを確認"""

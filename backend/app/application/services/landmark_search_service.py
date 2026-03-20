@@ -12,6 +12,7 @@ from app.config import (
     LANDMARK_DISTANCE_TOLERANCE_PERCENT,
     MIN_SEARCH_RADIUS_M,
 )
+from app.domain.exceptions import ExternalServiceError
 from app.domain.services.coordinate_service import calculate_distance
 from app.domain.services.landmark_service import (
     calculate_search_radius,
@@ -82,7 +83,7 @@ class LandmarkSearchService:
             logger.info(f"Find {len(seen)} new landmarks around center")
             if self._should_stop(seen, target_count, calls, max_calls):
                 return list(seen.values())
-        except Exception:
+        except ExternalServiceError:
             logger.warning(
                 f"中心点 ({center.latitude:.4f}, {center.longitude:.4f}) でのランドマーク検索失敗",
                 exc_info=True,
@@ -109,7 +110,7 @@ class LandmarkSearchService:
                 )
                 if self._should_stop(seen, target_count, calls, max_calls):
                     return list(seen.values())
-            except Exception as e:
+            except ExternalServiceError as e:
                 # 個別の点でのエラーは無視して続行
                 logger.warning(
                     f"円周上の点 ({point_lat:.4f}, {point_lng:.4f}) で検索失敗: {e}",
