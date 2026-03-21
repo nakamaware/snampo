@@ -25,40 +25,71 @@ LANDMARK_SEARCH_MAX_CALLS = 8  # 最大API呼び出し回数
 LANDMARK_DISTANCE_TOLERANCE_PERCENT = 15.0  # 許容誤差 (%)
 LANDMARK_SEARCH_TIME_BUDGET_MS = 3000  # タイムアウト予算 (ミリ秒)
 MIN_SEARCH_RADIUS_M = 50  # Google Maps Nearby Search APIの最小検索半径 (メートル)
+PLACES_API_MAX_SEARCH_RADIUS_M = 50000  # Places API searchNearby の最大検索半径 (メートル)
 MIDPOINT_MIN_SEARCH_RADIUS_M = 300  # 中間地点検索の最小半径 (メートル)
+
+# Directions API制約
+DIRECTIONS_API_MAX_WAYPOINTS = 25  # origin/destination を除く waypoint 最大数
 
 # ランドマーク検索対象のタイプ
 # 参考: https://developers.google.com/maps/documentation/places/web-service/place-types?hl=ja
 LANDMARK_INCLUDED_TYPES = [
-    # 文化
-    "cultural_landmark",
-    "historical_place",
-    "monument",
+    # 🏞️ 自然・屋外
+    "beach",
+    "national_park",
+    "state_park",
+    "park",
+    "city_park",
+    "garden",
+    "botanical_garden",
+    "hiking_area",
+    "picnic_ground",
+    "plaza",
+    "marina",
+    # 🏛️ 文化・ランドマーク
+    "castle",
+    "art_museum",
     "museum",
-    "sculpture",
-    # 教育
-    "library",
-    "university",
-    # エンターテイメント/レクリエーション
-    "amusement_center",
+    "history_museum",
+    "historical_landmark",
+    "performing_arts_theater",
+    "concert_hall",
+    "opera_house",
+    "philharmonic_hall",
+    "planetarium",
+    # 🎡 エンタメ・映え
     "amusement_park",
     "aquarium",
-    "casino",
-    "garden",
-    "tourist_attraction",
-    "zoo",
-    # 自然地物
-    "beach",
-    # ショッピング
+    "ferris_wheel",
+    "observation_deck",
+    "amphitheatre",
+    "cycling_park",
+    "skateboard_park",
+    "dog_park",
+    # ☕ 軽い立ち寄り
+    "cafe",
+    "coffee_shop",
+    "coffee_stand",
+    "bakery",
+    "ice_cream_shop",
+    "dessert_shop",
+    "tea_house",
+    # 🛍️ 発見系
+    "book_store",
+    "gift_shop",
+    "market",
+    "farmers_market",
+    "flea_market",
     "shopping_mall",
-    # 交通
-    "airport",
-    "airstrip",
-    "ferry_terminal",
-    "international_airport",
-    "light_rail_station",
-    "subway_station",
-    "train_station",
+    # 🧘‍♂️ チル
+    "spa",
+    "sauna",
+    "public_bath",
+    # 🏕️ 非日常・雰囲気
+    "campground",
+    "cottage",
+    "japanese_inn",
+    "resort_hotel",
 ]
 
 # 環境変数からGoogle APIキーを取得

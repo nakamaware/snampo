@@ -48,7 +48,7 @@ repos:
       - id: flutter-analyze
         name: flutter analyze
         description: Flutter/Dartの静的解析
-        entry: bash -c 'cd frontend && flutter analyze --no-fatal-infos'
+        entry: bash -c 'cd frontend && mise exec -- flutter analyze --no-fatal-infos'
         language: system
         files: ^frontend/.*\.dart$
         pass_filenames: false
