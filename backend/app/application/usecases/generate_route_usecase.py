@@ -6,7 +6,6 @@
 import logging
 
 from injector import inject
-from pydantic import BaseModel, ConfigDict, Field
 
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
 from app.application.services import (
@@ -14,7 +13,9 @@ from app.application.services import (
     LandmarkSearchService,
     StreetViewImageFetchService,
 )
+from app.application.usecases.route_result_dto import RouteResultDto
 from app.config import (
+    DIRECTIONS_API_MAX_WAYPOINTS,
     LANDMARK_SEARCH_MAX_CALLS,
     LANDMARK_SEARCH_TARGET_COUNT,
     MIDPOINT_MIN_SEARCH_RADIUS_M,
@@ -25,39 +26,13 @@ from app.domain.exceptions import (
     RouteGenerationError,
 )
 from app.domain.services import coordinate_service
+from app.domain.services.mission_point_calculation_service import calculate_mission_point_count
 from app.domain.value_objects import (
     Coordinate,
     StreetViewImage,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class RouteResultDto(BaseModel):
-    """ルート生成結果DTO
-
-    Application層から返されるルート情報を表します。
-
-    Attributes:
-        departure: 出発地点の座標
-        destination: 目的地の座標
-        midpoints: 中間地点の座標リスト
-        overview_polyline: ルートの概要ポリライン文字列
-        midpoint_images: 中間地点の画像情報リスト
-            ((座標, StreetViewImage)のリスト、順序を保持)
-        destination_image: 目的地の画像情報
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    departure: Coordinate = Field(description="出発地点の座標")
-    destination: Coordinate = Field(description="目的地の座標")
-    midpoints: list[Coordinate] = Field(description="中間地点の座標リスト")
-    overview_polyline: str = Field(description="ルートの概要ポリライン文字列")
-    midpoint_images: list[tuple[Coordinate, StreetViewImage]] = Field(
-        description="中間地点の画像情報リスト ((座標, StreetViewImage)のリスト、順序を保持)"
-    )
-    destination_image: StreetViewImage | None = Field(default=None, description="目的地の画像情報")
 
 
 class GenerateRouteUseCase:
@@ -98,8 +73,11 @@ class GenerateRouteUseCase:
 
         アプローチ:
         1. 目的地のランドマークを決定 (ランダムモードの場合)
-        2. 中間地点付近でランドマークを検索
-        3. 初期地点→中間地点、中間地点→目的地の2つのルートを取得し、結合
+        2. 必要なmission地点数を計算(距離に応じて)
+        3. 現在地→目的地のルートを先に取得
+        4. ルート上を等分割して複数の中間地点候補を生成
+        5. 各中間地点付近でランドマークを検索
+        6. 初期地点→目的地のルートを取得(waypoints=[地点1, 地点2, ...])
 
         Args:
             current_coordinate: 現在地の座標
@@ -108,10 +86,6 @@ class GenerateRouteUseCase:
 
         Returns:
             RouteResultDto: ルート情報
-
-        Raises:
-            ExternalServiceError: 外部サービスエラーが発生した場合
-            RouteGenerationError: ルート生成に失敗した場合
         """
         if destination_coordinate is None and radius_m is None:
             raise ValueError("radius_m または destination_coordinate のいずれかを指定してください")
@@ -156,49 +130,104 @@ class GenerateRouteUseCase:
                 destination_coordinate = destination_image.metadata_coordinate
                 logger.info("Successfully fetched Street View image for random destination")
 
-            # 2. 中間地点付近のランドマーク検索
-            midpoint_coordinate = coordinate_service.calculate_geodesic_midpoint(
-                current_coordinate, destination_coordinate
-            )
-
-            # 中間地点の検索半径を決定
+            # 2. 目的地指定モードでは、現在地〜目的地の距離から半径を計算
             if radius_m is None:
-                # 目的地指定モード: 現在地〜目的地の距離から計算
                 radius_m = int(
                     coordinate_service.calculate_distance(
                         current_coordinate, destination_coordinate
                     )
                 )
 
-            midpoint_search_radius = max(MIDPOINT_MIN_SEARCH_RADIUS_M, radius_m // 4)
-            midpoint_landmarks = self.google_maps_gateway.search_landmarks_nearby(
-                coordinate=midpoint_coordinate,
-                radius=midpoint_search_radius,
-                rank_preference="DISTANCE",
+            # 3. 必要なmission地点数を計算
+            required_midpoint_count = calculate_mission_point_count(radius_m)
+            midpoint_target_count = min(required_midpoint_count, DIRECTIONS_API_MAX_WAYPOINTS)
+            if midpoint_target_count != required_midpoint_count:
+                logger.info(
+                    (
+                        "Required midpoint count %s exceeded limit, "
+                        "capped to %s due to waypoint constraint"
+                    ),
+                    required_midpoint_count,
+                    midpoint_target_count,
+                )
+            logger.info(
+                (
+                    "Required midpoint count: %s, capped midpoint count: %s, "
+                    "total missions: %s for radius %sm"
+                ),
+                required_midpoint_count,
+                midpoint_target_count,
+                midpoint_target_count + 1,
+                radius_m,
             )
-            logger.info(f"Find {len(midpoint_landmarks)} landmarks around midpoint")
-            if not midpoint_landmarks:
-                raise ExternalServiceValidationError(
-                    "中間地点付近にランドマークが見つかりませんでした",
-                    service_name="Places API",
+
+            # 4. 現在地→目的地の実ルート上から複数の中間地点候補を生成
+            candidate_coordinates = []
+            if midpoint_target_count > 0:
+                route_coordinates, _ = self.google_maps_gateway.get_directions(
+                    origin=current_coordinate,
+                    destination=destination_coordinate,
+                    waypoints=None,
+                )
+                candidate_coordinates = coordinate_service.divide_route_into_segments(
+                    route_coordinates=route_coordinates,
+                    num_segments=midpoint_target_count,
                 )
 
-            _, midpoint_image = self.landmark_selector.select(midpoint_landmarks, shuffle=False)
-            midpoint_coordinate = midpoint_image.metadata_coordinate
+            # 5. 各中間地点付近でランドマーク検索
+            midpoint_results = []
+            midpoint_search_radius = max(MIDPOINT_MIN_SEARCH_RADIUS_M, radius_m // 4)
 
-            # 3. 現在地→目的地のルートを取得
+            for i, candidate_coord in enumerate(candidate_coordinates, 1):
+                logger.info(f"Searching landmarks for mission point {i}/{midpoint_target_count}")
+
+                # 各候補地点周辺でランドマーク検索
+                landmarks = self.google_maps_gateway.search_landmarks_nearby(
+                    coordinate=candidate_coord,
+                    radius=midpoint_search_radius,
+                    rank_preference="DISTANCE",
+                )
+
+                if landmarks:
+                    # 画像付きランドマークを選択
+                    try:
+                        _, image = self.landmark_selector.select(landmarks)
+                        midpoint_results.append((image.metadata_coordinate, image))
+                        logger.info(f"Mission point {i} found at {image.metadata_coordinate}")
+                    except ExternalServiceValidationError:
+                        logger.warning(f"No image available for mission point {i}")
+                else:
+                    logger.warning(f"No landmarks found for mission point {i}")
+
+            # 必要数に満たない場合の警告
+            if len(midpoint_results) < midpoint_target_count:
+                logger.warning(
+                    f"Only {len(midpoint_results)}/{midpoint_target_count} "
+                    "mission points could be generated"
+                )
+
+            # 6. ルート全体を取得(waypointsとして全midpointを渡す)
+            midpoint_coords = [coord for coord, _ in midpoint_results]
             _, overview_polyline = self.google_maps_gateway.get_directions(
-                current_coordinate,
-                destination_coordinate,
-                waypoints=[midpoint_coordinate],
+                origin=current_coordinate,
+                destination=destination_coordinate,
+                waypoints=midpoint_coords,  # 複数のwaypointsを渡す
+            )
+
+            # デバッグ用ログ: 生成されたルートの中間地点と画像の数を出力
+            logger.info(
+                "RouteResultDto midpoints count=%s, midpoint_images count=%s, total missions=%s",
+                len(midpoint_coords),
+                len(midpoint_results),
+                len(midpoint_coords) + (1 if destination_image is not None else 0),
             )
 
             return RouteResultDto(
                 departure=current_coordinate,
                 destination=destination_coordinate,
-                midpoints=[midpoint_coordinate],
+                midpoints=midpoint_coords,
                 overview_polyline=overview_polyline,
-                midpoint_images=[(midpoint_coordinate, midpoint_image)],
+                midpoint_images=midpoint_results,
                 destination_image=destination_image,
             )
         except (ExternalServiceValidationError, ExternalServiceError, ValueError) as e:
