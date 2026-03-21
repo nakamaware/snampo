@@ -2,6 +2,29 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'coordinate.freezed.dart';
 
+/// [Coordinate] を JSON と相互変換するための [JsonConverter]。
+///
+/// MissionEntity、ImageCoordinate、CheckpointProgress などで [Coordinate] を
+/// JSON シリアライズする際に使用する。復元時も公開 factory を通して
+/// 緯度・経度の範囲チェックを行うため、破損した保存データからの不正値は弾かれる。
+class CoordinateConverter
+    implements JsonConverter<Coordinate, Map<String, dynamic>> {
+  /// [CoordinateConverter] を作成する
+  const CoordinateConverter();
+
+  @override
+  Coordinate fromJson(Map<String, dynamic> json) => Coordinate(
+    latitude: (json['latitude'] as num).toDouble(),
+    longitude: (json['longitude'] as num).toDouble(),
+  );
+
+  @override
+  Map<String, dynamic> toJson(Coordinate object) => {
+    'latitude': object.latitude,
+    'longitude': object.longitude,
+  };
+}
+
 /// 座標値オブジェクト
 @freezed
 abstract class Coordinate with _$Coordinate {

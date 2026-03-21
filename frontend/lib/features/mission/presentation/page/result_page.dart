@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// ミッション完了後の結果を表示するページ
 ///
 /// resultpageに遷移する時にバグるので要修正
-class ResultPage extends StatelessWidget {
+class ResultPage extends HookConsumerWidget {
   /// ResultPageのコンストラクタ
   const ResultPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 到着画面が初めて表示されたタイミングで1回だけ永続ミッションと進捗をクリアする（ビルド完了後に遅延実行）
+    // clearProgress（写真削除など）が例外でも、永続ミッションは必ず外す（再開ゴミ残留防止）
+    useEffect(() {
+      final progressStore = ref.read(missionProgressStoreProvider.notifier);
+      final persistedMission = ref.read(persistedMissionProvider.notifier);
+      Future(() async {
+        try {
+          await progressStore.clearProgress();
+        } finally {
+          persistedMission.clearMission();
+        }
+      });
+      return null;
+    }, const []);
+
     final theme = Theme.of(context);
     final titleTextStyle = (theme.textTheme.displayMedium ??
             theme.textTheme.headlineMedium ??
@@ -61,12 +80,10 @@ class HomeButton extends StatelessWidget {
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, //ボタンの背景色
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
       ),
-      onPressed: () {
-        context.go('/');
-      },
+      onPressed: () => context.go('/'),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text('ホーム', style: textStyle),
