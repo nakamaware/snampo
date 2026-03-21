@@ -16,8 +16,10 @@ class SavePhotoUseCase {
     required String tempPhotoPath,
     required int checkpointIndex,
   }) async {
-    final savedPath =
-        await _photoStorage.savePhoto(tempPhotoPath, checkpointIndex);
+    final savedPath = await _photoStorage.savePhoto(
+      tempPhotoPath,
+      checkpointIndex,
+    );
     return CheckpointProgress(
       userPhotoPath: savedPath,
       achievedAt: DateTime.now(),

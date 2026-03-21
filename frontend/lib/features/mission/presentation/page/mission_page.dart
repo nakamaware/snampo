@@ -77,10 +77,10 @@ class MissionPage extends HookConsumerWidget {
         if (_params is! MissionStoreParamsResume) {
           // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
           // （startProgress だけだとパス参照が失われオーファンが残る）
-          final progressNotifier =
-              ref.read(missionProgressStoreProvider.notifier);
-          final persistedNotifier =
-              ref.read(persistedMissionProvider.notifier);
+          final progressNotifier = ref.read(
+            missionProgressStoreProvider.notifier,
+          );
+          final persistedNotifier = ref.read(persistedMissionProvider.notifier);
           final checkpointCount = mission.waypoints.length + 1;
           Future(() async {
             await progressNotifier.clearProgress();
@@ -487,10 +487,9 @@ class TakeSnap extends HookConsumerWidget {
       // プレビュー用（メモリ上の Map）
       ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
       // 旧 HEAD 相当: SavePhotoUseCase 経由で永続化しチェックポイントを更新
-      await ref.read(missionProgressStoreProvider.notifier).savePhoto(
-            spotIndex,
-            path,
-          );
+      await ref
+          .read(missionProgressStoreProvider.notifier)
+          .savePhoto(spotIndex, path);
     }
   }
 }

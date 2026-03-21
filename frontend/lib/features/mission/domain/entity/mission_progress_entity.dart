@@ -13,8 +13,10 @@ abstract class CheckpointProgress with _$CheckpointProgress {
   const factory CheckpointProgress({
     /// 撮影時の位置（将来用、現状は null）
     @NullableCoordinateConverter() Coordinate? guessPosition,
+
     /// 保存した写真のファイルパス
     String? userPhotoPath,
+
     /// 達成した日時
     DateTime? achievedAt,
   }) = _CheckpointProgress;
@@ -50,6 +52,7 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   const factory MissionProgressEntity({
     /// ミッション開始時刻
     required DateTime startedAt,
+
     /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
     @Default([])
     @JsonKey(toJson: _missionProgressCheckpointsToJson)
@@ -65,5 +68,4 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
 
 List<Object?> _missionProgressCheckpointsToJson(
   List<CheckpointProgress?> list,
-) =>
-    list.map((e) => e?.toJson()).toList();
+) => list.map((e) => e?.toJson()).toList();

@@ -14,15 +14,15 @@ class CoordinateConverter
 
   @override
   Coordinate fromJson(Map<String, dynamic> json) => Coordinate(
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
-      );
+    latitude: (json['latitude'] as num).toDouble(),
+    longitude: (json['longitude'] as num).toDouble(),
+  );
 
   @override
   Map<String, dynamic> toJson(Coordinate object) => {
-        'latitude': object.latitude,
-        'longitude': object.longitude,
-      };
+    'latitude': object.latitude,
+    'longitude': object.longitude,
+  };
 }
 
 /// 座標値オブジェクト
