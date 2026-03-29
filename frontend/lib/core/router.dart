@@ -11,11 +11,15 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/', builder: (context, state) => const HomePage()),
     GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
     GoRoute(
-      path: '/mission/:radius',
+      path: '/mission/random/:radius',
       builder: (context, state) {
-        final radius = int.parse(state.pathParameters['radius']!);
-        return MissionPage(radius: radius);
+        final meters = int.parse(state.pathParameters['radius']!);
+        return MissionPage(radius: meters);
       },
+    ),
+    GoRoute(
+      path: '/mission',
+      builder: (context, state) => const MissionPage.resume(),
     ),
     GoRoute(path: '/camera', builder: (context, state) => const CameraPage()),
     GoRoute(

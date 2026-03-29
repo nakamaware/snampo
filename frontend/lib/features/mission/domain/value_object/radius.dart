@@ -2,6 +2,22 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'radius.freezed.dart';
 
+/// [Radius] を JSON と相互変換するための [JsonConverter]。
+///
+/// MissionEntity で [Radius] を JSON シリアライズする際に使用する。復元時も公開 factory を通して
+/// 500m〜10000m の範囲チェックを行うため、破損した保存データからの不正値は弾かれる。
+class RadiusConverter implements JsonConverter<Radius, Map<String, dynamic>> {
+  /// [RadiusConverter] を作成する
+  const RadiusConverter();
+
+  @override
+  Radius fromJson(Map<String, dynamic> json) =>
+      Radius(meters: json['meters'] as int);
+
+  @override
+  Map<String, dynamic> toJson(Radius object) => {'meters': object.meters};
+}
+
 /// 半径値オブジェクト
 @freezed
 abstract class Radius with _$Radius {

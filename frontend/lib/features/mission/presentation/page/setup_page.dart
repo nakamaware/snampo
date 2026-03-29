@@ -105,7 +105,7 @@ class _SliderWidgetState extends State<SliderWidget> {
 }
 
 /// ミッションを開始するための送信ボタンウィジェット。
-class SubmitButton extends StatefulWidget {
+class SubmitButton extends StatelessWidget {
   /// [SubmitButton] ウィジェットを作成します。
   ///
   /// [radius] はミッションの検索半径です。
@@ -115,11 +115,6 @@ class SubmitButton extends StatefulWidget {
   final Radius radius;
 
   @override
-  State<SubmitButton> createState() => _SubmitButtonState();
-}
-
-class _SubmitButtonState extends State<SubmitButton> {
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = theme.textTheme.displayMedium!.copyWith(
@@ -128,14 +123,11 @@ class _SubmitButtonState extends State<SubmitButton> {
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, // ボタンの背景色
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
-        // shape: RoundedRectangleBorder( // 形を変えるか否か
-        //   borderRadius: BorderRadius.circular(10), // 角の丸み
-        // ),
       ),
       onPressed: () {
-        context.push('/mission/${widget.radius.meters}');
+        context.push('/mission/random/${radius.meters}');
       },
       child: Padding(
         padding: const EdgeInsets.all(15),
