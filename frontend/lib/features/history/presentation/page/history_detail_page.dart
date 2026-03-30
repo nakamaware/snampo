@@ -1,15 +1,13 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:snampo/features/history/domain/entity/mission_history_entity.dart';
-import 'package:snampo/features/history/presentation/store/history_store.dart';
+import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// 1 件の履歴の詳細 (地図 + 各スポットの写真)
@@ -17,7 +15,7 @@ class HistoryDetailPage extends ConsumerWidget {
   /// [HistoryDetailPage] を作成する
   const HistoryDetailPage({required this.recordId, super.key});
 
-  /// 履歴レコードの id ( [MissionHistoryEntity.id] )
+  /// 履歴の id ( [MissionHistory.id] )
   final String recordId;
 
   @override
@@ -28,17 +26,10 @@ class HistoryDetailPage extends ConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final historyAsync = ref.watch(historyStoreProvider);
+    final historyAsync = ref.watch(missionHistoryByIdProvider(recordId));
 
     return historyAsync.when(
-      data: (data) {
-        MissionHistoryEntity? found;
-        for (final r in data.records) {
-          if (r.id == recordId) {
-            found = r;
-            break;
-          }
-        }
+      data: (MissionHistory? found) {
         if (found == null) {
           return Scaffold(
             appBar: AppBar(
@@ -93,13 +84,12 @@ class HistoryDetailPage extends ConsumerWidget {
 class _HistoryDetailBody extends StatelessWidget {
   const _HistoryDetailBody({required this.record});
 
-  final MissionHistoryEntity record;
+  final MissionHistory record;
 
   @override
   Widget build(BuildContext context) {
-    final mission = record.mission;
-    final spots = <ImageCoordinate>[...mission.waypoints, mission.destination];
-    final encoded = mission.overviewPolyline;
+    final spots = record.spots;
+    final encoded = record.overviewPolyline;
     final polylinePoints =
         encoded.isNotEmpty ? decodePolyline(encoded) : <LatLng>[];
     final polylines = <Polyline>{
@@ -115,10 +105,7 @@ class _HistoryDetailBody extends StatelessWidget {
     final markers = <Marker>{
       Marker(
         markerId: const MarkerId('departure'),
-        position: LatLng(
-          mission.departure.latitude,
-          mission.departure.longitude,
-        ),
+        position: LatLng(record.departure.latitude, record.departure.longitude),
         infoWindow: const InfoWindow(title: '出発'),
       ),
       for (var i = 0; i < spots.length; i++)
@@ -132,9 +119,9 @@ class _HistoryDetailBody extends StatelessWidget {
         ),
     };
 
-    final departure = mission.departure;
+    final departure = record.departure;
     final durationText = formatMissionDuration(
-      record.progress.startedAt,
+      record.startedAt,
       record.completedAt,
     );
 
@@ -164,12 +151,8 @@ class _HistoryDetailBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: spots.length,
             itemBuilder: (context, index) {
-              final spot = spots[index];
-              final cp =
-                  index < record.progress.checkpoints.length
-                      ? record.progress.checkpoints[index]
-                      : null;
-              final userPath = cp?.userPhotoPath;
+              final line = spots[index];
+              final userPath = line.userPhotoPath;
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -192,7 +175,9 @@ class _HistoryDetailBody extends StatelessWidget {
                               children: [
                                 const Text('参考画像 ( Street View )'),
                                 const SizedBox(height: 4),
-                                _StreetViewThumb(imageBase64: spot.imageBase64),
+                                _StreetViewThumb(
+                                  path: line.streetViewImagePath,
+                                ),
                               ],
                             ),
                           ),
@@ -222,26 +207,40 @@ class _HistoryDetailBody extends StatelessWidget {
 }
 
 class _StreetViewThumb extends StatelessWidget {
-  const _StreetViewThumb({required this.imageBase64});
+  const _StreetViewThumb({required this.path});
 
-  final String imageBase64;
+  final String path;
 
   @override
   Widget build(BuildContext context) {
-    final bytes = base64Decode(imageBase64);
     final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => openHistoryFullscreenImageFromBytes(context, bytes),
-        child: Image.memory(
-          bytes,
-          height: 120,
-          width: double.infinity,
-          fit: BoxFit.cover,
+    if (path.isNotEmpty && File(path).existsSync()) {
+      return Material(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => openHistoryFullscreenImageFromFile(context, path),
+          child: Image.file(
+            File(path),
+            height: 120,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
         ),
+      );
+    }
+    return Container(
+      height: 120,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: theme.colorScheme.outline,
+        size: 40,
       ),
     );
   }

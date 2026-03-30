@@ -1,4 +1,4 @@
-import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 
 /// [start] から [end] までの経過時間を日本語の表記にする
 String formatMissionDuration(DateTime start, DateTime end) {
@@ -15,10 +15,10 @@ String formatMissionDuration(DateTime start, DateTime end) {
   return '$seconds秒';
 }
 
-/// チェックポイント一覧から最初のユーザー写真パスを返す
-String? firstUserPhotoPath(List<CheckpointProgress?> checkpoints) {
-  for (final cp in checkpoints) {
-    final p = cp?.userPhotoPath;
+/// スポット行一覧から最初のユーザー写真パスを返す
+String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
+  for (final line in spots) {
+    final p = line.userPhotoPath;
     if (p != null && p.isNotEmpty) {
       return p;
     }

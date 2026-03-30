@@ -8,6 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/history/di/record_mission_history.dart';
+import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
+import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
@@ -382,8 +385,36 @@ class SnapViewState extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10), // 角の丸み
                 ),
               ),
-              onPressed: () {
-                context.push('/result');
+              onPressed: () async {
+                final progress = await _resolveCurrentProgress(
+                  ref,
+                  missionInfo,
+                );
+                if (progress == null) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('進捗情報を取得できませんでした')),
+                    );
+                  }
+                  return;
+                }
+                try {
+                  await recordCompletedMission(
+                    ref,
+                    mission: missionInfo,
+                    progress: progress,
+                  );
+                } on Exception {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('履歴の保存に失敗しました')),
+                    );
+                  }
+                  return;
+                }
+                if (context.mounted) {
+                  await context.push('/result');
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -543,4 +574,34 @@ class SetTestImage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [missionProgressStoreProvider] から最新の進捗を取得する。
+///
+/// `.future` は build 完了時の値に留まり savePhoto 後の最新 state を反映しないため、
+/// 現在の AsyncData → loading 中なら await → まだ null なら新規開始、の順で解決する。
+Future<MissionProgressEntity?> _resolveCurrentProgress(
+  WidgetRef ref,
+  MissionEntity missionInfo,
+) async {
+  final snap = ref.read(missionProgressStoreProvider);
+  var progress = switch (snap) {
+    AsyncData(:final value) => value,
+    _ => null,
+  };
+  if (progress == null && snap.isLoading) {
+    progress = await ref.read(missionProgressStoreProvider.future);
+  }
+  if (progress == null) {
+    final checkpointCount = missionInfo.waypoints.length + 1;
+    ref
+        .read(missionProgressStoreProvider.notifier)
+        .startProgress(checkpointCount);
+    final snap2 = ref.read(missionProgressStoreProvider);
+    progress = switch (snap2) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+  }
+  return progress;
 }

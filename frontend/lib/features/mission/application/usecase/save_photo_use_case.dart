@@ -1,4 +1,4 @@
-import 'package:snampo/features/mission/application/interface/photo_storage.dart';
+import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 
 /// 写真を永続保存するユースケース

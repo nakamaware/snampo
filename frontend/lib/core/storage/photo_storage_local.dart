@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:snampo/features/mission/application/interface/photo_storage.dart';
+import 'package:snampo/core/storage/photo_storage.dart';
 
 /// 写真ストレージの実装
 ///

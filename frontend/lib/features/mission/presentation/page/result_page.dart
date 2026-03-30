@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/features/history/presentation/store/history_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
@@ -15,25 +14,13 @@ class ResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 到着画面が初めて表示されたタイミングで1回だけ
-    // 履歴保存・永続ミッションと進捗をクリアする
+    // 初回表示時に再開用の永続データをクリアする。
+    // 履歴保存は MissionPage の「到着」ボタンで実施済み。
+    // build 中の Notifier 操作を避けるため addPostFrameCallback で遅延させる。
     useEffect(() {
-      Future(() async {
-        final mission = await ref.read(persistedMissionProvider.future);
-        final progress = await ref.read(missionProgressStoreProvider.future);
-        final historyNotifier = ref.read(historyStoreProvider.notifier);
-        final progressNotifier = ref.read(
-          missionProgressStoreProvider.notifier,
-        );
-        final persistedNotifier = ref.read(persistedMissionProvider.notifier);
-        try {
-          if (mission != null && progress != null) {
-            historyNotifier.addHistory(mission, progress);
-          }
-        } finally {
-          progressNotifier.resetState();
-          persistedNotifier.clearMission();
-        }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(missionProgressStoreProvider.notifier).resetState();
+        ref.read(persistedMissionProvider.notifier).clearMission();
       });
       return null;
     }, const []);

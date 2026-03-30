@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:snampo/features/history/domain/entity/mission_history_entity.dart';
-import 'package:snampo/features/history/presentation/store/history_store.dart';
+import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/history/di/record_mission_history.dart';
+import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 
@@ -22,7 +23,7 @@ class HistoryPage extends ConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final historyAsync = ref.watch(historyStoreProvider);
+    final historyAsync = ref.watch(missionHistoriesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,7 +44,7 @@ class HistoryPage extends ConsumerWidget {
       ),
       body: historyAsync.when(
         data: (data) {
-          final records = data.records;
+          final records = data;
           if (records.isEmpty) {
             return Center(
               child: Padding(
@@ -97,7 +98,7 @@ class HistoryPage extends ConsumerWidget {
 class _HistoryListTile extends ConsumerWidget {
   const _HistoryListTile({required this.record, required this.onTap});
 
-  final MissionHistoryEntity record;
+  final MissionHistory record;
   final VoidCallback onTap;
 
   @override
@@ -105,10 +106,10 @@ class _HistoryListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final completed = record.completedAt;
     final durationText = formatMissionDuration(
-      record.progress.startedAt,
+      record.startedAt,
       record.completedAt,
     );
-    final thumbPath = firstUserPhotoPath(record.progress.checkpoints);
+    final thumbPath = firstUserPhotoPath(record.spots);
     late final Widget thumbWidget;
     final thumbPathNonNull = thumbPath;
     if (thumbPathNonNull != null && File(thumbPathNonNull).existsSync()) {
@@ -169,9 +170,7 @@ class _HistoryListTile extends ConsumerWidget {
         return confirmed ?? false;
       },
       onDismissed: (direction) {
-        unawaited(
-          ref.read(historyStoreProvider.notifier).removeHistory(record.id),
-        );
+        unawaited(removeCompletedMission(ref, record.id));
       },
       background: Container(
         alignment: Alignment.centerRight,

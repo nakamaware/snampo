@@ -320,52 +320,6 @@ final class GetCurrentPositionUseCaseProvider
 String _$getCurrentPositionUseCaseHash() =>
     r'fad01b4707dc85fcbac4f1f6f9500449007eb397';
 
-/// 写真ストレージのプロバイダー
-
-@ProviderFor(photoStorage)
-final photoStorageProvider = PhotoStorageProvider._();
-
-/// 写真ストレージのプロバイダー
-
-final class PhotoStorageProvider
-    extends $FunctionalProvider<IPhotoStorage, IPhotoStorage, IPhotoStorage>
-    with $Provider<IPhotoStorage> {
-  /// 写真ストレージのプロバイダー
-  PhotoStorageProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'photoStorageProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$photoStorageHash();
-
-  @$internal
-  @override
-  $ProviderElement<IPhotoStorage> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  IPhotoStorage create(Ref ref) {
-    return photoStorage(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(IPhotoStorage value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<IPhotoStorage>(value),
-    );
-  }
-}
-
-String _$photoStorageHash() => r'9740c5e7802997d76becf6e502af09f63bc88dda';
-
 /// 写真を保存するユースケースのプロバイダー
 
 @ProviderFor(savePhotoUseCase)
