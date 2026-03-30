@@ -1,4 +1,6 @@
 import 'package:go_router/go_router.dart';
+import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
+import 'package:snampo/features/history/presentation/page/history_page.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
@@ -34,5 +36,18 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryPage(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return HistoryDetailPage(recordId: id);
+          },
+        ),
+      ],
+    ),
   ],
 );

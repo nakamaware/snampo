@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'mission_progress_store.dart';
+part of 'history_store.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -8,63 +8,60 @@ part of 'mission_progress_store.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// ミッション進捗を管理するストア
+/// 完了ミッションの履歴を SQLite に永続化する
 
-@ProviderFor(MissionProgressStoreNotifier)
+@ProviderFor(HistoryStoreNotifier)
 @JsonPersist()
-final missionProgressStoreProvider = MissionProgressStoreNotifierProvider._();
+final historyStoreProvider = HistoryStoreNotifierProvider._();
 
-/// ミッション進捗を管理するストア
+/// 完了ミッションの履歴を SQLite に永続化する
 @JsonPersist()
-final class MissionProgressStoreNotifierProvider
+final class HistoryStoreNotifierProvider
     extends
-        $AsyncNotifierProvider<
-          MissionProgressStoreNotifier,
-          MissionProgressEntity?
-        > {
-  /// ミッション進捗を管理するストア
-  MissionProgressStoreNotifierProvider._()
+        $AsyncNotifierProvider<HistoryStoreNotifier, HistoryPersistedState> {
+  /// 完了ミッションの履歴を SQLite に永続化する
+  HistoryStoreNotifierProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'missionProgressStoreProvider',
+        name: r'historyStoreProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$missionProgressStoreNotifierHash();
+  String debugGetCreateSourceHash() => _$historyStoreNotifierHash();
 
   @$internal
   @override
-  MissionProgressStoreNotifier create() => MissionProgressStoreNotifier();
+  HistoryStoreNotifier create() => HistoryStoreNotifier();
 }
 
-String _$missionProgressStoreNotifierHash() =>
-    r'082b04947f965080e16a0167b7d4b4b48efff28d';
+String _$historyStoreNotifierHash() =>
+    r'528132a2ade69c07ccd6496ee38b5effa03708ed';
 
-/// ミッション進捗を管理するストア
+/// 完了ミッションの履歴を SQLite に永続化する
 
 @JsonPersist()
-abstract class _$MissionProgressStoreNotifierBase
-    extends $AsyncNotifier<MissionProgressEntity?> {
-  FutureOr<MissionProgressEntity?> build();
+abstract class _$HistoryStoreNotifierBase
+    extends $AsyncNotifier<HistoryPersistedState> {
+  FutureOr<HistoryPersistedState> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final ref =
         this.ref
-            as $Ref<AsyncValue<MissionProgressEntity?>, MissionProgressEntity?>;
+            as $Ref<AsyncValue<HistoryPersistedState>, HistoryPersistedState>;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<MissionProgressEntity?>,
-                MissionProgressEntity?
+                AsyncValue<HistoryPersistedState>,
+                HistoryPersistedState
               >,
-              AsyncValue<MissionProgressEntity?>,
+              AsyncValue<HistoryPersistedState>,
               Object?,
               Object?
             >;
@@ -77,11 +74,10 @@ abstract class _$MissionProgressStoreNotifierBase
 // **************************************************************************
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
-abstract class _$MissionProgressStoreNotifier
-    extends _$MissionProgressStoreNotifierBase {
+abstract class _$HistoryStoreNotifier extends _$HistoryStoreNotifierBase {
   /// The default key used by [persist].
   String get key {
-    const resolvedKey = "MissionProgressStoreNotifier";
+    const resolvedKey = "HistoryStoreNotifier";
     return resolvedKey;
   }
 
@@ -91,8 +87,8 @@ abstract class _$MissionProgressStoreNotifier
   PersistResult persist(
     FutureOr<Storage<String, String>> storage, {
     String? key,
-    String Function(MissionProgressEntity? state)? encode,
-    MissionProgressEntity? Function(String encoded)? decode,
+    String Function(HistoryPersistedState state)? encode,
+    HistoryPersistedState Function(String encoded)? decode,
     StorageOptions options = const StorageOptions(),
   }) {
     return NotifierPersistX(this).persist<String, String>(
@@ -103,9 +99,7 @@ abstract class _$MissionProgressStoreNotifier
           decode ??
           (encoded) {
             final e = $jsonCodex.decode(encoded);
-            return e == null
-                ? null
-                : MissionProgressEntity?.fromJson(e as Map<String, Object?>);
+            return HistoryPersistedState.fromJson(e as Map<String, Object?>);
           },
       options: options,
     );

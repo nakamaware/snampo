@@ -45,6 +45,13 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     state = AsyncValue.data(current.copyWith(checkpoints: updated));
   }
 
+  /// 進捗状態のみリセットする（写真ファイルは削除しない）
+  ///
+  /// ミッション完了後に履歴へ写したあと、再開用ストアだけ空にする場合に使う。
+  void resetState() {
+    state = const AsyncValue.data(null);
+  }
+
   /// 進捗をクリアする（保存した写真ファイルも削除）
   Future<void> clearProgress() async {
     final current = state.value;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/history/presentation/store/history_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
@@ -14,16 +15,24 @@ class ResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 到着画面が初めて表示されたタイミングで1回だけ永続ミッションと進捗をクリアする（ビルド完了後に遅延実行）
-    // clearProgress（写真削除など）が例外でも、永続ミッションは必ず外す（再開ゴミ残留防止）
+    // 到着画面が初めて表示されたタイミングで1回だけ
+    // 履歴保存・永続ミッションと進捗をクリアする
     useEffect(() {
-      final progressStore = ref.read(missionProgressStoreProvider.notifier);
-      final persistedMission = ref.read(persistedMissionProvider.notifier);
       Future(() async {
+        final mission = await ref.read(persistedMissionProvider.future);
+        final progress = await ref.read(missionProgressStoreProvider.future);
+        final historyNotifier = ref.read(historyStoreProvider.notifier);
+        final progressNotifier = ref.read(
+          missionProgressStoreProvider.notifier,
+        );
+        final persistedNotifier = ref.read(persistedMissionProvider.notifier);
         try {
-          await progressStore.clearProgress();
+          if (mission != null && progress != null) {
+            historyNotifier.addHistory(mission, progress);
+          }
         } finally {
-          persistedMission.clearMission();
+          progressNotifier.resetState();
+          persistedNotifier.clearMission();
         }
       });
       return null;
