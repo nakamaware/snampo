@@ -1,5 +1,7 @@
 // 旧バージョンが端末に残していた MissionHistoryEntity 形式の JSON 等は読み込まない
 // (公開前のため破棄してよい前提。ソースは履歴 Drift のみ)
+import 'dart:developer';
+
 import 'package:drift/drift.dart';
 import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
@@ -77,23 +79,50 @@ class HistoryRepository implements IHistoryRepository {
 
   /// 履歴と紐づくファイルを削除する
   ///
-  /// 写真パスの取得 → ファイル削除 → 親行 DELETE の順で行う。
-  /// `HistorySpots` は `onDelete: cascade` で親行と連動削除されるため、
-  /// 先に親行を消すとスポット行も消えて写真パスが取れなくなる点に注意。
+  /// スポット行から [HistorySpotRow.userPhotoPath] を SELECT で集めたうえで、
+  /// トランザクション内で親行を削除する (cascade でスポット行も削除)。
+  /// DB コミット後にユーザー写真・Street View ファイルをベストエフォートで削除する。
   @override
   Future<void> deleteHistory(String id) async {
     final spotRows =
         await (_db.select(_db.historySpots)
           ..where((t) => t.historyId.equals(id))).get();
+    final userPhotoPaths = <String>[];
     for (final row in spotRows) {
       final path = row.userPhotoPath;
       if (path != null) {
-        await _photoStorage.deletePhoto(path);
+        userPhotoPaths.add(path);
       }
     }
-    await _streetViewStorage.deleteForHistory(id);
-    await (_db.delete(_db.missionHistories)
-      ..where((t) => t.id.equals(id))).go();
+
+    await _db.transaction(() async {
+      await (_db.delete(_db.missionHistories)
+        ..where((t) => t.id.equals(id))).go();
+    });
+
+    for (final path in userPhotoPaths) {
+      try {
+        await _photoStorage.deletePhoto(path);
+      } catch (e, st) {
+        log(
+          'deleteHistory: failed to delete user photo: $path',
+          error: e,
+          stackTrace: st,
+          name: 'HistoryRepository',
+        );
+      }
+    }
+
+    try {
+      await _streetViewStorage.deleteForHistory(id);
+    } catch (e, st) {
+      log(
+        'deleteHistory: failed to delete Street View files for history: $id',
+        error: e,
+        stackTrace: st,
+        name: 'HistoryRepository',
+      );
+    }
   }
 
   /// 履歴一覧 (完了日時の新しい順)
