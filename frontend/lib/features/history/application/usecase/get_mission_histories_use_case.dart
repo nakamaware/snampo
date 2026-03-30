@@ -10,6 +10,17 @@ class GetMissionHistoriesUseCase {
 
   /// 履歴一覧を返す
   Future<List<MissionHistory>> call({int? limit, int offset = 0}) {
+    if (offset < 0) {
+      throw ArgumentError.value(offset, 'offset', 'offset は 0 以上である必要があります');
+    }
+    if (limit != null && limit < 0) {
+      throw ArgumentError.value(
+        limit,
+        'limit',
+        'limit は null または 0 以上である必要があります',
+      );
+    }
+
     return _repository.getHistories(limit: limit, offset: offset);
   }
 }
