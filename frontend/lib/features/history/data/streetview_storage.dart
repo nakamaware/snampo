@@ -47,18 +47,22 @@ class StreetViewStorage {
   Future<void> deleteForHistory(String historyId) async {
     final dir = await _storageDirectory();
     final prefix = '${historyId}_spot';
-    try {
-      for (final entity in dir.listSync()) {
-        if (entity is! File) {
-          continue;
-        }
-        final name = p.basename(entity.path);
-        if (name.startsWith(prefix) && name.endsWith('.jpg')) {
+    final deleteErrors = <FileSystemException>[];
+    for (final entity in dir.listSync()) {
+      if (entity is! File) {
+        continue;
+      }
+      final name = p.basename(entity.path);
+      if (name.startsWith(prefix) && name.endsWith('.jpg')) {
+        try {
           await entity.delete();
+        } on FileSystemException catch (e) {
+          deleteErrors.add(e);
         }
       }
-    } on FileSystemException {
-      // 続行
+    }
+    if (deleteErrors.isNotEmpty) {
+      throw deleteErrors.first;
     }
   }
 }
