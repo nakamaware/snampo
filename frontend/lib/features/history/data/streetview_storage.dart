@@ -31,6 +31,18 @@ class StreetViewStorage {
     return file.path;
   }
 
+  /// [saveBase64Image] で保存した 1 ファイルをパスで削除する
+  Future<void> delete(String path) async {
+    try {
+      final file = File(path);
+      if (file.existsSync()) {
+        await file.delete();
+      }
+    } on FileSystemException {
+      // 続行
+    }
+  }
+
   /// 履歴 id に紐づく Street View ファイルをすべて削除する
   Future<void> deleteForHistory(String historyId) async {
     final dir = await _storageDirectory();

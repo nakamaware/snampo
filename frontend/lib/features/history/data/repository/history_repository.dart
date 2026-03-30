@@ -28,42 +28,51 @@ class HistoryRepository implements IHistoryRepository {
   }) async {
     final spots = HistoryFromMissionMapper.orderedSpots(mission);
     final now = DateTime.now();
+    final createdPaths = <String>[];
 
-    await _db.transaction(() async {
-      await _db
-          .into(_db.missionHistories)
-          .insert(
-            HistoryFromMissionMapper.missionHistoryRowCompanion(
-              id: id,
-              mission: mission,
-              completedAt: now,
-              startedAt: progress.startedAt,
-            ),
-          );
-
-      final cps = progress.checkpoints;
-      for (var i = 0; i < spots.length; i++) {
-        final spot = spots[i];
-        final path = await _streetViewStorage.saveBase64Image(
-          historyId: id,
-          sortOrder: i,
-          imageBase64: spot.imageBase64,
-        );
-        final cp = i < cps.length ? cps[i] : null;
+    try {
+      await _db.transaction(() async {
         await _db
-            .into(_db.historySpots)
+            .into(_db.missionHistories)
             .insert(
-              HistoryFromMissionMapper.spotRowCompanion(
-                historyId: id,
-                sortOrder: i,
-                isLastSpot: i == spots.length - 1,
-                spot: spot,
-                streetViewImagePath: path,
-                checkpointProgress: cp,
+              HistoryFromMissionMapper.missionHistoryRowCompanion(
+                id: id,
+                mission: mission,
+                completedAt: now,
+                startedAt: progress.startedAt,
               ),
             );
+
+        final cps = progress.checkpoints;
+        for (var i = 0; i < spots.length; i++) {
+          final spot = spots[i];
+          final path = await _streetViewStorage.saveBase64Image(
+            historyId: id,
+            sortOrder: i,
+            imageBase64: spot.imageBase64,
+          );
+          createdPaths.add(path);
+          final cp = i < cps.length ? cps[i] : null;
+          await _db
+              .into(_db.historySpots)
+              .insert(
+                HistoryFromMissionMapper.spotRowCompanion(
+                  historyId: id,
+                  sortOrder: i,
+                  isLastSpot: i == spots.length - 1,
+                  spot: spot,
+                  streetViewImagePath: path,
+                  checkpointProgress: cp,
+                ),
+              );
+        }
+      });
+    } catch (_) {
+      for (final path in createdPaths) {
+        await _streetViewStorage.delete(path);
       }
-    });
+      rethrow;
+    }
   }
 
   /// 履歴と紐づくファイルを削除する
