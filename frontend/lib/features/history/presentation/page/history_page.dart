@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -167,10 +167,20 @@ class _HistoryListTile extends ConsumerWidget {
             );
           },
         );
-        return confirmed ?? false;
-      },
-      onDismissed: (direction) {
-        unawaited(removeCompletedMission(ref, record.id));
+        if (!(confirmed ?? false)) {
+          return false;
+        }
+        try {
+          await removeCompletedMission(ref, record.id);
+          return true;
+        } catch (error, stackTrace) {
+          log(
+            'removeCompletedMission failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          return false;
+        }
       },
       background: Container(
         alignment: Alignment.centerRight,

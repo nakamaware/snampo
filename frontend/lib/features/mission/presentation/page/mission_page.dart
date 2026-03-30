@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -337,7 +338,7 @@ class SnapView extends StatelessWidget {
 }
 
 /// SnapView内でミッション情報を表示するウィジェット
-class SnapViewState extends ConsumerWidget {
+class SnapViewState extends HookConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
   const SnapViewState({required this.params, super.key});
 
@@ -346,6 +347,7 @@ class SnapViewState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isSubmitting = useState(false);
     final theme = Theme.of(context);
     final titleTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.secondary,
@@ -385,37 +387,52 @@ class SnapViewState extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10), // 角の丸み
                 ),
               ),
-              onPressed: () async {
-                final progress = await _resolveCurrentProgress(
-                  ref,
-                  missionInfo,
-                );
-                if (progress == null) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('進捗情報を取得できませんでした')),
-                    );
-                  }
-                  return;
-                }
-                try {
-                  await recordCompletedMission(
-                    ref,
-                    mission: missionInfo,
-                    progress: progress,
-                  );
-                } on Exception {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('履歴の保存に失敗しました')),
-                    );
-                  }
-                  return;
-                }
-                if (context.mounted) {
-                  await context.push('/result');
-                }
-              },
+              onPressed:
+                  isSubmitting.value
+                      ? null
+                      : () async {
+                        if (isSubmitting.value) {
+                          return;
+                        }
+                        isSubmitting.value = true;
+                        try {
+                          final progress = await _resolveCurrentProgress(
+                            ref,
+                            missionInfo,
+                          );
+                          if (progress == null) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('進捗情報を取得できませんでした'),
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                          try {
+                            await recordCompletedMission(
+                              ref,
+                              mission: missionInfo,
+                              progress: progress,
+                            );
+                          } on Exception {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('履歴の保存に失敗しました')),
+                              );
+                            }
+                            return;
+                          }
+                          if (context.mounted) {
+                            await context.push('/result');
+                          }
+                        } finally {
+                          if (context.mounted) {
+                            isSubmitting.value = false;
+                          }
+                        }
+                      },
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text('到着', style: buttonTextStyle),
