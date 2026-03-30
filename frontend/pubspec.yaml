@@ -30,7 +30,7 @@ dependencies:
   riverpod: ^3.1.0
   riverpod_annotation: ^4.0.0
   riverpod_sqflite: ^0.4.0
-  # 生成されたAPIクライアント（OpenAPIスキーマから自動生成）
+  # 生成された API クライアント (OpenAPI スキーマから自動生成)
   snampo_api:
     path: ../packages/snampo_api
   sqflite: ^2.4.2
