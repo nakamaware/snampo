@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 
@@ -57,19 +56,9 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   Future<void> clearProgress() async {
     final current = state.value;
     if (current != null) {
-      // await の前に同期で取得し、非同期ギャップ後に ref.read しない
-      final photoStorage = ref.read(photoStorageProvider);
-      for (final cp in current.checkpoints) {
-        if (cp?.userPhotoPath != null) {
-          try {
-            await photoStorage.deletePhoto(cp!.userPhotoPath!);
-          } on Object {
-            // 1 件の削除失敗でループを止めない
-          }
-        }
-      }
+      final useCase = ref.read(clearMissionProgressUseCaseProvider);
+      await useCase.call(current);
     }
-    // 進捗を null にリセットして永続化も解除する（ミッション完了時など）
     state = const AsyncValue.data(null);
   }
 }

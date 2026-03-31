@@ -370,3 +370,57 @@ final class SavePhotoUseCaseProvider
 }
 
 String _$savePhotoUseCaseHash() => r'f685694c7a67c3ec0457107a90cb7c32dc9aa6d1';
+
+/// ミッション進捗に紐づく写真を削除するユースケースのプロバイダー
+
+@ProviderFor(clearMissionProgressUseCase)
+final clearMissionProgressUseCaseProvider =
+    ClearMissionProgressUseCaseProvider._();
+
+/// ミッション進捗に紐づく写真を削除するユースケースのプロバイダー
+
+final class ClearMissionProgressUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ClearMissionProgressUseCase,
+          ClearMissionProgressUseCase,
+          ClearMissionProgressUseCase
+        >
+    with $Provider<ClearMissionProgressUseCase> {
+  /// ミッション進捗に紐づく写真を削除するユースケースのプロバイダー
+  ClearMissionProgressUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'clearMissionProgressUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$clearMissionProgressUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ClearMissionProgressUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ClearMissionProgressUseCase create(Ref ref) {
+    return clearMissionProgressUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ClearMissionProgressUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ClearMissionProgressUseCase>(value),
+    );
+  }
+}
+
+String _$clearMissionProgressUseCaseHash() =>
+    r'70dac75f75b4788274b633c961864c2b01b137de';

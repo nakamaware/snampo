@@ -157,7 +157,7 @@ final class HistoryRepositoryProvider
   }
 }
 
-String _$historyRepositoryHash() => r'3960e9cb0c8828d9bb84e09e8d816b83e483397a';
+String _$historyRepositoryHash() => r'f0e5315ec31e3f0f0997c14e81cd28a025b9f818';
 
 /// 履歴一覧を取得するユースケース
 
