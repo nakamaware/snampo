@@ -32,6 +32,15 @@ class MissionHistories extends Table {
   /// 探索半径 (m)。目的地指定モードでは null
   IntColumn get radiusMeters => integer().nullable()();
 
+  /// ミッション開始モード: `random` / `destination`
+  TextColumn get mode => text().withDefault(const Constant('random'))();
+
+  /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
+  RealColumn get destinationLat => real().nullable()();
+
+  /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
+  RealColumn get destinationLng => real().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -76,12 +85,40 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await customStatement('''
+ALTER TABLE mission_histories ADD COLUMN mode TEXT NOT NULL DEFAULT 'random'
+''');
+        await customStatement(
+          'ALTER TABLE mission_histories ADD COLUMN destination_lat REAL',
+        );
+        await customStatement(
+          'ALTER TABLE mission_histories ADD COLUMN destination_lng REAL',
+        );
+        await customStatement('''
+UPDATE mission_histories SET mode = 'destination'
+WHERE radius_meters IS NULL
+''');
+        await customStatement('''
+UPDATE mission_histories SET destination_lat = (
+  SELECT lat FROM history_spots
+  WHERE history_spots.history_id = mission_histories.id
+  AND history_spots.is_destination = 1
+), destination_lng = (
+  SELECT lng FROM history_spots
+  WHERE history_spots.history_id = mission_histories.id
+  AND history_spots.is_destination = 1
+) WHERE mode = 'destination'
+''');
+      }
     },
     beforeOpen: (OpeningDetails details) async {
       await customStatement('PRAGMA foreign_keys = ON;');

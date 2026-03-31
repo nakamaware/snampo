@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MissionHistory {
 
- String get id; DateTime get completedAt; DateTime get startedAt;@CoordinateConverter() Coordinate get departure; String get overviewPolyline; List<MissionHistorySpot> get spots;@RadiusConverter() Radius? get radius;
+ String get id; DateTime get completedAt; DateTime get startedAt;@CoordinateConverter() Coordinate get departure; String get overviewPolyline; List<MissionHistorySpot> get spots; MissionSettings get settings;
 /// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $MissionHistoryCopyWith<MissionHistory> get copyWith => _$MissionHistoryCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&const DeepCollectionEquality().equals(other.spots, spots)&&(identical(other.radius, radius) || other.radius == radius));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&const DeepCollectionEquality().equals(other.spots, spots)&&(identical(other.settings, settings) || other.settings == settings));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,completedAt,startedAt,departure,overviewPolyline,const DeepCollectionEquality().hash(spots),radius);
+int get hashCode => Object.hash(runtimeType,id,completedAt,startedAt,departure,overviewPolyline,const DeepCollectionEquality().hash(spots),settings);
 
 @override
 String toString() {
-  return 'MissionHistory(id: $id, completedAt: $completedAt, startedAt: $startedAt, departure: $departure, overviewPolyline: $overviewPolyline, spots: $spots, radius: $radius)';
+  return 'MissionHistory(id: $id, completedAt: $completedAt, startedAt: $startedAt, departure: $departure, overviewPolyline: $overviewPolyline, spots: $spots, settings: $settings)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $MissionHistoryCopyWith<$Res>  {
   factory $MissionHistoryCopyWith(MissionHistory value, $Res Function(MissionHistory) _then) = _$MissionHistoryCopyWithImpl;
 @useResult
 $Res call({
- String id, DateTime completedAt, DateTime startedAt,@CoordinateConverter() Coordinate departure, String overviewPolyline, List<MissionHistorySpot> spots,@RadiusConverter() Radius? radius
+ String id, DateTime completedAt, DateTime startedAt,@CoordinateConverter() Coordinate departure, String overviewPolyline, List<MissionHistorySpot> spots, MissionSettings settings
 });
 
 
-$CoordinateCopyWith<$Res> get departure;$RadiusCopyWith<$Res>? get radius;
+$CoordinateCopyWith<$Res> get departure;$MissionSettingsCopyWith<$Res> get settings;
 
 }
 /// @nodoc
@@ -62,7 +62,7 @@ class _$MissionHistoryCopyWithImpl<$Res>
 
 /// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? completedAt = null,Object? startedAt = null,Object? departure = null,Object? overviewPolyline = null,Object? spots = null,Object? radius = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? completedAt = null,Object? startedAt = null,Object? departure = null,Object? overviewPolyline = null,Object? spots = null,Object? settings = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,completedAt: null == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
@@ -70,8 +70,8 @@ as DateTime,startedAt: null == startedAt ? _self.startedAt : startedAt // ignore
 as DateTime,departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
 as String,spots: null == spots ? _self.spots : spots // ignore: cast_nullable_to_non_nullable
-as List<MissionHistorySpot>,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius?,
+as List<MissionHistorySpot>,settings: null == settings ? _self.settings : settings // ignore: cast_nullable_to_non_nullable
+as MissionSettings,
   ));
 }
 /// Create a copy of MissionHistory
@@ -87,13 +87,10 @@ $CoordinateCopyWith<$Res> get departure {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res>? get radius {
-    if (_self.radius == null) {
-    return null;
-  }
+$MissionSettingsCopyWith<$Res> get settings {
 
-  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
-    return _then(_self.copyWith(radius: value));
+  return $MissionSettingsCopyWith<$Res>(_self.settings, (value) {
+    return _then(_self.copyWith(settings: value));
   });
 }
 }
@@ -177,10 +174,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots, @RadiusConverter()  Radius? radius)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots,  MissionSettings settings)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionHistory() when $default != null:
-return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.radius);case _:
+return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.settings);case _:
   return orElse();
 
 }
@@ -198,10 +195,10 @@ return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots, @RadiusConverter()  Radius? radius)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots,  MissionSettings settings)  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistory():
-return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.radius);case _:
+return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.settings);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -218,10 +215,10 @@ return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots, @RadiusConverter()  Radius? radius)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime completedAt,  DateTime startedAt, @CoordinateConverter()  Coordinate departure,  String overviewPolyline,  List<MissionHistorySpot> spots,  MissionSettings settings)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistory() when $default != null:
-return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.radius);case _:
+return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that.overviewPolyline,_that.spots,_that.settings);case _:
   return null;
 
 }
@@ -233,7 +230,7 @@ return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that
 
 
 class _MissionHistory implements MissionHistory {
-  const _MissionHistory({required this.id, required this.completedAt, required this.startedAt, @CoordinateConverter() required this.departure, required this.overviewPolyline, required final  List<MissionHistorySpot> spots, @RadiusConverter() this.radius}): _spots = spots;
+  const _MissionHistory({required this.id, required this.completedAt, required this.startedAt, @CoordinateConverter() required this.departure, required this.overviewPolyline, required final  List<MissionHistorySpot> spots, required this.settings}): _spots = spots;
 
 
 @override final  String id;
@@ -248,7 +245,7 @@ class _MissionHistory implements MissionHistory {
   return EqualUnmodifiableListView(_spots);
 }
 
-@override@RadiusConverter() final  Radius? radius;
+@override final  MissionSettings settings;
 
 /// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
@@ -260,16 +257,16 @@ _$MissionHistoryCopyWith<_MissionHistory> get copyWith => __$MissionHistoryCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MissionHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&const DeepCollectionEquality().equals(other._spots, _spots)&&(identical(other.radius, radius) || other.radius == radius));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MissionHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.departure, departure) || other.departure == departure)&&(identical(other.overviewPolyline, overviewPolyline) || other.overviewPolyline == overviewPolyline)&&const DeepCollectionEquality().equals(other._spots, _spots)&&(identical(other.settings, settings) || other.settings == settings));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,completedAt,startedAt,departure,overviewPolyline,const DeepCollectionEquality().hash(_spots),radius);
+int get hashCode => Object.hash(runtimeType,id,completedAt,startedAt,departure,overviewPolyline,const DeepCollectionEquality().hash(_spots),settings);
 
 @override
 String toString() {
-  return 'MissionHistory(id: $id, completedAt: $completedAt, startedAt: $startedAt, departure: $departure, overviewPolyline: $overviewPolyline, spots: $spots, radius: $radius)';
+  return 'MissionHistory(id: $id, completedAt: $completedAt, startedAt: $startedAt, departure: $departure, overviewPolyline: $overviewPolyline, spots: $spots, settings: $settings)';
 }
 
 
@@ -280,11 +277,11 @@ abstract mixin class _$MissionHistoryCopyWith<$Res> implements $MissionHistoryCo
   factory _$MissionHistoryCopyWith(_MissionHistory value, $Res Function(_MissionHistory) _then) = __$MissionHistoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, DateTime completedAt, DateTime startedAt,@CoordinateConverter() Coordinate departure, String overviewPolyline, List<MissionHistorySpot> spots,@RadiusConverter() Radius? radius
+ String id, DateTime completedAt, DateTime startedAt,@CoordinateConverter() Coordinate departure, String overviewPolyline, List<MissionHistorySpot> spots, MissionSettings settings
 });
 
 
-@override $CoordinateCopyWith<$Res> get departure;@override $RadiusCopyWith<$Res>? get radius;
+@override $CoordinateCopyWith<$Res> get departure;@override $MissionSettingsCopyWith<$Res> get settings;
 
 }
 /// @nodoc
@@ -297,7 +294,7 @@ class __$MissionHistoryCopyWithImpl<$Res>
 
 /// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? completedAt = null,Object? startedAt = null,Object? departure = null,Object? overviewPolyline = null,Object? spots = null,Object? radius = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? completedAt = null,Object? startedAt = null,Object? departure = null,Object? overviewPolyline = null,Object? spots = null,Object? settings = null,}) {
   return _then(_MissionHistory(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,completedAt: null == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
@@ -305,8 +302,8 @@ as DateTime,startedAt: null == startedAt ? _self.startedAt : startedAt // ignore
 as DateTime,departure: null == departure ? _self.departure : departure // ignore: cast_nullable_to_non_nullable
 as Coordinate,overviewPolyline: null == overviewPolyline ? _self.overviewPolyline : overviewPolyline // ignore: cast_nullable_to_non_nullable
 as String,spots: null == spots ? _self._spots : spots // ignore: cast_nullable_to_non_nullable
-as List<MissionHistorySpot>,radius: freezed == radius ? _self.radius : radius // ignore: cast_nullable_to_non_nullable
-as Radius?,
+as List<MissionHistorySpot>,settings: null == settings ? _self.settings : settings // ignore: cast_nullable_to_non_nullable
+as MissionSettings,
   ));
 }
 
@@ -323,13 +320,10 @@ $CoordinateCopyWith<$Res> get departure {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res>? get radius {
-    if (_self.radius == null) {
-    return null;
-  }
+$MissionSettingsCopyWith<$Res> get settings {
 
-  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
-    return _then(_self.copyWith(radius: value));
+  return $MissionSettingsCopyWith<$Res>(_self.settings, (value) {
+    return _then(_self.copyWith(settings: value));
   });
 }
 }

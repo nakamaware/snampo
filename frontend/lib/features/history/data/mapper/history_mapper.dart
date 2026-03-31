@@ -2,11 +2,52 @@ import 'package:drift/drift.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
+import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+
+/// Drift [MissionHistories.mode] の値
+const String historyModeRandom = 'random';
+
+/// Drift [MissionHistories.mode] の値
+const String historyModeDestination = 'destination';
+
+/// Drift 行とスポット一覧から [MissionSettings] を組み立てる
+MissionSettings missionSettingsFromHistoryRow(
+  MissionHistoryRow h,
+  List<MissionHistorySpot> spots,
+) {
+  if (h.mode == historyModeRandom) {
+    final meters = h.radiusMeters;
+    if (meters == null) {
+      throw StateError('履歴 ${h.id} は random ですが radius_meters がありません');
+    }
+    return MissionSettings.random(radius: Radius.internal(meters: meters));
+  }
+  if (h.mode == historyModeDestination) {
+    var lat = h.destinationLat;
+    var lng = h.destinationLng;
+    if (lat == null || lng == null) {
+      for (final s in spots) {
+        if (s.isDestination) {
+          lat = s.coordinate.latitude;
+          lng = s.coordinate.longitude;
+          break;
+        }
+      }
+    }
+    if (lat == null || lng == null) {
+      throw StateError('履歴 ${h.id} は destination ですが座標がありません');
+    }
+    return MissionSettings.destination(
+      destination: Coordinate.internal(latitude: lat, longitude: lng),
+    );
+  }
+  throw StateError('履歴 ${h.id} の mode が不正です: ${h.mode}');
+}
 
 /// 履歴 Drift 層とドメイン・mission 境界の相互変換 (書き込み・読み込みを 1 ファイルに集約)
 
@@ -35,6 +76,8 @@ MissionHistory missionHistoryFromDriftRows(
           )
           .toList();
 
+  final settings = missionSettingsFromHistoryRow(h, spots);
+
   return MissionHistory(
     id: h.id,
     completedAt: DateTime.fromMillisecondsSinceEpoch(h.completedAt),
@@ -42,10 +85,7 @@ MissionHistory missionHistoryFromDriftRows(
     departure: Coordinate(latitude: h.departureLat, longitude: h.departureLng),
     overviewPolyline: h.overviewPolyline,
     spots: spots,
-    radius:
-        h.radiusMeters == null
-            ? null
-            : Radius.internal(meters: h.radiusMeters!),
+    settings: settings,
   );
 }
 
@@ -67,6 +107,7 @@ class HistoryFromMissionMapper {
     required DateTime completedAt,
     required DateTime startedAt,
   }) {
+    final isRandom = mission.radius != null;
     return MissionHistoriesCompanion.insert(
       id: id,
       completedAt: completedAt.millisecondsSinceEpoch,
@@ -75,6 +116,13 @@ class HistoryFromMissionMapper {
       departureLng: mission.departure.longitude,
       overviewPolyline: mission.overviewPolyline,
       radiusMeters: Value(mission.radius?.meters),
+      mode: Value(isRandom ? historyModeRandom : historyModeDestination),
+      destinationLat: Value(
+        isRandom ? null : mission.destination.coordinate.latitude,
+      ),
+      destinationLng: Value(
+        isRandom ? null : mission.destination.coordinate.longitude,
+      ),
     );
   }
 

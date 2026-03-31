@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
+import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
@@ -146,6 +147,15 @@ class _HistoryDetailBody extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: Text(
+            _missionSettingsLabel(record.settings),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -204,6 +214,16 @@ class _HistoryDetailBody extends StatelessWidget {
       ],
     );
   }
+}
+
+String _missionSettingsLabel(MissionSettings settings) {
+  return settings.when(
+    random: (r) => 'ミッション設定: ランダム (半径 ${r.meters} m)',
+    destination:
+        (c) =>
+            'ミッション設定: 目的地指定 '
+            '(${c.latitude.toStringAsFixed(5)}, ${c.longitude.toStringAsFixed(5)})',
+  );
 }
 
 class _StreetViewThumb extends StatelessWidget {

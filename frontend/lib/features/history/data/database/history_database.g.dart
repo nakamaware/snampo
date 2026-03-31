@@ -84,6 +84,38 @@ class $MissionHistoriesTable extends MissionHistories
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('random'),
+  );
+  static const VerificationMeta _destinationLatMeta = const VerificationMeta(
+    'destinationLat',
+  );
+  @override
+  late final GeneratedColumn<double> destinationLat = GeneratedColumn<double>(
+    'destination_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _destinationLngMeta = const VerificationMeta(
+    'destinationLng',
+  );
+  @override
+  late final GeneratedColumn<double> destinationLng = GeneratedColumn<double>(
+    'destination_lng',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -93,6 +125,9 @@ class $MissionHistoriesTable extends MissionHistories
     departureLng,
     overviewPolyline,
     radiusMeters,
+    mode,
+    destinationLat,
+    destinationLng,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -172,6 +207,30 @@ class $MissionHistoriesTable extends MissionHistories
         ),
       );
     }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    }
+    if (data.containsKey('destination_lat')) {
+      context.handle(
+        _destinationLatMeta,
+        destinationLat.isAcceptableOrUnknown(
+          data['destination_lat']!,
+          _destinationLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('destination_lng')) {
+      context.handle(
+        _destinationLngMeta,
+        destinationLng.isAcceptableOrUnknown(
+          data['destination_lng']!,
+          _destinationLngMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -215,6 +274,19 @@ class $MissionHistoriesTable extends MissionHistories
         DriftSqlType.int,
         data['${effectivePrefix}radius_meters'],
       ),
+      mode:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}mode'],
+          )!,
+      destinationLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}destination_lat'],
+      ),
+      destinationLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}destination_lng'],
+      ),
     );
   }
 
@@ -246,6 +318,15 @@ class MissionHistoryRow extends DataClass
 
   /// 探索半径 (m)。目的地指定モードでは null
   final int? radiusMeters;
+
+  /// ミッション開始モード: `random` / `destination`
+  final String mode;
+
+  /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
+  final double? destinationLat;
+
+  /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
+  final double? destinationLng;
   const MissionHistoryRow({
     required this.id,
     required this.completedAt,
@@ -254,6 +335,9 @@ class MissionHistoryRow extends DataClass
     required this.departureLng,
     required this.overviewPolyline,
     this.radiusMeters,
+    required this.mode,
+    this.destinationLat,
+    this.destinationLng,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -266,6 +350,13 @@ class MissionHistoryRow extends DataClass
     map['overview_polyline'] = Variable<String>(overviewPolyline);
     if (!nullToAbsent || radiusMeters != null) {
       map['radius_meters'] = Variable<int>(radiusMeters);
+    }
+    map['mode'] = Variable<String>(mode);
+    if (!nullToAbsent || destinationLat != null) {
+      map['destination_lat'] = Variable<double>(destinationLat);
+    }
+    if (!nullToAbsent || destinationLng != null) {
+      map['destination_lng'] = Variable<double>(destinationLng);
     }
     return map;
   }
@@ -282,6 +373,15 @@ class MissionHistoryRow extends DataClass
           radiusMeters == null && nullToAbsent
               ? const Value.absent()
               : Value(radiusMeters),
+      mode: Value(mode),
+      destinationLat:
+          destinationLat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(destinationLat),
+      destinationLng:
+          destinationLng == null && nullToAbsent
+              ? const Value.absent()
+              : Value(destinationLng),
     );
   }
 
@@ -298,6 +398,9 @@ class MissionHistoryRow extends DataClass
       departureLng: serializer.fromJson<double>(json['departureLng']),
       overviewPolyline: serializer.fromJson<String>(json['overviewPolyline']),
       radiusMeters: serializer.fromJson<int?>(json['radiusMeters']),
+      mode: serializer.fromJson<String>(json['mode']),
+      destinationLat: serializer.fromJson<double?>(json['destinationLat']),
+      destinationLng: serializer.fromJson<double?>(json['destinationLng']),
     );
   }
   @override
@@ -311,6 +414,9 @@ class MissionHistoryRow extends DataClass
       'departureLng': serializer.toJson<double>(departureLng),
       'overviewPolyline': serializer.toJson<String>(overviewPolyline),
       'radiusMeters': serializer.toJson<int?>(radiusMeters),
+      'mode': serializer.toJson<String>(mode),
+      'destinationLat': serializer.toJson<double?>(destinationLat),
+      'destinationLng': serializer.toJson<double?>(destinationLng),
     };
   }
 
@@ -322,6 +428,9 @@ class MissionHistoryRow extends DataClass
     double? departureLng,
     String? overviewPolyline,
     Value<int?> radiusMeters = const Value.absent(),
+    String? mode,
+    Value<double?> destinationLat = const Value.absent(),
+    Value<double?> destinationLng = const Value.absent(),
   }) => MissionHistoryRow(
     id: id ?? this.id,
     completedAt: completedAt ?? this.completedAt,
@@ -330,6 +439,11 @@ class MissionHistoryRow extends DataClass
     departureLng: departureLng ?? this.departureLng,
     overviewPolyline: overviewPolyline ?? this.overviewPolyline,
     radiusMeters: radiusMeters.present ? radiusMeters.value : this.radiusMeters,
+    mode: mode ?? this.mode,
+    destinationLat:
+        destinationLat.present ? destinationLat.value : this.destinationLat,
+    destinationLng:
+        destinationLng.present ? destinationLng.value : this.destinationLng,
   );
   MissionHistoryRow copyWithCompanion(MissionHistoriesCompanion data) {
     return MissionHistoryRow(
@@ -353,6 +467,15 @@ class MissionHistoryRow extends DataClass
           data.radiusMeters.present
               ? data.radiusMeters.value
               : this.radiusMeters,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      destinationLat:
+          data.destinationLat.present
+              ? data.destinationLat.value
+              : this.destinationLat,
+      destinationLng:
+          data.destinationLng.present
+              ? data.destinationLng.value
+              : this.destinationLng,
     );
   }
 
@@ -365,7 +488,10 @@ class MissionHistoryRow extends DataClass
           ..write('departureLat: $departureLat, ')
           ..write('departureLng: $departureLng, ')
           ..write('overviewPolyline: $overviewPolyline, ')
-          ..write('radiusMeters: $radiusMeters')
+          ..write('radiusMeters: $radiusMeters, ')
+          ..write('mode: $mode, ')
+          ..write('destinationLat: $destinationLat, ')
+          ..write('destinationLng: $destinationLng')
           ..write(')'))
         .toString();
   }
@@ -379,6 +505,9 @@ class MissionHistoryRow extends DataClass
     departureLng,
     overviewPolyline,
     radiusMeters,
+    mode,
+    destinationLat,
+    destinationLng,
   );
   @override
   bool operator ==(Object other) =>
@@ -390,7 +519,10 @@ class MissionHistoryRow extends DataClass
           other.departureLat == this.departureLat &&
           other.departureLng == this.departureLng &&
           other.overviewPolyline == this.overviewPolyline &&
-          other.radiusMeters == this.radiusMeters);
+          other.radiusMeters == this.radiusMeters &&
+          other.mode == this.mode &&
+          other.destinationLat == this.destinationLat &&
+          other.destinationLng == this.destinationLng);
 }
 
 class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
@@ -401,6 +533,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
   final Value<double> departureLng;
   final Value<String> overviewPolyline;
   final Value<int?> radiusMeters;
+  final Value<String> mode;
+  final Value<double?> destinationLat;
+  final Value<double?> destinationLng;
   final Value<int> rowid;
   const MissionHistoriesCompanion({
     this.id = const Value.absent(),
@@ -410,6 +545,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     this.departureLng = const Value.absent(),
     this.overviewPolyline = const Value.absent(),
     this.radiusMeters = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.destinationLat = const Value.absent(),
+    this.destinationLng = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MissionHistoriesCompanion.insert({
@@ -420,6 +558,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     required double departureLng,
     required String overviewPolyline,
     this.radiusMeters = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.destinationLat = const Value.absent(),
+    this.destinationLng = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        completedAt = Value(completedAt),
@@ -435,6 +576,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Expression<double>? departureLng,
     Expression<String>? overviewPolyline,
     Expression<int>? radiusMeters,
+    Expression<String>? mode,
+    Expression<double>? destinationLat,
+    Expression<double>? destinationLng,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -445,6 +589,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       if (departureLng != null) 'departure_lng': departureLng,
       if (overviewPolyline != null) 'overview_polyline': overviewPolyline,
       if (radiusMeters != null) 'radius_meters': radiusMeters,
+      if (mode != null) 'mode': mode,
+      if (destinationLat != null) 'destination_lat': destinationLat,
+      if (destinationLng != null) 'destination_lng': destinationLng,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -457,6 +604,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Value<double>? departureLng,
     Value<String>? overviewPolyline,
     Value<int?>? radiusMeters,
+    Value<String>? mode,
+    Value<double?>? destinationLat,
+    Value<double?>? destinationLng,
     Value<int>? rowid,
   }) {
     return MissionHistoriesCompanion(
@@ -467,6 +617,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       departureLng: departureLng ?? this.departureLng,
       overviewPolyline: overviewPolyline ?? this.overviewPolyline,
       radiusMeters: radiusMeters ?? this.radiusMeters,
+      mode: mode ?? this.mode,
+      destinationLat: destinationLat ?? this.destinationLat,
+      destinationLng: destinationLng ?? this.destinationLng,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -495,6 +648,15 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     if (radiusMeters.present) {
       map['radius_meters'] = Variable<int>(radiusMeters.value);
     }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (destinationLat.present) {
+      map['destination_lat'] = Variable<double>(destinationLat.value);
+    }
+    if (destinationLng.present) {
+      map['destination_lng'] = Variable<double>(destinationLng.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -511,6 +673,9 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
           ..write('departureLng: $departureLng, ')
           ..write('overviewPolyline: $overviewPolyline, ')
           ..write('radiusMeters: $radiusMeters, ')
+          ..write('mode: $mode, ')
+          ..write('destinationLat: $destinationLat, ')
+          ..write('destinationLng: $destinationLng, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1155,6 +1320,9 @@ typedef $$MissionHistoriesTableCreateCompanionBuilder =
       required double departureLng,
       required String overviewPolyline,
       Value<int?> radiusMeters,
+      Value<String> mode,
+      Value<double?> destinationLat,
+      Value<double?> destinationLng,
       Value<int> rowid,
     });
 typedef $$MissionHistoriesTableUpdateCompanionBuilder =
@@ -1166,6 +1334,9 @@ typedef $$MissionHistoriesTableUpdateCompanionBuilder =
       Value<double> departureLng,
       Value<String> overviewPolyline,
       Value<int?> radiusMeters,
+      Value<String> mode,
+      Value<double?> destinationLat,
+      Value<double?> destinationLng,
       Value<int> rowid,
     });
 
@@ -1248,6 +1419,21 @@ class $$MissionHistoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get destinationLat => $composableBuilder(
+    column: $table.destinationLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get destinationLng => $composableBuilder(
+    column: $table.destinationLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> historySpotsRefs(
     Expression<bool> Function($$HistorySpotsTableFilterComposer f) f,
   ) {
@@ -1317,6 +1503,21 @@ class $$MissionHistoriesTableOrderingComposer
     column: $table.radiusMeters,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get destinationLat => $composableBuilder(
+    column: $table.destinationLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get destinationLng => $composableBuilder(
+    column: $table.destinationLng,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MissionHistoriesTableAnnotationComposer
@@ -1356,6 +1557,19 @@ class $$MissionHistoriesTableAnnotationComposer
 
   GeneratedColumn<int> get radiusMeters => $composableBuilder(
     column: $table.radiusMeters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<double> get destinationLat => $composableBuilder(
+    column: $table.destinationLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get destinationLng => $composableBuilder(
+    column: $table.destinationLng,
     builder: (column) => column,
   );
 
@@ -1429,6 +1643,9 @@ class $$MissionHistoriesTableTableManager
                 Value<double> departureLng = const Value.absent(),
                 Value<String> overviewPolyline = const Value.absent(),
                 Value<int?> radiusMeters = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<double?> destinationLat = const Value.absent(),
+                Value<double?> destinationLng = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion(
                 id: id,
@@ -1438,6 +1655,9 @@ class $$MissionHistoriesTableTableManager
                 departureLng: departureLng,
                 overviewPolyline: overviewPolyline,
                 radiusMeters: radiusMeters,
+                mode: mode,
+                destinationLat: destinationLat,
+                destinationLng: destinationLng,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1449,6 +1669,9 @@ class $$MissionHistoriesTableTableManager
                 required double departureLng,
                 required String overviewPolyline,
                 Value<int?> radiusMeters = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<double?> destinationLat = const Value.absent(),
+                Value<double?> destinationLng = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion.insert(
                 id: id,
@@ -1458,6 +1681,9 @@ class $$MissionHistoriesTableTableManager
                 departureLng: departureLng,
                 overviewPolyline: overviewPolyline,
                 radiusMeters: radiusMeters,
+                mode: mode,
+                destinationLat: destinationLat,
+                destinationLng: destinationLng,
                 rowid: rowid,
               ),
           withReferenceMapper:

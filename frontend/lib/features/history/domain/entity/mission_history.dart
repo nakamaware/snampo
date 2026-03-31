@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
+import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 part 'mission_history.freezed.dart';
 
@@ -16,6 +16,6 @@ abstract class MissionHistory with _$MissionHistory {
     @CoordinateConverter() required Coordinate departure,
     required String overviewPolyline,
     required List<MissionHistorySpot> spots,
-    @RadiusConverter() Radius? radius,
+    required MissionSettings settings,
   }) = _MissionHistory;
 }
