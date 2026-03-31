@@ -213,6 +213,59 @@ final class GetMissionHistoriesUseCaseProvider
 String _$getMissionHistoriesUseCaseHash() =>
     r'90377eb05f29b5e45e581812aa65ec56b7487425';
 
+/// 履歴を id で 1 件取得するユースケース
+
+@ProviderFor(getMissionHistoryUseCase)
+final getMissionHistoryUseCaseProvider = GetMissionHistoryUseCaseProvider._();
+
+/// 履歴を id で 1 件取得するユースケース
+
+final class GetMissionHistoryUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetMissionHistoryUseCase,
+          GetMissionHistoryUseCase,
+          GetMissionHistoryUseCase
+        >
+    with $Provider<GetMissionHistoryUseCase> {
+  /// 履歴を id で 1 件取得するユースケース
+  GetMissionHistoryUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getMissionHistoryUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getMissionHistoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetMissionHistoryUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetMissionHistoryUseCase create(Ref ref) {
+    return getMissionHistoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetMissionHistoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetMissionHistoryUseCase>(value),
+    );
+  }
+}
+
+String _$getMissionHistoryUseCaseHash() =>
+    r'1f1f183c8627216f1de3b0856ff9341070f659a3';
+
 /// 履歴を 1 件追加するユースケース
 
 @ProviderFor(addMissionHistoryUseCase)
@@ -319,134 +372,3 @@ final class RemoveMissionHistoryUseCaseProvider
 
 String _$removeMissionHistoryUseCaseHash() =>
     r'60e8b77e4f3afaaffa87749e23c335074303f56f';
-
-/// 履歴一覧 (完了日時の新しい順)。store は持たず DB を read-through する。
-
-@ProviderFor(missionHistories)
-final missionHistoriesProvider = MissionHistoriesProvider._();
-
-/// 履歴一覧 (完了日時の新しい順)。store は持たず DB を read-through する。
-
-final class MissionHistoriesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<MissionHistory>>,
-          List<MissionHistory>,
-          FutureOr<List<MissionHistory>>
-        >
-    with
-        $FutureModifier<List<MissionHistory>>,
-        $FutureProvider<List<MissionHistory>> {
-  /// 履歴一覧 (完了日時の新しい順)。store は持たず DB を read-through する。
-  MissionHistoriesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'missionHistoriesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$missionHistoriesHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<MissionHistory>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<MissionHistory>> create(Ref ref) {
-    return missionHistories(ref);
-  }
-}
-
-String _$missionHistoriesHash() => r'eb7387e52c70b243bc21997e704a6c0c463155bc';
-
-/// id で 1 件 (なければ null)
-
-@ProviderFor(missionHistoryById)
-final missionHistoryByIdProvider = MissionHistoryByIdFamily._();
-
-/// id で 1 件 (なければ null)
-
-final class MissionHistoryByIdProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<MissionHistory?>,
-          MissionHistory?,
-          FutureOr<MissionHistory?>
-        >
-    with $FutureModifier<MissionHistory?>, $FutureProvider<MissionHistory?> {
-  /// id で 1 件 (なければ null)
-  MissionHistoryByIdProvider._({
-    required MissionHistoryByIdFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'missionHistoryByIdProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$missionHistoryByIdHash();
-
-  @override
-  String toString() {
-    return r'missionHistoryByIdProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<MissionHistory?> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<MissionHistory?> create(Ref ref) {
-    final argument = this.argument as String;
-    return missionHistoryById(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is MissionHistoryByIdProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$missionHistoryByIdHash() =>
-    r'84aa5ba48cbf9ede00f863fbdfc488cee49fb475';
-
-/// id で 1 件 (なければ null)
-
-final class MissionHistoryByIdFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<MissionHistory?>, String> {
-  MissionHistoryByIdFamily._()
-    : super(
-        retry: null,
-        name: r'missionHistoryByIdProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// id で 1 件 (なければ null)
-
-  MissionHistoryByIdProvider call(String id) =>
-      MissionHistoryByIdProvider._(argument: id, from: this);
-
-  @override
-  String toString() => r'missionHistoryByIdProvider';
-}

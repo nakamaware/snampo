@@ -3,11 +3,11 @@ import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/application/usecase/add_mission_history_use_case.dart';
 import 'package:snampo/features/history/application/usecase/get_mission_histories_use_case.dart';
+import 'package:snampo/features/history/application/usecase/get_mission_history_use_case.dart';
 import 'package:snampo/features/history/application/usecase/remove_mission_history_use_case.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/data/repository/history_repository.dart';
 import 'package:snampo/features/history/data/streetview_storage.dart';
-import 'package:snampo/features/history/domain/entity/mission_history.dart';
 
 part 'history_provider.g.dart';
 
@@ -41,6 +41,12 @@ GetMissionHistoriesUseCase getMissionHistoriesUseCase(Ref ref) {
   return GetMissionHistoriesUseCase(ref.read(historyRepositoryProvider));
 }
 
+/// 履歴を id で 1 件取得するユースケース
+@riverpod
+GetMissionHistoryUseCase getMissionHistoryUseCase(Ref ref) {
+  return GetMissionHistoryUseCase(ref.read(historyRepositoryProvider));
+}
+
 /// 履歴を 1 件追加するユースケース
 @riverpod
 AddMissionHistoryUseCase addMissionHistoryUseCase(Ref ref) {
@@ -51,16 +57,4 @@ AddMissionHistoryUseCase addMissionHistoryUseCase(Ref ref) {
 @riverpod
 RemoveMissionHistoryUseCase removeMissionHistoryUseCase(Ref ref) {
   return RemoveMissionHistoryUseCase(ref.read(historyRepositoryProvider));
-}
-
-/// 履歴一覧 (完了日時の新しい順)。store は持たず DB を read-through する。
-@riverpod
-Future<List<MissionHistory>> missionHistories(Ref ref) async {
-  return ref.read(getMissionHistoriesUseCaseProvider).call();
-}
-
-/// id で 1 件 (なければ null)
-@riverpod
-Future<MissionHistory?> missionHistoryById(Ref ref, String id) async {
-  return ref.read(historyRepositoryProvider).getHistoryById(id);
 }

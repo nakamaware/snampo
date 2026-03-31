@@ -2,16 +2,17 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
-import 'package:snampo/features/history/di/record_mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
+import 'package:snampo/features/history/presentation/hook/use_histories.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 
 /// 完了ミッション履歴の一覧
-class HistoryPage extends ConsumerWidget {
+class HistoryPage extends HookConsumerWidget {
   /// [HistoryPage] を作成する
   const HistoryPage({super.key});
 
@@ -23,7 +24,8 @@ class HistoryPage extends ConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final historyAsync = ref.watch(missionHistoriesProvider);
+    final historyAsync = useHistories(ref);
+    final removedIds = useState<Set<String>>({});
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +46,9 @@ class HistoryPage extends ConsumerWidget {
       ),
       body: historyAsync.when(
         data: (data) {
-          final records = data;
+          final records = data
+              .where((h) => !removedIds.value.contains(h.id))
+              .toList(growable: false);
           if (records.isEmpty) {
             return Center(
               child: Padding(
@@ -81,6 +85,9 @@ class HistoryPage extends ConsumerWidget {
                 onTap: () {
                   context.push('/history/${record.id}');
                 },
+                onRemoved: (id) {
+                  removedIds.value = {...removedIds.value, id};
+                },
               );
             },
           );
@@ -96,10 +103,15 @@ class HistoryPage extends ConsumerWidget {
 }
 
 class _HistoryListTile extends ConsumerWidget {
-  const _HistoryListTile({required this.record, required this.onTap});
+  const _HistoryListTile({
+    required this.record,
+    required this.onTap,
+    required this.onRemoved,
+  });
 
   final MissionHistory record;
   final VoidCallback onTap;
+  final void Function(String id) onRemoved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,14 +183,11 @@ class _HistoryListTile extends ConsumerWidget {
           return false;
         }
         try {
-          await removeCompletedMission(ref, record.id);
+          await ref.read(removeMissionHistoryUseCaseProvider).call(record.id);
+          onRemoved(record.id);
           return true;
         } catch (error, stackTrace) {
-          log(
-            'removeCompletedMission failed',
-            error: error,
-            stackTrace: stackTrace,
-          );
+          log('履歴の削除に失敗', error: error, stackTrace: stackTrace);
           return false;
         }
       },

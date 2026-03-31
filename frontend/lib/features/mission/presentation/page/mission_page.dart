@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/features/history/di/record_mission_history.dart';
+import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
@@ -411,11 +411,9 @@ class SnapViewState extends HookConsumerWidget {
                             return;
                           }
                           try {
-                            await recordCompletedMission(
-                              ref,
-                              mission: missionInfo,
-                              progress: progress,
-                            );
+                            await ref
+                                .read(addMissionHistoryUseCaseProvider)
+                                .call(mission: missionInfo, progress: progress);
                           } on Exception {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

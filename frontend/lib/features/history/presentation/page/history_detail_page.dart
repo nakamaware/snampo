@@ -1,17 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
+import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// 1 件の履歴の詳細 (地図 + 各スポットの写真)
-class HistoryDetailPage extends ConsumerWidget {
+class HistoryDetailPage extends HookConsumerWidget {
   /// [HistoryDetailPage] を作成する
   const HistoryDetailPage({required this.recordId, super.key});
 
@@ -26,9 +26,9 @@ class HistoryDetailPage extends ConsumerWidget {
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
 
-    final historyAsync = ref.watch(missionHistoryByIdProvider(recordId));
+    final detailAsync = useHistoryDetail(ref, recordId);
 
-    return historyAsync.when(
+    return detailAsync.when(
       data: (MissionHistory? found) {
         if (found == null) {
           return Scaffold(
