@@ -11,11 +11,12 @@ part of 'image_coordinate.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$ImageCoordinate {
 
 /// 座標
- Coordinate get coordinate;/// Base64エンコードされた画像データ
+@CoordinateConverter() Coordinate get coordinate;/// Base64エンコードされた画像データ
  String get imageBase64;
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
@@ -23,6 +24,8 @@ mixin _$ImageCoordinate {
 @pragma('vm:prefer-inline')
 $ImageCoordinateCopyWith<ImageCoordinate> get copyWith => _$ImageCoordinateCopyWithImpl<ImageCoordinate>(this as ImageCoordinate, _$identity);
 
+  /// Serializes this ImageCoordinate to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -30,7 +33,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,coordinate,imageBase64);
 
@@ -47,7 +50,7 @@ abstract mixin class $ImageCoordinateCopyWith<$Res>  {
   factory $ImageCoordinateCopyWith(ImageCoordinate value, $Res Function(ImageCoordinate) _then) = _$ImageCoordinateCopyWithImpl;
 @useResult
 $Res call({
- Coordinate coordinate, String imageBase64
+@CoordinateConverter() Coordinate coordinate, String imageBase64
 });
 
 
@@ -162,7 +165,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate coordinate,  String imageBase64)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
 return $default(_that.coordinate,_that.imageBase64);case _:
@@ -183,7 +186,7 @@ return $default(_that.coordinate,_that.imageBase64);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate coordinate,  String imageBase64)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64)  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate():
 return $default(_that.coordinate,_that.imageBase64);case _:
@@ -203,7 +206,7 @@ return $default(_that.coordinate,_that.imageBase64);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate coordinate,  String imageBase64)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64)?  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
 return $default(_that.coordinate,_that.imageBase64);case _:
@@ -215,14 +218,14 @@ return $default(_that.coordinate,_that.imageBase64);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _ImageCoordinate implements ImageCoordinate {
-  const _ImageCoordinate({required this.coordinate, required this.imageBase64});
-  
+  const _ImageCoordinate({@CoordinateConverter() required this.coordinate, required this.imageBase64});
+  factory _ImageCoordinate.fromJson(Map<String, dynamic> json) => _$ImageCoordinateFromJson(json);
 
 /// 座標
-@override final  Coordinate coordinate;
+@override@CoordinateConverter() final  Coordinate coordinate;
 /// Base64エンコードされた画像データ
 @override final  String imageBase64;
 
@@ -232,14 +235,17 @@ class _ImageCoordinate implements ImageCoordinate {
 @pragma('vm:prefer-inline')
 _$ImageCoordinateCopyWith<_ImageCoordinate> get copyWith => __$ImageCoordinateCopyWithImpl<_ImageCoordinate>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ImageCoordinateToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,coordinate,imageBase64);
 
@@ -256,7 +262,7 @@ abstract mixin class _$ImageCoordinateCopyWith<$Res> implements $ImageCoordinate
   factory _$ImageCoordinateCopyWith(_ImageCoordinate value, $Res Function(_ImageCoordinate) _then) = __$ImageCoordinateCopyWithImpl;
 @override @useResult
 $Res call({
- Coordinate coordinate, String imageBase64
+@CoordinateConverter() Coordinate coordinate, String imageBase64
 });
 
 

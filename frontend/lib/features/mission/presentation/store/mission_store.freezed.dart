@@ -55,12 +55,13 @@ extension MissionStoreParamsPatterns on MissionStoreParams {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( MissionStoreParamsRandom value)?  random,TResult Function( MissionStoreParamsDestination value)?  destination,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( MissionStoreParamsRandom value)?  random,TResult Function( MissionStoreParamsDestination value)?  destination,TResult Function( MissionStoreParamsResume value)?  resume,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that);case MissionStoreParamsDestination() when destination != null:
-return destination(_that);case _:
+return destination(_that);case MissionStoreParamsResume() when resume != null:
+return resume(_that);case _:
   return orElse();
 
 }
@@ -78,12 +79,13 @@ return destination(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( MissionStoreParamsRandom value)  random,required TResult Function( MissionStoreParamsDestination value)  destination,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( MissionStoreParamsRandom value)  random,required TResult Function( MissionStoreParamsDestination value)  destination,required TResult Function( MissionStoreParamsResume value)  resume,}){
 final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom():
 return random(_that);case MissionStoreParamsDestination():
-return destination(_that);}
+return destination(_that);case MissionStoreParamsResume():
+return resume(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -97,12 +99,13 @@ return destination(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( MissionStoreParamsRandom value)?  random,TResult? Function( MissionStoreParamsDestination value)?  destination,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( MissionStoreParamsRandom value)?  random,TResult? Function( MissionStoreParamsDestination value)?  destination,TResult? Function( MissionStoreParamsResume value)?  resume,}){
 final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that);case MissionStoreParamsDestination() when destination != null:
-return destination(_that);case _:
+return destination(_that);case MissionStoreParamsResume() when resume != null:
+return resume(_that);case _:
   return null;
 
 }
@@ -119,11 +122,12 @@ return destination(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Radius radius)?  random,TResult Function( Coordinate destination)?  destination,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Radius radius)?  random,TResult Function( Coordinate destination)?  destination,TResult Function()?  resume,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that.radius);case MissionStoreParamsDestination() when destination != null:
-return destination(_that.destination);case _:
+return destination(_that.destination);case MissionStoreParamsResume() when resume != null:
+return resume();case _:
   return orElse();
 
 }
@@ -141,11 +145,12 @@ return destination(_that.destination);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Radius radius)  random,required TResult Function( Coordinate destination)  destination,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Radius radius)  random,required TResult Function( Coordinate destination)  destination,required TResult Function()  resume,}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom():
 return random(_that.radius);case MissionStoreParamsDestination():
-return destination(_that.destination);}
+return destination(_that.destination);case MissionStoreParamsResume():
+return resume();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -159,11 +164,12 @@ return destination(_that.destination);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Radius radius)?  random,TResult? Function( Coordinate destination)?  destination,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Radius radius)?  random,TResult? Function( Coordinate destination)?  destination,TResult? Function()?  resume,}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that.radius);case MissionStoreParamsDestination() when destination != null:
-return destination(_that.destination);case _:
+return destination(_that.destination);case MissionStoreParamsResume() when resume != null:
+return resume();case _:
   return null;
 
 }
@@ -176,7 +182,7 @@ return destination(_that.destination);case _:
 
 class MissionStoreParamsRandom implements MissionStoreParams {
   const MissionStoreParamsRandom({required this.radius});
-
+  
 
  final  Radius radius;
 
@@ -239,7 +245,7 @@ as Radius,
 @override
 @pragma('vm:prefer-inline')
 $RadiusCopyWith<$Res> get radius {
-
+  
   return $RadiusCopyWith<$Res>(_self.radius, (value) {
     return _then(_self.copyWith(radius: value));
   });
@@ -251,7 +257,7 @@ $RadiusCopyWith<$Res> get radius {
 
 class MissionStoreParamsDestination implements MissionStoreParams {
   const MissionStoreParamsDestination({required this.destination});
-
+  
 
  final  Coordinate destination;
 
@@ -314,11 +320,43 @@ as Coordinate,
 @override
 @pragma('vm:prefer-inline')
 $CoordinateCopyWith<$Res> get destination {
-
+  
   return $CoordinateCopyWith<$Res>(_self.destination, (value) {
     return _then(_self.copyWith(destination: value));
   });
 }
 }
+
+/// @nodoc
+
+
+class MissionStoreParamsResume implements MissionStoreParams {
+  const MissionStoreParamsResume();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionStoreParamsResume);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'MissionStoreParams.resume()';
+}
+
+
+}
+
+
+
 
 // dart format on

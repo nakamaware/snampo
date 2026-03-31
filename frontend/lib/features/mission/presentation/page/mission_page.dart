@@ -11,22 +11,33 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
+import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
-// TODO: ミッションロードのページを分離する
-/// ミッションページを表示するウィジェット
+// 競合解消メモ（main × 再開機能の統合）:
+// - main 系: MissionStoreParams + 専用カメラ画面 + cameraStore で取得〜撮影 UI
+// - feature 系: missionProgressStore でスポット数・撮影の永続、
+//   persistedMissionProvider でホームからの再開
+// TODO(kawayama): ミッションロードのページを分離する
+
+/// ミッション画面（ルートごとに `MissionStoreParams` が決まる）。
+///
+/// 次の3モードをすべて提供する。
+/// - **半径指定（ランダム）**: コンストラクタ … API が半径内で目的地を決める
+/// - **目的地指定**: `MissionPage.withDestination` … 地図で選んだ座標でルート生成
+/// - **再開**: `MissionPage.resume` … 永続ストアのミッションを復元（API 呼び出しなし）
 class MissionPage extends HookConsumerWidget {
-  /// ランダムモードでミッションページを作成する
+  /// 半径指定（ランダム）モード。
   ///
-  /// [radius] はミッションの検索半径（メートル単位）
+  /// [radius] は検索半径（メートル）。`/mission/random/:radius` から遷移する想定。
   MissionPage({required int radius, super.key})
     : _params = MissionStoreParams.random(radius: Radius(meters: radius));
 
-  /// 目的地指定モードでミッションページを作成する
+  /// 目的地指定モード。
   ///
-  /// [destinationLat] は目的地の緯度
-  /// [destinationLng] は目的地の経度
+  /// [destinationLat] / [destinationLng] はユーザーが地図で選択した緯度経度。
   MissionPage.withDestination({
     required double destinationLat,
     required double destinationLng,
@@ -37,6 +48,10 @@ class MissionPage extends HookConsumerWidget {
            longitude: destinationLng,
          ),
        );
+
+  /// ゲーム再開モード（永続化済みミッションの復元）。
+  const MissionPage.resume({super.key})
+    : _params = const MissionStoreParams.resume();
 
   /// ミッションストアのパラメータ
   final MissionStoreParams _params;
@@ -49,6 +64,32 @@ class MissionPage extends HookConsumerWidget {
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
+
+    // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
+    // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
+    //
+    // さらに API で新規取得した場合のみ persistedMissionProvider へ書き込み、
+    // ホームの「再開」と整合させる。resume 時は既に DB に同一内容があるのでスキップ。
+    ref.listen(missionStoreProvider(_params), (prev, next) {
+      next.whenData((mission) {
+        // 再開時は missionProgressStore が SQLite から復元済みなので、
+        // startProgress するとチェックポイントが空に上書きされ写真が消える。
+        if (_params is! MissionStoreParamsResume) {
+          // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
+          // （startProgress だけだとパス参照が失われオーファンが残る）
+          final progressNotifier = ref.read(
+            missionProgressStoreProvider.notifier,
+          );
+          final persistedNotifier = ref.read(persistedMissionProvider.notifier);
+          final checkpointCount = mission.waypoints.length + 1;
+          Future(() async {
+            await progressNotifier.clearProgress();
+            progressNotifier.startProgress(checkpointCount);
+            persistedNotifier.setMission(mission);
+          });
+        }
+      });
+    });
 
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
@@ -147,6 +188,7 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // main: [missionStoreProvider]（params 付き）でポリラインを一度だけデコードして描画
     ref.watch(missionStoreProvider(widget.params)).whenData((missionInfo) {
       final encodedPolyline = missionInfo.overviewPolyline;
       if (encodedPolyline.isNotEmpty && _polylineCoordinates.isEmpty) {
@@ -312,6 +354,7 @@ class SnapViewState extends ConsumerWidget {
 
     return missionAsyncValue.when(
       data: (missionInfo) {
+        // main: 経由地 + 目的地を可変長スポットとして列挙
         final missionSpots = [
           ...missionInfo.waypoints,
           missionInfo.destination,
@@ -385,24 +428,42 @@ class AnswerImage extends StatelessWidget {
   }
 }
 
-/// 写真を撮影するためのボタンを表示するウィジェット
+/// スポットごとの撮影 UI。
+///
+/// - main: カメラ画面へ遷移し `cameraStore` でセッション中プレビュー
+/// - feature（旧 HEAD）: 撮影後 `missionProgressStore.savePhoto` で永続パスを記録
+///   （再開後もプレビュー可能）
 class TakeSnap extends HookConsumerWidget {
-  /// TakeSnapウィジェットのコンストラクタ
+  /// [TakeSnap] ウィジェットを作成する
   ///
-  /// [spotIndex] 写真を撮影するスポットのインデックス
+  /// [spotIndex] は撮影対象スポットのインデックス（0 から連番）
   const TakeSnap({required this.spotIndex, super.key});
 
-  /// 写真を撮影するスポットのインデックス
+  /// 撮影するスポットのインデックス
   final int spotIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // cameraStoreProvider を監視
+    // main: 今セッションで撮った直後のプレビュー用パス
     final cameraPath = ref.watch(
       cameraStoreProvider.select((map) => map[spotIndex]),
     );
 
-    if (cameraPath == null) {
+    // feature: 再開後は進捗の永続パスで表示。撮り直し中は camera が先に更新されるため camera を優先する
+    final progressAsync = ref.watch(missionProgressStoreProvider);
+    final progressPath = progressAsync.maybeWhen(
+      data: (progress) {
+        if (progress == null || spotIndex >= progress.checkpoints.length) {
+          return null;
+        }
+        return progress.checkpoints[spotIndex]?.userPhotoPath;
+      },
+      orElse: () => null,
+    );
+
+    final displayPath = cameraPath ?? progressPath;
+
+    if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
         onPressed: () => _handleCameraCapture(context, ref),
@@ -413,17 +474,22 @@ class TakeSnap extends HookConsumerWidget {
     return SizedBox(
       width: 150,
       height: 150,
-      child: SetImage(picture: File(cameraPath)),
+      child: SetImage(picture: File(displayPath)),
     );
   }
 
   Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
-    // カメラ画面へ遷移
+    // main: 専用カメラページへ遷移
     final capturedFile = await context.push<XFile?>('/camera');
 
     if (capturedFile != null && context.mounted) {
       final path = capturedFile.path;
+      // プレビュー用（メモリ上の Map）
       ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
+      // 旧 HEAD 相当: SavePhotoUseCase 経由で永続化しチェックポイントを更新
+      await ref
+          .read(missionProgressStoreProvider.notifier)
+          .savePhoto(spotIndex, path);
     }
   }
 }
