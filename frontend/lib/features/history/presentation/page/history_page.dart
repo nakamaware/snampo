@@ -7,9 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
+import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
 import 'package:snampo/features/history/presentation/hook/use_histories.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
-import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 
 /// 完了ミッション履歴の一覧
 class HistoryPage extends HookConsumerWidget {
@@ -247,7 +247,18 @@ class _HistoryThumbnail extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => openHistoryFullscreenImageFromFile(context, filePath),
+        onTap: () {
+          if (!File(filePath).existsSync()) return;
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              fullscreenDialog: true,
+              builder:
+                  (_) => HistoryFullscreenImageViewer(
+                    child: Image.file(File(filePath), fit: BoxFit.contain),
+                  ),
+            ),
+          );
+        },
         child: Image.file(
           File(filePath),
           width: _size,

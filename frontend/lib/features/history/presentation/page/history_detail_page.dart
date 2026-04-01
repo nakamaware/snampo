@@ -6,9 +6,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
+import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
 import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
-import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// 1 件の履歴の詳細
@@ -239,8 +239,20 @@ class _PhotoThumbnail extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap:
-              () => openHistoryFullscreenImageFromFile(context, resolvedPath),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                fullscreenDialog: true,
+                builder:
+                    (_) => HistoryFullscreenImageViewer(
+                      child: Image.file(
+                        File(resolvedPath),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+              ),
+            );
+          },
           child: Image.file(
             File(resolvedPath),
             height: _height,
