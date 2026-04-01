@@ -50,31 +50,8 @@ class HistoryPage extends HookConsumerWidget {
               .where((h) => !removedIds.value.contains(h.id))
               .toList(growable: false);
           if (records.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 240,
-                      child: Image.asset(
-                        'images/snampo.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'まだ履歴がありません',
-                      style: theme.textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return const _EmptyHistoryView();
           }
-
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             itemCount: records.length,
@@ -82,9 +59,7 @@ class HistoryPage extends HookConsumerWidget {
               final record = records[index];
               return _HistoryListTile(
                 record: record,
-                onTap: () {
-                  context.push('/history/${record.id}');
-                },
+                onTap: () => context.push('/history/${record.id}'),
                 onRemoved: (id) {
                   removedIds.value = {...removedIds.value, id};
                 },
@@ -102,6 +77,36 @@ class HistoryPage extends HookConsumerWidget {
   }
 }
 
+/// 履歴がない場合の表示
+class _EmptyHistoryView extends StatelessWidget {
+  const _EmptyHistoryView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 240,
+              child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'まだ履歴がありません',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 履歴のリスト行
 class _HistoryListTile extends ConsumerWidget {
   const _HistoryListTile({
     required this.record,
@@ -116,108 +121,11 @@ class _HistoryListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final completed = record.completedAt;
-    final durationText = formatMissionDuration(
-      record.startedAt,
-      record.completedAt,
-    );
-    final path = firstUserPhotoPath(record.spots);
-    Widget thumbPlaceholder() {
-      return Container(
-        width: 72,
-        height: 72,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          color: theme.colorScheme.outline,
-        ),
-      );
-    }
-
-    final thumbWidget =
-        path == null
-            ? thumbPlaceholder()
-            : Material(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => openHistoryFullscreenImageFromFile(context, path),
-                child: Image.file(
-                  File(path),
-                  width: 72,
-                  height: 72,
-                  fit: BoxFit.cover,
-                  errorBuilder:
-                      (context, error, stackTrace) => thumbPlaceholder(),
-                ),
-              ),
-            );
 
     return Dismissible(
       key: ValueKey<String>(record.id),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (ctx) {
-            return AlertDialog(
-              title: const Text('削除の確認'),
-              content: const Text('この履歴を削除しますか？写真ファイルも削除されます。'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('キャンセル'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('削除'),
-                ),
-              ],
-            );
-          },
-        );
-        if (!(confirmed ?? false)) {
-          return false;
-        }
-        try {
-          await ref.read(removeMissionHistoryUseCaseProvider).call(record.id);
-          onRemoved(record.id);
-          return true;
-        } catch (error, stackTrace) {
-          log('履歴の削除に失敗', error: error, stackTrace: stackTrace);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('履歴の削除に失敗しました'),
-                action: SnackBarAction(
-                  label: '再試行',
-                  onPressed: () async {
-                    try {
-                      await ref
-                          .read(removeMissionHistoryUseCaseProvider)
-                          .call(record.id);
-                      onRemoved(record.id);
-                    } catch (e, st) {
-                      log('履歴の削除に失敗', error: e, stackTrace: st);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('履歴の削除に失敗しました')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-            );
-          }
-          return false;
-        }
-      },
+      confirmDismiss: (_) => _confirmAndRemove(context, ref),
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -232,23 +140,19 @@ class _HistoryListTile extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                thumbWidget,
+                _HistoryThumbnail(path: firstUserPhotoPath(record.spots)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${completed.year}/'
-                        '${completed.month.toString().padLeft(2, '0')}/'
-                        '${completed.day.toString().padLeft(2, '0')} '
-                        '${completed.hour.toString().padLeft(2, '0')}:'
-                        '${completed.minute.toString().padLeft(2, '0')}',
+                        formatCompletedDate(record.completedAt),
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '所要時間: $durationText',
+                        '所要時間: ${formatMissionDuration(record.startedAt, record.completedAt)}',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -261,6 +165,113 @@ class _HistoryListTile extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmAndRemove(BuildContext context, WidgetRef ref) async {
+    final confirmed = await _showDeleteDialog(context);
+    if (!confirmed) return false;
+    if (!context.mounted) return false;
+
+    return _executeRemove(context, ref, showRetryOnFailure: true);
+  }
+
+  Future<bool> _showDeleteDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('削除の確認'),
+          content: const Text('この履歴を削除しますか？写真ファイルも削除されます。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('キャンセル'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('削除'),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _executeRemove(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool showRetryOnFailure,
+  }) async {
+    try {
+      await ref.read(removeMissionHistoryUseCaseProvider).call(record.id);
+      onRemoved(record.id);
+      return true;
+    } catch (error, stackTrace) {
+      log('履歴の削除に失敗', error: error, stackTrace: stackTrace);
+      if (context.mounted && showRetryOnFailure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('履歴の削除に失敗しました'),
+            action: SnackBarAction(
+              label: '再試行',
+              onPressed:
+                  () => _executeRemove(context, ref, showRetryOnFailure: false),
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+  }
+}
+
+/// 履歴のリスト行にあるサムネイル
+class _HistoryThumbnail extends StatelessWidget {
+  const _HistoryThumbnail({this.path});
+
+  final String? path;
+
+  static const double _size = 72;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filePath = path;
+
+    if (filePath == null) return _placeholder(theme);
+
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => openHistoryFullscreenImageFromFile(context, filePath),
+        child: Image.file(
+          File(filePath),
+          width: _size,
+          height: _size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _placeholder(theme),
+        ),
+      ),
+    );
+  }
+
+  static Widget _placeholder(ThemeData theme) {
+    return Container(
+      width: _size,
+      height: _size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: theme.colorScheme.outline,
       ),
     );
   }

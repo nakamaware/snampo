@@ -15,6 +15,16 @@ String formatMissionDuration(DateTime start, DateTime end) {
   return '$seconds秒';
 }
 
+/// [dateTime] を `yyyy/MM/dd HH:mm` 形式にフォーマットする
+String formatCompletedDate(DateTime dateTime) {
+  final y = dateTime.year;
+  final mo = dateTime.month.toString().padLeft(2, '0');
+  final d = dateTime.day.toString().padLeft(2, '0');
+  final h = dateTime.hour.toString().padLeft(2, '0');
+  final mi = dateTime.minute.toString().padLeft(2, '0');
+  return '$y/$mo/$d $h:$mi';
+}
+
 /// スポット行一覧から最初のユーザー写真パスを返す
 String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
   for (final line in spots) {
