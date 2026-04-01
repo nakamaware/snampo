@@ -241,6 +241,12 @@ class _PhotoThumbnail extends StatelessWidget {
 
     if (resolvedPath != null && resolvedPath.isNotEmpty) {
       final file = File(resolvedPath);
+      final media = MediaQuery.of(context);
+      final dpr = media.devicePixelRatio;
+      final cacheHeight = (_height * dpr).round();
+      // List 12+12, Card 12+12, 列間 12 としたときの 1 列の論理幅
+      final logicalThumbWidth = (media.size.width - 60) / 2;
+      final cacheWidth = (logicalThumbWidth * dpr).round();
       Widget thumbnailError(BuildContext _, Object __, StackTrace? ___) {
         return SizedBox(
           height: _height,
@@ -288,6 +294,8 @@ class _PhotoThumbnail extends StatelessWidget {
             height: _height,
             width: double.infinity,
             fit: BoxFit.cover,
+            cacheHeight: cacheHeight,
+            cacheWidth: cacheWidth,
             errorBuilder: thumbnailError,
           ),
         ),
