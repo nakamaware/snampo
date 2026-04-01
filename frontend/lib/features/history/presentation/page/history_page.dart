@@ -125,7 +125,12 @@ class _HistoryListTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey<String>(record.id),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (_) => _confirmAndRemove(context, ref),
+      confirmDismiss: (_) async {
+        final confirmed = await _showDeleteDialog(context);
+        if (!confirmed) return false;
+        if (!context.mounted) return false;
+        return _executeRemove(context, ref, showRetryOnFailure: true);
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -169,14 +174,7 @@ class _HistoryListTile extends ConsumerWidget {
     );
   }
 
-  Future<bool> _confirmAndRemove(BuildContext context, WidgetRef ref) async {
-    final confirmed = await _showDeleteDialog(context);
-    if (!confirmed) return false;
-    if (!context.mounted) return false;
-
-    return _executeRemove(context, ref, showRetryOnFailure: true);
-  }
-
+  /// 削除の確認ダイアログを表示する
   Future<bool> _showDeleteDialog(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
@@ -200,6 +198,7 @@ class _HistoryListTile extends ConsumerWidget {
     return result ?? false;
   }
 
+  /// 削除を実行する
   Future<bool> _executeRemove(
     BuildContext context,
     WidgetRef ref, {
@@ -260,6 +259,7 @@ class _HistoryThumbnail extends StatelessWidget {
     );
   }
 
+  /// サムネイルのプレースホルダー
   static Widget _placeholder(ThemeData theme) {
     return Container(
       width: _size,
