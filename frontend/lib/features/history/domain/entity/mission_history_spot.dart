@@ -8,7 +8,7 @@ part 'mission_history_spot.freezed.dart';
 abstract class MissionHistorySpot with _$MissionHistorySpot {
   /// [MissionHistorySpot] を作成する
   const factory MissionHistorySpot({
-    @CoordinateConverter() required Coordinate coordinate,
+    required Coordinate coordinate,
     required int sortOrder,
     required bool isDestination,
     required String streetViewImagePath,

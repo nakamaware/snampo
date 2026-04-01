@@ -13,7 +13,7 @@ abstract class MissionHistory with _$MissionHistory {
     required String id,
     required DateTime completedAt,
     required DateTime startedAt,
-    @CoordinateConverter() required Coordinate departure,
+    required Coordinate departure,
     required String overviewPolyline,
     required List<MissionHistorySpot> spots,
     required MissionSettings settings,
