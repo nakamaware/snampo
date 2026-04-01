@@ -93,16 +93,15 @@ class HistoryRepository implements IHistoryRepository {
   /// DB コミット後にユーザー写真・Street View ファイルをベストエフォートで削除する。
   @override
   Future<void> deleteHistory(String id) async {
-    final spotRows =
-        await (_db.select(_db.historySpots)
-          ..where((t) => t.historyId.equals(id))).get();
-    final userPhotoPaths = <String>[];
-    for (final row in spotRows) {
-      final path = row.userPhotoPath;
-      if (path != null) {
-        userPhotoPaths.add(path);
-      }
-    }
+    final spots = _db.historySpots;
+    final userPhotoPaths =
+        await (_db.selectOnly(spots)
+              ..addColumns([spots.userPhotoPath])
+              ..where(
+                spots.historyId.equals(id) & spots.userPhotoPath.isNotNull(),
+              ))
+            .map((row) => row.read(spots.userPhotoPath)!)
+            .get();
 
     await _db.transaction(() async {
       await (_db.delete(_db.missionHistories)
