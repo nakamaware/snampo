@@ -423,7 +423,7 @@ class SnapViewState extends HookConsumerWidget {
                             return;
                           }
                           if (context.mounted) {
-                            await context.push('/result');
+                            context.go('/result');
                           }
                         } finally {
                           if (context.mounted) {
