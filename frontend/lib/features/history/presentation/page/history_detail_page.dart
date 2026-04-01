@@ -231,9 +231,22 @@ class _PhotoThumbnail extends StatelessWidget {
     final theme = Theme.of(context);
     final resolvedPath = path;
 
-    if (resolvedPath != null &&
-        resolvedPath.isNotEmpty &&
-        File(resolvedPath).existsSync()) {
+    if (resolvedPath != null && resolvedPath.isNotEmpty) {
+      final file = File(resolvedPath);
+      Widget thumbnailError(BuildContext _, Object __, StackTrace? ___) {
+        return SizedBox(
+          height: _height,
+          width: double.infinity,
+          child: Center(
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              color: theme.colorScheme.outline,
+              size: 40,
+            ),
+          ),
+        );
+      }
+
       return Material(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
@@ -246,18 +259,28 @@ class _PhotoThumbnail extends StatelessWidget {
                 builder:
                     (_) => HistoryFullscreenImageViewer(
                       child: Image.file(
-                        File(resolvedPath),
+                        file,
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.white54,
+                              size: 64,
+                            ),
+                          );
+                        },
                       ),
                     ),
               ),
             );
           },
           child: Image.file(
-            File(resolvedPath),
+            file,
             height: _height,
             width: double.infinity,
             fit: BoxFit.cover,
+            errorBuilder: thumbnailError,
           ),
         ),
       );
