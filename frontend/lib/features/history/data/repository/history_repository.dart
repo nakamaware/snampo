@@ -69,11 +69,20 @@ class HistoryRepository implements IHistoryRepository {
               );
         }
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
       for (final path in createdPaths) {
-        await _streetViewStorage.delete(path);
+        try {
+          await _streetViewStorage.delete(path);
+        } catch (cleanupError, cleanupStackTrace) {
+          log(
+            'insertHistory: failed to cleanup Street View file: $path',
+            error: cleanupError,
+            stackTrace: cleanupStackTrace,
+            name: 'HistoryRepository',
+          );
+        }
       }
-      rethrow;
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
