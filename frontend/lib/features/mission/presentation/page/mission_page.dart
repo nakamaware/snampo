@@ -600,12 +600,19 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
   MissionEntity missionInfo,
 ) async {
   final snap = ref.read(missionProgressStoreProvider);
+  if (snap.hasError) {
+    return null;
+  }
   var progress = switch (snap) {
     AsyncData(:final value) => value,
     _ => null,
   };
   if (progress == null && snap.isLoading) {
-    progress = await ref.read(missionProgressStoreProvider.future);
+    try {
+      progress = await ref.read(missionProgressStoreProvider.future);
+    } on Object {
+      return null;
+    }
   }
   if (progress == null) {
     final checkpointCount = missionInfo.waypoints.length + 1;
