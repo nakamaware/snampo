@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -47,7 +48,14 @@ class HistoryDetailPage extends HookConsumerWidget {
           return _HistoryDetailBody(record: found);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('読み込みに失敗しました\n$error')),
+        error: (error, stackTrace) {
+          log(
+            'HistoryDetailPage load error',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          return const Center(child: Text('読み込みに失敗しました'));
+        },
       ),
     );
   }
