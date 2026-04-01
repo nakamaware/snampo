@@ -8,12 +8,10 @@ part 'mission_settings.freezed.dart';
 @freezed
 sealed class MissionSettings with _$MissionSettings {
   /// ランダムモード (探索半径)
-  const factory MissionSettings.random({
-    @RadiusConverter() required Radius radius,
-  }) = MissionSettingsRandom;
+  const factory MissionSettings.random({required Radius radius}) =
+      MissionSettingsRandom;
 
   /// 目的地指定モード (ユーザーが指定した目的地座標)
-  const factory MissionSettings.destination({
-    @CoordinateConverter() required Coordinate destination,
-  }) = MissionSettingsDestination;
+  const factory MissionSettings.destination({required Coordinate destination}) =
+      MissionSettingsDestination;
 }

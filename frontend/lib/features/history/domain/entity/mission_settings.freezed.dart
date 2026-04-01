@@ -119,7 +119,7 @@ return destination(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function(@RadiusConverter()  Radius radius)?  random,TResult Function(@CoordinateConverter()  Coordinate destination)?  destination,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Radius radius)?  random,TResult Function( Coordinate destination)?  destination,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MissionSettingsRandom() when random != null:
 return random(_that.radius);case MissionSettingsDestination() when destination != null:
@@ -141,7 +141,7 @@ return destination(_that.destination);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function(@RadiusConverter()  Radius radius)  random,required TResult Function(@CoordinateConverter()  Coordinate destination)  destination,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Radius radius)  random,required TResult Function( Coordinate destination)  destination,}) {final _that = this;
 switch (_that) {
 case MissionSettingsRandom():
 return random(_that.radius);case MissionSettingsDestination():
@@ -159,7 +159,7 @@ return destination(_that.destination);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function(@RadiusConverter()  Radius radius)?  random,TResult? Function(@CoordinateConverter()  Coordinate destination)?  destination,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Radius radius)?  random,TResult? Function( Coordinate destination)?  destination,}) {final _that = this;
 switch (_that) {
 case MissionSettingsRandom() when random != null:
 return random(_that.radius);case MissionSettingsDestination() when destination != null:
@@ -175,10 +175,10 @@ return destination(_that.destination);case _:
 
 
 class MissionSettingsRandom implements MissionSettings {
-  const MissionSettingsRandom({@RadiusConverter() required this.radius});
+  const MissionSettingsRandom({required this.radius});
 
 
-@RadiusConverter() final  Radius radius;
+ final  Radius radius;
 
 /// Create a copy of MissionSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -210,7 +210,7 @@ abstract mixin class $MissionSettingsRandomCopyWith<$Res> implements $MissionSet
   factory $MissionSettingsRandomCopyWith(MissionSettingsRandom value, $Res Function(MissionSettingsRandom) _then) = _$MissionSettingsRandomCopyWithImpl;
 @useResult
 $Res call({
-@RadiusConverter() Radius radius
+ Radius radius
 });
 
 
@@ -250,10 +250,10 @@ $RadiusCopyWith<$Res> get radius {
 
 
 class MissionSettingsDestination implements MissionSettings {
-  const MissionSettingsDestination({@CoordinateConverter() required this.destination});
+  const MissionSettingsDestination({required this.destination});
 
 
-@CoordinateConverter() final  Coordinate destination;
+ final  Coordinate destination;
 
 /// Create a copy of MissionSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -285,7 +285,7 @@ abstract mixin class $MissionSettingsDestinationCopyWith<$Res> implements $Missi
   factory $MissionSettingsDestinationCopyWith(MissionSettingsDestination value, $Res Function(MissionSettingsDestination) _then) = _$MissionSettingsDestinationCopyWithImpl;
 @useResult
 $Res call({
-@CoordinateConverter() Coordinate destination
+ Coordinate destination
 });
 
 
