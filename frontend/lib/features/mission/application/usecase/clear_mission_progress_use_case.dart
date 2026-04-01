@@ -16,7 +16,7 @@ class ClearMissionProgressUseCase {
       if (cp?.userPhotoPath != null) {
         try {
           await _photoStorage.deletePhoto(cp!.userPhotoPath!);
-        } on Object {
+        } on Exception {
           // 1 件の削除失敗でループを止めない
         }
       }
