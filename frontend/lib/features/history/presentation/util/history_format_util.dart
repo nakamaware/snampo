@@ -1,4 +1,5 @@
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
+import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 
 /// [start] から [end] までの経過時間を日本語の表記にする
 String formatMissionDuration(DateTime start, DateTime end) {
@@ -23,6 +24,18 @@ String formatCompletedDate(DateTime dateTime) {
   final h = dateTime.hour.toString().padLeft(2, '0');
   final mi = dateTime.minute.toString().padLeft(2, '0');
   return '$y/$mo/$d $h:$mi';
+}
+
+/// [MissionSettings] を日本語ラベルに変換する
+String formatMissionSettings(MissionSettings settings) {
+  return settings.when(
+    random: (r) => 'ミッション設定: ランダム (半径 ${r.meters} m)',
+    destination:
+        (c) =>
+            'ミッション設定: 目的地指定 '
+            '(${c.latitude.toStringAsFixed(5)}, '
+            '${c.longitude.toStringAsFixed(5)})',
+  );
 }
 
 /// スポット行一覧から最初のユーザー写真パスを返す

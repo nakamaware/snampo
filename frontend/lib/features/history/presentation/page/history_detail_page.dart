@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
-import 'package:snampo/features/history/domain/entity/mission_settings.dart';
+import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/history/presentation/util/history_fullscreen_image.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
-/// 1 件の履歴の詳細 (地図 + 各スポットの写真)
+/// 1 件の履歴の詳細
 class HistoryDetailPage extends HookConsumerWidget {
   /// [HistoryDetailPage] を作成する
   const HistoryDetailPage({required this.recordId, super.key});
@@ -26,62 +26,34 @@ class HistoryDetailPage extends HookConsumerWidget {
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
-
     final detailAsync = useHistoryDetail(ref, recordId);
 
-    return detailAsync.when(
-      data: (MissionHistory? found) {
-        if (found == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('履歴', style: titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
-            body: const Center(child: Text('この履歴は見つかりませんでした')),
-          );
-        }
-        final record = found;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('履歴の詳細', style: titleTextStyle),
-            centerTitle: true,
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: context.pop,
-            ),
-          ),
-          body: _HistoryDetailBody(record: record),
-        );
-      },
-      loading:
-          () => Scaffold(
-            appBar: AppBar(
-              title: Text('履歴の詳細', style: titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
-            body: const Center(child: CircularProgressIndicator()),
-          ),
-      error:
-          (error, stackTrace) => Scaffold(
-            appBar: AppBar(
-              title: Text('履歴の詳細', style: titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
-            body: Center(child: Text('読み込みに失敗しました\n$error')),
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('履歴の詳細', style: titleTextStyle),
+        centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: context.pop,
+        ),
+      ),
+      body: detailAsync.when(
+        data: (found) {
+          if (found == null) {
+            return const Center(child: Text('この履歴は見つかりませんでした'));
+          }
+          return _HistoryDetailBody(record: found);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('読み込みに失敗しました\n$error')),
+      ),
     );
   }
 }
 
+/// 履歴の詳細の本体
 class _HistoryDetailBody extends StatelessWidget {
   const _HistoryDetailBody({required this.record});
 
@@ -89,10 +61,55 @@ class _HistoryDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spots = record.spots;
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _RouteMap(record: record),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            '所要時間: '
+            '${formatMissionDuration(record.startedAt, record.completedAt)}',
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: Text(
+            formatMissionSettings(record.settings),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: record.spots.length,
+            itemBuilder:
+                (context, index) =>
+                    _SpotCard(spot: record.spots[index], index: index),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 履歴のルートマップ
+class _RouteMap extends StatelessWidget {
+  const _RouteMap({required this.record});
+
+  final MissionHistory record;
+
+  @override
+  Widget build(BuildContext context) {
     final encoded = record.overviewPolyline;
     final polylinePoints =
         encoded.isNotEmpty ? decodePolyline(encoded) : <LatLng>[];
+
     final polylines = <Polyline>{
       if (polylinePoints.isNotEmpty)
         Polyline(
@@ -103,6 +120,7 @@ class _HistoryDetailBody extends StatelessWidget {
         ),
     };
 
+    final spots = record.spots;
     final markers = <Marker>{
       Marker(
         markerId: const MarkerId('departure'),
@@ -120,180 +138,121 @@ class _HistoryDetailBody extends StatelessWidget {
         ),
     };
 
-    final departure = record.departure;
-    final durationText = formatMissionDuration(
-      record.startedAt,
-      record.completedAt,
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.38,
+      child: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: LatLng(record.departure.latitude, record.departure.longitude),
+          zoom: 14,
+        ),
+        polylines: polylines,
+        markers: markers,
+      ),
     );
+  }
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: MediaQuery.sizeOf(context).height * 0.38,
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(departure.latitude, departure.longitude),
-              zoom: 14,
-            ),
-            polylines: polylines,
-            markers: markers,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            '所要時間: $durationText',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: Text(
-            _missionSettingsLabel(record.settings),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: spots.length,
-            itemBuilder: (context, index) {
-              final line = spots[index];
-              final userPath = line.userPhotoPath;
+/// スポットのカード
+class _SpotCard extends StatelessWidget {
+  const _SpotCard({required this.spot, required this.index});
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Spot ${index + 1}',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('参考画像 ( Street View )'),
-                                const SizedBox(height: 4),
-                                _StreetViewThumb(
-                                  path: line.streetViewImagePath,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('あなたの写真'),
-                                const SizedBox(height: 4),
-                                _UserPhotoThumb(path: userPath),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+  final MissionHistorySpot spot;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Spot ${index + 1}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _PhotoColumn(
+                    label: '参考画像 (Street View)',
+                    path: spot.streetViewImagePath,
                   ),
                 ),
-              );
-            },
-          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _PhotoColumn(
+                    label: 'あなたの写真',
+                    path: spot.userPhotoPath,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// 写真のカラム
+class _PhotoColumn extends StatelessWidget {
+  const _PhotoColumn({required this.label, this.path});
+
+  final String label;
+  final String? path;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        const SizedBox(height: 4),
+        _PhotoThumbnail(path: path),
       ],
     );
   }
 }
 
-String _missionSettingsLabel(MissionSettings settings) {
-  return settings.when(
-    random: (r) => 'ミッション設定: ランダム (半径 ${r.meters} m)',
-    destination:
-        (c) =>
-            'ミッション設定: 目的地指定 '
-            '(${c.latitude.toStringAsFixed(5)}, ${c.longitude.toStringAsFixed(5)})',
-  );
-}
-
-class _StreetViewThumb extends StatelessWidget {
-  const _StreetViewThumb({required this.path});
-
-  final String path;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (path.isNotEmpty && File(path).existsSync()) {
-      return Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openHistoryFullscreenImageFromFile(context, path),
-          child: Image.file(
-            File(path),
-            height: 120,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-      );
-    }
-    return Container(
-      height: 120,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: theme.colorScheme.outline,
-        size: 40,
-      ),
-    );
-  }
-}
-
-class _UserPhotoThumb extends StatelessWidget {
-  const _UserPhotoThumb({this.path});
+/// 写真のサムネイル
+class _PhotoThumbnail extends StatelessWidget {
+  const _PhotoThumbnail({this.path});
 
   final String? path;
 
+  static const _height = 120.0;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final pathNonNull = path;
-    if (pathNonNull != null && File(pathNonNull).existsSync()) {
-      final filePath = pathNonNull;
+    final resolvedPath = path;
+
+    if (resolvedPath != null &&
+        resolvedPath.isNotEmpty &&
+        File(resolvedPath).existsSync()) {
       return Material(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => openHistoryFullscreenImageFromFile(context, filePath),
+          onTap:
+              () => openHistoryFullscreenImageFromFile(context, resolvedPath),
           child: Image.file(
-            File(filePath),
-            height: 120,
+            File(resolvedPath),
+            height: _height,
             width: double.infinity,
             fit: BoxFit.cover,
           ),
         ),
       );
     }
+
     return Container(
-      height: 120,
+      height: _height,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
