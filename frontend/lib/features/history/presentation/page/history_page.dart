@@ -190,6 +190,31 @@ class _HistoryListTile extends ConsumerWidget {
           return true;
         } catch (error, stackTrace) {
           log('履歴の削除に失敗', error: error, stackTrace: stackTrace);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('履歴の削除に失敗しました'),
+                action: SnackBarAction(
+                  label: '再試行',
+                  onPressed: () async {
+                    try {
+                      await ref
+                          .read(removeMissionHistoryUseCaseProvider)
+                          .call(record.id);
+                      onRemoved(record.id);
+                    } catch (e, st) {
+                      log('履歴の削除に失敗', error: e, stackTrace: st);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('履歴の削除に失敗しました')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            );
+          }
           return false;
         }
       },
