@@ -121,27 +121,9 @@ class _HistoryListTile extends ConsumerWidget {
       record.startedAt,
       record.completedAt,
     );
-    final thumbPath = firstUserPhotoPath(record.spots);
-    late final Widget thumbWidget;
-    final thumbPathNonNull = thumbPath;
-    if (thumbPathNonNull != null && File(thumbPathNonNull).existsSync()) {
-      final path = thumbPathNonNull;
-      thumbWidget = Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openHistoryFullscreenImageFromFile(context, path),
-          child: Image.file(
-            File(path),
-            width: 72,
-            height: 72,
-            fit: BoxFit.cover,
-          ),
-        ),
-      );
-    } else {
-      thumbWidget = Container(
+    final path = firstUserPhotoPath(record.spots);
+    Widget thumbPlaceholder() {
+      return Container(
         width: 72,
         height: 72,
         alignment: Alignment.center,
@@ -155,6 +137,26 @@ class _HistoryListTile extends ConsumerWidget {
         ),
       );
     }
+
+    final thumbWidget =
+        path == null
+            ? thumbPlaceholder()
+            : Material(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => openHistoryFullscreenImageFromFile(context, path),
+                child: Image.file(
+                  File(path),
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (context, error, stackTrace) => thumbPlaceholder(),
+                ),
+              ),
+            );
 
     return Dismissible(
       key: ValueKey<String>(record.id),
