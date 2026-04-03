@@ -45,23 +45,20 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     state = AsyncValue.data(current.copyWith(checkpoints: updated));
   }
 
+  /// 進捗状態のみリセットする（写真ファイルは削除しない）
+  ///
+  /// ミッション完了後に履歴へ写したあと、再開用ストアだけ空にする場合に使う。
+  void resetState() {
+    state = const AsyncValue.data(null);
+  }
+
   /// 進捗をクリアする（保存した写真ファイルも削除）
   Future<void> clearProgress() async {
     final current = state.value;
     if (current != null) {
-      // await の前に同期で取得し、非同期ギャップ後に ref.read しない
-      final photoStorage = ref.read(photoStorageProvider);
-      for (final cp in current.checkpoints) {
-        if (cp?.userPhotoPath != null) {
-          try {
-            await photoStorage.deletePhoto(cp!.userPhotoPath!);
-          } on Object {
-            // 1 件の削除失敗でループを止めない
-          }
-        }
-      }
+      final useCase = ref.read(clearMissionProgressUseCaseProvider);
+      await useCase.call(current);
     }
-    // 進捗を null にリセットして永続化も解除する（ミッション完了時など）
     state = const AsyncValue.data(null);
   }
 }

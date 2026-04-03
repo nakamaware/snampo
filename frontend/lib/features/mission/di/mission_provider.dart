@@ -1,16 +1,16 @@
 import 'package:path/path.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_sqflite/riverpod_sqflite.dart';
+import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
-import 'package:snampo/features/mission/application/interface/photo_storage.dart';
+import 'package:snampo/features/mission/application/usecase/clear_mission_progress_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_destination_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_random_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/save_photo_use_case.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/mission_repository.dart';
-import 'package:snampo/features/mission/data/photo_storage.dart';
 import 'package:sqflite/sqflite.dart';
 
 part 'mission_provider.g.dart';
@@ -61,14 +61,14 @@ GetCurrentPositionUseCase getCurrentPositionUseCase(Ref ref) {
   return GetCurrentPositionUseCase(ref.read(locationServiceProvider));
 }
 
-/// 写真ストレージのプロバイダー
-@riverpod
-IPhotoStorage photoStorage(Ref ref) {
-  return PhotoStorage();
-}
-
 /// 写真を保存するユースケースのプロバイダー
 @riverpod
 SavePhotoUseCase savePhotoUseCase(Ref ref) {
   return SavePhotoUseCase(ref.read(photoStorageProvider));
+}
+
+/// ミッション進捗に紐づく写真を削除するユースケースのプロバイダー
+@riverpod
+ClearMissionProgressUseCase clearMissionProgressUseCase(Ref ref) {
+  return ClearMissionProgressUseCase(ref.read(photoStorageProvider));
 }
