@@ -21,7 +21,6 @@ def test_必須フィールドのみで作成できること() -> None:
     assert landmark.coordinate == coordinate
     assert landmark.primary_type is None
     assert landmark.types is None
-    assert landmark.rating is None
 
 
 def test_すべてのフィールドを指定して作成できること() -> None:
@@ -33,7 +32,6 @@ def test_すべてのフィールドを指定して作成できること() -> No
         coordinate=coordinate,
         primary_type="train_station",
         types=["train_station", "transit_station", "point_of_interest"],
-        rating=4.5,
     )
 
     assert landmark.place_id == "ChIJXSModoWLGGARILWiCfeu2M0"
@@ -41,7 +39,6 @@ def test_すべてのフィールドを指定して作成できること() -> No
     assert landmark.coordinate == coordinate
     assert landmark.primary_type == "train_station"
     assert landmark.types == ["train_station", "transit_station", "point_of_interest"]
-    assert landmark.rating == 4.5
 
 
 def test_place_idが空文字でValidationErrorが発生すること() -> None:
@@ -68,53 +65,6 @@ def test_display_nameが空文字でValidationErrorが発生すること() -> No
         )
 
 
-def test_ratingが0未満でValidationErrorが発生すること() -> None:
-    """ratingが0未満の場合、ValidationErrorが発生することを確認"""
-    coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
-
-    with pytest.raises(ValidationError):
-        Landmark(
-            place_id="ChIJXSModoWLGGARILWiCfeu2M0",
-            display_name="東京駅",
-            coordinate=coordinate,
-            rating=-0.1,
-        )
-
-
-def test_ratingが5超過でValidationErrorが発生すること() -> None:
-    """ratingが5.0を超える場合、ValidationErrorが発生することを確認"""
-    coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
-
-    with pytest.raises(ValidationError):
-        Landmark(
-            place_id="ChIJXSModoWLGGARILWiCfeu2M0",
-            display_name="東京駅",
-            coordinate=coordinate,
-            rating=5.1,
-        )
-
-
-def test_ratingの境界値で作成できること() -> None:
-    """ratingの境界値 (0.0と5.0) でLandmarkを作成できることを確認"""
-    coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
-
-    landmark_min = Landmark(
-        place_id="ChIJXSModoWLGGARILWiCfeu2M0",
-        display_name="東京駅",
-        coordinate=coordinate,
-        rating=0.0,
-    )
-    landmark_max = Landmark(
-        place_id="ChIJXSModoWLGGARILWiCfeu2M0",
-        display_name="東京駅",
-        coordinate=coordinate,
-        rating=5.0,
-    )
-
-    assert landmark_min.rating == 0.0
-    assert landmark_max.rating == 5.0
-
-
 def test_不変性が保証されていること() -> None:
     """frozen=Trueにより不変性が保証されていることを確認"""
     coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
@@ -138,7 +88,6 @@ def test_同じ値のLandmarkが等しいこと() -> None:
         coordinate=coordinate,
         primary_type="train_station",
         types=["train_station"],
-        rating=4.5,
     )
     landmark2 = Landmark(
         place_id="ChIJXSModoWLGGARILWiCfeu2M0",
@@ -146,7 +95,6 @@ def test_同じ値のLandmarkが等しいこと() -> None:
         coordinate=coordinate,
         primary_type="train_station",
         types=["train_station"],
-        rating=4.5,
     )
 
     assert landmark1 == landmark2
