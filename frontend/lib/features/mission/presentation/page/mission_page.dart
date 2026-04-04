@@ -8,8 +8,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/mission/di/mission_provider.dart';
+import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/page/midpoint_result_page.dart';
+import 'package:snampo/features/mission/presentation/page/photo_confirm_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
@@ -351,6 +356,7 @@ class SnapViewState extends ConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
     final missionAsyncValue = ref.watch(missionStoreProvider(params));
+    final progressAsync = ref.watch(missionProgressStoreProvider);
 
     return missionAsyncValue.when(
       data: (missionInfo) {
@@ -359,18 +365,35 @@ class SnapViewState extends ConsumerWidget {
           ...missionInfo.waypoints,
           missionInfo.destination,
         ];
+        final allCompleted = progressAsync.maybeWhen(
+          data:
+              (progress) =>
+                  progress != null &&
+                  progress.checkpoints.isNotEmpty &&
+                  progress.checkpoints.every(
+                    (checkpoint) => checkpoint != null,
+                  ),
+          orElse: () => false,
+        );
 
         return Column(
           children: [
             Text('MISSION', style: titleTextStyle),
             for (var i = 0; i < missionSpots.length; i++)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('- Spot${i + 1}: '),
-                  AnswerImage(imageBase64: missionSpots[i].imageBase64),
-                  TakeSnap(spotIndex: i),
-                ],
+              _MissionSpotRow(
+                index: i,
+                missionPoint: missionSpots[i],
+                checkpoint: progressAsync.maybeWhen(
+                  data:
+                      (progress) =>
+                          progress != null &&
+                                  i < progress.checkpoints.length &&
+                                  progress.checkpoints[i] != null
+                              ? progress.checkpoints[i]
+                              : null,
+                  orElse: () => null,
+                ),
+                totalCheckpointCount: missionSpots.length,
               ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -382,12 +405,10 @@ class SnapViewState extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10), // 角の丸み
                 ),
               ),
-              onPressed: () {
-                context.push('/result');
-              },
+              onPressed: allCompleted ? () => context.push('/result') : null,
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('到着', style: buttonTextStyle),
+                child: Text('プレイ結果', style: buttonTextStyle),
               ),
             ),
           ],
@@ -395,6 +416,57 @@ class SnapViewState extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stackTrace) => Center(child: Text('エラーが発生しました: $error')),
+    );
+  }
+}
+
+class _MissionSpotRow extends StatelessWidget {
+  const _MissionSpotRow({
+    required this.index,
+    required this.missionPoint,
+    required this.checkpoint,
+    required this.totalCheckpointCount,
+  });
+
+  final int index;
+  final ImageCoordinate missionPoint;
+  final CheckpointProgress? checkpoint;
+  final int totalCheckpointCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('- Spot${index + 1}: '),
+          AnswerImage(imageBase64: missionPoint.imageBase64),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TakeSnap(spotIndex: index, missionPoint: missionPoint),
+              if (checkpoint != null) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed:
+                      () => context.push(
+                        '/midpoint-result',
+                        extra: MidPointResultPageArgs(
+                          midPointIndex: index,
+                          totalCheckpointCount: totalCheckpointCount,
+                          missionPoint: missionPoint,
+                          checkpoint: checkpoint!,
+                        ),
+                      ),
+                  child: const Text('結果を見る'),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -437,10 +509,17 @@ class TakeSnap extends HookConsumerWidget {
   /// [TakeSnap] ウィジェットを作成する
   ///
   /// [spotIndex] は撮影対象スポットのインデックス（0 から連番）
-  const TakeSnap({required this.spotIndex, super.key});
+  const TakeSnap({
+    required this.spotIndex,
+    required this.missionPoint,
+    super.key,
+  });
 
   /// 撮影するスポットのインデックス
   final int spotIndex;
+
+  /// 撮影対象の地点情報
+  final ImageCoordinate missionPoint;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -461,7 +540,7 @@ class TakeSnap extends HookConsumerWidget {
       orElse: () => null,
     );
 
-    final displayPath = cameraPath ?? progressPath;
+    final displayPath = progressPath ?? cameraPath;
 
     if (displayPath == null) {
       return FloatingActionButton(
@@ -479,17 +558,72 @@ class TakeSnap extends HookConsumerWidget {
   }
 
   Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
-    // main: 専用カメラページへ遷移
-    final capturedFile = await context.push<XFile?>('/camera');
+    final router = GoRouter.of(context);
 
-    if (capturedFile != null && context.mounted) {
+    while (context.mounted) {
+      final capturedFile = await router.push<XFile?>('/camera');
+      if (capturedFile == null || !context.mounted) {
+        return;
+      }
+
       final path = capturedFile.path;
-      // プレビュー用（メモリ上の Map）
-      ref.read(cameraStoreProvider.notifier).savePhoto(spotIndex, path);
-      // 旧 HEAD 相当: SavePhotoUseCase 経由で永続化しチェックポイントを更新
-      await ref
+      final confirmed = await router.push<bool>(
+        '/photo-confirm',
+        extra: PhotoConfirmPageArgs(
+          referenceImageBase64: missionPoint.imageBase64,
+          capturedPhotoPath: path,
+        ),
+      );
+      if (confirmed != true || !context.mounted) {
+        continue;
+      }
+
+      final currentPosition =
+          await ref.read(getCurrentPositionUseCaseProvider).call();
+      final capturedHeading =
+          await ref.read(getCurrentHeadingUseCaseProvider).call();
+      final judgeResult = ref
+          .read(judgePhotoUseCaseProvider)
+          .call(
+            currentPosition: currentPosition,
+            target: missionPoint,
+            capturedHeading: capturedHeading,
+          );
+
+      final checkpoint = await ref
           .read(missionProgressStoreProvider.notifier)
-          .savePhoto(spotIndex, path);
+          .completeCheckpoint(
+            index: spotIndex,
+            tempPhotoPath: path,
+            guessPosition: currentPosition,
+            capturedHeading: capturedHeading,
+            judgeRank: judgeResult.rank,
+            distanceErrorMeters: judgeResult.distanceErrorMeters,
+            headingErrorDegrees: judgeResult.headingErrorDegrees,
+          );
+      if (!context.mounted || checkpoint == null) {
+        return;
+      }
+
+      ref
+          .read(cameraStoreProvider.notifier)
+          .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
+      await router.push(
+        '/midpoint-result',
+        extra: MidPointResultPageArgs(
+          midPointIndex: spotIndex,
+          totalCheckpointCount:
+              ref
+                  .read(missionProgressStoreProvider)
+                  .value
+                  ?.checkpoints
+                  .length ??
+              spotIndex + 1,
+          missionPoint: missionPoint,
+          checkpoint: checkpoint,
+        ),
+      );
+      return;
     }
   }
 }

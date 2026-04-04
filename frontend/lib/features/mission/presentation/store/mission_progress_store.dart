@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_progress_store.g.dart';
 
@@ -28,21 +30,35 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     );
   }
 
-  /// 撮影した写真を保存し、チェックポイントを更新する
-  Future<void> savePhoto(int index, String tempPhotoPath) async {
+  /// チェックポイントの撮影結果と採点結果を確定する
+  Future<CheckpointProgress?> completeCheckpoint({
+    required int index,
+    required String tempPhotoPath,
+    required Coordinate? guessPosition,
+    required double? capturedHeading,
+    required PhotoJudgeRank judgeRank,
+    required double distanceErrorMeters,
+    required double? headingErrorDegrees,
+  }) async {
     final current = state.value;
-    if (current == null) return;
-    if (index < 0 || index >= current.checkpoints.length) return;
+    if (current == null) return null;
+    if (index < 0 || index >= current.checkpoints.length) return null;
 
     final useCase = ref.read(savePhotoUseCaseProvider);
     final checkpoint = await useCase.call(
       tempPhotoPath: tempPhotoPath,
       checkpointIndex: index,
+      guessPosition: guessPosition,
+      capturedHeading: capturedHeading,
+      judgeRank: judgeRank,
+      distanceErrorMeters: distanceErrorMeters,
+      headingErrorDegrees: headingErrorDegrees,
     );
 
     final updated = List<CheckpointProgress?>.from(current.checkpoints);
     updated[index] = checkpoint;
     state = AsyncValue.data(current.copyWith(checkpoints: updated));
+    return checkpoint;
   }
 
   /// 進捗をクリアする（保存した写真ファイルも削除）
