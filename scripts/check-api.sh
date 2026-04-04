@@ -28,11 +28,11 @@ MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm \
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR" "$HOST_CHECK_DIR" >/dev/null 2>&1 || true' EXIT
 
-# 既存のファイルをコピー（比較不要なファイルは後で除外）
+# 既存のファイルをコピー (比較不要なファイルは後で除外)
 mkdir -p "$TMP_DIR/existing" "$TMP_DIR/generated"
 cp -R packages/snampo_api/. "$TMP_DIR/existing/"
 
-# 生成されたファイルをコピー（比較不要なファイルは後で除外）
+# 生成されたファイルをコピー (比較不要なファイルは後で除外)
 cp -R "$HOST_CHECK_DIR/generated/." "$TMP_DIR/generated/"
 
 # 比較不要なファイルを除外

@@ -27,15 +27,21 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/photo-confirm',
       builder: (context, state) {
-        final args = state.extra! as PhotoConfirmPageArgs;
-        return PhotoConfirmPage(args: args);
+        final extra = state.extra;
+        if (extra is! PhotoConfirmPageArgs) {
+          return const HomePage();
+        }
+        return PhotoConfirmPage(args: extra);
       },
     ),
     GoRoute(
       path: '/midpoint-result',
       builder: (context, state) {
-        final args = state.extra! as MidPointResultPageArgs;
-        return MidPointResultPage(args: args);
+        final extra = state.extra;
+        if (extra is! MidPointResultPageArgs) {
+          return const HomePage();
+        }
+        return MidPointResultPage(args: extra);
       },
     ),
     GoRoute(

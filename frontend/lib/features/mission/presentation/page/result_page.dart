@@ -58,7 +58,10 @@ class ResultPage extends ConsumerWidget {
                         child: ListView.builder(
                           itemCount: points.length,
                           itemBuilder: (context, index) {
-                            final checkpoint = progress.checkpoints[index];
+                            final checkpoint =
+                                index < progress.checkpoints.length
+                                    ? progress.checkpoints[index]
+                                    : null;
                             return _ResultCard(
                               title:
                                   index == points.length - 1

@@ -22,7 +22,7 @@ def _resolve_bash() -> str:
             if (
                 candidate
                 and Path(candidate).exists()
-                and "system32\\bash.exe" not in candidate.lower()
+                and "system32/bash.exe" not in candidate.lower().replace("\\", "/")
             ):
                 return candidate
 

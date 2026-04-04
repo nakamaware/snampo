@@ -126,7 +126,7 @@ class MidPointResultPage extends StatelessWidget {
                 onPressed:
                     point.googleMapsUrl == null
                         ? null
-                        : () => _openGoogleMaps(point.googleMapsUrl!),
+                        : () => _openGoogleMaps(context, point.googleMapsUrl!),
                 child: const Text('Google Mapでスポットを確認する'),
               ),
               const SizedBox(height: 12),
@@ -147,8 +147,15 @@ class MidPointResultPage extends StatelessWidget {
     );
   }
 
-  Future<void> _openGoogleMaps(String url) async {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  Future<void> _openGoogleMaps(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Google Map を開けませんでした')));
+      }
+    }
   }
 }
 

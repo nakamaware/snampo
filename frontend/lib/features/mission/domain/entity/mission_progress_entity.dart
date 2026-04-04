@@ -21,10 +21,10 @@ abstract class CheckpointProgress with _$CheckpointProgress {
     /// 撮影時の方角
     double? capturedHeading,
 
-    /// 位置誤差（メートル）
+    /// 位置誤差 (メートル)
     double? distanceErrorMeters,
 
-    /// 方角誤差（度）
+    /// 方角誤差 (度)
     double? headingErrorDegrees,
 
     /// 採点ランク
