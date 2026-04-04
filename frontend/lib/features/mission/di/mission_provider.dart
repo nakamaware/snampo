@@ -1,13 +1,17 @@
 import 'package:path/path.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_sqflite/riverpod_sqflite.dart';
+import 'package:snampo/features/mission/application/interface/heading_service.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
 import 'package:snampo/features/mission/application/interface/photo_storage.dart';
 import 'package:snampo/features/mission/application/usecase/create_destination_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_random_mission_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/get_current_heading_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/judge_photo_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/save_photo_use_case.dart';
+import 'package:snampo/features/mission/data/heading_service.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/mission_repository.dart';
 import 'package:snampo/features/mission/data/photo_storage.dart';
@@ -29,6 +33,12 @@ Future<JsonSqFliteStorage> storage(Ref ref) async {
 @riverpod
 ILocationService locationService(Ref ref) {
   return LocationService();
+}
+
+/// 方角サービスのプロバイダー
+@riverpod
+IHeadingService headingService(Ref ref) {
+  return HeadingService();
 }
 
 /// ミッションリポジトリのプロバイダー
@@ -59,6 +69,18 @@ CreateDestinationMissionUseCase createDestinationMissionUseCase(Ref ref) {
 @riverpod
 GetCurrentPositionUseCase getCurrentPositionUseCase(Ref ref) {
   return GetCurrentPositionUseCase(ref.read(locationServiceProvider));
+}
+
+/// 現在方角を取得するユースケースのプロバイダー
+@riverpod
+GetCurrentHeadingUseCase getCurrentHeadingUseCase(Ref ref) {
+  return GetCurrentHeadingUseCase(ref.read(headingServiceProvider));
+}
+
+/// 写真採点ユースケースのプロバイダー
+@riverpod
+JudgePhotoUseCase judgePhotoUseCase(Ref ref) {
+  return JudgePhotoUseCase();
 }
 
 /// 写真ストレージのプロバイダー

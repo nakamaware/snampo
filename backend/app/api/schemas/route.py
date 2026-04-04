@@ -2,12 +2,12 @@
 
 import base64
 from typing import Annotated, Literal
+from urllib.parse import urlencode
 
 from pydantic import BaseModel, Discriminator, Field
 
-from app.application.usecases.route_result_dto import RouteResultDto
+from app.application.usecases.route_result_dto import RoutePointDto, RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
-from app.domain.value_objects.street_view_image import StreetViewImage
 
 
 class RouteRequestBase(BaseModel):
@@ -91,24 +91,38 @@ class MidPoint(BaseModel):
     image_latitude: float | None = None
     image_longitude: float | None = None
     image_utf8: str | None = None
+    heading: float | None = None
+    name: str | None = None
+    genre: str | None = None
+    google_maps_url: str | None = None
 
     @classmethod
-    def from_coordinate(
-        cls, coordinate: Coordinate, street_view_image: StreetViewImage | None
-    ) -> "MidPoint":
-        """座標と画像情報からMidPointを作成
+    def from_dto(cls, point: RoutePointDto) -> "MidPoint":
+        """地点DTOからMidPointを作成
 
         Args:
-            coordinate: 座標
-            street_view_image: ストリートビュー画像 (存在しない場合はNone)
+            point: 地点DTO
 
         Returns:
             MidPoint: 中間地点モデル
         """
+        coordinate = point.coordinate
+        street_view_image = point.street_view_image
         lat, lng = coordinate.to_float_tuple()
+        landmark = point.landmark
+        google_maps_url = _build_google_maps_url(
+            coordinate=coordinate,
+            place_id=landmark.place_id if landmark is not None else None,
+        )
 
         if street_view_image is None:
-            return cls(latitude=lat, longitude=lng)
+            return cls(
+                latitude=lat,
+                longitude=lng,
+                name=landmark.display_name if landmark is not None else None,
+                genre=_extract_genre(point),
+                google_maps_url=google_maps_url,
+            )
 
         image_lat, image_lng = street_view_image.metadata_coordinate.to_float_tuple()
         image_data_base64 = base64.b64encode(street_view_image.image_data).decode("utf-8")
@@ -119,6 +133,10 @@ class MidPoint(BaseModel):
             image_latitude=image_lat,
             image_longitude=image_lng,
             image_utf8=image_data_base64,
+            heading=street_view_image.heading,
+            name=landmark.display_name if landmark is not None else None,
+            genre=_extract_genre(point),
+            google_maps_url=google_maps_url,
         )
 
 
@@ -140,17 +158,28 @@ class RouteResponse(BaseModel):
         Returns:
             RouteResponse: APIレスポンススキーマ
         """
-        midpoint_images_dict = dict[Coordinate, StreetViewImage](dto.midpoint_images)
-        midpoint_list = [
-            MidPoint.from_coordinate(coord, midpoint_images_dict.get(coord))
-            for coord in dto.midpoints
-        ]
-
         departure_lat, departure_lng = dto.departure.to_float_tuple()
 
         return cls(
             departure=Point(latitude=departure_lat, longitude=departure_lng),
-            destination=MidPoint.from_coordinate(dto.destination, dto.destination_image),
-            midpoints=midpoint_list,
+            destination=MidPoint.from_dto(dto.destination),
+            midpoints=[MidPoint.from_dto(point) for point in dto.midpoints],
             overview_polyline=dto.overview_polyline,
         )
+
+
+def _extract_genre(point: RoutePointDto) -> str | None:
+    """地点DTOから表示用ジャンルを取得する"""
+    landmark = point.landmark
+    if landmark is None:
+        return None
+    return landmark.primary_type or (landmark.types[0] if landmark.types else None)
+
+
+def _build_google_maps_url(coordinate: Coordinate, place_id: str | None) -> str:
+    """Google Mapsで地点詳細を開くURLを構築する"""
+    lat, lng = coordinate.to_float_tuple()
+    query = {"api": "1", "query": f"{lat},{lng}"}
+    if place_id:
+        query["query_place_id"] = place_id
+    return f"https://www.google.com/maps/search/?{urlencode(query)}"

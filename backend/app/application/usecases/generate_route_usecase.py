@@ -13,7 +13,7 @@ from app.application.services import (
     LandmarkSearchService,
     StreetViewImageFetchService,
 )
-from app.application.usecases.route_result_dto import RouteResultDto
+from app.application.usecases.route_result_dto import RoutePointDto, RouteResultDto
 from app.config import (
     DIRECTIONS_API_MAX_WAYPOINTS,
     LANDMARK_SEARCH_MAX_CALLS,
@@ -29,6 +29,7 @@ from app.domain.services import coordinate_service
 from app.domain.services.mission_point_calculation_service import calculate_mission_point_count
 from app.domain.value_objects import (
     Coordinate,
+    Landmark,
     StreetViewImage,
 )
 
@@ -94,6 +95,7 @@ class GenerateRouteUseCase:
 
         try:
             destination_image: StreetViewImage | None = None
+            destination_landmark: Landmark | None = None
 
             # 1. 目的地の決定
             if destination_coordinate is not None:
@@ -124,7 +126,7 @@ class GenerateRouteUseCase:
                         service_name="Places API",
                     )
 
-                _, destination_image = self.landmark_selector.select(
+                destination_landmark, destination_image = self.landmark_selector.select(
                     destination_landmarks, shuffle=True
                 )
                 destination_coordinate = destination_image.metadata_coordinate
@@ -175,7 +177,7 @@ class GenerateRouteUseCase:
                 )
 
             # 5. 各中間地点付近でランドマーク検索
-            midpoint_results = []
+            midpoint_results: list[RoutePointDto] = []
             midpoint_search_radius = max(MIDPOINT_MIN_SEARCH_RADIUS_M, radius_m // 4)
 
             for i, candidate_coord in enumerate(candidate_coordinates, 1):
@@ -191,8 +193,14 @@ class GenerateRouteUseCase:
                 if landmarks:
                     # 画像付きランドマークを選択
                     try:
-                        _, image = self.landmark_selector.select(landmarks)
-                        midpoint_results.append((image.metadata_coordinate, image))
+                        landmark, image = self.landmark_selector.select(landmarks)
+                        midpoint_results.append(
+                            RoutePointDto(
+                                coordinate=image.metadata_coordinate,
+                                street_view_image=image,
+                                landmark=landmark,
+                            )
+                        )
                         logger.info(f"Mission point {i} found at {image.metadata_coordinate}")
                     except ExternalServiceValidationError:
                         logger.warning(f"No image available for mission point {i}")
@@ -207,7 +215,7 @@ class GenerateRouteUseCase:
                 )
 
             # 6. ルート全体を取得(waypointsとして全midpointを渡す)
-            midpoint_coords = [coord for coord, _ in midpoint_results]
+            midpoint_coords = [point.coordinate for point in midpoint_results]
             _, overview_polyline = self.google_maps_gateway.get_directions(
                 origin=current_coordinate,
                 destination=destination_coordinate,
@@ -224,11 +232,13 @@ class GenerateRouteUseCase:
 
             return RouteResultDto(
                 departure=current_coordinate,
-                destination=destination_coordinate,
-                midpoints=midpoint_coords,
+                destination=RoutePointDto(
+                    coordinate=destination_coordinate,
+                    street_view_image=destination_image,
+                    landmark=destination_landmark,
+                ),
                 overview_polyline=overview_polyline,
-                midpoint_images=midpoint_results,
-                destination_image=destination_image,
+                midpoints=midpoint_results,
             )
         except (ExternalServiceValidationError, ExternalServiceError, ValueError) as e:
             raise RouteGenerationError(
