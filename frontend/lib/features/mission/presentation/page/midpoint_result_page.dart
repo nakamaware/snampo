@@ -43,12 +43,12 @@ class MidPointResultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final checkpoint = args.checkpoint;
+    final isGoal = args.midPointIndex == args.totalCheckpointCount - 1;
     if (checkpoint.userPhotoPath == null) {
-      return const _ErrorScaffold(message: '採点結果を表示できませんでした。', isGoal: false);
+      return _ErrorScaffold(message: '採点結果を表示できませんでした。', isGoal: isGoal);
     }
 
     final point = args.missionPoint;
-    final isGoal = args.midPointIndex == args.totalCheckpointCount - 1;
     final rank = checkpoint.judgeRank ?? PhotoJudgeRank.retry;
     final distanceErrorText =
         checkpoint.distanceErrorMeters == null

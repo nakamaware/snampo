@@ -55,9 +55,14 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
       headingErrorDegrees: headingErrorDegrees,
     );
 
-    final updated = List<CheckpointProgress?>.from(current.checkpoints);
+    final latest = state.value;
+    if (latest == null || index >= latest.checkpoints.length) {
+      return null;
+    }
+
+    final updated = List<CheckpointProgress?>.from(latest.checkpoints);
     updated[index] = checkpoint;
-    state = AsyncValue.data(current.copyWith(checkpoints: updated));
+    state = AsyncValue.data(latest.copyWith(checkpoints: updated));
     return checkpoint;
   }
 

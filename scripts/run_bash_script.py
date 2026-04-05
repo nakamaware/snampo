@@ -41,7 +41,11 @@ def main() -> int:
         print(f"Script not found: {script_path}", file=sys.stderr)
         return 2
 
-    bash = _resolve_bash()
+    try:
+        bash = _resolve_bash()
+    except FileNotFoundError as e:
+        print(f"Error resolving bash: {e}", file=sys.stderr)
+        return 2
     result = subprocess.run([bash, str(script_path), *sys.argv[2:]], check=False)
     return result.returncode
 
