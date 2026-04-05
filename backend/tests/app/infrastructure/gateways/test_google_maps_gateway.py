@@ -10,6 +10,62 @@ from app.domain.exceptions import ExternalServiceError
 from app.domain.value_objects import Coordinate, ImageSize, Landmark
 from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
 
+# Nearby Search (新版) の FieldMask で Pro 以外の SKU を誘発するトークン
+# https://developers.google.com/maps/documentation/places/web-service/nearby-search
+_NEARBY_SEARCH_ENTERPRISE_SKU_FIELD_MASK_TOKENS: frozenset[str] = frozenset(
+    {
+        "places.currentOpeningHours",
+        "places.currentSecondaryOpeningHours",
+        "places.internationalPhoneNumber",
+        "places.nationalPhoneNumber",
+        "places.priceLevel",
+        "places.priceRange",
+        "places.rating",
+        "places.regularOpeningHours",
+        "places.regularSecondaryOpeningHours",
+        "places.userRatingCount",
+        "places.websiteUri",
+    }
+)
+_NEARBY_SEARCH_ENTERPRISE_ATMOSPHERE_SKU_FIELD_MASK_TOKENS: frozenset[str] = frozenset(
+    {
+        "places.allowsDogs",
+        "places.curbsidePickup",
+        "places.delivery",
+        "places.dineIn",
+        "places.editorialSummary",
+        "places.evChargeAmenitySummary",
+        "places.evChargeOptions",
+        "places.fuelOptions",
+        "places.generativeSummary",
+        "places.goodForChildren",
+        "places.goodForGroups",
+        "places.goodForWatchingSports",
+        "places.liveMusic",
+        "places.menuForChildren",
+        "places.neighborhoodSummary",
+        "places.parkingOptions",
+        "places.paymentOptions",
+        "places.outdoorSeating",
+        "places.reservable",
+        "places.restroom",
+        "places.reviews",
+        "places.reviewSummary",
+        "routingSummaries",
+        "places.servesBeer",
+        "places.servesBreakfast",
+        "places.servesBrunch",
+        "places.servesCocktails",
+        "places.servesCoffee",
+        "places.servesDessert",
+        "places.servesDinner",
+        "places.servesLunch",
+        "places.servesVegetarianFood",
+        "places.servesWine",
+        "places.takeout",
+    }
+)
+
 
 class TestGetDirections:
     """GetDirectionsのテスト"""
@@ -781,6 +837,36 @@ class TestSearchLandmarksNearby:
             circle = request_body.get("locationRestriction", {}).get("circle", {})
             assert circle.get("radius") == PLACES_API_MAX_SEARCH_RADIUS_M
 
+    def test_searchNearbyのFieldMaskにEnterpriseSKUのフィールドが含まれないこと(self) -> None:
+        """Pro SKU のみにするため、Enterprise / Enterprise+Atmosphere のフィールドを含まない。"""
+        coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
+        radius = 1000
+
+        mock_response_data = {"places": []}
+
+        with patch(
+            "app.infrastructure.gateways.google_maps_gateway_impl.requests.post"
+        ) as mock_post:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_post.return_value = mock_response
+
+            gateway = GoogleMapsGatewayImpl()
+            gateway.search_landmarks_nearby(coordinate, radius)
+
+            call_args = mock_post.call_args
+            assert call_args is not None
+            headers = call_args.kwargs.get("headers", {})
+            field_mask = headers.get("X-Goog-FieldMask", "")
+            masked_tokens = {t.strip() for t in field_mask.split(",") if t.strip()}
+            non_pro_tokens = (
+                _NEARBY_SEARCH_ENTERPRISE_SKU_FIELD_MASK_TOKENS
+                | _NEARBY_SEARCH_ENTERPRISE_ATMOSPHERE_SKU_FIELD_MASK_TOKENS
+            )
+            assert masked_tokens.isdisjoint(non_pro_tokens)
+
     def test_正常なレスポンスからLandmarkリストが返されること(self) -> None:
         """正常なレスポンスからLandmarkリストが返されることを確認"""
         coordinate = Coordinate(latitude=35.6812, longitude=139.7671)
@@ -799,7 +885,6 @@ class TestSearchLandmarksNearby:
                         "point_of_interest",
                         "establishment",
                     ],
-                    "rating": 4.5,
                 },
                 {
                     "id": "ChIJN1t_tDeuEmsRUsoyG83frY5",
@@ -807,7 +892,6 @@ class TestSearchLandmarksNearby:
                     "location": {"latitude": 35.6850, "longitude": 139.7528},
                     "primaryType": "tourist_attraction",
                     "types": ["tourist_attraction", "point_of_interest", "establishment"],
-                    "rating": 4.7,
                 },
             ]
         }
@@ -838,7 +922,6 @@ class TestSearchLandmarksNearby:
                 "point_of_interest",
                 "establishment",
             ]
-            assert landmarks[0].rating == 4.5
 
     def test_空のレスポンスから空のリストが返されること(self) -> None:
         """空のレスポンスから空のリストが返されることを確認"""
@@ -913,7 +996,6 @@ class TestSearchLandmarksNearby:
                     "displayName": {"text": "東京駅"},
                     "location": {"latitude": 35.6812, "longitude": 139.7671},
                     "primaryType": "train_station",
-                    "rating": 4.5,
                 },
             ]
         }
@@ -952,7 +1034,6 @@ class TestSearchLandmarksNearby:
                     "displayName": {"text": "東京駅"},
                     "location": {"latitude": 35.6812, "longitude": 139.7671},
                     "primaryType": "train_station",
-                    "rating": 4.5,
                 },
             ]
         }
@@ -989,7 +1070,6 @@ class TestSearchLandmarksNearby:
                     "displayName": {"text": "東京駅"},
                     "location": {"latitude": 35.6812, "longitude": 139.7671},
                     "primaryType": "train_station",
-                    "rating": 4.5,
                 },
             ]
         }

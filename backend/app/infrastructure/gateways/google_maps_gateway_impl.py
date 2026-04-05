@@ -377,7 +377,6 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
 
             primary_type = place.get("primaryType")
             types = place.get("types")
-            rating = place.get("rating")
 
             landmark = Landmark(
                 place_id=place_id,
@@ -385,7 +384,6 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
                 coordinate=landmark_coordinate,
                 primary_type=primary_type,
                 types=types if isinstance(types, list) else None,
-                rating=float(rating) if rating is not None else None,
             )
             landmarks.append(landmark)
 
@@ -442,8 +440,7 @@ class GoogleMapsGatewayImpl(GoogleMapsGateway):
             "Content-Type": "application/json",
             "X-Goog-Api-Key": GOOGLE_API_KEY,
             "X-Goog-FieldMask": (
-                "places.id,places.displayName,places.location,"
-                "places.primaryType,places.types,places.rating,places.userRatingCount"
+                "places.id,places.displayName,places.location,places.primaryType,places.types"
             ),
         }
 
