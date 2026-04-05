@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/page/midpoint_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
@@ -176,8 +177,8 @@ class _ResultCard extends StatelessWidget {
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 4),
-                    Text(point.name ?? '名称未取得'),
-                    Text(point.genre ?? 'ジャンル未取得'),
+                    Text(point.name ?? '取得できませんでした'),
+                    Text(point.genre?.japaneseLabel ?? '取得できませんでした'),
                     const SizedBox(height: 4),
                     Text('判定: ${checkpoint?.judgeRank?.label ?? '未採点'}'),
                     const SizedBox(height: 8),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -90,7 +91,10 @@ class MidPointResultPage extends StatelessWidget {
               _RankCard(rank: rank),
               const SizedBox(height: 16),
               _InfoTile(label: '名称', value: point.name ?? '取得できませんでした'),
-              _InfoTile(label: 'ジャンル', value: point.genre ?? '取得できませんでした'),
+              _InfoTile(
+                label: 'ジャンル',
+                value: point.genre?.japaneseLabel ?? '取得できませんでした',
+              ),
               _InfoTile(label: '位置誤差', value: distanceErrorText),
               _InfoTile(label: '方角誤差', value: headingErrorText),
               const SizedBox(height: 16),
