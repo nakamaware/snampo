@@ -88,6 +88,10 @@ class MissionPage extends HookConsumerWidget {
           final persistedNotifier = ref.read(persistedMissionProvider.notifier);
           final checkpointCount = mission.waypoints.length + 1;
           Future(() async {
+            // build() の完了を待ってから state を書き換える。
+            // build() と startProgress が並行すると、build() の返り値 (null) が
+            // Riverpod によって遅延適用され startProgress の entity を上書きするため。
+            await ref.read(missionProgressStoreProvider.future);
             await progressNotifier.clearProgress();
             progressNotifier.startProgress(checkpointCount);
             persistedNotifier.setMission(mission);
