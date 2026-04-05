@@ -7,7 +7,7 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/presentation/page/midpoint_result_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
@@ -67,16 +67,16 @@ class ResultPage extends ConsumerWidget {
                               title:
                                   index == points.length - 1
                                       ? 'GOAL'
-                                      : 'MidPoint ${index + 1}',
+                                      : 'Spot ${index + 1}',
                               point: points[index],
                               checkpoint: checkpoint,
                               onTap:
                                   checkpoint == null
                                       ? null
                                       : () => context.push(
-                                        '/midpoint-result',
-                                        extra: MidPointResultPageArgs(
-                                          midPointIndex: index,
+                                        '/spot-result',
+                                        extra: SpotResultPageArgs(
+                                          spotIndex: index,
                                           totalCheckpointCount: points.length,
                                           missionPoint: points[index],
                                           checkpoint: checkpoint,

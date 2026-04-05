@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
-import 'package:snampo/features/mission/presentation/page/midpoint_result_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/photo_confirm_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
@@ -35,13 +35,13 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/midpoint-result',
+      path: '/spot-result',
       builder: (context, state) {
         final extra = state.extra;
-        if (extra is! MidPointResultPageArgs) {
+        if (extra is! SpotResultPageArgs) {
           return const HomePage();
         }
-        return MidPointResultPage(args: extra);
+        return SpotResultPage(args: extra);
       },
     ),
     GoRoute(

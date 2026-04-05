@@ -9,18 +9,18 @@ import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// MidPointResultPage の引数
-class MidPointResultPageArgs {
-  /// MidPointResultPageArgs のコンストラクタ
-  const MidPointResultPageArgs({
-    required this.midPointIndex,
+/// SpotResultPage の引数
+class SpotResultPageArgs {
+  /// SpotResultPageArgs のコンストラクタ
+  const SpotResultPageArgs({
+    required this.spotIndex,
     required this.totalCheckpointCount,
     required this.missionPoint,
     required this.checkpoint,
   });
 
-  /// MidPoint のインデックス
-  final int midPointIndex;
+  /// Spot のインデックス
+  final int spotIndex;
 
   /// 全チェックポイント数
   final int totalCheckpointCount;
@@ -32,19 +32,19 @@ class MidPointResultPageArgs {
   final CheckpointProgress checkpoint;
 }
 
-/// MidPoint単位の採点結果画面
-class MidPointResultPage extends StatelessWidget {
-  /// MidPointResultPageのコンストラクタ
-  const MidPointResultPage({required this.args, super.key});
+/// Spot単位の採点結果画面
+class SpotResultPage extends StatelessWidget {
+  /// SpotResultPageのコンストラクタ
+  const SpotResultPage({required this.args, super.key});
 
   /// 画面引数
-  final MidPointResultPageArgs args;
+  final SpotResultPageArgs args;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final checkpoint = args.checkpoint;
-    final isGoal = args.midPointIndex == args.totalCheckpointCount - 1;
+    final isGoal = args.spotIndex == args.totalCheckpointCount - 1;
     if (checkpoint.userPhotoPath == null) {
       return _ErrorScaffold(message: '採点結果を表示できませんでした。', isGoal: isGoal);
     }
@@ -62,7 +62,7 @@ class MidPointResultPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isGoal ? 'GOAL RESULT' : 'MIDPOINT RESULT'),
+        title: Text(isGoal ? 'GOAL RESULT' : 'SPOT RESULT'),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
@@ -74,7 +74,7 @@ class MidPointResultPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                isGoal ? 'GOAL!' : 'MidPoint ${args.midPointIndex + 1}',
+                isGoal ? 'GOAL!' : 'Spot ${args.spotIndex + 1}',
                 style: theme.textTheme.displaySmall,
                 textAlign: TextAlign.center,
               ),
@@ -112,7 +112,7 @@ class MidPointResultPage extends StatelessWidget {
                     ),
                     markers: {
                       Marker(
-                        markerId: const MarkerId('midpoint'),
+                        markerId: const MarkerId('spot'),
                         position: LatLng(
                           point.coordinate.latitude,
                           point.coordinate.longitude,
@@ -218,7 +218,7 @@ class _ErrorScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(isGoal ? 'GOAL RESULT' : 'MIDPOINT RESULT')),
+      appBar: AppBar(title: Text(isGoal ? 'GOAL RESULT' : 'SPOT RESULT')),
       body: Center(child: Text(message)),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -6,6 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
@@ -13,7 +15,7 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/presentation/page/midpoint_result_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/photo_confirm_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
@@ -456,9 +458,9 @@ class _MissionSpotRow extends StatelessWidget {
                 OutlinedButton(
                   onPressed:
                       () => context.push(
-                        '/midpoint-result',
-                        extra: MidPointResultPageArgs(
-                          midPointIndex: index,
+                        '/spot-result',
+                        extra: SpotResultPageArgs(
+                          spotIndex: index,
                           totalCheckpointCount: totalCheckpointCount,
                           missionPoint: missionPoint,
                           checkpoint: checkpoint!,
@@ -527,6 +529,8 @@ class TakeSnap extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isCapturing = useState(false);
+
     // main: 今セッションで撮った直後のプレビュー用パス
     final cameraPath = ref.watch(
       cameraStoreProvider.select((map) => map[spotIndex]),
@@ -549,7 +553,17 @@ class TakeSnap extends HookConsumerWidget {
     if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
-        onPressed: () => _handleCameraCapture(context, ref),
+        onPressed:
+            isCapturing.value
+                ? null
+                : () async {
+                  isCapturing.value = true;
+                  try {
+                    await _handleCameraCapture(context, ref);
+                  } finally {
+                    if (context.mounted) isCapturing.value = false;
+                  }
+                },
         child: const Icon(Icons.add_a_photo),
       );
     }
@@ -563,7 +577,6 @@ class TakeSnap extends HookConsumerWidget {
 
   Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
     final router = GoRouter.of(context);
-
     while (context.mounted) {
       final capturedFile = await router.push<XFile?>('/camera');
       if (capturedFile == null || !context.mounted) {
@@ -581,6 +594,37 @@ class TakeSnap extends HookConsumerWidget {
       if (confirmed != true || !context.mounted) {
         continue;
       }
+
+      unawaited(
+        showGeneralDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: Colors.black,
+          pageBuilder:
+              (_, __, ___) => PopScope(
+                canPop: false,
+                child: Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        LoadingAnimationWidget.staggeredDotsWave(
+                          color: Colors.blue,
+                          size: 100,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          '採点中...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+        ),
+      );
 
       final currentPosition =
           await ref.read(getCurrentPositionUseCaseProvider).call();
@@ -605,7 +649,11 @@ class TakeSnap extends HookConsumerWidget {
             distanceErrorMeters: judgeResult.distanceErrorMeters,
             headingErrorDegrees: judgeResult.headingErrorDegrees,
           );
-      if (!context.mounted || checkpoint == null) {
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.of(context, rootNavigator: true).pop();
+      if (checkpoint == null) {
         return;
       }
 
@@ -613,9 +661,9 @@ class TakeSnap extends HookConsumerWidget {
           .read(cameraStoreProvider.notifier)
           .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
       await router.push(
-        '/midpoint-result',
-        extra: MidPointResultPageArgs(
-          midPointIndex: spotIndex,
+        '/spot-result',
+        extra: SpotResultPageArgs(
+          spotIndex: spotIndex,
           totalCheckpointCount:
               ref
                   .read(missionProgressStoreProvider)
