@@ -168,45 +168,65 @@ class _CameraPageState extends State<CameraPage> {
       return;
     }
 
-    unawaited(
-      showGeneralDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        barrierColor: Colors.black,
-        pageBuilder:
-            (_, __, ___) => PopScope(
-              canPop: false,
-              child: Scaffold(
-                backgroundColor: Colors.black,
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      LoadingAnimationWidget.staggeredDotsWave(
-                        color: Colors.blue,
-                        size: 100,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        '採点中...',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    var loadingVisible = false;
+    var shouldResumePreview = true;
+
+    try {
+      loadingVisible = true;
+      unawaited(
+        showGeneralDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: Colors.black,
+          pageBuilder:
+              (_, __, ___) => PopScope(
+                canPop: false,
+                child: Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        LoadingAnimationWidget.staggeredDotsWave(
+                          color: Colors.blue,
+                          size: 100,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          '採点中...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-      ),
-    );
+        ),
+      );
 
-    final isAccepted = await widget.args.onPhotoAccepted(file);
-    if (!context.mounted) {
-      return;
+      final isAccepted = await widget.args.onPhotoAccepted(file);
+
+      if (rootNavigator.mounted) {
+        rootNavigator.pop();
+        loadingVisible = false;
+      }
+
+      if (!isAccepted) {
+        return;
+      }
+
+      shouldResumePreview = false;
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (loadingVisible && rootNavigator.mounted) {
+        rootNavigator.pop();
+      }
+      if (shouldResumePreview && mounted) {
+        await _controller!.resumePreview();
+      }
     }
-    Navigator.of(context, rootNavigator: true).pop();
-    if (!isAccepted) {
-      return;
-    }
-    Navigator.of(context).pop();
   }
 }

@@ -42,16 +42,22 @@ class PhotoConfirmDialog extends StatelessWidget {
             Expanded(
               child: _PreviewCard(
                 title: 'Mission Photo',
-                child: Image.memory(referenceBytes, fit: BoxFit.cover),
+                child: ColoredBox(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Image.memory(referenceBytes, fit: BoxFit.contain),
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Expanded(
               child: _PreviewCard(
                 title: 'Your Photo',
-                child: Image.file(
-                  File(args.capturedPhotoPath),
-                  fit: BoxFit.cover,
+                child: ColoredBox(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Image.file(
+                    File(args.capturedPhotoPath),
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
