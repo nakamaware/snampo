@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,8 +14,8 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
-import 'package:snampo/features/mission/presentation/page/photo_confirm_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
@@ -577,106 +576,63 @@ class TakeSnap extends HookConsumerWidget {
 
   Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
     final router = GoRouter.of(context);
-    while (context.mounted) {
-      final capturedFile = await router.push<XFile?>('/camera');
-      if (capturedFile == null || !context.mounted) {
-        return;
-      }
+    SpotResultPageArgs? nextSpotResultArgs;
+    await router.push<void>(
+      '/camera',
+      extra: CameraPageArgs(
+        referenceImageBase64: missionPoint.imageBase64,
+        onPhotoAccepted: (capturedFile) async {
+          final path = capturedFile.path;
+          final currentPosition =
+              await ref.read(getCurrentPositionUseCaseProvider).call();
+          final capturedHeading =
+              await ref.read(getCurrentHeadingUseCaseProvider).call();
+          final judgeResult = ref
+              .read(judgePhotoUseCaseProvider)
+              .call(
+                currentPosition: currentPosition,
+                target: missionPoint,
+                capturedHeading: capturedHeading,
+              );
 
-      final path = capturedFile.path;
-      final confirmed = await router.push<bool>(
-        '/photo-confirm',
-        extra: PhotoConfirmPageArgs(
-          referenceImageBase64: missionPoint.imageBase64,
-          capturedPhotoPath: path,
-        ),
-      );
-      if (confirmed != true || !context.mounted) {
-        continue;
-      }
+          final checkpoint = await ref
+              .read(missionProgressStoreProvider.notifier)
+              .completeCheckpoint(
+                index: spotIndex,
+                tempPhotoPath: path,
+                guessPosition: currentPosition,
+                capturedHeading: capturedHeading,
+                judgeRank: judgeResult.rank,
+                distanceErrorMeters: judgeResult.distanceErrorMeters,
+                headingErrorDegrees: judgeResult.headingErrorDegrees,
+              );
+          if (checkpoint == null) {
+            return false;
+          }
 
-      unawaited(
-        showGeneralDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          barrierColor: Colors.black,
-          pageBuilder:
-              (_, __, ___) => PopScope(
-                canPop: false,
-                child: Scaffold(
-                  backgroundColor: Colors.black,
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        LoadingAnimationWidget.staggeredDotsWave(
-                          color: Colors.blue,
-                          size: 100,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          '採点中...',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-        ),
-      );
-
-      final currentPosition =
-          await ref.read(getCurrentPositionUseCaseProvider).call();
-      final capturedHeading =
-          await ref.read(getCurrentHeadingUseCaseProvider).call();
-      final judgeResult = ref
-          .read(judgePhotoUseCaseProvider)
-          .call(
-            currentPosition: currentPosition,
-            target: missionPoint,
-            capturedHeading: capturedHeading,
+          ref
+              .read(cameraStoreProvider.notifier)
+              .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
+          nextSpotResultArgs = SpotResultPageArgs(
+            spotIndex: spotIndex,
+            totalCheckpointCount:
+                ref
+                    .read(missionProgressStoreProvider)
+                    .value
+                    ?.checkpoints
+                    .length ??
+                spotIndex + 1,
+            missionPoint: missionPoint,
+            checkpoint: checkpoint,
           );
-
-      final checkpoint = await ref
-          .read(missionProgressStoreProvider.notifier)
-          .completeCheckpoint(
-            index: spotIndex,
-            tempPhotoPath: path,
-            guessPosition: currentPosition,
-            capturedHeading: capturedHeading,
-            judgeRank: judgeResult.rank,
-            distanceErrorMeters: judgeResult.distanceErrorMeters,
-            headingErrorDegrees: judgeResult.headingErrorDegrees,
-          );
-      if (!context.mounted) {
-        return;
-      }
-      Navigator.of(context, rootNavigator: true).pop();
-      if (checkpoint == null) {
-        return;
-      }
-
-      ref
-          .read(cameraStoreProvider.notifier)
-          .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
-      await router.push(
-        '/spot-result',
-        extra: SpotResultPageArgs(
-          spotIndex: spotIndex,
-          totalCheckpointCount:
-              ref
-                  .read(missionProgressStoreProvider)
-                  .value
-                  ?.checkpoints
-                  .length ??
-              spotIndex + 1,
-          missionPoint: missionPoint,
-          checkpoint: checkpoint,
-        ),
-      );
+          return true;
+        },
+      ),
+    );
+    if (!context.mounted || nextSpotResultArgs == null) {
       return;
     }
+    await router.push('/spot-result', extra: nextSpotResultArgs);
   }
 }
 

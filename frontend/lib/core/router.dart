@@ -3,7 +3,6 @@ import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
-import 'package:snampo/features/mission/presentation/page/photo_confirm_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
 
@@ -23,15 +22,14 @@ final GoRouter appRouter = GoRouter(
       path: '/mission',
       builder: (context, state) => const MissionPage.resume(),
     ),
-    GoRoute(path: '/camera', builder: (context, state) => const CameraPage()),
     GoRoute(
-      path: '/photo-confirm',
+      path: '/camera',
       builder: (context, state) {
         final extra = state.extra;
-        if (extra is! PhotoConfirmPageArgs) {
+        if (extra is! CameraPageArgs) {
           return const HomePage();
         }
-        return PhotoConfirmPage(args: extra);
+        return CameraPage(args: extra);
       },
     ),
     GoRoute(
