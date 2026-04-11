@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:geolocator/geolocator.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
@@ -105,9 +103,13 @@ class JudgePhotoUseCase {
     if (headingErrorDegrees == null) {
       return true;
     }
-    return headingErrorDegrees <= headingThreshold;
+    return headingErrorDegrees.abs() <= headingThreshold;
   }
 
+  /// 方角誤差を符号付きで返す
+  ///
+  /// 正の値 = 基準より右 (時計回り) にズレている
+  /// 負の値 = 基準より左 (反時計回り) にズレている
   double? _calculateHeadingError({
     required double? referenceHeading,
     required double? capturedHeading,
@@ -116,7 +118,8 @@ class JudgePhotoUseCase {
       return null;
     }
 
-    final difference = (referenceHeading - capturedHeading).abs();
-    return math.min(difference, 360 - difference);
+    final raw = capturedHeading - referenceHeading;
+    // [-180, 180) に正規化
+    return ((raw + 180) % 360) - 180;
   }
 }

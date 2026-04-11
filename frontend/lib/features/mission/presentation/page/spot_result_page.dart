@@ -55,10 +55,9 @@ class SpotResultPage extends StatelessWidget {
         checkpoint.distanceErrorMeters == null
             ? '取得できませんでした'
             : '${checkpoint.distanceErrorMeters!.toStringAsFixed(1)} m';
-    final headingErrorText =
-        checkpoint.headingErrorDegrees == null
-            ? '取得できませんでした'
-            : '${checkpoint.headingErrorDegrees!.toStringAsFixed(1)} deg';
+    final headingErrorText = _buildHeadingErrorText(
+      checkpoint.headingErrorDegrees,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -95,8 +94,8 @@ class SpotResultPage extends StatelessWidget {
                 label: 'ジャンル',
                 value: point.genre?.japaneseLabel ?? '取得できませんでした',
               ),
-              _InfoTile(label: '位置誤差', value: distanceErrorText),
-              _InfoTile(label: '方角誤差', value: headingErrorText),
+              _InfoTile(label: 'スポットまで残り', value: distanceErrorText),
+              _InfoTile(label: '向きのずれ', value: headingErrorText),
               const SizedBox(height: 16),
               SizedBox(
                 height: 220,
@@ -149,6 +148,14 @@ class SpotResultPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildHeadingErrorText(double? degrees) {
+    if (degrees == null) return '取得できませんでした';
+    final abs = degrees.abs();
+    if (abs < 0.05) return 'JUST!';
+    final formatted = abs.toStringAsFixed(1);
+    return degrees > 0 ? '右に$formatted度' : '左に$formatted度';
   }
 
   Future<void> _openGoogleMaps(BuildContext context, String url) async {
