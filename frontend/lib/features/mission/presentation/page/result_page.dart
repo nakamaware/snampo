@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -101,13 +102,29 @@ class ResultPage extends ConsumerWidget {
               () => const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               ),
-          error: (error, stackTrace) => _ResultErrorScaffold(message: '$error'),
+          error: (error, stackTrace) {
+            log(
+              '進捗データの読み込みに失敗しました',
+              error: error,
+              stackTrace: stackTrace,
+              name: 'ResultPage',
+            );
+            return const _ResultErrorScaffold(message: '結果データの読み込みに失敗しました。');
+          },
         );
       },
       loading:
           () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, stackTrace) => _ResultErrorScaffold(message: '$error'),
+      error: (error, stackTrace) {
+        log(
+          'ミッションデータの読み込みに失敗しました',
+          error: error,
+          stackTrace: stackTrace,
+          name: 'ResultPage',
+        );
+        return const _ResultErrorScaffold(message: '結果データの読み込みに失敗しました。');
+      },
     );
   }
 
