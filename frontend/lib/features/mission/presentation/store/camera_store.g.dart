@@ -8,18 +8,21 @@ part of 'camera_store.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 写真のパスを保存するストア
 
 @ProviderFor(CameraStore)
 final cameraStoreProvider = CameraStoreProvider._();
 
+/// 写真のパスを保存するストア
 final class CameraStoreProvider
     extends $NotifierProvider<CameraStore, Map<int, String>> {
+  /// 写真のパスを保存するストア
   CameraStoreProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'CameraStoreProvider',
+        name: r'cameraStoreProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
@@ -41,7 +44,9 @@ final class CameraStoreProvider
   }
 }
 
-String _$cameraStoreHash() => r'816cf5f03e4d66e2f7ea8a32e3d0f3fa93e7fef7';
+String _$cameraStoreHash() => r'9c941b7ab886365b8ff9c94de6d86d2cb5dae404';
+
+/// 写真のパスを保存するストア
 
 abstract class _$CameraStore extends $Notifier<Map<int, String>> {
   Map<int, String> build();

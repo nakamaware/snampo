@@ -96,6 +96,10 @@ class MissionRepository implements IMissionRepository {
           longitude: response.destination.longitude.toDouble(),
         ),
         imageBase64: response.destination.imageUtf8!,
+        referenceHeading: response.destination.heading?.toDouble(),
+        name: response.destination.name,
+        genre: response.destination.genre,
+        googleMapsUrl: response.destination.googleMapsUrl,
       ),
       waypoints:
           response.midpoints.map((midpoint) {
@@ -109,6 +113,10 @@ class MissionRepository implements IMissionRepository {
                 longitude: midpoint.longitude.toDouble(),
               ),
               imageBase64: midpoint.imageUtf8!,
+              referenceHeading: midpoint.heading?.toDouble(),
+              name: midpoint.name,
+              genre: midpoint.genre,
+              googleMapsUrl: midpoint.googleMapsUrl,
             );
           }).toList(),
       overviewPolyline: response.overviewPolyline,
