@@ -45,6 +45,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     if (index < 0 || index >= current.checkpoints.length) return null;
 
     final useCase = ref.read(savePhotoUseCaseProvider);
+    final photoStorage = ref.read(photoStorageProvider);
     final checkpoint = await useCase.call(
       tempPhotoPath: tempPhotoPath,
       checkpointIndex: index,
@@ -57,6 +58,14 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
 
     final latest = state.value;
     if (latest == null || index >= latest.checkpoints.length) {
+      final orphanPath = checkpoint.userPhotoPath;
+      if (orphanPath != null) {
+        try {
+          await photoStorage.deletePhoto(orphanPath);
+        } on Object {
+          // 競合時に後始末失敗したら、呼び出し元へは null を返す
+        }
+      }
       return null;
     }
 
