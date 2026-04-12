@@ -64,6 +64,8 @@ class ResultPage extends ConsumerWidget {
                                 index < progress.checkpoints.length
                                     ? progress.checkpoints[index]
                                     : null;
+                            final hasResultPhoto =
+                                checkpoint?.userPhotoPath != null;
                             return _ResultCard(
                               title:
                                   index == points.length - 1
@@ -72,7 +74,7 @@ class ResultPage extends ConsumerWidget {
                               point: points[index],
                               checkpoint: checkpoint,
                               onTap:
-                                  checkpoint == null
+                                  !hasResultPhoto
                                       ? null
                                       : () => context.push(
                                         '/spot-result',
@@ -80,7 +82,7 @@ class ResultPage extends ConsumerWidget {
                                           spotIndex: index,
                                           totalCheckpointCount: points.length,
                                           missionPoint: points[index],
-                                          checkpoint: checkpoint,
+                                          checkpoint: checkpoint!,
                                           fromResultPage: true,
                                         ),
                                       ),
