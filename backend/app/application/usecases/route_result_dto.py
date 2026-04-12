@@ -11,9 +11,7 @@ class RoutePointDto(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     coordinate: Coordinate = Field(description="地点の座標")
-    street_view_image: StreetViewImage | None = Field(
-        default=None, description="地点に対応する Street View 画像"
-    )
+    street_view_image: StreetViewImage = Field(description="地点に対応する Street View 画像")
     landmark: Landmark | None = Field(default=None, description="地点に対応するランドマーク情報")
 
 

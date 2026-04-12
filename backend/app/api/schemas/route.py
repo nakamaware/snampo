@@ -115,15 +115,6 @@ class MidPoint(BaseModel):
             place_id=landmark.place_id if landmark is not None else None,
         )
 
-        if street_view_image is None:
-            return cls(
-                latitude=lat,
-                longitude=lng,
-                name=landmark.display_name if landmark is not None else None,
-                genre=_extract_genre(point),
-                google_maps_url=google_maps_url,
-            )
-
         image_lat, image_lng = street_view_image.metadata_coordinate.to_float_tuple()
         image_data_base64 = base64.b64encode(street_view_image.image_data).decode("utf-8")
 
