@@ -157,7 +157,17 @@ class SpotResultPage extends StatelessWidget {
   }
 
   Future<void> _openGoogleMaps(BuildContext context, String url) async {
-    final uri = Uri.parse(url);
+    final Uri uri;
+    try {
+      uri = Uri.parse(url);
+    } on FormatException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Google Map を開けませんでした')));
+      }
+      return;
+    }
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (context.mounted) {
         ScaffoldMessenger.of(
