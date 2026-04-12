@@ -17,6 +17,7 @@ class SpotResultPageArgs {
     required this.totalCheckpointCount,
     required this.missionPoint,
     required this.checkpoint,
+    this.fromResultPage = false,
   });
 
   /// Spot のインデックス
@@ -30,6 +31,9 @@ class SpotResultPageArgs {
 
   /// 表示対象の進捗情報
   final CheckpointProgress checkpoint;
+
+  /// プレイ結果画面から遷移してきたかどうか
+  final bool fromResultPage;
 }
 
 /// Spot単位の採点結果画面
@@ -134,14 +138,8 @@ class SpotResultPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () {
-                  if (isGoal) {
-                    context.go('/result');
-                    return;
-                  }
-                  context.pop();
-                },
-                child: Text(isGoal ? 'プレイ全体の結果を見る' : 'ミッション画面へ戻る'),
+                onPressed: () => context.pop(),
+                child: Text(args.fromResultPage ? 'プレイ結果画面に戻る' : 'ミッション画面へ戻る'),
               ),
             ],
           ),
