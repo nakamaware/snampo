@@ -11,6 +11,15 @@ locals {
     "sts.googleapis.com",
     # Cloud Quotas API
     "cloudquotas.googleapis.com",
+    # 予算設定
+    "cloudfunctions.googleapis.com",
+    "billingbudgets.googleapis.com",
+    "cloudbilling.googleapis.com",
+    "iam.googleapis.com",
+    "pubsub.googleapis.com",
+    "serviceusage.googleapis.com",
+    "monitoring.googleapis.com",
+    "eventarc.googleapis.com",
     # バックエンド用API
     "places.googleapis.com",
     "street-view-image-backend.googleapis.com",
