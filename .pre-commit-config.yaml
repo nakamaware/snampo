@@ -29,11 +29,11 @@ repos:
         name: ruff (lint)
         description: Pythonコードのlintチェック
         args: [--fix]
-        files: ^backend/.*\.py$
+        files: ^(backend|functions)/.*\.py$
       - id: ruff-format
         name: ruff (format)
         description: Pythonコードのフォーマットチェック
-        files: ^backend/.*\.py$
+        files: ^(backend|functions)/.*\.py$
 
   # Frontend用（Flutter/Dart） - カスタムローカルフック
   - repo: local
