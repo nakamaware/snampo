@@ -8,6 +8,7 @@ terraform {
 }
 
 locals {
+  env          = "dev"
   project_name = "snampo-dev"
   project_id   = "snampo-480404"
 }
@@ -22,6 +23,7 @@ provider "google" {
 module "snampo_dev" {
   source = "../../modules/common"
 
+  project_env  = local.env
   project_id   = local.project_id
   project_name = local.project_name
   # 有効化するAPI

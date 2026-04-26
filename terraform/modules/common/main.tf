@@ -256,7 +256,7 @@ module "artifact_registry" {
     keep_policy = {
       action = "KEEP"
       most_recent_versions = {
-        keep_count            = 10
+        keep_count            = 3
         package_name_prefixes = each.value.pkg_prefixes
       }
     }
@@ -270,7 +270,12 @@ locals {
       service_name    = "${var.project_name}-backend"
       service_account = "${var.project_name}-run@${var.project_id}.iam.gserviceaccount.com"
       container_specs = {
-        env = []
+        env = [
+          {
+            name  = "ENV"
+            value = "${var.project_env}"
+          }
+        ]
         env_secret = [
           {
             name      = "GOOGLE_API_KEY"

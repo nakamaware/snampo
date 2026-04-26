@@ -8,6 +8,7 @@ terraform {
 }
 
 locals {
+  env          = "prod"
   project_name = "snampo-prod"
   project_id   = "snampo-prod"
 }
@@ -22,6 +23,7 @@ provider "google" {
 module "snampo_prod" {
   source = "../../modules/common"
 
+  project_env  = local.env
   project_id   = local.project_id
   project_name = local.project_name
   # グループの権限
