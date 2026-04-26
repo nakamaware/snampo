@@ -68,10 +68,10 @@ class HistoryPage extends HookConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (error, stackTrace) => Center(
-              child: Text('読み込みに失敗しました\n$error', textAlign: TextAlign.center),
-            ),
+        error: (error, stackTrace) {
+          log('HistoryPage load error', error: error, stackTrace: stackTrace);
+          return const Center(child: Text('読み込みに失敗しました'));
+        },
       ),
     );
   }
