@@ -145,11 +145,19 @@ class HistoryRepository implements IHistoryRepository {
       q.limit(limit, offset: offset);
     }
     final rows = await q.get();
-    final out = <MissionHistory>[];
-    for (final h in rows) {
-      out.add(await _rowToMissionHistory(h));
+    if (rows.isEmpty) {
+      return [];
     }
-    return out;
+    final ids = rows.map((r) => r.id).toList();
+    final allSpotRows = await _selectHistorySpotsForHistoryIds(ids);
+    final spotsByHistoryId = <String, List<HistorySpotRow>>{};
+    for (final s in allSpotRows) {
+      (spotsByHistoryId[s.historyId] ??= <HistorySpotRow>[]).add(s);
+    }
+    return [
+      for (final h in rows)
+        missionHistoryFromDriftRows(h, spotsByHistoryId[h.id] ?? const []),
+    ];
   }
 
   /// id で 1 件取得
@@ -165,11 +173,45 @@ class HistoryRepository implements IHistoryRepository {
   }
 
   Future<MissionHistory> _rowToMissionHistory(MissionHistoryRow h) async {
-    final spotRows =
-        await (_db.select(_db.historySpots)
-              ..where((t) => t.historyId.equals(h.id))
-              ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-            .get();
+    final spotRows = await _selectHistorySpotsForSingleHistoryId(h.id);
     return missionHistoryFromDriftRows(h, spotRows);
+  }
+
+  /// 単一履歴用 (詳細 1 件取得)。一覧と異なり 1 回の spots 取得で足りる。
+  Future<List<HistorySpotRow>> _selectHistorySpotsForSingleHistoryId(
+    String historyId,
+  ) async {
+    return (_db.select(_db.historySpots)
+          ..where((t) => t.historyId.equals(historyId))
+          ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+        .get();
+  }
+
+  /// 複数履歴分の `history_spots` を一括取得する (SQLite 変数数の制限のため id を分割)。
+  Future<List<HistorySpotRow>> _selectHistorySpotsForHistoryIds(
+    List<String> historyIds,
+  ) async {
+    if (historyIds.isEmpty) {
+      return [];
+    }
+    const chunkSize = 500;
+    final out = <HistorySpotRow>[];
+    for (var i = 0; i < historyIds.length; i += chunkSize) {
+      final end =
+          (i + chunkSize > historyIds.length)
+              ? historyIds.length
+              : i + chunkSize;
+      final chunk = historyIds.sublist(i, end);
+      final part =
+          await (_db.select(_db.historySpots)
+                ..where((t) => t.historyId.isIn(chunk))
+                ..orderBy([
+                  (t) => OrderingTerm.asc(t.historyId),
+                  (t) => OrderingTerm.asc(t.sortOrder),
+                ]))
+              .get();
+      out.addAll(part);
+    }
+    return out;
   }
 }
