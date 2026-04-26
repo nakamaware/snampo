@@ -24,3 +24,7 @@ CLAUDE.md
 *.terraform/
 *.tfstate
 *.tfstate.*
+# シークレットを含む tfvars（例示用の *.example は除く）
+*.auto.tfvars
+# Cloud Functions ビルド成果物
+terraform/env/*/sources/
