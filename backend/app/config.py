@@ -98,3 +98,6 @@ if not GOOGLE_API_KEY:
     raise ValueError(
         "GOOGLE_API_KEY環境変数が設定されていません。.envファイルまたは環境変数に設定してください。"
     )
+
+# 環境(dev または prod)を取得
+ENV = os.environ.get("ENV", "dev")

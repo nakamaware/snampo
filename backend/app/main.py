@@ -5,10 +5,13 @@ import logging
 
 from fastapi import FastAPI
 
+from app.config import ENV
 from app.api.openapi import custom_openapi
 from app.api.routes import route
 
-logging.basicConfig(level=logging.INFO)
+
+LOG_LEVEL = logging.INFO if ENV == "prod" else logging.DEBUG
+logging.basicConfig(level=LOG_LEVEL)
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
