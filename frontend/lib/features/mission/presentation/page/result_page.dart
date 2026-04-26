@@ -14,17 +14,13 @@ class ResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 到着画面が初めて表示されたタイミングで1回だけ永続ミッションと進捗をクリアする（ビルド完了後に遅延実行）
-    // clearProgress（写真削除など）が例外でも、永続ミッションは必ず外す（再開ゴミ残留防止）
+    // 初回表示時に再開用の永続データをクリアする。
+    // 履歴保存は MissionPage の「到着」ボタンで実施済み。
+    // build 中の Notifier 操作を避けるため addPostFrameCallback で遅延させる。
     useEffect(() {
-      final progressStore = ref.read(missionProgressStoreProvider.notifier);
-      final persistedMission = ref.read(persistedMissionProvider.notifier);
-      Future(() async {
-        try {
-          await progressStore.clearProgress();
-        } finally {
-          persistedMission.clearMission();
-        }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(missionProgressStoreProvider.notifier).resetState();
+        ref.read(persistedMissionProvider.notifier).clearMission();
       });
       return null;
     }, const []);
