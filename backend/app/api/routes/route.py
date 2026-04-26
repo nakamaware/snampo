@@ -79,16 +79,19 @@ def route(
         return RouteResponse.from_dto(result)
     except RouteGenerationError as e:
         extra_log = _build_extra_log(request)
-        logger.warning(f"RouteGenerationError in /route: {e}", extra=extra_log)
+        logger.warning(f"RouteGenerationError in /route: {e}")
+        logger.debug(f"RouteGenerationError in /route: {e}", extra=extra_log)
         raise HTTPException(status_code=500, detail=e.message) from e
     except ExternalServiceError as e:
         extra_log = _build_extra_log(request)
-        logger.error(f"ExternalServiceError in /route: {e}", extra=extra_log)
+        logger.error(f"ExternalServiceError in /route: {e}")
+        logger.debug(f"ExternalServiceError in /route: {e}", extra=extra_log)
         raise HTTPException(status_code=500, detail="外部サービスとの通信に失敗しました") from e
     except Exception as e:
         # NOTE: 未知のエラーはスタックトレースを含むexceptionレベルでログを出力
         extra_log = _build_extra_log(request)
-        logger.exception(f"Exception in /route: {e}", extra=extra_log)
+        logger.exception(f"Exception in /route: {e}")
+        logger.debug(f"Exception in /route: {e}", extra=extra_log)
         raise HTTPException(status_code=500, detail="ルート生成に失敗しました") from e
 
 
