@@ -9,7 +9,7 @@ from app.api.openapi import custom_openapi
 from app.api.routes import route
 from app.config import ENV
 
-LOG_LEVEL = logging.INFO if ENV == "prod" else logging.DEBUG
+LOG_LEVEL = logging.DEBUG if ENV == "dev" else logging.INFO
 logging.basicConfig(level=LOG_LEVEL)
 
 logger = logging.getLogger(__name__)

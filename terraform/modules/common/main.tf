@@ -273,7 +273,7 @@ locals {
         env = [
           {
             name  = "ENV"
-            value = "${var.project_env}"
+            value = var.project_env
           }
         ]
         env_secret = [
