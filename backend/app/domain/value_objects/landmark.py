@@ -18,4 +18,3 @@ class Landmark(BaseModel):
     coordinate: Coordinate = Field(description="座標")
     primary_type: str | None = Field(default=None, description="主要タイプ")
     types: list[str] | None = Field(default=None, description="すべてのタイプ")
-    rating: float | None = Field(default=None, ge=0.0, le=5.0, description="評価 (0.0-5.0)")
