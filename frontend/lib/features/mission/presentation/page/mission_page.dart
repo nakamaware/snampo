@@ -4,12 +4,14 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
+import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
@@ -344,7 +346,7 @@ class SnapView extends StatelessWidget {
 }
 
 /// SnapView内でミッション情報を表示するウィジェット
-class SnapViewState extends ConsumerWidget {
+class SnapViewState extends HookConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
   const SnapViewState({required this.params, super.key});
 
@@ -353,6 +355,7 @@ class SnapViewState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isSubmitting = useState(false);
     final theme = Theme.of(context);
     final titleTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.secondary,
@@ -410,7 +413,50 @@ class SnapViewState extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10), // 角の丸み
                 ),
               ),
-              onPressed: allCompleted ? () => context.push('/result') : null,
+              onPressed:
+                  !allCompleted || isSubmitting.value
+                      ? null
+                      : () async {
+                        if (isSubmitting.value) {
+                          return;
+                        }
+                        isSubmitting.value = true;
+                        try {
+                          final progress = await _resolveCurrentProgress(
+                            ref,
+                            missionInfo,
+                          );
+                          if (progress == null) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('進捗情報を取得できませんでした'),
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                          try {
+                            await ref
+                                .read(addMissionHistoryUseCaseProvider)
+                                .call(mission: missionInfo, progress: progress);
+                          } on Exception {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('履歴の保存に失敗しました')),
+                              );
+                            }
+                            return;
+                          }
+                          if (context.mounted) {
+                            context.go('/result');
+                          }
+                        } finally {
+                          if (context.mounted) {
+                            isSubmitting.value = false;
+                          }
+                        }
+                      },
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text('プレイ結果', style: buttonTextStyle),
@@ -685,4 +731,41 @@ class SetTestImage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [missionProgressStoreProvider] から最新の進捗を取得する。
+///
+/// `.future` は build 完了時の値に留まり savePhoto 後の最新 state を反映しないため、
+/// 現在の AsyncData → loading 中なら await → まだ null なら新規開始、の順で解決する。
+Future<MissionProgressEntity?> _resolveCurrentProgress(
+  WidgetRef ref,
+  MissionEntity missionInfo,
+) async {
+  final snap = ref.read(missionProgressStoreProvider);
+  if (snap.hasError) {
+    return null;
+  }
+  var progress = switch (snap) {
+    AsyncData(:final value) => value,
+    _ => null,
+  };
+  if (progress == null && snap.isLoading) {
+    try {
+      progress = await ref.read(missionProgressStoreProvider.future);
+    } on Object {
+      return null;
+    }
+  }
+  if (progress == null) {
+    final checkpointCount = missionInfo.waypoints.length + 1;
+    ref
+        .read(missionProgressStoreProvider.notifier)
+        .startProgress(checkpointCount);
+    final snap2 = ref.read(missionProgressStoreProvider);
+    progress = switch (snap2) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+  }
+  return progress;
 }
