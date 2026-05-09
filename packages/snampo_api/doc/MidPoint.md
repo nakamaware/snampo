@@ -13,6 +13,10 @@ Name | Type | Description | Notes
 **imageLatitude** | **num** |  | [optional] 
 **imageLongitude** | **num** |  | [optional] 
 **imageUtf8** | **String** |  | [optional] 
+**heading** | **num** |  | [optional] 
+**name** | **String** |  | [optional] 
+**genre** | **String** |  | [optional] 
+**googleMapsUrl** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

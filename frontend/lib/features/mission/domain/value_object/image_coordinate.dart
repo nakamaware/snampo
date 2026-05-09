@@ -17,8 +17,21 @@ abstract class ImageCoordinate with _$ImageCoordinate {
 
     /// Base64エンコードされた画像データ
     required String imageBase64,
+
+    /// 正解画像の基準方角
+    double? referenceHeading,
+
+    /// 表示名
+    String? name,
+
+    /// ジャンル
+    String? genre,
+
+    /// Google Maps の詳細URL
+    String? googleMapsUrl,
   }) = _ImageCoordinate;
 
+  /// JSON から [ImageCoordinate] を生成する
   factory ImageCoordinate.fromJson(Map<String, dynamic> json) =>
       _$ImageCoordinateFromJson(json);
 }

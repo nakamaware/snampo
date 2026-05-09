@@ -105,6 +105,53 @@ final class LocationServiceProvider
 
 String _$locationServiceHash() => r'dd6fb819a5b2471f9d6e687a739bbd7a66f973e4';
 
+/// 方角サービスのプロバイダー
+
+@ProviderFor(headingService)
+final headingServiceProvider = HeadingServiceProvider._();
+
+/// 方角サービスのプロバイダー
+
+final class HeadingServiceProvider
+    extends
+        $FunctionalProvider<IHeadingService, IHeadingService, IHeadingService>
+    with $Provider<IHeadingService> {
+  /// 方角サービスのプロバイダー
+  HeadingServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'headingServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$headingServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<IHeadingService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  IHeadingService create(Ref ref) {
+    return headingService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(IHeadingService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IHeadingService>(value),
+    );
+  }
+}
+
+String _$headingServiceHash() => r'262636b24e46ae8843bb01e5b6dbcc34d5d03399';
+
 /// ミッションリポジトリのプロバイダー
 
 @ProviderFor(missionRepository)
@@ -319,6 +366,111 @@ final class GetCurrentPositionUseCaseProvider
 
 String _$getCurrentPositionUseCaseHash() =>
     r'fad01b4707dc85fcbac4f1f6f9500449007eb397';
+
+/// 現在方角を取得するユースケースのプロバイダー
+
+@ProviderFor(getCurrentHeadingUseCase)
+final getCurrentHeadingUseCaseProvider = GetCurrentHeadingUseCaseProvider._();
+
+/// 現在方角を取得するユースケースのプロバイダー
+
+final class GetCurrentHeadingUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetCurrentHeadingUseCase,
+          GetCurrentHeadingUseCase,
+          GetCurrentHeadingUseCase
+        >
+    with $Provider<GetCurrentHeadingUseCase> {
+  /// 現在方角を取得するユースケースのプロバイダー
+  GetCurrentHeadingUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCurrentHeadingUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCurrentHeadingUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCurrentHeadingUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCurrentHeadingUseCase create(Ref ref) {
+    return getCurrentHeadingUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCurrentHeadingUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCurrentHeadingUseCase>(value),
+    );
+  }
+}
+
+String _$getCurrentHeadingUseCaseHash() =>
+    r'f5ba14d688fb3d5aab3c03a4332f601bc7b721d9';
+
+/// 写真採点ユースケースのプロバイダー
+
+@ProviderFor(judgePhotoUseCase)
+final judgePhotoUseCaseProvider = JudgePhotoUseCaseProvider._();
+
+/// 写真採点ユースケースのプロバイダー
+
+final class JudgePhotoUseCaseProvider
+    extends
+        $FunctionalProvider<
+          JudgePhotoUseCase,
+          JudgePhotoUseCase,
+          JudgePhotoUseCase
+        >
+    with $Provider<JudgePhotoUseCase> {
+  /// 写真採点ユースケースのプロバイダー
+  JudgePhotoUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'judgePhotoUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$judgePhotoUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<JudgePhotoUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  JudgePhotoUseCase create(Ref ref) {
+    return judgePhotoUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(JudgePhotoUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<JudgePhotoUseCase>(value),
+    );
+  }
+}
+
+String _$judgePhotoUseCaseHash() => r'aa8d70af22035361f367bceb76ccf6d8b395723e';
 
 /// 写真を保存するユースケースのプロバイダー
 
