@@ -155,11 +155,11 @@ data "google_project" "current" {
   project_id = local.project_id
 }
 
-# Eventarc が Pub/Sub 経由で ID トークンを発行するために必要
-resource "google_project_iam_member" "pubsub_token_creator" {
-  project = local.project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+# Eventarc が Pub/Sub 経由で budget_notifier SA の ID トークンを発行するために必要
+resource "google_service_account_iam_member" "pubsub_token_creator" {
+  service_account_id = google_service_account.budget_notifier.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
 resource "google_cloudfunctions2_function" "budget_notifier" {
@@ -168,8 +168,9 @@ resource "google_cloudfunctions2_function" "budget_notifier" {
   location = local.location
 
   build_config {
-    runtime     = "python314"
-    entry_point = "notify_discord"
+    runtime           = "python314"
+    entry_point       = "notify_discord"
+    docker_repository = "projects/${local.project_id}/locations/${local.location}/repositories/${local.project_name}"
 
     source {
       storage_source {
@@ -196,6 +197,7 @@ resource "google_cloudfunctions2_function" "budget_notifier" {
     }
   }
 
+  depends_on = [module.snampo_dev]
 }
 
 # Eventarc が Function (Cloud Run) を呼び出すために必要

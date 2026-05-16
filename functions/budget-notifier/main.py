@@ -12,7 +12,6 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 @functions_framework.cloud_event
 def notify_discord(cloud_event):
-    # https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications#notification_format
     try:
         message = cloud_event.data["message"]
         notification_data = json.loads(base64.b64decode(message["data"]).decode("utf-8"))

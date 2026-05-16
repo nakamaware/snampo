@@ -226,7 +226,7 @@ locals {
     {
       id                    = var.project_name
       desc                  = "Cloud Run Source Deployments"
-      package_name_prefixes = ["snampo"]
+      package_name_prefixes = ["snampo", "budget-notifier"]
     },
   ]
 
