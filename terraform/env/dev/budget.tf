@@ -25,6 +25,7 @@ variable "discord_webhook_url" {
 
 data "google_billing_account" "account" {
   billing_account = var.billing_account_id
+  depends_on      = [module.snampo_dev]
 }
 
 resource "google_monitoring_notification_channel" "email" {
