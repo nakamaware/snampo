@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_progress_entity.freezed.dart';
@@ -11,11 +12,23 @@ part 'mission_progress_entity.g.dart';
 abstract class CheckpointProgress with _$CheckpointProgress {
   /// [CheckpointProgress] を作成する
   const factory CheckpointProgress({
-    /// 撮影時の位置（将来用、現状は null）
+    /// 撮影時の位置
     @NullableCoordinateConverter() Coordinate? guessPosition,
 
     /// 保存した写真のファイルパス
     String? userPhotoPath,
+
+    /// 撮影時の方角
+    double? capturedHeading,
+
+    /// 位置誤差 (メートル)
+    double? distanceErrorMeters,
+
+    /// 方角誤差 (度)
+    double? headingErrorDegrees,
+
+    /// 採点ランク
+    PhotoJudgeRank? judgeRank,
 
     /// 達成した日時
     DateTime? achievedAt,
