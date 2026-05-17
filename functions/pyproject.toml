@@ -1,0 +1,32 @@
+[project]
+name = "snampo-functions"
+version = "0.1.0"
+description = "Snampo GCP Cloud Functions"
+requires-python = ">=3.13"
+dependencies = [
+    "functions-framework==3.8.3",
+    "requests==2.33.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+exclude = [".git", "__pycache__"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # Pyflakes (未使用変数・インポート検出)
+    "B",       # flake8-bugbear (バグの可能性を検出)
+    "I",       # isort (インポート順序の整理)
+    "N",       # pep8-naming (命名規則チェック)
+    "UP",      # pyupgrade (モダンPython構文へのアップグレード)
+    "S",       # flake8-bandit (セキュリティチェック)
+    "RUF",     # Ruff独自のルール
+]
+ignore = [
+    # Cloud Functions のエントリポイントは型付けが困難なため除外
+    "ANN",
+    # スクリプト用途のため Docstring は不要
+    "D",
+]

@@ -20,7 +20,7 @@ jobs:
     with:
       source_ref: HEAD^
       target_ref: HEAD
-  
+
   terraform-cd:
     name: Terraform CD
     needs: check-diff
@@ -54,3 +54,7 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        env:
+          TF_VAR_billing_account_id:   ${{ secrets.BILLING_ACCOUNT_ID }}
+          TF_VAR_discord_role_id:      ${{ secrets.DISCORD_ROLE_ID }}
+          TF_VAR_discord_webhook_url:  ${{ secrets.DISCORD_WEBHOOK_URL }}

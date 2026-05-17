@@ -65,6 +65,10 @@ jobs:
         id: plan
         run: terraform plan -no-color -input=false
         continue-on-error: true
+        env:
+          TF_VAR_billing_account_id:   ${{ secrets.BILLING_ACCOUNT_ID }}
+          TF_VAR_discord_role_id:      ${{ secrets.DISCORD_ROLE_ID }}
+          TF_VAR_discord_webhook_url:  ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
