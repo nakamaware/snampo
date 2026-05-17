@@ -15,9 +15,13 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CheckpointProgress {
 
-/// 撮影時の位置（将来用、現状は null）
+/// 撮影時の位置
 @NullableCoordinateConverter() Coordinate? get guessPosition;/// 保存した写真のファイルパス
- String? get userPhotoPath;/// 達成した日時
+ String? get userPhotoPath;/// 撮影時の方角
+ double? get capturedHeading;/// 位置誤差（メートル）
+ double? get distanceErrorMeters;/// 方角誤差（度）
+ double? get headingErrorDegrees;/// 採点ランク
+ PhotoJudgeRank? get judgeRank;/// 達成した日時
  DateTime? get achievedAt;
 /// Create a copy of CheckpointProgress
 /// with the given fields replaced by the non-null parameter values.
@@ -31,16 +35,16 @@ $CheckpointProgressCopyWith<CheckpointProgress> get copyWith => _$CheckpointProg
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckpointProgress&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckpointProgress&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,guessPosition,userPhotoPath,achievedAt);
+int get hashCode => Object.hash(runtimeType,guessPosition,userPhotoPath,capturedHeading,distanceErrorMeters,headingErrorDegrees,judgeRank,achievedAt);
 
 @override
 String toString() {
-  return 'CheckpointProgress(guessPosition: $guessPosition, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt)';
+  return 'CheckpointProgress(guessPosition: $guessPosition, userPhotoPath: $userPhotoPath, capturedHeading: $capturedHeading, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, judgeRank: $judgeRank, achievedAt: $achievedAt)';
 }
 
 
@@ -51,7 +55,7 @@ abstract mixin class $CheckpointProgressCopyWith<$Res>  {
   factory $CheckpointProgressCopyWith(CheckpointProgress value, $Res Function(CheckpointProgress) _then) = _$CheckpointProgressCopyWithImpl;
 @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 
@@ -68,11 +72,15 @@ class _$CheckpointProgressCopyWithImpl<$Res>
 
 /// Create a copy of CheckpointProgress
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? guessPosition = freezed,Object? userPhotoPath = freezed,Object? achievedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? guessPosition = freezed,Object? userPhotoPath = freezed,Object? capturedHeading = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? judgeRank = freezed,Object? achievedAt = freezed,}) {
   return _then(_self.copyWith(
 guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,userPhotoPath: freezed == userPhotoPath ? _self.userPhotoPath : userPhotoPath // ignore: cast_nullable_to_non_nullable
-as String?,achievedAt: freezed == achievedAt ? _self.achievedAt : achievedAt // ignore: cast_nullable_to_non_nullable
+as String?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
+as double?,distanceErrorMeters: freezed == distanceErrorMeters ? _self.distanceErrorMeters : distanceErrorMeters // ignore: cast_nullable_to_non_nullable
+as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
+as double?,judgeRank: freezed == judgeRank ? _self.judgeRank : judgeRank // ignore: cast_nullable_to_non_nullable
+as PhotoJudgeRank?,achievedAt: freezed == achievedAt ? _self.achievedAt : achievedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
@@ -170,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  DateTime? achievedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckpointProgress() when $default != null:
-return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _:
+return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
   return orElse();
 
 }
@@ -191,10 +199,10 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  DateTime? achievedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)  $default,) {final _that = this;
 switch (_that) {
 case _CheckpointProgress():
-return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _:
+return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -211,10 +219,10 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  DateTime? achievedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _CheckpointProgress() when $default != null:
-return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _:
+return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
   return null;
 
 }
@@ -226,13 +234,21 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.achievedAt);case _
 @JsonSerializable()
 
 class _CheckpointProgress implements CheckpointProgress {
-  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.achievedAt});
+  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.capturedHeading, this.distanceErrorMeters, this.headingErrorDegrees, this.judgeRank, this.achievedAt});
   factory _CheckpointProgress.fromJson(Map<String, dynamic> json) => _$CheckpointProgressFromJson(json);
 
-/// 撮影時の位置（将来用、現状は null）
+/// 撮影時の位置
 @override@NullableCoordinateConverter() final  Coordinate? guessPosition;
 /// 保存した写真のファイルパス
 @override final  String? userPhotoPath;
+/// 撮影時の方角
+@override final  double? capturedHeading;
+/// 位置誤差（メートル）
+@override final  double? distanceErrorMeters;
+/// 方角誤差（度）
+@override final  double? headingErrorDegrees;
+/// 採点ランク
+@override final  PhotoJudgeRank? judgeRank;
 /// 達成した日時
 @override final  DateTime? achievedAt;
 
@@ -249,16 +265,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckpointProgress&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckpointProgress&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,guessPosition,userPhotoPath,achievedAt);
+int get hashCode => Object.hash(runtimeType,guessPosition,userPhotoPath,capturedHeading,distanceErrorMeters,headingErrorDegrees,judgeRank,achievedAt);
 
 @override
 String toString() {
-  return 'CheckpointProgress(guessPosition: $guessPosition, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt)';
+  return 'CheckpointProgress(guessPosition: $guessPosition, userPhotoPath: $userPhotoPath, capturedHeading: $capturedHeading, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, judgeRank: $judgeRank, achievedAt: $achievedAt)';
 }
 
 
@@ -269,7 +285,7 @@ abstract mixin class _$CheckpointProgressCopyWith<$Res> implements $CheckpointPr
   factory _$CheckpointProgressCopyWith(_CheckpointProgress value, $Res Function(_CheckpointProgress) _then) = __$CheckpointProgressCopyWithImpl;
 @override @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 
@@ -286,11 +302,15 @@ class __$CheckpointProgressCopyWithImpl<$Res>
 
 /// Create a copy of CheckpointProgress
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? guessPosition = freezed,Object? userPhotoPath = freezed,Object? achievedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? guessPosition = freezed,Object? userPhotoPath = freezed,Object? capturedHeading = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? judgeRank = freezed,Object? achievedAt = freezed,}) {
   return _then(_CheckpointProgress(
 guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,userPhotoPath: freezed == userPhotoPath ? _self.userPhotoPath : userPhotoPath // ignore: cast_nullable_to_non_nullable
-as String?,achievedAt: freezed == achievedAt ? _self.achievedAt : achievedAt // ignore: cast_nullable_to_non_nullable
+as String?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
+as double?,distanceErrorMeters: freezed == distanceErrorMeters ? _self.distanceErrorMeters : distanceErrorMeters // ignore: cast_nullable_to_non_nullable
+as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
+as double?,judgeRank: freezed == judgeRank ? _self.judgeRank : judgeRank // ignore: cast_nullable_to_non_nullable
+as PhotoJudgeRank?,achievedAt: freezed == achievedAt ? _self.achievedAt : achievedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }

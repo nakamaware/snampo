@@ -12,6 +12,13 @@ _CheckpointProgress _$CheckpointProgressFromJson(Map<String, dynamic> json) =>
         json['guessPosition'] as Map<String, dynamic>?,
       ),
       userPhotoPath: json['userPhotoPath'] as String?,
+      capturedHeading: (json['capturedHeading'] as num?)?.toDouble(),
+      distanceErrorMeters: (json['distanceErrorMeters'] as num?)?.toDouble(),
+      headingErrorDegrees: (json['headingErrorDegrees'] as num?)?.toDouble(),
+      judgeRank: $enumDecodeNullable(
+        _$PhotoJudgeRankEnumMap,
+        json['judgeRank'],
+      ),
       achievedAt:
           json['achievedAt'] == null
               ? null
@@ -24,8 +31,19 @@ Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
         instance.guessPosition,
       ),
       'userPhotoPath': instance.userPhotoPath,
+      'capturedHeading': instance.capturedHeading,
+      'distanceErrorMeters': instance.distanceErrorMeters,
+      'headingErrorDegrees': instance.headingErrorDegrees,
+      'judgeRank': _$PhotoJudgeRankEnumMap[instance.judgeRank],
       'achievedAt': instance.achievedAt?.toIso8601String(),
     };
+
+const _$PhotoJudgeRankEnumMap = {
+  PhotoJudgeRank.excellent: 'excellent',
+  PhotoJudgeRank.good: 'good',
+  PhotoJudgeRank.fair: 'fair',
+  PhotoJudgeRank.retry: 'retry',
+};
 
 _MissionProgressEntity _$MissionProgressEntityFromJson(
   Map<String, dynamic> json,
