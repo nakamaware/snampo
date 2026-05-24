@@ -90,7 +90,7 @@ class MidPoint(BaseModel):
     longitude: float
     image_latitude: float | None = None
     image_longitude: float | None = None
-    image_utf8: str | None = None
+    image_base64: str | None = None
     heading: float | None = None
     name: str | None = None
     genre: str | None = None
@@ -123,7 +123,7 @@ class MidPoint(BaseModel):
             longitude=lng,
             image_latitude=image_lat,
             image_longitude=image_lng,
-            image_utf8=image_data_base64,
+            image_base64=image_data_base64,
             heading=street_view_image.heading,
             name=landmark.display_name if landmark is not None else None,
             genre=_extract_genre(point),
