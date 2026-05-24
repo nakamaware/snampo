@@ -79,7 +79,7 @@ class MissionRepository implements IMissionRepository {
       throw Exception('ルート情報が取得できませんでした');
     }
 
-    // imageBase64のnullチェック（ImageCoordinateのimageBase64は必須のため）
+    // imageBase64のnullチェック (ImageCoordinateのimageBase64は必須のため)
     if (response.destination.imageBase64 == null ||
         response.destination.imageBase64!.isEmpty) {
       throw Exception('目的地の画像情報が取得できませんでした');
