@@ -37,7 +37,6 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
-
   });
 
   group('Radius', () {
@@ -56,6 +55,5 @@ void main() {
       expect(() => Radius(meters: 499), throwsA(isA<ArgumentError>()));
       expect(() => Radius(meters: 10001), throwsA(isA<ArgumentError>()));
     });
-
   });
 }
