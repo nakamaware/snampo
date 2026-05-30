@@ -1,15 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// アプリケーションのトップページ
-class HomePage extends ConsumerWidget {
+class HomePage extends HookConsumerWidget {
   /// HomePageのコンストラクタ
-  const HomePage({super.key});
+  const HomePage({super.key, this.errorMessage});
+
+  /// エラー表示に使うメッセージ
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    useEffect(() {
+      final message = errorMessage;
+      if (message == null || message.isEmpty) {
+        return null;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+
+      return null;
+    }, [errorMessage]);
+
     final savedMissionAsync = ref.watch(persistedMissionProvider);
     final hasSavedMission = savedMissionAsync.value != null;
 
