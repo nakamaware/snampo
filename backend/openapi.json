@@ -107,7 +107,7 @@
             ],
             "title": "Image Longitude"
           },
-          "image_utf8": {
+          "image_base64": {
             "anyOf": [
               {
                 "type": "string"
@@ -116,7 +116,7 @@
                 "type": "null"
               }
             ],
-            "title": "Image Utf8"
+            "title": "Image Base64"
           },
           "heading": {
             "anyOf": [

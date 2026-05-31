@@ -79,9 +79,9 @@ class MissionRepository implements IMissionRepository {
       throw Exception('ルート情報が取得できませんでした');
     }
 
-    // imageUtf8のnullチェック（ImageCoordinateのimageBase64は必須のため）
-    if (response.destination.imageUtf8 == null ||
-        response.destination.imageUtf8!.isEmpty) {
+    // imageBase64のnullチェック (ImageCoordinateのimageBase64は必須のため)
+    if (response.destination.imageBase64 == null ||
+        response.destination.imageBase64!.isEmpty) {
       throw Exception('目的地の画像情報が取得できませんでした');
     }
 
@@ -95,7 +95,7 @@ class MissionRepository implements IMissionRepository {
           latitude: response.destination.latitude.toDouble(),
           longitude: response.destination.longitude.toDouble(),
         ),
-        imageBase64: response.destination.imageUtf8!,
+        imageBase64: response.destination.imageBase64!,
         referenceHeading: response.destination.heading?.toDouble(),
         name: response.destination.name,
         genre: response.destination.genre,
@@ -103,8 +103,8 @@ class MissionRepository implements IMissionRepository {
       ),
       waypoints:
           response.midpoints.map((midpoint) {
-            // waypointsのimageUtf8もnullチェック
-            if (midpoint.imageUtf8 == null || midpoint.imageUtf8!.isEmpty) {
+            // waypointsのimageBase64もnullチェック
+            if (midpoint.imageBase64 == null || midpoint.imageBase64!.isEmpty) {
               throw Exception('通過地点の画像情報が取得できませんでした');
             }
             return ImageCoordinate(
@@ -112,7 +112,7 @@ class MissionRepository implements IMissionRepository {
                 latitude: midpoint.latitude.toDouble(),
                 longitude: midpoint.longitude.toDouble(),
               ),
-              imageBase64: midpoint.imageUtf8!,
+              imageBase64: midpoint.imageBase64!,
               referenceHeading: midpoint.heading?.toDouble(),
               name: midpoint.name,
               genre: midpoint.genre,
