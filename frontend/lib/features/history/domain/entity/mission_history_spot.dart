@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_history_spot.freezed.dart';
@@ -14,5 +15,14 @@ abstract class MissionHistorySpot with _$MissionHistorySpot {
     required String streetViewImagePath,
     String? userPhotoPath,
     DateTime? achievedAt,
+    String? name,
+    String? genre,
+    String? googleMapsUrl,
+    double? referenceHeading,
+    PhotoJudgeRank? judgeRank,
+    double? distanceErrorMeters,
+    double? headingErrorDegrees,
+    Coordinate? guessPosition,
+    double? capturedHeading,
   }) = _MissionHistorySpot;
 }

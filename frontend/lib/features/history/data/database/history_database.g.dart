@@ -788,6 +788,112 @@ class $HistorySpotsTable extends HistorySpots
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _genreMeta = const VerificationMeta('genre');
+  @override
+  late final GeneratedColumn<String> genre = GeneratedColumn<String>(
+    'genre',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _googleMapsUrlMeta = const VerificationMeta(
+    'googleMapsUrl',
+  );
+  @override
+  late final GeneratedColumn<String> googleMapsUrl = GeneratedColumn<String>(
+    'google_maps_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceHeadingMeta = const VerificationMeta(
+    'referenceHeading',
+  );
+  @override
+  late final GeneratedColumn<double> referenceHeading = GeneratedColumn<double>(
+    'reference_heading',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _judgeRankMeta = const VerificationMeta(
+    'judgeRank',
+  );
+  @override
+  late final GeneratedColumn<String> judgeRank = GeneratedColumn<String>(
+    'judge_rank',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _distanceErrorMetersMeta =
+      const VerificationMeta('distanceErrorMeters');
+  @override
+  late final GeneratedColumn<double> distanceErrorMeters =
+      GeneratedColumn<double>(
+        'distance_error_meters',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _headingErrorDegreesMeta =
+      const VerificationMeta('headingErrorDegrees');
+  @override
+  late final GeneratedColumn<double> headingErrorDegrees =
+      GeneratedColumn<double>(
+        'heading_error_degrees',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _guessLatMeta = const VerificationMeta(
+    'guessLat',
+  );
+  @override
+  late final GeneratedColumn<double> guessLat = GeneratedColumn<double>(
+    'guess_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _guessLngMeta = const VerificationMeta(
+    'guessLng',
+  );
+  @override
+  late final GeneratedColumn<double> guessLng = GeneratedColumn<double>(
+    'guess_lng',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _capturedHeadingMeta = const VerificationMeta(
+    'capturedHeading',
+  );
+  @override
+  late final GeneratedColumn<double> capturedHeading = GeneratedColumn<double>(
+    'captured_heading',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -799,6 +905,16 @@ class $HistorySpotsTable extends HistorySpots
     streetViewImagePath,
     userPhotoPath,
     achievedAt,
+    name,
+    genre,
+    googleMapsUrl,
+    referenceHeading,
+    judgeRank,
+    distanceErrorMeters,
+    headingErrorDegrees,
+    guessLat,
+    guessLng,
+    capturedHeading,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -884,6 +1000,81 @@ class $HistorySpotsTable extends HistorySpots
         achievedAt.isAcceptableOrUnknown(data['achieved_at']!, _achievedAtMeta),
       );
     }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('genre')) {
+      context.handle(
+        _genreMeta,
+        genre.isAcceptableOrUnknown(data['genre']!, _genreMeta),
+      );
+    }
+    if (data.containsKey('google_maps_url')) {
+      context.handle(
+        _googleMapsUrlMeta,
+        googleMapsUrl.isAcceptableOrUnknown(
+          data['google_maps_url']!,
+          _googleMapsUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_heading')) {
+      context.handle(
+        _referenceHeadingMeta,
+        referenceHeading.isAcceptableOrUnknown(
+          data['reference_heading']!,
+          _referenceHeadingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('judge_rank')) {
+      context.handle(
+        _judgeRankMeta,
+        judgeRank.isAcceptableOrUnknown(data['judge_rank']!, _judgeRankMeta),
+      );
+    }
+    if (data.containsKey('distance_error_meters')) {
+      context.handle(
+        _distanceErrorMetersMeta,
+        distanceErrorMeters.isAcceptableOrUnknown(
+          data['distance_error_meters']!,
+          _distanceErrorMetersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('heading_error_degrees')) {
+      context.handle(
+        _headingErrorDegreesMeta,
+        headingErrorDegrees.isAcceptableOrUnknown(
+          data['heading_error_degrees']!,
+          _headingErrorDegreesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('guess_lat')) {
+      context.handle(
+        _guessLatMeta,
+        guessLat.isAcceptableOrUnknown(data['guess_lat']!, _guessLatMeta),
+      );
+    }
+    if (data.containsKey('guess_lng')) {
+      context.handle(
+        _guessLngMeta,
+        guessLng.isAcceptableOrUnknown(data['guess_lng']!, _guessLngMeta),
+      );
+    }
+    if (data.containsKey('captured_heading')) {
+      context.handle(
+        _capturedHeadingMeta,
+        capturedHeading.isAcceptableOrUnknown(
+          data['captured_heading']!,
+          _capturedHeadingMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -936,6 +1127,46 @@ class $HistorySpotsTable extends HistorySpots
         DriftSqlType.int,
         data['${effectivePrefix}achieved_at'],
       ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      genre: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre'],
+      ),
+      googleMapsUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}google_maps_url'],
+      ),
+      referenceHeading: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}reference_heading'],
+      ),
+      judgeRank: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}judge_rank'],
+      ),
+      distanceErrorMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}distance_error_meters'],
+      ),
+      headingErrorDegrees: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}heading_error_degrees'],
+      ),
+      guessLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}guess_lat'],
+      ),
+      guessLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}guess_lng'],
+      ),
+      capturedHeading: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}captured_heading'],
+      ),
     );
   }
 
@@ -972,6 +1203,36 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
 
   /// チェックポイント達成日時 (Unix ms)
   final int? achievedAt;
+
+  /// スポット名称 (Places API)
+  final String? name;
+
+  /// ジャンル識別子 (Places primaryType)
+  final String? genre;
+
+  /// Google Maps の詳細 URL
+  final String? googleMapsUrl;
+
+  /// 正解画像の基準方角 (度)
+  final double? referenceHeading;
+
+  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  final String? judgeRank;
+
+  /// 位置誤差 (m)
+  final double? distanceErrorMeters;
+
+  /// 方角誤差 (度)
+  final double? headingErrorDegrees;
+
+  /// 撮影時の推定緯度
+  final double? guessLat;
+
+  /// 撮影時の推定経度
+  final double? guessLng;
+
+  /// 撮影時の方角 (度)
+  final double? capturedHeading;
   const HistorySpotRow({
     required this.id,
     required this.historyId,
@@ -982,6 +1243,16 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     required this.streetViewImagePath,
     this.userPhotoPath,
     this.achievedAt,
+    this.name,
+    this.genre,
+    this.googleMapsUrl,
+    this.referenceHeading,
+    this.judgeRank,
+    this.distanceErrorMeters,
+    this.headingErrorDegrees,
+    this.guessLat,
+    this.guessLng,
+    this.capturedHeading,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -998,6 +1269,36 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     }
     if (!nullToAbsent || achievedAt != null) {
       map['achieved_at'] = Variable<int>(achievedAt);
+    }
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    if (!nullToAbsent || genre != null) {
+      map['genre'] = Variable<String>(genre);
+    }
+    if (!nullToAbsent || googleMapsUrl != null) {
+      map['google_maps_url'] = Variable<String>(googleMapsUrl);
+    }
+    if (!nullToAbsent || referenceHeading != null) {
+      map['reference_heading'] = Variable<double>(referenceHeading);
+    }
+    if (!nullToAbsent || judgeRank != null) {
+      map['judge_rank'] = Variable<String>(judgeRank);
+    }
+    if (!nullToAbsent || distanceErrorMeters != null) {
+      map['distance_error_meters'] = Variable<double>(distanceErrorMeters);
+    }
+    if (!nullToAbsent || headingErrorDegrees != null) {
+      map['heading_error_degrees'] = Variable<double>(headingErrorDegrees);
+    }
+    if (!nullToAbsent || guessLat != null) {
+      map['guess_lat'] = Variable<double>(guessLat);
+    }
+    if (!nullToAbsent || guessLng != null) {
+      map['guess_lng'] = Variable<double>(guessLng);
+    }
+    if (!nullToAbsent || capturedHeading != null) {
+      map['captured_heading'] = Variable<double>(capturedHeading);
     }
     return map;
   }
@@ -1019,6 +1320,41 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           achievedAt == null && nullToAbsent
               ? const Value.absent()
               : Value(achievedAt),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      genre:
+          genre == null && nullToAbsent ? const Value.absent() : Value(genre),
+      googleMapsUrl:
+          googleMapsUrl == null && nullToAbsent
+              ? const Value.absent()
+              : Value(googleMapsUrl),
+      referenceHeading:
+          referenceHeading == null && nullToAbsent
+              ? const Value.absent()
+              : Value(referenceHeading),
+      judgeRank:
+          judgeRank == null && nullToAbsent
+              ? const Value.absent()
+              : Value(judgeRank),
+      distanceErrorMeters:
+          distanceErrorMeters == null && nullToAbsent
+              ? const Value.absent()
+              : Value(distanceErrorMeters),
+      headingErrorDegrees:
+          headingErrorDegrees == null && nullToAbsent
+              ? const Value.absent()
+              : Value(headingErrorDegrees),
+      guessLat:
+          guessLat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(guessLat),
+      guessLng:
+          guessLng == null && nullToAbsent
+              ? const Value.absent()
+              : Value(guessLng),
+      capturedHeading:
+          capturedHeading == null && nullToAbsent
+              ? const Value.absent()
+              : Value(capturedHeading),
     );
   }
 
@@ -1039,6 +1375,20 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       ),
       userPhotoPath: serializer.fromJson<String?>(json['userPhotoPath']),
       achievedAt: serializer.fromJson<int?>(json['achievedAt']),
+      name: serializer.fromJson<String?>(json['name']),
+      genre: serializer.fromJson<String?>(json['genre']),
+      googleMapsUrl: serializer.fromJson<String?>(json['googleMapsUrl']),
+      referenceHeading: serializer.fromJson<double?>(json['referenceHeading']),
+      judgeRank: serializer.fromJson<String?>(json['judgeRank']),
+      distanceErrorMeters: serializer.fromJson<double?>(
+        json['distanceErrorMeters'],
+      ),
+      headingErrorDegrees: serializer.fromJson<double?>(
+        json['headingErrorDegrees'],
+      ),
+      guessLat: serializer.fromJson<double?>(json['guessLat']),
+      guessLng: serializer.fromJson<double?>(json['guessLng']),
+      capturedHeading: serializer.fromJson<double?>(json['capturedHeading']),
     );
   }
   @override
@@ -1054,6 +1404,16 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'streetViewImagePath': serializer.toJson<String>(streetViewImagePath),
       'userPhotoPath': serializer.toJson<String?>(userPhotoPath),
       'achievedAt': serializer.toJson<int?>(achievedAt),
+      'name': serializer.toJson<String?>(name),
+      'genre': serializer.toJson<String?>(genre),
+      'googleMapsUrl': serializer.toJson<String?>(googleMapsUrl),
+      'referenceHeading': serializer.toJson<double?>(referenceHeading),
+      'judgeRank': serializer.toJson<String?>(judgeRank),
+      'distanceErrorMeters': serializer.toJson<double?>(distanceErrorMeters),
+      'headingErrorDegrees': serializer.toJson<double?>(headingErrorDegrees),
+      'guessLat': serializer.toJson<double?>(guessLat),
+      'guessLng': serializer.toJson<double?>(guessLng),
+      'capturedHeading': serializer.toJson<double?>(capturedHeading),
     };
   }
 
@@ -1067,6 +1427,16 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     String? streetViewImagePath,
     Value<String?> userPhotoPath = const Value.absent(),
     Value<int?> achievedAt = const Value.absent(),
+    Value<String?> name = const Value.absent(),
+    Value<String?> genre = const Value.absent(),
+    Value<String?> googleMapsUrl = const Value.absent(),
+    Value<double?> referenceHeading = const Value.absent(),
+    Value<String?> judgeRank = const Value.absent(),
+    Value<double?> distanceErrorMeters = const Value.absent(),
+    Value<double?> headingErrorDegrees = const Value.absent(),
+    Value<double?> guessLat = const Value.absent(),
+    Value<double?> guessLng = const Value.absent(),
+    Value<double?> capturedHeading = const Value.absent(),
   }) => HistorySpotRow(
     id: id ?? this.id,
     historyId: historyId ?? this.historyId,
@@ -1078,6 +1448,27 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     userPhotoPath:
         userPhotoPath.present ? userPhotoPath.value : this.userPhotoPath,
     achievedAt: achievedAt.present ? achievedAt.value : this.achievedAt,
+    name: name.present ? name.value : this.name,
+    genre: genre.present ? genre.value : this.genre,
+    googleMapsUrl:
+        googleMapsUrl.present ? googleMapsUrl.value : this.googleMapsUrl,
+    referenceHeading:
+        referenceHeading.present
+            ? referenceHeading.value
+            : this.referenceHeading,
+    judgeRank: judgeRank.present ? judgeRank.value : this.judgeRank,
+    distanceErrorMeters:
+        distanceErrorMeters.present
+            ? distanceErrorMeters.value
+            : this.distanceErrorMeters,
+    headingErrorDegrees:
+        headingErrorDegrees.present
+            ? headingErrorDegrees.value
+            : this.headingErrorDegrees,
+    guessLat: guessLat.present ? guessLat.value : this.guessLat,
+    guessLng: guessLng.present ? guessLng.value : this.guessLng,
+    capturedHeading:
+        capturedHeading.present ? capturedHeading.value : this.capturedHeading,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
     return HistorySpotRow(
@@ -1100,6 +1491,31 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
               : this.userPhotoPath,
       achievedAt:
           data.achievedAt.present ? data.achievedAt.value : this.achievedAt,
+      name: data.name.present ? data.name.value : this.name,
+      genre: data.genre.present ? data.genre.value : this.genre,
+      googleMapsUrl:
+          data.googleMapsUrl.present
+              ? data.googleMapsUrl.value
+              : this.googleMapsUrl,
+      referenceHeading:
+          data.referenceHeading.present
+              ? data.referenceHeading.value
+              : this.referenceHeading,
+      judgeRank: data.judgeRank.present ? data.judgeRank.value : this.judgeRank,
+      distanceErrorMeters:
+          data.distanceErrorMeters.present
+              ? data.distanceErrorMeters.value
+              : this.distanceErrorMeters,
+      headingErrorDegrees:
+          data.headingErrorDegrees.present
+              ? data.headingErrorDegrees.value
+              : this.headingErrorDegrees,
+      guessLat: data.guessLat.present ? data.guessLat.value : this.guessLat,
+      guessLng: data.guessLng.present ? data.guessLng.value : this.guessLng,
+      capturedHeading:
+          data.capturedHeading.present
+              ? data.capturedHeading.value
+              : this.capturedHeading,
     );
   }
 
@@ -1114,7 +1530,17 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('lng: $lng, ')
           ..write('streetViewImagePath: $streetViewImagePath, ')
           ..write('userPhotoPath: $userPhotoPath, ')
-          ..write('achievedAt: $achievedAt')
+          ..write('achievedAt: $achievedAt, ')
+          ..write('name: $name, ')
+          ..write('genre: $genre, ')
+          ..write('googleMapsUrl: $googleMapsUrl, ')
+          ..write('referenceHeading: $referenceHeading, ')
+          ..write('judgeRank: $judgeRank, ')
+          ..write('distanceErrorMeters: $distanceErrorMeters, ')
+          ..write('headingErrorDegrees: $headingErrorDegrees, ')
+          ..write('guessLat: $guessLat, ')
+          ..write('guessLng: $guessLng, ')
+          ..write('capturedHeading: $capturedHeading')
           ..write(')'))
         .toString();
   }
@@ -1130,6 +1556,16 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     streetViewImagePath,
     userPhotoPath,
     achievedAt,
+    name,
+    genre,
+    googleMapsUrl,
+    referenceHeading,
+    judgeRank,
+    distanceErrorMeters,
+    headingErrorDegrees,
+    guessLat,
+    guessLng,
+    capturedHeading,
   );
   @override
   bool operator ==(Object other) =>
@@ -1143,7 +1579,17 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.lng == this.lng &&
           other.streetViewImagePath == this.streetViewImagePath &&
           other.userPhotoPath == this.userPhotoPath &&
-          other.achievedAt == this.achievedAt);
+          other.achievedAt == this.achievedAt &&
+          other.name == this.name &&
+          other.genre == this.genre &&
+          other.googleMapsUrl == this.googleMapsUrl &&
+          other.referenceHeading == this.referenceHeading &&
+          other.judgeRank == this.judgeRank &&
+          other.distanceErrorMeters == this.distanceErrorMeters &&
+          other.headingErrorDegrees == this.headingErrorDegrees &&
+          other.guessLat == this.guessLat &&
+          other.guessLng == this.guessLng &&
+          other.capturedHeading == this.capturedHeading);
 }
 
 class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
@@ -1156,6 +1602,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<String> streetViewImagePath;
   final Value<String?> userPhotoPath;
   final Value<int?> achievedAt;
+  final Value<String?> name;
+  final Value<String?> genre;
+  final Value<String?> googleMapsUrl;
+  final Value<double?> referenceHeading;
+  final Value<String?> judgeRank;
+  final Value<double?> distanceErrorMeters;
+  final Value<double?> headingErrorDegrees;
+  final Value<double?> guessLat;
+  final Value<double?> guessLng;
+  final Value<double?> capturedHeading;
   const HistorySpotsCompanion({
     this.id = const Value.absent(),
     this.historyId = const Value.absent(),
@@ -1166,6 +1622,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.streetViewImagePath = const Value.absent(),
     this.userPhotoPath = const Value.absent(),
     this.achievedAt = const Value.absent(),
+    this.name = const Value.absent(),
+    this.genre = const Value.absent(),
+    this.googleMapsUrl = const Value.absent(),
+    this.referenceHeading = const Value.absent(),
+    this.judgeRank = const Value.absent(),
+    this.distanceErrorMeters = const Value.absent(),
+    this.headingErrorDegrees = const Value.absent(),
+    this.guessLat = const Value.absent(),
+    this.guessLng = const Value.absent(),
+    this.capturedHeading = const Value.absent(),
   });
   HistorySpotsCompanion.insert({
     this.id = const Value.absent(),
@@ -1177,6 +1643,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     required String streetViewImagePath,
     this.userPhotoPath = const Value.absent(),
     this.achievedAt = const Value.absent(),
+    this.name = const Value.absent(),
+    this.genre = const Value.absent(),
+    this.googleMapsUrl = const Value.absent(),
+    this.referenceHeading = const Value.absent(),
+    this.judgeRank = const Value.absent(),
+    this.distanceErrorMeters = const Value.absent(),
+    this.headingErrorDegrees = const Value.absent(),
+    this.guessLat = const Value.absent(),
+    this.guessLng = const Value.absent(),
+    this.capturedHeading = const Value.absent(),
   }) : historyId = Value(historyId),
        sortOrder = Value(sortOrder),
        isDestination = Value(isDestination),
@@ -1193,6 +1669,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<String>? streetViewImagePath,
     Expression<String>? userPhotoPath,
     Expression<int>? achievedAt,
+    Expression<String>? name,
+    Expression<String>? genre,
+    Expression<String>? googleMapsUrl,
+    Expression<double>? referenceHeading,
+    Expression<String>? judgeRank,
+    Expression<double>? distanceErrorMeters,
+    Expression<double>? headingErrorDegrees,
+    Expression<double>? guessLat,
+    Expression<double>? guessLng,
+    Expression<double>? capturedHeading,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1205,6 +1691,18 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
         'street_view_image_path': streetViewImagePath,
       if (userPhotoPath != null) 'user_photo_path': userPhotoPath,
       if (achievedAt != null) 'achieved_at': achievedAt,
+      if (name != null) 'name': name,
+      if (genre != null) 'genre': genre,
+      if (googleMapsUrl != null) 'google_maps_url': googleMapsUrl,
+      if (referenceHeading != null) 'reference_heading': referenceHeading,
+      if (judgeRank != null) 'judge_rank': judgeRank,
+      if (distanceErrorMeters != null)
+        'distance_error_meters': distanceErrorMeters,
+      if (headingErrorDegrees != null)
+        'heading_error_degrees': headingErrorDegrees,
+      if (guessLat != null) 'guess_lat': guessLat,
+      if (guessLng != null) 'guess_lng': guessLng,
+      if (capturedHeading != null) 'captured_heading': capturedHeading,
     });
   }
 
@@ -1218,6 +1716,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<String>? streetViewImagePath,
     Value<String?>? userPhotoPath,
     Value<int?>? achievedAt,
+    Value<String?>? name,
+    Value<String?>? genre,
+    Value<String?>? googleMapsUrl,
+    Value<double?>? referenceHeading,
+    Value<String?>? judgeRank,
+    Value<double?>? distanceErrorMeters,
+    Value<double?>? headingErrorDegrees,
+    Value<double?>? guessLat,
+    Value<double?>? guessLng,
+    Value<double?>? capturedHeading,
   }) {
     return HistorySpotsCompanion(
       id: id ?? this.id,
@@ -1229,6 +1737,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       streetViewImagePath: streetViewImagePath ?? this.streetViewImagePath,
       userPhotoPath: userPhotoPath ?? this.userPhotoPath,
       achievedAt: achievedAt ?? this.achievedAt,
+      name: name ?? this.name,
+      genre: genre ?? this.genre,
+      googleMapsUrl: googleMapsUrl ?? this.googleMapsUrl,
+      referenceHeading: referenceHeading ?? this.referenceHeading,
+      judgeRank: judgeRank ?? this.judgeRank,
+      distanceErrorMeters: distanceErrorMeters ?? this.distanceErrorMeters,
+      headingErrorDegrees: headingErrorDegrees ?? this.headingErrorDegrees,
+      guessLat: guessLat ?? this.guessLat,
+      guessLng: guessLng ?? this.guessLng,
+      capturedHeading: capturedHeading ?? this.capturedHeading,
     );
   }
 
@@ -1264,6 +1782,40 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     if (achievedAt.present) {
       map['achieved_at'] = Variable<int>(achievedAt.value);
     }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (genre.present) {
+      map['genre'] = Variable<String>(genre.value);
+    }
+    if (googleMapsUrl.present) {
+      map['google_maps_url'] = Variable<String>(googleMapsUrl.value);
+    }
+    if (referenceHeading.present) {
+      map['reference_heading'] = Variable<double>(referenceHeading.value);
+    }
+    if (judgeRank.present) {
+      map['judge_rank'] = Variable<String>(judgeRank.value);
+    }
+    if (distanceErrorMeters.present) {
+      map['distance_error_meters'] = Variable<double>(
+        distanceErrorMeters.value,
+      );
+    }
+    if (headingErrorDegrees.present) {
+      map['heading_error_degrees'] = Variable<double>(
+        headingErrorDegrees.value,
+      );
+    }
+    if (guessLat.present) {
+      map['guess_lat'] = Variable<double>(guessLat.value);
+    }
+    if (guessLng.present) {
+      map['guess_lng'] = Variable<double>(guessLng.value);
+    }
+    if (capturedHeading.present) {
+      map['captured_heading'] = Variable<double>(capturedHeading.value);
+    }
     return map;
   }
 
@@ -1278,7 +1830,17 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('lng: $lng, ')
           ..write('streetViewImagePath: $streetViewImagePath, ')
           ..write('userPhotoPath: $userPhotoPath, ')
-          ..write('achievedAt: $achievedAt')
+          ..write('achievedAt: $achievedAt, ')
+          ..write('name: $name, ')
+          ..write('genre: $genre, ')
+          ..write('googleMapsUrl: $googleMapsUrl, ')
+          ..write('referenceHeading: $referenceHeading, ')
+          ..write('judgeRank: $judgeRank, ')
+          ..write('distanceErrorMeters: $distanceErrorMeters, ')
+          ..write('headingErrorDegrees: $headingErrorDegrees, ')
+          ..write('guessLat: $guessLat, ')
+          ..write('guessLng: $guessLng, ')
+          ..write('capturedHeading: $capturedHeading')
           ..write(')'))
         .toString();
   }
@@ -1758,6 +2320,16 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       required String streetViewImagePath,
       Value<String?> userPhotoPath,
       Value<int?> achievedAt,
+      Value<String?> name,
+      Value<String?> genre,
+      Value<String?> googleMapsUrl,
+      Value<double?> referenceHeading,
+      Value<String?> judgeRank,
+      Value<double?> distanceErrorMeters,
+      Value<double?> headingErrorDegrees,
+      Value<double?> guessLat,
+      Value<double?> guessLng,
+      Value<double?> capturedHeading,
     });
 typedef $$HistorySpotsTableUpdateCompanionBuilder =
     HistorySpotsCompanion Function({
@@ -1770,6 +2342,16 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<String> streetViewImagePath,
       Value<String?> userPhotoPath,
       Value<int?> achievedAt,
+      Value<String?> name,
+      Value<String?> genre,
+      Value<String?> googleMapsUrl,
+      Value<double?> referenceHeading,
+      Value<String?> judgeRank,
+      Value<double?> distanceErrorMeters,
+      Value<double?> headingErrorDegrees,
+      Value<double?> guessLat,
+      Value<double?> guessLng,
+      Value<double?> capturedHeading,
     });
 
 final class $$HistorySpotsTableReferences
@@ -1846,6 +2428,56 @@ class $$HistorySpotsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genre => $composableBuilder(
+    column: $table.genre,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get googleMapsUrl => $composableBuilder(
+    column: $table.googleMapsUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get referenceHeading => $composableBuilder(
+    column: $table.referenceHeading,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get judgeRank => $composableBuilder(
+    column: $table.judgeRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get distanceErrorMeters => $composableBuilder(
+    column: $table.distanceErrorMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get headingErrorDegrees => $composableBuilder(
+    column: $table.headingErrorDegrees,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get guessLat => $composableBuilder(
+    column: $table.guessLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get guessLng => $composableBuilder(
+    column: $table.guessLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get capturedHeading => $composableBuilder(
+    column: $table.capturedHeading,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MissionHistoriesTableFilterComposer get historyId {
     final $$MissionHistoriesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -1919,6 +2551,56 @@ class $$HistorySpotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genre => $composableBuilder(
+    column: $table.genre,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get googleMapsUrl => $composableBuilder(
+    column: $table.googleMapsUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get referenceHeading => $composableBuilder(
+    column: $table.referenceHeading,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get judgeRank => $composableBuilder(
+    column: $table.judgeRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get distanceErrorMeters => $composableBuilder(
+    column: $table.distanceErrorMeters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get headingErrorDegrees => $composableBuilder(
+    column: $table.headingErrorDegrees,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get guessLat => $composableBuilder(
+    column: $table.guessLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get guessLng => $composableBuilder(
+    column: $table.guessLng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get capturedHeading => $composableBuilder(
+    column: $table.capturedHeading,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MissionHistoriesTableOrderingComposer get historyId {
     final $$MissionHistoriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -1981,6 +2663,46 @@ class $$HistorySpotsTableAnnotationComposer
 
   GeneratedColumn<int> get achievedAt => $composableBuilder(
     column: $table.achievedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get genre =>
+      $composableBuilder(column: $table.genre, builder: (column) => column);
+
+  GeneratedColumn<String> get googleMapsUrl => $composableBuilder(
+    column: $table.googleMapsUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get referenceHeading => $composableBuilder(
+    column: $table.referenceHeading,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get judgeRank =>
+      $composableBuilder(column: $table.judgeRank, builder: (column) => column);
+
+  GeneratedColumn<double> get distanceErrorMeters => $composableBuilder(
+    column: $table.distanceErrorMeters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get headingErrorDegrees => $composableBuilder(
+    column: $table.headingErrorDegrees,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get guessLat =>
+      $composableBuilder(column: $table.guessLat, builder: (column) => column);
+
+  GeneratedColumn<double> get guessLng =>
+      $composableBuilder(column: $table.guessLng, builder: (column) => column);
+
+  GeneratedColumn<double> get capturedHeading => $composableBuilder(
+    column: $table.capturedHeading,
     builder: (column) => column,
   );
 
@@ -2048,6 +2770,16 @@ class $$HistorySpotsTableTableManager
                 Value<String> streetViewImagePath = const Value.absent(),
                 Value<String?> userPhotoPath = const Value.absent(),
                 Value<int?> achievedAt = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<String?> genre = const Value.absent(),
+                Value<String?> googleMapsUrl = const Value.absent(),
+                Value<double?> referenceHeading = const Value.absent(),
+                Value<String?> judgeRank = const Value.absent(),
+                Value<double?> distanceErrorMeters = const Value.absent(),
+                Value<double?> headingErrorDegrees = const Value.absent(),
+                Value<double?> guessLat = const Value.absent(),
+                Value<double?> guessLng = const Value.absent(),
+                Value<double?> capturedHeading = const Value.absent(),
               }) => HistorySpotsCompanion(
                 id: id,
                 historyId: historyId,
@@ -2058,6 +2790,16 @@ class $$HistorySpotsTableTableManager
                 streetViewImagePath: streetViewImagePath,
                 userPhotoPath: userPhotoPath,
                 achievedAt: achievedAt,
+                name: name,
+                genre: genre,
+                googleMapsUrl: googleMapsUrl,
+                referenceHeading: referenceHeading,
+                judgeRank: judgeRank,
+                distanceErrorMeters: distanceErrorMeters,
+                headingErrorDegrees: headingErrorDegrees,
+                guessLat: guessLat,
+                guessLng: guessLng,
+                capturedHeading: capturedHeading,
               ),
           createCompanionCallback:
               ({
@@ -2070,6 +2812,16 @@ class $$HistorySpotsTableTableManager
                 required String streetViewImagePath,
                 Value<String?> userPhotoPath = const Value.absent(),
                 Value<int?> achievedAt = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<String?> genre = const Value.absent(),
+                Value<String?> googleMapsUrl = const Value.absent(),
+                Value<double?> referenceHeading = const Value.absent(),
+                Value<String?> judgeRank = const Value.absent(),
+                Value<double?> distanceErrorMeters = const Value.absent(),
+                Value<double?> headingErrorDegrees = const Value.absent(),
+                Value<double?> guessLat = const Value.absent(),
+                Value<double?> guessLng = const Value.absent(),
+                Value<double?> capturedHeading = const Value.absent(),
               }) => HistorySpotsCompanion.insert(
                 id: id,
                 historyId: historyId,
@@ -2080,6 +2832,16 @@ class $$HistorySpotsTableTableManager
                 streetViewImagePath: streetViewImagePath,
                 userPhotoPath: userPhotoPath,
                 achievedAt: achievedAt,
+                name: name,
+                genre: genre,
+                googleMapsUrl: googleMapsUrl,
+                referenceHeading: referenceHeading,
+                judgeRank: judgeRank,
+                distanceErrorMeters: distanceErrorMeters,
+                headingErrorDegrees: headingErrorDegrees,
+                guessLat: guessLat,
+                guessLng: guessLng,
+                capturedHeading: capturedHeading,
               ),
           withReferenceMapper:
               (p0) =>

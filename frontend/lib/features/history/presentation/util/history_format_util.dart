@@ -48,3 +48,35 @@ String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
   }
   return null;
 }
+
+/// 位置誤差 (m) を表示用にフォーマットする
+String formatDistanceError(double? meters) {
+  if (meters == null) {
+    return '取得できませんでした';
+  }
+  return '${meters.toStringAsFixed(1)} m';
+}
+
+/// 方角誤差 (度) を表示用にフォーマットする
+String formatHeadingError(double? degrees) {
+  if (degrees == null) {
+    return '取得できませんでした';
+  }
+  final abs = degrees.abs();
+  if (abs < 0.05) {
+    return 'JUST!';
+  }
+  final formatted = abs.toStringAsFixed(1);
+  return degrees > 0 ? '右に$formatted度' : '左に$formatted度';
+}
+
+/// 履歴スポットの見出しを返す
+String formatHistorySpotTitle({
+  required MissionHistorySpot spot,
+  required int index,
+}) {
+  if (spot.isDestination) {
+    return spot.name ?? 'GOAL';
+  }
+  return spot.name ?? 'Spot ${index + 1}';
+}

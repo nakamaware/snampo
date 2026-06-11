@@ -18,8 +18,8 @@ mixin _$CheckpointProgress {
 /// 撮影時の位置
 @NullableCoordinateConverter() Coordinate? get guessPosition;/// 保存した写真のファイルパス
  String? get userPhotoPath;/// 撮影時の方角
- double? get capturedHeading;/// 位置誤差（メートル）
- double? get distanceErrorMeters;/// 方角誤差（度）
+ double? get capturedHeading;/// 位置誤差 (メートル)
+ double? get distanceErrorMeters;/// 方角誤差 (度)
  double? get headingErrorDegrees;/// 採点ランク
  PhotoJudgeRank? get judgeRank;/// 達成した日時
  DateTime? get achievedAt;
@@ -243,9 +243,9 @@ class _CheckpointProgress implements CheckpointProgress {
 @override final  String? userPhotoPath;
 /// 撮影時の方角
 @override final  double? capturedHeading;
-/// 位置誤差（メートル）
+/// 位置誤差 (メートル)
 @override final  double? distanceErrorMeters;
-/// 方角誤差（度）
+/// 方角誤差 (度)
 @override final  double? headingErrorDegrees;
 /// 採点ランク
 @override final  PhotoJudgeRank? judgeRank;

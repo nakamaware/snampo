@@ -52,4 +52,4 @@ final class PhotoStorageProvider
   }
 }
 
-String _$photoStorageHash() => r'9740c5e7802997d76becf6e502af09f63bc88dda';
+String _$photoStorageHash() => r'ca8be66dee0695e30c301d787f5341d10dc24317';

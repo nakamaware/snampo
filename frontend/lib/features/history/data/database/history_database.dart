@@ -75,6 +75,36 @@ class HistorySpots extends Table {
 
   /// チェックポイント達成日時 (Unix ms)
   IntColumn get achievedAt => integer().nullable()();
+
+  /// スポット名称 (Places API)
+  TextColumn get name => text().nullable()();
+
+  /// ジャンル識別子 (Places primaryType)
+  TextColumn get genre => text().nullable()();
+
+  /// Google Maps の詳細 URL
+  TextColumn get googleMapsUrl => text().nullable()();
+
+  /// 正解画像の基準方角 (度)
+  RealColumn get referenceHeading => real().nullable()();
+
+  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  TextColumn get judgeRank => text().nullable()();
+
+  /// 位置誤差 (m)
+  RealColumn get distanceErrorMeters => real().nullable()();
+
+  /// 方角誤差 (度)
+  RealColumn get headingErrorDegrees => real().nullable()();
+
+  /// 撮影時の推定緯度
+  RealColumn get guessLat => real().nullable()();
+
+  /// 撮影時の推定経度
+  RealColumn get guessLng => real().nullable()();
+
+  /// 撮影時の方角 (度)
+  RealColumn get capturedHeading => real().nullable()();
 }
 
 /// 履歴専用 Drift DB (`snampo_history.db`)
@@ -85,7 +115,7 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -118,6 +148,36 @@ UPDATE mission_histories SET destination_lat = (
   AND history_spots.is_destination = 1
 ) WHERE mode = 'destination'
 ''');
+      }
+      if (from < 3) {
+        await customStatement('ALTER TABLE history_spots ADD COLUMN name TEXT');
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN genre TEXT',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN google_maps_url TEXT',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN reference_heading REAL',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN judge_rank TEXT',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN distance_error_meters REAL',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN heading_error_degrees REAL',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN guess_lat REAL',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN guess_lng REAL',
+        );
+        await customStatement(
+          'ALTER TABLE history_spots ADD COLUMN captured_heading REAL',
+        );
       }
     },
     beforeOpen: (OpeningDetails details) async {

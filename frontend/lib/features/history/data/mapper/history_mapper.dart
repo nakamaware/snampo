@@ -5,6 +5,7 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
@@ -14,6 +15,25 @@ const String historyModeRandom = 'random';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeDestination = 'destination';
+
+PhotoJudgeRank? _judgeRankFromDb(String? value) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  for (final rank in PhotoJudgeRank.values) {
+    if (rank.name == value) {
+      return rank;
+    }
+  }
+  return null;
+}
+
+Coordinate? _guessPositionFromDb({required double? lat, required double? lng}) {
+  if (lat == null || lng == null) {
+    return null;
+  }
+  return Coordinate(latitude: lat, longitude: lng);
+}
 
 /// Drift 行とスポット一覧から [MissionSettings] を組み立てる
 MissionSettings missionSettingsFromHistoryRow(
@@ -72,6 +92,18 @@ MissionHistory missionHistoryFromDriftRows(
                   s.achievedAt == null
                       ? null
                       : DateTime.fromMillisecondsSinceEpoch(s.achievedAt!),
+              name: s.name,
+              genre: s.genre,
+              googleMapsUrl: s.googleMapsUrl,
+              referenceHeading: s.referenceHeading,
+              judgeRank: _judgeRankFromDb(s.judgeRank),
+              distanceErrorMeters: s.distanceErrorMeters,
+              headingErrorDegrees: s.headingErrorDegrees,
+              guessPosition: _guessPositionFromDb(
+                lat: s.guessLat,
+                lng: s.guessLng,
+              ),
+              capturedHeading: s.capturedHeading,
             ),
           )
           .toList();
@@ -135,6 +167,7 @@ class HistoryFromMissionMapper {
     required String streetViewImagePath,
     CheckpointProgress? checkpointProgress,
   }) {
+    final cp = checkpointProgress;
     return HistorySpotsCompanion.insert(
       historyId: historyId,
       sortOrder: sortOrder,
@@ -142,8 +175,18 @@ class HistoryFromMissionMapper {
       lat: spot.coordinate.latitude,
       lng: spot.coordinate.longitude,
       streetViewImagePath: streetViewImagePath,
-      userPhotoPath: Value(checkpointProgress?.userPhotoPath),
-      achievedAt: Value(checkpointProgress?.achievedAt?.millisecondsSinceEpoch),
+      userPhotoPath: Value(cp?.userPhotoPath),
+      achievedAt: Value(cp?.achievedAt?.millisecondsSinceEpoch),
+      name: Value(spot.name),
+      genre: Value(spot.genre),
+      googleMapsUrl: Value(spot.googleMapsUrl),
+      referenceHeading: Value(spot.referenceHeading),
+      judgeRank: Value(cp?.judgeRank?.name),
+      distanceErrorMeters: Value(cp?.distanceErrorMeters),
+      headingErrorDegrees: Value(cp?.headingErrorDegrees),
+      guessLat: Value(cp?.guessPosition?.latitude),
+      guessLng: Value(cp?.guessPosition?.longitude),
+      capturedHeading: Value(cp?.capturedHeading),
     );
   }
 }

@@ -10,7 +10,10 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
 import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 1 件の履歴の詳細
 class HistoryDetailPage extends HookConsumerWidget {
@@ -169,6 +172,9 @@ class _SpotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasScore = spot.judgeRank != null;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -177,9 +183,13 @@ class _SpotCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Spot ${index + 1}',
-              style: Theme.of(context).textTheme.titleSmall,
+              formatHistorySpotTitle(spot: spot, index: index),
+              style: theme.textTheme.titleSmall,
             ),
+            if (hasScore) ...[
+              const SizedBox(height: 8),
+              _RankBadge(rank: spot.judgeRank!),
+            ],
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,8 +209,115 @@ class _SpotCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (spot.genre != null ||
+                spot.distanceErrorMeters != null ||
+                spot.headingErrorDegrees != null) ...[
+              const SizedBox(height: 8),
+              if (spot.genre != null)
+                _InfoRow(label: 'ジャンル', value: spot.genre!.japaneseLabel),
+              if (spot.distanceErrorMeters != null)
+                _InfoRow(
+                  label: 'スポットまで残り',
+                  value: formatDistanceError(spot.distanceErrorMeters),
+                ),
+              if (spot.headingErrorDegrees != null)
+                _InfoRow(
+                  label: '向きのずれ',
+                  value: formatHeadingError(spot.headingErrorDegrees),
+                ),
+            ],
+            if (spot.googleMapsUrl != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed:
+                      () => _openGoogleMaps(context, spot.googleMapsUrl!),
+                  child: const Text('Google Mapでスポットを確認する'),
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _openGoogleMaps(BuildContext context, String url) async {
+    final Uri uri;
+    try {
+      uri = Uri.parse(url);
+    } on FormatException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Google Map を開けませんでした')));
+      }
+      return;
+    }
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Google Map を開けませんでした')));
+      }
+    }
+  }
+}
+
+class _RankBadge extends StatelessWidget {
+  const _RankBadge({required this.rank});
+
+  final PhotoJudgeRank rank;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = switch (rank) {
+      PhotoJudgeRank.excellent => Colors.green,
+      PhotoJudgeRank.good => Colors.blue,
+      PhotoJudgeRank.fair => Colors.orange,
+      PhotoJudgeRank.retry => Colors.red,
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        rank.label,
+        style: theme.textTheme.titleSmall?.copyWith(color: color),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
       ),
     );
   }
