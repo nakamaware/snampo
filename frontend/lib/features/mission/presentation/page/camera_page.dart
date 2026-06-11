@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:snampo/features/mission/presentation/dialog/photo_confirm_dialog.dart';
 
 /// カメラページの引数
@@ -35,6 +38,13 @@ class CameraPage extends StatefulWidget {
 class _CameraPageState extends State<CameraPage> {
   CameraController? _controller;
   bool _isInitialized = false;
+  double _minZoomLevel = 1;
+  double _maxZoomLevel = 1;
+  double _currentZoomLevel = 1;
+  double _baseZoomLevel = 1;
+  int _activePointers = 0;
+  bool _isSettingZoomLevel = false;
+  double? _queuedZoomLevel;
 
   @override
   void initState() {
@@ -74,17 +84,34 @@ class _CameraPageState extends State<CameraPage> {
         return;
       }
 
-      _controller = CameraController(
-        cameras.first,
-        ResolutionPreset.medium,
+      final selectedCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      final controller = CameraController(
+        selectedCamera,
+        ResolutionPreset.high,
         enableAudio: false, // 音声録音をしない
       );
 
-      await _controller!.initialize();
+      await controller.initialize();
+      final minZoomLevel = await controller.getMinZoomLevel();
+      final maxZoomLevel = await controller.getMaxZoomLevel();
+      final initialZoomLevel = 1.0.clamp(minZoomLevel, maxZoomLevel).toDouble();
+      await controller.setZoomLevel(initialZoomLevel);
 
-      if (!mounted) return;
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
       setState(() {
+        _controller = controller;
         _isInitialized = true;
+        _minZoomLevel = minZoomLevel;
+        _maxZoomLevel = maxZoomLevel;
+        _currentZoomLevel = initialZoomLevel;
+        _baseZoomLevel = initialZoomLevel;
       });
     } on CameraException catch (e) {
       if (!mounted) return;
@@ -106,6 +133,92 @@ class _CameraPageState extends State<CameraPage> {
     super.dispose();
   }
 
+  void _handleScaleStart(ScaleStartDetails details) {
+    _baseZoomLevel = _currentZoomLevel;
+  }
+
+  Future<void> _handleScaleUpdate(ScaleUpdateDetails details) async {
+    if (_activePointers < 2) {
+      return;
+    }
+
+    final targetZoomLevel = (_baseZoomLevel * details.scale).clamp(
+      _minZoomLevel,
+      _maxZoomLevel,
+    );
+    await _setZoomLevel(targetZoomLevel.toDouble());
+  }
+
+  void _handleScaleEnd(ScaleEndDetails details) {
+    _baseZoomLevel = _currentZoomLevel;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activePointers++;
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    if (_activePointers > 0) {
+      _activePointers--;
+    }
+    if (_activePointers < 2) {
+      _baseZoomLevel = _currentZoomLevel;
+    }
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    if (_activePointers > 0) {
+      _activePointers--;
+    }
+    if (_activePointers < 2) {
+      _baseZoomLevel = _currentZoomLevel;
+    }
+  }
+
+  Future<void> _setZoomLevel(double zoomLevel) async {
+    final controller = _controller;
+    if (controller == null || !_isInitialized) {
+      return;
+    }
+
+    if (_isSettingZoomLevel) {
+      _queuedZoomLevel = zoomLevel;
+      return;
+    }
+
+    _isSettingZoomLevel = true;
+    var nextZoomLevel = zoomLevel;
+
+    while (true) {
+      try {
+        await controller.setZoomLevel(nextZoomLevel);
+      } on CameraException {
+        break;
+      }
+
+      if (!mounted) {
+        _isSettingZoomLevel = false;
+        return;
+      }
+
+      final hasChanged = (_currentZoomLevel - nextZoomLevel).abs() > 0.001;
+      if (hasChanged) {
+        setState(() {
+          _currentZoomLevel = nextZoomLevel;
+        });
+      }
+
+      final queuedZoomLevel = _queuedZoomLevel;
+      _queuedZoomLevel = null;
+      if (queuedZoomLevel == null) {
+        break;
+      }
+      nextZoomLevel = queuedZoomLevel;
+    }
+
+    _isSettingZoomLevel = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized || _controller == null) {
@@ -117,6 +230,8 @@ class _CameraPageState extends State<CameraPage> {
             theme.textTheme.headlineMedium ??
             const TextStyle())
         .copyWith(color: theme.colorScheme.onPrimary);
+    // FAB (56dp) + FAB margin (16dp) + safe area + gap (16dp)
+    final sliderBottom = MediaQuery.paddingOf(context).bottom + 56 + 16 + 16;
 
     return Scaffold(
       appBar: AppBar(
@@ -124,9 +239,100 @@ class _CameraPageState extends State<CameraPage> {
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
-      body: Center(
-        // カメラプレビューを表示
-        child: CameraPreview(_controller!),
+      body: Listener(
+        onPointerDown: _handlePointerDown,
+        onPointerUp: _handlePointerUp,
+        onPointerCancel: _handlePointerCancel,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onScaleStart: _handleScaleStart,
+          onScaleUpdate: _handleScaleUpdate,
+          onScaleEnd: _handleScaleEnd,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: Colors.black),
+              // カメラプレビューを 16:9 に制限して表示
+              Center(
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ClipRect(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: 1,
+                        height: _controller!.value.aspectRatio,
+                        child: CameraPreview(_controller!),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      '${_currentZoomLevel.toStringAsFixed(1)}x',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: sliderBottom,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.zoom_out,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _currentZoomLevel.clamp(
+                            _minZoomLevel,
+                            _maxZoomLevel,
+                          ),
+                          min: _minZoomLevel,
+                          max: _maxZoomLevel,
+                          onChanged: (value) {
+                            setState(() => _currentZoomLevel = value);
+                            _setZoomLevel(value);
+                          },
+                          activeColor: Colors.white,
+                          inactiveColor: Colors.white38,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.zoom_in,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -144,8 +350,53 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 
+  Future<XFile> _cropTo16x9(XFile original) async {
+    final bytes = await original.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) return original;
+
+    final srcW = decoded.width;
+    final srcH = decoded.height;
+    const targetRatio = 16.0 / 9.0;
+    final srcRatio = srcW / srcH;
+
+    final int cropW;
+    final int cropH;
+    final int cropX;
+    final int cropY;
+
+    if (srcRatio > targetRatio) {
+      cropH = srcH;
+      cropW = (srcH * targetRatio).round().clamp(1, srcW);
+      cropX = (srcW - cropW) ~/ 2;
+      cropY = 0;
+    } else {
+      cropW = srcW;
+      cropH = (srcW / targetRatio).round().clamp(1, srcH);
+      cropX = 0;
+      cropY = (srcH - cropH) ~/ 2;
+    }
+
+    final cropped = img.copyCrop(
+      decoded,
+      x: cropX,
+      y: cropY,
+      width: cropW,
+      height: cropH,
+    );
+    final jpegBytes = img.encodeJpg(cropped, quality: 90);
+
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/snap_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await File(path).writeAsBytes(jpegBytes);
+
+    return XFile(path);
+  }
+
   Future<void> _handleCapture(BuildContext context) async {
-    final file = await _controller!.takePicture();
+    final rawFile = await _controller!.takePicture();
+    final file = await _cropTo16x9(rawFile);
     if (!context.mounted) {
       return;
     }

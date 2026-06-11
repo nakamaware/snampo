@@ -36,8 +36,8 @@ void main() {
       // TODO
     });
 
-    // String imageUtf8
-    test('to test the property `imageUtf8`', () async {
+    // String imageBase64
+    test('to test the property `imageBase64`', () async {
       // TODO
     });
 

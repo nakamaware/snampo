@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **longitude** | **num** |  | 
 **imageLatitude** | **num** |  | [optional] 
 **imageLongitude** | **num** |  | [optional] 
-**imageUtf8** | **String** |  | [optional] 
+**imageBase64** | **String** |  | [optional] 
 **heading** | **num** |  | [optional] 
 **name** | **String** |  | [optional] 
 **genre** | **String** |  | [optional] 
