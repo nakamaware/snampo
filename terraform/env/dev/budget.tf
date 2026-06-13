@@ -23,9 +23,19 @@ variable "discord_webhook_url" {
 # 予算アラート
 # ------------------------------
 
+# 初回適用時のみ Billing Account Admin 権限による手動付与が必要
+resource "google_billing_account_iam_member" "terraform_costs_manager" {
+  billing_account_id = var.billing_account_id
+  role               = "roles/billing.costsManager"
+  member             = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+
+  depends_on = [module.snampo_dev]
+}
+
 data "google_billing_account" "account" {
   billing_account = var.billing_account_id
-  depends_on      = [module.snampo_dev]
+  lookup_projects = false
+  depends_on      = [google_billing_account_iam_member.terraform_costs_manager]
 }
 
 resource "google_monitoring_notification_channel" "email" {
