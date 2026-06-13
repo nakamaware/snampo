@@ -1,5 +1,7 @@
 import 'package:snampo/features/mission/application/interface/photo_storage.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 写真を永続保存するユースケース
 class SavePhotoUseCase {
@@ -15,13 +17,23 @@ class SavePhotoUseCase {
   Future<CheckpointProgress> call({
     required String tempPhotoPath,
     required int checkpointIndex,
+    required Coordinate? guessPosition,
+    required double? capturedHeading,
+    required PhotoJudgeRank judgeRank,
+    required double distanceErrorMeters,
+    required double? headingErrorDegrees,
   }) async {
     final savedPath = await _photoStorage.savePhoto(
       tempPhotoPath,
       checkpointIndex,
     );
     return CheckpointProgress(
+      guessPosition: guessPosition,
       userPhotoPath: savedPath,
+      capturedHeading: capturedHeading,
+      distanceErrorMeters: distanceErrorMeters,
+      headingErrorDegrees: headingErrorDegrees,
+      judgeRank: judgeRank,
       achievedAt: DateTime.now(),
     );
   }

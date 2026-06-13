@@ -18,6 +18,10 @@ class MidPoint {
     this.imageLatitude,
     this.imageLongitude,
     this.imageUtf8,
+    this.heading,
+    this.name,
+    this.genre,
+    this.googleMapsUrl,
   });
 
   num latitude;
@@ -30,13 +34,25 @@ class MidPoint {
 
   String? imageUtf8;
 
+  num? heading;
+
+  String? name;
+
+  String? genre;
+
+  String? googleMapsUrl;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is MidPoint &&
     other.latitude == latitude &&
     other.longitude == longitude &&
     other.imageLatitude == imageLatitude &&
     other.imageLongitude == imageLongitude &&
-    other.imageUtf8 == imageUtf8;
+    other.imageUtf8 == imageUtf8 &&
+    other.heading == heading &&
+    other.name == name &&
+    other.genre == genre &&
+    other.googleMapsUrl == googleMapsUrl;
 
   @override
   int get hashCode =>
@@ -45,10 +61,14 @@ class MidPoint {
     (longitude.hashCode) +
     (imageLatitude == null ? 0 : imageLatitude!.hashCode) +
     (imageLongitude == null ? 0 : imageLongitude!.hashCode) +
-    (imageUtf8 == null ? 0 : imageUtf8!.hashCode);
+    (imageUtf8 == null ? 0 : imageUtf8!.hashCode) +
+    (heading == null ? 0 : heading!.hashCode) +
+    (name == null ? 0 : name!.hashCode) +
+    (genre == null ? 0 : genre!.hashCode) +
+    (googleMapsUrl == null ? 0 : googleMapsUrl!.hashCode);
 
   @override
-  String toString() => 'MidPoint[latitude=$latitude, longitude=$longitude, imageLatitude=$imageLatitude, imageLongitude=$imageLongitude, imageUtf8=$imageUtf8]';
+  String toString() => 'MidPoint[latitude=$latitude, longitude=$longitude, imageLatitude=$imageLatitude, imageLongitude=$imageLongitude, imageUtf8=$imageUtf8, heading=$heading, name=$name, genre=$genre, googleMapsUrl=$googleMapsUrl]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -68,6 +88,26 @@ class MidPoint {
       json[r'image_utf8'] = this.imageUtf8;
     } else {
       json[r'image_utf8'] = null;
+    }
+    if (this.heading != null) {
+      json[r'heading'] = this.heading;
+    } else {
+      json[r'heading'] = null;
+    }
+    if (this.name != null) {
+      json[r'name'] = this.name;
+    } else {
+      json[r'name'] = null;
+    }
+    if (this.genre != null) {
+      json[r'genre'] = this.genre;
+    } else {
+      json[r'genre'] = null;
+    }
+    if (this.googleMapsUrl != null) {
+      json[r'google_maps_url'] = this.googleMapsUrl;
+    } else {
+      json[r'google_maps_url'] = null;
     }
     return json;
   }
@@ -100,6 +140,12 @@ class MidPoint {
             ? null
             : num.parse('${json[r'image_longitude']}'),
         imageUtf8: mapValueOfType<String>(json, r'image_utf8'),
+        heading: json[r'heading'] == null
+            ? null
+            : num.parse('${json[r'heading']}'),
+        name: mapValueOfType<String>(json, r'name'),
+        genre: mapValueOfType<String>(json, r'genre'),
+        googleMapsUrl: mapValueOfType<String>(json, r'google_maps_url'),
       );
     }
     return null;

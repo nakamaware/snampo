@@ -41,6 +41,26 @@ void main() {
       // TODO
     });
 
+    // num heading
+    test('to test the property `heading`', () async {
+      // TODO
+    });
+
+    // String name
+    test('to test the property `name`', () async {
+      // TODO
+    });
+
+    // String genre
+    test('to test the property `genre`', () async {
+      // TODO
+    });
+
+    // String googleMapsUrl
+    test('to test the property `googleMapsUrl`', () async {
+      // TODO
+    });
+
 
   });
 

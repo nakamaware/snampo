@@ -12,10 +12,18 @@ _ImageCoordinate _$ImageCoordinateFromJson(Map<String, dynamic> json) =>
         json['coordinate'] as Map<String, dynamic>,
       ),
       imageBase64: json['imageBase64'] as String,
+      referenceHeading: (json['referenceHeading'] as num?)?.toDouble(),
+      name: json['name'] as String?,
+      genre: json['genre'] as String?,
+      googleMapsUrl: json['googleMapsUrl'] as String?,
     );
 
 Map<String, dynamic> _$ImageCoordinateToJson(_ImageCoordinate instance) =>
     <String, dynamic>{
       'coordinate': const CoordinateConverter().toJson(instance.coordinate),
       'imageBase64': instance.imageBase64,
+      'referenceHeading': instance.referenceHeading,
+      'name': instance.name,
+      'genre': instance.genre,
+      'googleMapsUrl': instance.googleMapsUrl,
     };

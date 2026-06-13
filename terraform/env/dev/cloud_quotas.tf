@@ -14,7 +14,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_directio
   parent   = "projects/${local.project_id}"
 
   quota_config {
-    preferred_value = 1000
+    preferred_value = 320
   }
 
   ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
@@ -28,7 +28,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_new_plac
   parent   = "projects/${local.project_id}"
 
   quota_config {
-    preferred_value = 1000
+    preferred_value = 160
   }
 
   ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
@@ -42,13 +42,13 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_roads_ap
   parent   = "projects/${local.project_id}"
 
   quota_config {
-    preferred_value = 1000
+    preferred_value = 160
   }
 
   ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
-resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_be" {
+resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_metadata_api" {
   depends_on = [module.snampo_dev]
 
   service  = "street-view-image-backend.googleapis.com"
@@ -62,7 +62,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_v
   ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"
 }
 
-resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_api_from_app" {
+resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_view_static_api" {
   depends_on = [module.snampo_dev]
 
   service  = "street-view-image-backend.googleapis.com"
@@ -70,7 +70,7 @@ resource "google_cloud_quotas_quota_preference" "overall_rate_limit_for_street_v
   parent   = "projects/${local.project_id}"
 
   quota_config {
-    preferred_value = 1000
+    preferred_value = 320
   }
 
   ignore_safety_checks = "QUOTA_DECREASE_PERCENTAGE_TOO_HIGH"

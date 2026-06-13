@@ -1,10 +1,32 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/mission/presentation/dialog/photo_confirm_dialog.dart';
+
+/// カメラページの引数
+class CameraPageArgs {
+  /// CameraPageArgsのコンストラクタ
+  const CameraPageArgs({
+    required this.referenceImageBase64,
+    required this.onPhotoAccepted,
+  });
+
+  /// 正解画像の base64 文字列
+  final String referenceImageBase64;
+
+  /// 画像確定後の処理
+  final Future<bool> Function(XFile file) onPhotoAccepted;
+}
 
 /// カメラページウィジェット。
 class CameraPage extends StatefulWidget {
   /// [CameraPage] ウィジェットを作成します。
-  const CameraPage({super.key});
+  const CameraPage({required this.args, super.key});
+
+  /// カメラページの引数
+  final CameraPageArgs args;
 
   @override
   State<CameraPage> createState() => _CameraPageState();
@@ -109,9 +131,7 @@ class _CameraPageState extends State<CameraPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            final file = await _controller!.takePicture();
-            if (!context.mounted) return;
-            Navigator.pop(context, file); // 撮影した画像を返す
+            await _handleCapture(context);
           } catch (e) {
             if (!context.mounted) return;
             await _showErrorDialog('写真の撮影に失敗しました。');
@@ -122,5 +142,91 @@ class _CameraPageState extends State<CameraPage> {
       // 撮影ボタンの位置を中央に設定
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+  }
+
+  Future<void> _handleCapture(BuildContext context) async {
+    final file = await _controller!.takePicture();
+    if (!context.mounted) {
+      return;
+    }
+
+    await _controller!.pausePreview();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => PhotoConfirmDialog(
+            args: PhotoConfirmDialogArgs(
+              referenceImageBase64: widget.args.referenceImageBase64,
+              capturedPhotoPath: file.path,
+            ),
+          ),
+    );
+    if (confirmed != true || !context.mounted) {
+      await _controller!.resumePreview();
+      return;
+    }
+
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    var loadingVisible = false;
+    var shouldResumePreview = true;
+
+    try {
+      loadingVisible = true;
+      unawaited(
+        showGeneralDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: Colors.black,
+          pageBuilder:
+              (_, __, ___) => PopScope(
+                canPop: false,
+                child: Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        LoadingAnimationWidget.staggeredDotsWave(
+                          color: Colors.blue,
+                          size: 100,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          '採点中...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+        ),
+      );
+
+      final isAccepted = await widget.args.onPhotoAccepted(file);
+
+      if (rootNavigator.mounted) {
+        rootNavigator.pop();
+        loadingVisible = false;
+      }
+
+      if (!isAccepted) {
+        return;
+      }
+
+      shouldResumePreview = false;
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (loadingVisible && rootNavigator.mounted) {
+        rootNavigator.pop();
+      }
+      if (shouldResumePreview && mounted) {
+        await _controller!.resumePreview();
+      }
+    }
   }
 }
