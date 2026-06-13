@@ -220,7 +220,7 @@ $Res call({
 });
 
 
-$RadiusCopyWith<$Res> get radius;
+
 
 }
 /// @nodoc
@@ -240,16 +240,7 @@ as Radius,
   ));
 }
 
-/// Create a copy of MissionStoreParams
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-  
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
-    return _then(_self.copyWith(radius: value));
-  });
-}
+
 }
 
 /// @nodoc
@@ -295,7 +286,7 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get destination;
+
 
 }
 /// @nodoc
@@ -315,16 +306,7 @@ as Coordinate,
   ));
 }
 
-/// Create a copy of MissionStoreParams
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get destination {
-  
-  return $CoordinateCopyWith<$Res>(_self.destination, (value) {
-    return _then(_self.copyWith(destination: value));
-  });
-}
+
 }
 
 /// @nodoc

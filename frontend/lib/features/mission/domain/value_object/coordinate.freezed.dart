@@ -15,11 +15,6 @@ T _$identity<T>(T value) => value;
 mixin _$Coordinate {
 
  double get latitude; double get longitude;
-/// Create a copy of Coordinate
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<Coordinate> get copyWith => _$CoordinateCopyWithImpl<Coordinate>(this as Coordinate, _$identity);
 
 
 
@@ -40,37 +35,7 @@ String toString() {
 
 }
 
-/// @nodoc
-abstract mixin class $CoordinateCopyWith<$Res>  {
-  factory $CoordinateCopyWith(Coordinate value, $Res Function(Coordinate) _then) = _$CoordinateCopyWithImpl;
-@useResult
-$Res call({
- double latitude, double longitude
-});
 
-
-
-
-}
-/// @nodoc
-class _$CoordinateCopyWithImpl<$Res>
-    implements $CoordinateCopyWith<$Res> {
-  _$CoordinateCopyWithImpl(this._self, this._then);
-
-  final Coordinate _self;
-  final $Res Function(Coordinate) _then;
-
-/// Create a copy of Coordinate
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? latitude = null,Object? longitude = null,}) {
-  return _then(_self.copyWith(
-latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
-as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
-as double,
-  ));
-}
-
-}
 
 
 /// Adds pattern-matching-related methods to [Coordinate].
@@ -213,11 +178,6 @@ class _Coordinate extends Coordinate {
 @override final  double latitude;
 @override final  double longitude;
 
-/// Create a copy of Coordinate
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$CoordinateCopyWith<_Coordinate> get copyWith => __$CoordinateCopyWithImpl<_Coordinate>(this, _$identity);
 
 
 
@@ -238,37 +198,7 @@ String toString() {
 
 }
 
-/// @nodoc
-abstract mixin class _$CoordinateCopyWith<$Res> implements $CoordinateCopyWith<$Res> {
-  factory _$CoordinateCopyWith(_Coordinate value, $Res Function(_Coordinate) _then) = __$CoordinateCopyWithImpl;
-@override @useResult
-$Res call({
- double latitude, double longitude
-});
 
 
-
-
-}
-/// @nodoc
-class __$CoordinateCopyWithImpl<$Res>
-    implements _$CoordinateCopyWith<$Res> {
-  __$CoordinateCopyWithImpl(this._self, this._then);
-
-  final _Coordinate _self;
-  final $Res Function(_Coordinate) _then;
-
-/// Create a copy of Coordinate
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? latitude = null,Object? longitude = null,}) {
-  return _then(_Coordinate(
-latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
-as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
-as double,
-  ));
-}
-
-
-}
 
 // dart format on
