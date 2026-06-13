@@ -26,7 +26,7 @@ class CoordinateConverter
 }
 
 /// 座標値オブジェクト
-@freezed
+@Freezed(copyWith: false)
 abstract class Coordinate with _$Coordinate {
   /// 座標を作成する
   ///

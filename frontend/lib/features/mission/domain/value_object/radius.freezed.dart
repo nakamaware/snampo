@@ -15,11 +15,6 @@ T _$identity<T>(T value) => value;
 mixin _$Radius {
 
  int get meters;
-/// Create a copy of Radius
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RadiusCopyWith<Radius> get copyWith => _$RadiusCopyWithImpl<Radius>(this as Radius, _$identity);
 
 
 
@@ -40,36 +35,7 @@ String toString() {
 
 }
 
-/// @nodoc
-abstract mixin class $RadiusCopyWith<$Res>  {
-  factory $RadiusCopyWith(Radius value, $Res Function(Radius) _then) = _$RadiusCopyWithImpl;
-@useResult
-$Res call({
- int meters
-});
 
-
-
-
-}
-/// @nodoc
-class _$RadiusCopyWithImpl<$Res>
-    implements $RadiusCopyWith<$Res> {
-  _$RadiusCopyWithImpl(this._self, this._then);
-
-  final Radius _self;
-  final $Res Function(Radius) _then;
-
-/// Create a copy of Radius
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? meters = null,}) {
-  return _then(_self.copyWith(
-meters: null == meters ? _self.meters : meters // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-}
 
 
 /// Adds pattern-matching-related methods to [Radius].
@@ -211,11 +177,6 @@ class _Radius extends Radius {
 
 @override final  int meters;
 
-/// Create a copy of Radius
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$RadiusCopyWith<_Radius> get copyWith => __$RadiusCopyWithImpl<_Radius>(this, _$identity);
 
 
 
@@ -236,36 +197,7 @@ String toString() {
 
 }
 
-/// @nodoc
-abstract mixin class _$RadiusCopyWith<$Res> implements $RadiusCopyWith<$Res> {
-  factory _$RadiusCopyWith(_Radius value, $Res Function(_Radius) _then) = __$RadiusCopyWithImpl;
-@override @useResult
-$Res call({
- int meters
-});
 
 
-
-
-}
-/// @nodoc
-class __$RadiusCopyWithImpl<$Res>
-    implements _$RadiusCopyWith<$Res> {
-  __$RadiusCopyWithImpl(this._self, this._then);
-
-  final _Radius _self;
-  final $Res Function(_Radius) _then;
-
-/// Create a copy of Radius
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? meters = null,}) {
-  return _then(_Radius(
-meters: null == meters ? _self.meters : meters // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-
-}
 
 // dart format on
