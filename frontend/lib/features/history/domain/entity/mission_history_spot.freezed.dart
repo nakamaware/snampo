@@ -49,8 +49,6 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get coordinate;$CoordinateCopyWith<$Res>? get guessPosition;
-
 }
 /// @nodoc
 class _$MissionHistorySpotCopyWithImpl<$Res>
@@ -82,28 +80,7 @@ as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeadi
 as double?,
   ));
 }
-/// Create a copy of MissionHistorySpot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get coordinate {
 
-  return $CoordinateCopyWith<$Res>(_self.coordinate, (value) {
-    return _then(_self.copyWith(coordinate: value));
-  });
-}/// Create a copy of MissionHistorySpot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res>? get guessPosition {
-    if (_self.guessPosition == null) {
-    return null;
-  }
-
-  return $CoordinateCopyWith<$Res>(_self.guessPosition!, (value) {
-    return _then(_self.copyWith(guessPosition: value));
-  });
-}
 }
 
 
@@ -294,8 +271,6 @@ $Res call({
 });
 
 
-@override $CoordinateCopyWith<$Res> get coordinate;@override $CoordinateCopyWith<$Res>? get guessPosition;
-
 }
 /// @nodoc
 class __$MissionHistorySpotCopyWithImpl<$Res>
@@ -328,28 +303,6 @@ as double?,
   ));
 }
 
-/// Create a copy of MissionHistorySpot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get coordinate {
-
-  return $CoordinateCopyWith<$Res>(_self.coordinate, (value) {
-    return _then(_self.copyWith(coordinate: value));
-  });
-}/// Create a copy of MissionHistorySpot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res>? get guessPosition {
-    if (_self.guessPosition == null) {
-    return null;
-  }
-
-  return $CoordinateCopyWith<$Res>(_self.guessPosition!, (value) {
-    return _then(_self.copyWith(guessPosition: value));
-  });
-}
 }
 
 // dart format on

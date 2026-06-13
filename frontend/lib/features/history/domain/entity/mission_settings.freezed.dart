@@ -214,8 +214,6 @@ $Res call({
 });
 
 
-$RadiusCopyWith<$Res> get radius;
-
 }
 /// @nodoc
 class _$MissionSettingsRandomCopyWithImpl<$Res>
@@ -234,16 +232,6 @@ as Radius,
   ));
 }
 
-/// Create a copy of MissionSettings
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res> get radius {
-
-  return $RadiusCopyWith<$Res>(_self.radius, (value) {
-    return _then(_self.copyWith(radius: value));
-  });
-}
 }
 
 /// @nodoc
@@ -289,8 +277,6 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get destination;
-
 }
 /// @nodoc
 class _$MissionSettingsDestinationCopyWithImpl<$Res>
@@ -309,16 +295,6 @@ as Coordinate,
   ));
 }
 
-/// Create a copy of MissionSettings
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get destination {
-
-  return $CoordinateCopyWith<$Res>(_self.destination, (value) {
-    return _then(_self.copyWith(destination: value));
-  });
-}
 }
 
 // dart format on

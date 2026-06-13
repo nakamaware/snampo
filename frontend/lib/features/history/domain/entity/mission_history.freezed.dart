@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get departure;$MissionSettingsCopyWith<$Res> get settings;
+$MissionSettingsCopyWith<$Res> get settings;
 
 }
 /// @nodoc
@@ -75,15 +75,6 @@ as MissionSettings,
   ));
 }
 /// Create a copy of MissionHistory
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get departure {
-
-  return $CoordinateCopyWith<$Res>(_self.departure, (value) {
-    return _then(_self.copyWith(departure: value));
-  });
-}/// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -281,7 +272,7 @@ $Res call({
 });
 
 
-@override $CoordinateCopyWith<$Res> get departure;@override $MissionSettingsCopyWith<$Res> get settings;
+@override $MissionSettingsCopyWith<$Res> get settings;
 
 }
 /// @nodoc
@@ -308,15 +299,6 @@ as MissionSettings,
 }
 
 /// Create a copy of MissionHistory
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get departure {
-
-  return $CoordinateCopyWith<$Res>(_self.departure, (value) {
-    return _then(_self.copyWith(departure: value));
-  });
-}/// Create a copy of MissionHistory
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')

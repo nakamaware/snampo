@@ -59,7 +59,7 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res>? get guessPosition;
+
 
 }
 /// @nodoc
@@ -84,19 +84,7 @@ as PhotoJudgeRank?,achievedAt: freezed == achievedAt ? _self.achievedAt : achiev
 as DateTime?,
   ));
 }
-/// Create a copy of CheckpointProgress
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res>? get guessPosition {
-    if (_self.guessPosition == null) {
-    return null;
-  }
 
-  return $CoordinateCopyWith<$Res>(_self.guessPosition!, (value) {
-    return _then(_self.copyWith(guessPosition: value));
-  });
-}
 }
 
 
@@ -289,7 +277,7 @@ $Res call({
 });
 
 
-@override $CoordinateCopyWith<$Res>? get guessPosition;
+
 
 }
 /// @nodoc
@@ -315,19 +303,7 @@ as DateTime?,
   ));
 }
 
-/// Create a copy of CheckpointProgress
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res>? get guessPosition {
-    if (_self.guessPosition == null) {
-    return null;
-  }
 
-  return $CoordinateCopyWith<$Res>(_self.guessPosition!, (value) {
-    return _then(_self.copyWith(guessPosition: value));
-  });
-}
 }
 
 

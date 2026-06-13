@@ -58,7 +58,7 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get coordinate;
+
 
 }
 /// @nodoc
@@ -82,16 +82,7 @@ as String?,googleMapsUrl: freezed == googleMapsUrl ? _self.googleMapsUrl : googl
 as String?,
   ));
 }
-/// Create a copy of ImageCoordinate
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get coordinate {
 
-  return $CoordinateCopyWith<$Res>(_self.coordinate, (value) {
-    return _then(_self.copyWith(coordinate: value));
-  });
-}
 }
 
 
@@ -282,7 +273,7 @@ $Res call({
 });
 
 
-@override $CoordinateCopyWith<$Res> get coordinate;
+
 
 }
 /// @nodoc
@@ -307,16 +298,7 @@ as String?,
   ));
 }
 
-/// Create a copy of ImageCoordinate
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get coordinate {
 
-  return $CoordinateCopyWith<$Res>(_self.coordinate, (value) {
-    return _then(_self.copyWith(coordinate: value));
-  });
-}
 }
 
 // dart format on
