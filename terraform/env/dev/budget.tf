@@ -23,9 +23,14 @@ variable "discord_webhook_url" {
 # 予算アラート
 # ------------------------------
 
+import {
+  id = "${local.project_id} roles/billing.costsManager serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+  to = google_project_iam_member.terraform_costs_manager
+}
+
 # 初回適用時のみ Billing Account Admin 権限による手動付与が必要
-resource "google_billing_account_iam_member" "terraform_costs_manager" {
-  billing_account_id = var.billing_account_id
+resource "google_project_iam_member" "terraform_costs_manager" {
+  project            = local.project_id
   role               = "roles/billing.costsManager"
   member             = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
 
