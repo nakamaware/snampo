@@ -1,11 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/application/usecase/add_mission_history_use_case.dart';
 import 'package:snampo/features/history/application/usecase/get_mission_histories_use_case.dart';
 import 'package:snampo/features/history/application/usecase/get_mission_history_use_case.dart';
 import 'package:snampo/features/history/application/usecase/remove_mission_history_use_case.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
+import 'package:snampo/features/history/data/history_photo_storage.dart';
 import 'package:snampo/features/history/data/repository/history_repository.dart';
 import 'package:snampo/features/history/data/streetview_storage.dart';
 
@@ -25,13 +25,19 @@ StreetViewStorage streetViewStorage(Ref ref) {
   return StreetViewStorage();
 }
 
+/// 履歴用ユーザー写真のファイル保存
+@riverpod
+HistoryPhotoStorage historyPhotoStorage(Ref ref) {
+  return HistoryPhotoStorage();
+}
+
 /// 履歴リポジトリ
 @riverpod
 IHistoryRepository historyRepository(Ref ref) {
   return HistoryRepository(
     ref.watch(historyDatabaseProvider),
     ref.watch(streetViewStorageProvider),
-    ref.watch(photoStorageProvider),
+    ref.watch(historyPhotoStorageProvider),
   );
 }
 

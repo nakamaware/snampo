@@ -107,6 +107,59 @@ final class StreetViewStorageProvider
 
 String _$streetViewStorageHash() => r'10dc40bf16f8d2699d0504a51d66998da2d4ee0b';
 
+/// 履歴用ユーザー写真のファイル保存
+
+@ProviderFor(historyPhotoStorage)
+final historyPhotoStorageProvider = HistoryPhotoStorageProvider._();
+
+/// 履歴用ユーザー写真のファイル保存
+
+final class HistoryPhotoStorageProvider
+    extends
+        $FunctionalProvider<
+          HistoryPhotoStorage,
+          HistoryPhotoStorage,
+          HistoryPhotoStorage
+        >
+    with $Provider<HistoryPhotoStorage> {
+  /// 履歴用ユーザー写真のファイル保存
+  HistoryPhotoStorageProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'historyPhotoStorageProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$historyPhotoStorageHash();
+
+  @$internal
+  @override
+  $ProviderElement<HistoryPhotoStorage> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  HistoryPhotoStorage create(Ref ref) {
+    return historyPhotoStorage(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(HistoryPhotoStorage value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<HistoryPhotoStorage>(value),
+    );
+  }
+}
+
+String _$historyPhotoStorageHash() =>
+    r'a1b2c3d4e5f6789012345678abcdef0123456789';
+
 /// 履歴リポジトリ
 
 @ProviderFor(historyRepository)

@@ -166,6 +166,7 @@ class HistoryFromMissionMapper {
     required ImageCoordinate spot,
     required String streetViewImagePath,
     CheckpointProgress? checkpointProgress,
+    String? userPhotoPath,
   }) {
     final cp = checkpointProgress;
     return HistorySpotsCompanion.insert(
@@ -175,7 +176,7 @@ class HistoryFromMissionMapper {
       lat: spot.coordinate.latitude,
       lng: spot.coordinate.longitude,
       streetViewImagePath: streetViewImagePath,
-      userPhotoPath: Value(cp?.userPhotoPath),
+      userPhotoPath: Value(userPhotoPath ?? cp?.userPhotoPath),
       achievedAt: Value(cp?.achievedAt?.millisecondsSinceEpoch),
       name: Value(spot.name),
       genre: Value(spot.genre),

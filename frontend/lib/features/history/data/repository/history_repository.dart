@@ -3,9 +3,9 @@
 import 'dart:developer';
 
 import 'package:drift/drift.dart';
-import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
+import 'package:snampo/features/history/data/history_photo_storage.dart';
 import 'package:snampo/features/history/data/mapper/history_mapper.dart';
 import 'package:snampo/features/history/data/streetview_storage.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
@@ -15,13 +15,17 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 /// Drift 上の履歴 CRUD
 class HistoryRepository implements IHistoryRepository {
   /// [HistoryRepository] を作成する
-  HistoryRepository(this._db, this._streetViewStorage, this._photoStorage);
+  HistoryRepository(
+    this._db,
+    this._streetViewStorage,
+    this._historyPhotoStorage,
+  );
 
   final HistoryDatabase _db;
   final StreetViewStorage _streetViewStorage;
-  final IPhotoStorage _photoStorage;
+  final HistoryPhotoStorage _historyPhotoStorage;
 
-  /// 新しい履歴を保存する (Street View はファイル化してパスのみ DB に保持)
+  /// 新しい履歴を保存する (Street View・ユーザー写真はファイル化してパスのみ DB に保持)
   @override
   Future<void> insertHistory({
     required String id,
@@ -30,7 +34,8 @@ class HistoryRepository implements IHistoryRepository {
   }) async {
     final spots = HistoryFromMissionMapper.orderedSpots(mission);
     final now = DateTime.now();
-    final createdPaths = <String>[];
+    final createdStreetViewPaths = <String>[];
+    final createdUserPhotoPaths = <String>[];
 
     try {
       await _db.transaction(() async {
@@ -53,8 +58,20 @@ class HistoryRepository implements IHistoryRepository {
             sortOrder: i,
             imageBase64: spot.imageBase64,
           );
-          createdPaths.add(path);
+          createdStreetViewPaths.add(path);
           final cp = i < cps.length ? cps[i] : null;
+          String? userPhotoPath;
+          final sourcePhotoPath = cp?.userPhotoPath;
+          if (sourcePhotoPath != null) {
+            userPhotoPath = await _historyPhotoStorage.copyUserPhoto(
+              historyId: id,
+              sortOrder: i,
+              sourcePath: sourcePhotoPath,
+            );
+            if (userPhotoPath != null) {
+              createdUserPhotoPaths.add(userPhotoPath);
+            }
+          }
           await _db
               .into(_db.historySpots)
               .insert(
@@ -65,17 +82,30 @@ class HistoryRepository implements IHistoryRepository {
                   spot: spot,
                   streetViewImagePath: path,
                   checkpointProgress: cp,
+                  userPhotoPath: userPhotoPath,
                 ),
               );
         }
       });
     } catch (error, stackTrace) {
-      for (final path in createdPaths) {
+      for (final path in createdStreetViewPaths) {
         try {
           await _streetViewStorage.delete(path);
         } catch (cleanupError, cleanupStackTrace) {
           log(
             'insertHistory: failed to cleanup Street View file: $path',
+            error: cleanupError,
+            stackTrace: cleanupStackTrace,
+            name: 'HistoryRepository',
+          );
+        }
+      }
+      for (final path in createdUserPhotoPaths) {
+        try {
+          await _historyPhotoStorage.delete(path);
+        } catch (cleanupError, cleanupStackTrace) {
+          log(
+            'insertHistory: failed to cleanup user photo file: $path',
             error: cleanupError,
             stackTrace: cleanupStackTrace,
             name: 'HistoryRepository',
@@ -110,7 +140,7 @@ class HistoryRepository implements IHistoryRepository {
 
     for (final path in userPhotoPaths) {
       try {
-        await _photoStorage.deletePhoto(path);
+        await _historyPhotoStorage.delete(path);
       } catch (e, st) {
         log(
           'deleteHistory: failed to delete user photo: $path',
