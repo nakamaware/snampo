@@ -30,9 +30,9 @@ import {
 
 # 初回適用時のみ Billing Account Admin 権限による手動付与が必要
 resource "google_project_iam_member" "terraform_costs_manager" {
-  project            = local.project_id
-  role               = "roles/billing.costsManager"
-  member             = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+  project = local.project_id
+  role    = "roles/billing.costsManager"
+  member  = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
 
   depends_on = [module.snampo_dev]
 }
@@ -40,7 +40,7 @@ resource "google_project_iam_member" "terraform_costs_manager" {
 data "google_billing_account" "account" {
   billing_account = var.billing_account_id
   lookup_projects = false
-  depends_on      = [google_billing_account_iam_member.terraform_costs_manager]
+  depends_on      = [google_project_iam_member.terraform_costs_manager]
 }
 
 resource "google_monitoring_notification_channel" "email" {
