@@ -24,7 +24,7 @@ variable "discord_webhook_url" {
 # ------------------------------
 
 import {
-  id = "projects/${local.project_id} roles/billing.costsManager serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+  id = "snampo-480404/roles/billing.costsManager/serviceAccount:snampo-dev-terraform@snampo-480404.iam.gserviceaccount.com"
   to = google_project_iam_member.terraform_costs_manager
 }
 
