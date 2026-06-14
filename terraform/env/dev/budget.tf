@@ -24,14 +24,14 @@ variable "discord_webhook_url" {
 # ------------------------------
 
 import {
-  id = "snampo-480404/roles/billing.costsManager/serviceAccount:snampo-dev-terraform@snampo-480404.iam.gserviceaccount.com"
+  id = "${local.project_id} roles/billing.projectManager serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
   to = google_project_iam_member.terraform_costs_manager
 }
 
 # 初回適用時のみ Billing Account Admin 権限による手動付与が必要
 resource "google_project_iam_member" "terraform_costs_manager" {
   project = local.project_id
-  role    = "roles/billing.costsManager"
+  role    = "roles/billing.projectManager"
   member  = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
 
   depends_on = [module.snampo_dev]
