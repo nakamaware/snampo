@@ -23,25 +23,25 @@ variable "discord_webhook_url" {
 # 予算アラート
 # ------------------------------
 
-import {
-  id = "${local.project_id} roles/billing.projectManager serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
-  to = google_project_iam_member.terraform_costs_manager
-}
+# import {
+#   id = "${local.project_id} roles/billing.projectManager serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+#   to = google_project_iam_member.terraform_costs_manager
+# }
 
-# 初回適用時のみ Billing Account Admin 権限による手動付与が必要
-resource "google_project_iam_member" "terraform_costs_manager" {
-  project = local.project_id
-  role    = "roles/billing.projectManager"
-  member  = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
+# # 初回適用時のみ Billing Account Admin 権限による手動付与が必要
+# resource "google_project_iam_member" "terraform_costs_manager" {
+#   project = local.project_id
+#   role    = "roles/billing.projectManager"
+#   member  = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
 
-  depends_on = [module.snampo_dev]
-}
+#   depends_on = [module.snampo_dev]
+# }
 
-data "google_billing_account" "account" {
-  billing_account = var.billing_account_id
-  lookup_projects = false
-  depends_on      = [google_project_iam_member.terraform_costs_manager]
-}
+# data "google_billing_account" "account" {
+#   billing_account = var.billing_account_id
+#   lookup_projects = false
+#   depends_on      = [google_project_iam_member.terraform_costs_manager]
+# }
 
 resource "google_monitoring_notification_channel" "email" {
   project = local.project_id
@@ -59,7 +59,7 @@ resource "google_pubsub_topic" "budget_notifications" {
 }
 
 resource "google_billing_budget" "budget" {
-  billing_account = data.google_billing_account.account.id
+  billing_account = var.billing_account_id
   display_name    = "Billing Budget for ${local.project_name}"
 
   budget_filter {
