@@ -48,8 +48,8 @@ resource "google_billing_budget" "budget" {
 
   amount {
     specified_amount {
-      currency_code = "USD"
-      units         = "50"
+      currency_code = "JPY"
+      units         = "1000"
     }
   }
 
