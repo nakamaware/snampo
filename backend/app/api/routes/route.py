@@ -52,9 +52,7 @@ def route(
         HTTPException: 外部サービスエラーが発生した場合、またはバリデーションエラーが発生した場合
     """
     try:
-        current_coordinate = Coordinate(
-            latitude=request.current_lat, longitude=request.current_lng
-        )
+        current_coordinate = Coordinate(latitude=request.current_lat, longitude=request.current_lng)
         destination_coordinate = None
         radius_m = None
 
@@ -75,9 +73,7 @@ def route(
         extra_log = _build_extra_log(request)
         logger.exception(f"Exception in /route: {e}")
         logger.debug(f"Exception in /route: {e}", extra=extra_log)
-        raise HTTPException(
-            status_code=500, detail="リクエストの処理に失敗しました"
-        ) from e
+        raise HTTPException(status_code=500, detail="リクエストの処理に失敗しました") from e
 
     try:
         result = usecase.execute(
@@ -95,17 +91,13 @@ def route(
         extra_log = _build_extra_log(request)
         logger.error(f"ExternalServiceError in /route: {e}")
         logger.debug(f"ExternalServiceError in /route: {e}", extra=extra_log)
-        raise HTTPException(
-            status_code=500, detail="外部サービスとの通信に失敗しました"
-        ) from e
+        raise HTTPException(status_code=500, detail="外部サービスとの通信に失敗しました") from e
     except Exception as e:
         # NOTE: 未知のエラーはスタックトレースを含むexceptionレベルでログを出力
         extra_log = _build_extra_log(request)
         logger.exception(f"Exception in /route: {e}")
         logger.debug(f"Exception in /route: {e}", extra=extra_log)
-        raise HTTPException(
-            status_code=500, detail="ルート生成に失敗しました"
-        ) from e
+        raise HTTPException(status_code=500, detail="ルート生成に失敗しました") from e
 
 
 def _build_extra_log(
