@@ -57,7 +57,7 @@ $Res call({
 });
 
 
-$CoordinateCopyWith<$Res> get departure;$ImageCoordinateCopyWith<$Res> get destination;$RadiusCopyWith<$Res>? get radius;
+$ImageCoordinateCopyWith<$Res> get destination;
 
 }
 /// @nodoc
@@ -84,31 +84,10 @@ as List<ImageCoordinate>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get departure {
-  
-  return $CoordinateCopyWith<$Res>(_self.departure, (value) {
-    return _then(_self.copyWith(departure: value));
-  });
-}/// Create a copy of MissionEntity
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
 $ImageCoordinateCopyWith<$Res> get destination {
   
   return $ImageCoordinateCopyWith<$Res>(_self.destination, (value) {
     return _then(_self.copyWith(destination: value));
-  });
-}/// Create a copy of MissionEntity
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res>? get radius {
-    if (_self.radius == null) {
-    return null;
-  }
-
-  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
-    return _then(_self.copyWith(radius: value));
   });
 }
 }
@@ -306,7 +285,7 @@ $Res call({
 });
 
 
-@override $CoordinateCopyWith<$Res> get departure;@override $ImageCoordinateCopyWith<$Res> get destination;@override $RadiusCopyWith<$Res>? get radius;
+@override $ImageCoordinateCopyWith<$Res> get destination;
 
 }
 /// @nodoc
@@ -334,31 +313,10 @@ as List<ImageCoordinate>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$CoordinateCopyWith<$Res> get departure {
-  
-  return $CoordinateCopyWith<$Res>(_self.departure, (value) {
-    return _then(_self.copyWith(departure: value));
-  });
-}/// Create a copy of MissionEntity
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
 $ImageCoordinateCopyWith<$Res> get destination {
   
   return $ImageCoordinateCopyWith<$Res>(_self.destination, (value) {
     return _then(_self.copyWith(destination: value));
-  });
-}/// Create a copy of MissionEntity
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RadiusCopyWith<$Res>? get radius {
-    if (_self.radius == null) {
-    return null;
-  }
-
-  return $RadiusCopyWith<$Res>(_self.radius!, (value) {
-    return _then(_self.copyWith(radius: value));
   });
 }
 }

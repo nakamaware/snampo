@@ -19,7 +19,7 @@ class RadiusConverter implements JsonConverter<Radius, Map<String, dynamic>> {
 }
 
 /// 半径値オブジェクト
-@freezed
+@Freezed(copyWith: false)
 abstract class Radius with _$Radius {
   /// 半径を作成する
   ///

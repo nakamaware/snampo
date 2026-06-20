@@ -11,6 +11,7 @@ locals {
   env          = "dev"
   project_name = "snampo-dev"
   project_id   = "snampo-480404"
+  location     = "asia-northeast1"
 }
 
 provider "google" {
