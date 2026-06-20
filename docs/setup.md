@@ -157,6 +157,65 @@ cp .env.example .env
 GOOGLE_API_KEY=your_google_maps_api_key_here
 ```
 
+### 11. Apple Maps Server API の設定 (任意)
+
+Issue [#235](https://github.com/nakamaware/snampo/issues/235) の調査・実装向けに、ローカルから Apple Maps Server API を叩くための設定です。通常の開発では不要です。
+
+#### 11-1. Apple Developer で認証情報を作成
+
+1. [Apple Developer](https://developer.apple.com/account) にログイン
+2. **Identifiers** → **+** → **Maps IDs** を選択して Maps ID を登録
+   - Identifier は reverse-domain 形式 (例: `maps.com.nakamaware.snampo`)
+3. **Keys** → **+** で秘密鍵を作成
+   - Key Name は英数字とスペースのみ (ハイフン `-` などの記号は不可)
+   - **MapKit JS** にチェック → **Configure** で上記 Maps ID を紐づけ
+   - **Download** で `.p8` を保存 (再ダウンロード不可)
+
+必要な値:
+
+| 環境変数 | 取得元 |
+|---|---|
+| `APPLE_TEAM_ID` | Account → **Membership** の Team ID (10 文字) |
+| `APPLE_MAPS_KEY_ID` | Keys 一覧の Key ID (10 文字) |
+| `APPLE_MAPS_PRIVATE_KEY_PATH` | ダウンロードした `.p8` のパス |
+
+#### 11-2. 秘密鍵の配置
+
+`.p8` は git 管理外の `backend/secrets/apple-maps/` に配置してください。
+
+```bash
+mkdir -p backend/secrets/apple-maps
+# ダウンロードした AuthKey_XXXXXXXXXX.p8 を上記ディレクトリへ移動
+```
+
+`backend/.gitignore` で `secrets/` と `*.p8` は無視されます。
+
+#### 11-3. 環境変数の追記
+
+`backend/.env` に以下を追記します。
+
+```dotenv
+APPLE_TEAM_ID=your_10_char_team_id
+APPLE_MAPS_KEY_ID=your_10_char_key_id
+APPLE_MAPS_PRIVATE_KEY_PATH=secrets/apple-maps/AuthKey_XXXXXXXXXX.p8
+```
+
+`APPLE_MAPS_PRIVATE_KEY_PATH` は `backend/` からの相対パスで指定できます。
+
+#### 11-4. 疎通確認
+
+```bash
+cd backend
+uv run python scripts/probe_apple_maps_api.py
+```
+
+成功すると `/v1/token`・`/v1/directions`・`/v1/search` の呼び出し結果が表示され、レスポンス全文は `backend/apple_maps_probe_result.json` に保存されます (このファイルも git 管理外です)。
+
+参考:
+
+- [Creating a Maps identifier and a private key](https://developer.apple.com/documentation/applemapsserverapi/creating-a-maps-identifier-and-a-private-key)
+- [Creating and using tokens with Maps Server API](https://developer.apple.com/documentation/applemapsserverapi/creating-and-using-tokens-with-maps-server-api)
+
 ## 使用しているツールバージョン
 
 - **Flutter**: 3.32.0

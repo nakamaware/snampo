@@ -22,7 +22,12 @@ build-backend = "hatchling.build"
 packages = ["app"]
 
 [dependency-groups]
-dev = ["ruff>=0.14.10", "pytest>=9.0.3", "pytest-cov>=7.0.0"]
+dev = [
+    "ruff>=0.14.10",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.0.0",
+    "pyjwt[crypto]>=2.10.1",
+]
 
 [tool.ruff]
 line-length = 100
