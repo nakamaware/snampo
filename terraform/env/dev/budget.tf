@@ -23,21 +23,6 @@ variable "discord_webhook_url" {
 # 予算アラート
 # ------------------------------
 
-# 初回適用時のみ Billing Account Admin 権限による手動付与が必要
-resource "google_billing_account_iam_member" "terraform_costs_manager" {
-  billing_account_id = var.billing_account_id
-  role               = "roles/billing.costsManager"
-  member             = "serviceAccount:${local.project_name}-terraform@${local.project_id}.iam.gserviceaccount.com"
-
-  depends_on = [module.snampo_dev]
-}
-
-data "google_billing_account" "account" {
-  billing_account = var.billing_account_id
-  lookup_projects = false
-  depends_on      = [google_billing_account_iam_member.terraform_costs_manager]
-}
-
 resource "google_monitoring_notification_channel" "email" {
   project = local.project_id
 
@@ -54,7 +39,7 @@ resource "google_pubsub_topic" "budget_notifications" {
 }
 
 resource "google_billing_budget" "budget" {
-  billing_account = data.google_billing_account.account.id
+  billing_account = var.billing_account_id
   display_name    = "Billing Budget for ${local.project_name}"
 
   budget_filter {
@@ -63,8 +48,8 @@ resource "google_billing_budget" "budget" {
 
   amount {
     specified_amount {
-      currency_code = "USD"
-      units         = "50"
+      currency_code = "JPY"
+      units         = "1000"
     }
   }
 
