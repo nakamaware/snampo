@@ -88,7 +88,7 @@ class JudgePhotoUseCase {
     )) {
       return PhotoJudgeRank.fair;
     }
-    return PhotoJudgeRank.retry;
+    return PhotoJudgeRank.miss;
   }
 
   bool _matches(

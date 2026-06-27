@@ -42,7 +42,7 @@ const _$PhotoJudgeRankEnumMap = {
   PhotoJudgeRank.excellent: 'excellent',
   PhotoJudgeRank.good: 'good',
   PhotoJudgeRank.fair: 'fair',
-  PhotoJudgeRank.retry: 'retry',
+  PhotoJudgeRank.miss: 'miss',
 };
 
 _MissionProgressEntity _$MissionProgressEntityFromJson(

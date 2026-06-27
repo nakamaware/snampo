@@ -252,10 +252,10 @@ class _CameraPageState extends State<CameraPage> {
             fit: StackFit.expand,
             children: [
               const ColoredBox(color: Colors.black),
-              // カメラプレビューを 16:9 に制限して表示
+              // カメラプレビューを正方形に制限して表示
               Center(
                 child: AspectRatio(
-                  aspectRatio: 16 / 9,
+                  aspectRatio: 1,
                   child: ClipRect(
                     child: FittedBox(
                       fit: BoxFit.cover,
@@ -350,32 +350,30 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 
-  Future<XFile> _cropTo16x9(XFile original) async {
+  Future<XFile> _cropToSquare(XFile original) async {
     final bytes = await original.readAsBytes();
     final decoded = img.decodeImage(bytes);
     if (decoded == null) return original;
 
     final srcW = decoded.width;
     final srcH = decoded.height;
-    const targetRatio = 16.0 / 9.0;
-    final srcRatio = srcW / srcH;
 
-    final int cropW;
-    final int cropH;
+    final int cropSize;
     final int cropX;
     final int cropY;
 
-    if (srcRatio > targetRatio) {
-      cropH = srcH;
-      cropW = (srcH * targetRatio).round().clamp(1, srcW);
-      cropX = (srcW - cropW) ~/ 2;
+    if (srcW > srcH) {
+      cropSize = srcH;
+      cropX = (srcW - cropSize) ~/ 2;
       cropY = 0;
     } else {
-      cropW = srcW;
-      cropH = (srcW / targetRatio).round().clamp(1, srcH);
+      cropSize = srcW;
       cropX = 0;
-      cropY = (srcH - cropH) ~/ 2;
+      cropY = (srcH - cropSize) ~/ 2;
     }
+
+    final cropW = cropSize;
+    final cropH = cropSize;
 
     final cropped = img.copyCrop(
       decoded,
@@ -396,7 +394,7 @@ class _CameraPageState extends State<CameraPage> {
 
   Future<void> _handleCapture(BuildContext context) async {
     final rawFile = await _controller!.takePicture();
-    final file = await _cropTo16x9(rawFile);
+    final file = await _cropToSquare(rawFile);
     if (!context.mounted) {
       return;
     }

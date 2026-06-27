@@ -54,7 +54,7 @@ class SpotResultPage extends StatelessWidget {
     }
 
     final point = args.missionPoint;
-    final rank = checkpoint.judgeRank ?? PhotoJudgeRank.retry;
+    final rank = checkpoint.judgeRank ?? PhotoJudgeRank.miss;
     final distanceErrorText =
         checkpoint.distanceErrorMeters == null
             ? '取得できませんでした'
@@ -190,7 +190,7 @@ class _RankCard extends StatelessWidget {
       PhotoJudgeRank.excellent => Colors.green,
       PhotoJudgeRank.good => Colors.blue,
       PhotoJudgeRank.fair => Colors.orange,
-      PhotoJudgeRank.retry => Colors.red,
+      PhotoJudgeRank.miss => Colors.red,
     };
 
     return Card(
