@@ -1,3 +1,8 @@
+# プロジェクトの環境
+variable "project_env" {
+  type = string
+}
+
 # リソースを作成するプロジェクトのID
 variable "project_id" {
   type = string

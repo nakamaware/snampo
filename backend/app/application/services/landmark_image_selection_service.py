@@ -66,7 +66,7 @@ class LandmarkImageSelectionService:
                     candidate.coordinate,
                     image_size,
                 )
-                logger.info(f"Successfully selected landmark: {candidate}")
+                logger.info(f"Successfully selected landmark: {candidate.place_id}")
                 return candidate, image
             except ExternalServiceValidationError:
                 logger.warning(
