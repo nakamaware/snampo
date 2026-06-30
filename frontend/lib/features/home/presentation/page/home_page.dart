@@ -44,6 +44,7 @@ class HomePage extends ConsumerWidget {
 
 /// 保存されたミッションを再開するボタン
 class ResumeButton extends StatelessWidget {
+  /// [ResumeButton] を作成する
   const ResumeButton({super.key});
 
   @override
@@ -116,9 +117,7 @@ class HistoryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(10), // 角の丸み
         ),
       ),
-      onPressed: () {
-        // TODO(kawayama): 履歴機能を実装する
-      },
+      onPressed: () => context.push('/history'),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text('履歴', style: style),
