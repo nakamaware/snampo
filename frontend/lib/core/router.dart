@@ -1,10 +1,14 @@
 import 'package:go_router/go_router.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
-import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
+
+HomePage _homeWithError(String message) {
+  return HomePage(errorMessage: message);
+}
 
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
@@ -14,7 +18,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/mission/random/:radius',
       builder: (context, state) {
-        final meters = int.parse(state.pathParameters['radius']!);
+        final meters = int.tryParse(state.pathParameters['radius'] ?? '');
+        if (meters == null) {
+          return _homeWithError('無効なリンクです');
+        }
         return MissionPage(radius: meters);
       },
     ),
@@ -27,7 +34,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra;
         if (extra is! CameraPageArgs) {
-          return const HomePage();
+          return _homeWithError('無効なリンクです');
         }
         return CameraPage(args: extra);
       },
@@ -37,7 +44,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra;
         if (extra is! SpotResultPageArgs) {
-          return const HomePage();
+          return _homeWithError('無効なリンクです');
         }
         return SpotResultPage(args: extra);
       },
@@ -45,8 +52,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/mission/destination/:lat/:lng',
       builder: (context, state) {
-        final lat = double.parse(state.pathParameters['lat']!);
-        final lng = double.parse(state.pathParameters['lng']!);
+        final lat = double.tryParse(state.pathParameters['lat'] ?? '');
+        final lng = double.tryParse(state.pathParameters['lng'] ?? '');
+        if (lat == null || lng == null) {
+          return _homeWithError('無効なリンクです');
+        }
         return MissionPage.withDestination(
           destinationLat: lat,
           destinationLng: lng,
@@ -55,4 +65,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
   ],
+  errorBuilder: (context, state) {
+    return _homeWithError('存在しないページです');
+  },
 );
