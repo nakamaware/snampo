@@ -444,7 +444,25 @@ class TestAppleMapsGatewaySearch:
         with pytest.raises(AppleMapsHTTPError) as exc_info:
             gateway.search_landmarks_nearby(center, 2000, target_count=1, max_calls=1)
         assert exc_info.value.status_code == 400
+        assert exc_info.value.is_bad_request()
         assert isinstance(exc_info.value, ExternalServiceError)
+
+    def test_本文にHTTP400とあっても500はbad_requestではないこと(
+        self, gateway: AppleMapsGatewayImpl
+    ) -> None:
+        """本文の "HTTP 400" 文字列では 400 再試行判定をしない。"""
+        center = Coordinate(latitude=35.0, longitude=139.0)
+        bad = MagicMock()
+        bad.status_code = 500
+        bad.text = "upstream said HTTP 400 earlier; this response is 500"
+        bad.raise_for_status.side_effect = HTTPError(response=bad)
+        gateway._session.get.return_value = bad
+
+        with pytest.raises(AppleMapsHTTPError) as exc_info:
+            gateway.search_landmarks_nearby(center, 2000, target_count=1, max_calls=1)
+        assert exc_info.value.status_code == 500
+        assert not exc_info.value.is_bad_request()
+        assert "HTTP 400" in exc_info.value.message
 
     def test_HTTPエラー本文は例外メッセージで切り詰められること(
         self, gateway: AppleMapsGatewayImpl

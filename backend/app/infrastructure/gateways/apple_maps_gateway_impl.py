@@ -102,9 +102,15 @@ class AppleMapsHTTPError(ExternalServiceError):
         self.status_code = status_code
         super().__init__(message, service_name=service_name)
 
+    def is_bad_request(self) -> bool:
+        """HTTP 400 かどうか。メッセージ文字列ではなく status_code で判定する。"""
+        return self.status_code == 400
 
-def _truncate_error_body(text: str, *, limit: int = _MAX_ERROR_BODY_CHARS) -> str:
+
+def _truncate_error_body(text: str | None, *, limit: int = _MAX_ERROR_BODY_CHARS) -> str:
     """例外メッセージ用にレスポンス本文を切り詰める。"""
+    if not text:
+        return ""
     if len(text) <= limit:
         return text
     return f"{text[:limit]}...(truncated)"
