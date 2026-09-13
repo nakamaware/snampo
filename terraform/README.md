@@ -32,6 +32,26 @@
 
 基本的に、GCPで生成するシークレット（APIキーなど）とGCP以外のシークレット（GitHub AppsのSecretなど）の2つがある。GCPのシークレットはTerraformでシークレットを作成してSecret Managerに登録することでGCP上のリソースで利用できる。GCP以外のシークレットは`TF_VAR_{xxx}`の環境変数をGitHubリポジトリのSecretに設定して、GitHub Actionsで`terrafrom apply`する際に変数としてTerraformに注入する。
 
+#### Apple Maps 秘密鍵 (目的地ランドマーク検索)
+
+Terraform は Secret Manager のコンテナ `apple-maps-private-key` だけを作る (PEM は git / tfvars に入れない)。Cloud Run には `APPLE_MAPS_PRIVATE_KEY` として注入する。Team ID / Key ID はプレーンな環境変数 (`apple_team_id` / `apple_maps_key_id`、例は `secrets.auto.tfvars.example`)。
+
+初回 (または鍵ローテ時) にバージョンを追加する:
+
+```bash
+# 開発
+gcloud secrets versions add apple-maps-private-key \
+  --data-file=AuthKey_XXXXXXXXXX.p8 \
+  --project=snampo-480404
+
+# 本番
+gcloud secrets versions add apple-maps-private-key \
+  --data-file=AuthKey_XXXXXXXXXX.p8 \
+  --project=snampo-prod
+```
+
+Cloud Run が参照する前に、少なくとも 1 バージョンが必要。
+
 ## 初期セットアップ
 
 ### 権限の確認とGCPの認証

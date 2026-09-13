@@ -236,6 +236,23 @@ locals {
   )
 }
 
+# Apple Maps 秘密鍵 (PEM)。バージョンは out-of-band で追加する:
+#   gcloud secrets versions add apple-maps-private-key --data-file=AuthKey_XXXX.p8 --project=<project_id>
+resource "google_secret_manager_secret" "apple_maps_private_key" {
+  project   = var.project_id
+  secret_id = "apple-maps-private-key"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.location
+      }
+    }
+  }
+
+  depends_on = [module.project_services]
+}
+
 module "artifact_registry" {
   source     = "GoogleCloudPlatform/artifact-registry/google"
   version    = "~> 0.8"
@@ -283,12 +300,24 @@ locals {
           {
             name  = "ENV"
             value = var.project_env
-          }
+          },
+          {
+            name  = "APPLE_TEAM_ID"
+            value = var.apple_team_id
+          },
+          {
+            name  = "APPLE_MAPS_KEY_ID"
+            value = var.apple_maps_key_id
+          },
         ]
         env_secret = [
           {
             name      = "GOOGLE_API_KEY"
             secret_id = "backend-api-key"
+          },
+          {
+            name      = "APPLE_MAPS_PRIVATE_KEY"
+            secret_id = google_secret_manager_secret.apple_maps_private_key.secret_id
           },
         ] # ここで指定できるのは、APIキーかシークレットのID
         port = 80
@@ -304,7 +333,7 @@ locals {
 
 module "cloud_run_service" {
   source     = "../gcp/cloud-run"
-  depends_on = [module.iam_members, module.secret_manager]
+  depends_on = [module.iam_members, module.secret_manager, google_secret_manager_secret.apple_maps_private_key]
   for_each = {
     for conf in local.cloud_run_service_config_list : conf.service_name => {
       service_account = conf.service_account

@@ -12,6 +12,7 @@ dependencies = [
     "tenacity>=9.1.2",
     "geopy>=2.4.1",
     "pydantic>=2.12.5",
+    "pyjwt[crypto]>=2.10.1",
 ]
 
 [build-system]

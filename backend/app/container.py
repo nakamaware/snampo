@@ -6,7 +6,9 @@ Infrastructure層の実装への依存は、この設定モジュールに集約
 
 from injector import Injector
 
+from app.application.gateway_interfaces.apple_maps_gateway import AppleMapsGateway
 from app.application.gateway_interfaces.google_maps_gateway import GoogleMapsGateway
+from app.infrastructure.gateways.apple_maps_gateway_impl import AppleMapsGatewayImpl
 from app.infrastructure.gateways.google_maps_gateway_impl import GoogleMapsGatewayImpl
 
 
@@ -18,6 +20,8 @@ def create_container() -> Injector:
     """
     injector = Injector()
     injector.binder.bind(GoogleMapsGateway, to=GoogleMapsGatewayImpl)
+    # 目的地ランドマーク検索のみ Apple。Directions / Street View / Roads / 中間地点は Google。
+    injector.binder.bind(AppleMapsGateway, to=AppleMapsGatewayImpl)
     return injector
 
 

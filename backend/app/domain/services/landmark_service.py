@@ -33,6 +33,8 @@ def generate_equidistant_circle_points(
     center: Coordinate,
     target_distance: int,
     search_radius: float,
+    *,
+    seed: int | None = None,
 ) -> list[tuple[float, float]]:
     """指定距離の円周上に等間隔で点を生成 (全周に散らす順番)
 
@@ -40,6 +42,7 @@ def generate_equidistant_circle_points(
         center: 中心座標
         target_distance: 指定距離 (メートル)
         search_radius: 各点での検索半径 (メートル)
+        seed: 指定時は散らし順を再現可能にする
 
     Returns:
         円周上の点のリスト [(lat, lng), ...] (全周に散らす順番)
@@ -55,8 +58,8 @@ def generate_equidistant_circle_points(
     # 全周に散らす順番のインデックスを生成
     # 例: 8点の場合 → [0, 4, 2, 6, 1, 5, 3, 7]
     # これにより、最初の数回で全周をカバーできる
-    # 開始位置はランダムにオフセットされる
-    scattered_indices = _generate_scattered_indices(num_points)
+    # 開始位置はランダムにオフセットされる (seed 指定時は再現可能)
+    scattered_indices = _generate_scattered_indices(num_points, seed=seed)
 
     points: list[tuple[float, float]] = []
     origin = (center.latitude, center.longitude)
@@ -73,14 +76,15 @@ def generate_equidistant_circle_points(
     return points
 
 
-def _generate_scattered_indices(n: int) -> list[int]:
-    """全周に散らす順番のインデックスを生成 (開始位置はランダム)
+def _generate_scattered_indices(n: int, *, seed: int | None = None) -> list[int]:
+    """全周に散らす順番のインデックスを生成 (開始位置はランダム / seed 可)
 
     n と互いに素な step を使った full-cycle generation により、
     全てのインデックス 0..n-1 を正確に1回ずつ生成します。
 
     Args:
         n: 生成するインデックスの総数
+        seed: 指定時は再現可能な乱数系列を使う
 
     Returns:
         0..n-1 のインデックスを全周に散らした順番で返すリスト
@@ -88,13 +92,16 @@ def _generate_scattered_indices(n: int) -> list[int]:
     if n <= 1:
         return [0]
 
+    # 開始位置・step は暗号用途ではないので random.Random で十分
+    rng = random.Random(seed) if seed is not None else random.Random()  # noqa: S311
+
     # ランダムな開始オフセットを選択
-    offset = random.randrange(n)  # noqa: S311 (ただのランダムの選択なので問題なし)
+    offset = rng.randrange(n)
 
     # n と互いに素な step を 1..n-1 からランダムに選択
     # gcd(step, n) == 1 なら step は n と互いに素
     while True:
-        step = random.randrange(1, n)  # noqa: S311 (ただのランダムの選択なので問題なし)
+        step = rng.randrange(1, n)
         if math.gcd(step, n) == 1:
             break
 

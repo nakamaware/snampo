@@ -217,3 +217,7 @@ __marimo__/
 
 # Project specific
 route.html
+apple_maps_probe_result.json
+apple_maps_search_probe_result.json
+secrets/
+*.p8
