@@ -1,5 +1,3 @@
-"""Route API スキーマのテスト"""
-
 from urllib.parse import parse_qs, urlparse
 
 from app.api.schemas.route import MidPoint, _build_google_maps_url
@@ -8,7 +6,6 @@ from app.domain.value_objects import Coordinate, Landmark, StreetViewImage
 
 
 def _street_view(coordinate: Coordinate) -> StreetViewImage:
-    """テスト用の最小 Street View 画像。"""
     return StreetViewImage(
         metadata_coordinate=coordinate,
         original_coordinate=coordinate,

@@ -92,8 +92,7 @@ def _generate_scattered_indices(n: int, *, seed: int | None = None) -> list[int]
     if n <= 1:
         return [0]
 
-    # 開始位置・step は暗号用途ではないので random.Random で十分
-    rng = random.Random(seed) if seed is not None else random.Random()  # noqa: S311
+    rng = random.Random(seed) if seed is not None else random.Random()  # noqa: S311 — 散らし順。暗号用途ではない
 
     # ランダムな開始オフセットを選択
     offset = rng.randrange(n)

@@ -1,5 +1,3 @@
-"""Apple Maps Gateway / Auth / クエリバッグのテスト (HTTP はモック、ネットワーク無し)"""
-
 from __future__ import annotations
 
 import math
@@ -15,8 +13,10 @@ from requests.exceptions import HTTPError
 
 from app.application.gateway_interfaces.apple_maps_gateway import (
     AppleSearchHit,
-    apple_poi_category_to_genre,
+    is_apple_place_id,
+    prefix_apple_place_id,
 )
+from app.application.gateway_interfaces.apple_poi_genre import apple_poi_category_to_genre
 from app.domain.exceptions import ExternalServiceError
 from app.domain.value_objects import Coordinate
 from app.infrastructure.gateways.apple_maps_auth import (
@@ -33,17 +33,11 @@ from app.infrastructure.gateways.apple_maps_gateway_impl import (
     circle_to_search_region,
     distance_band_bounds,
     format_search_region,
-    prefix_apple_place_id,
     stable_search_seed,
-)
-from app.infrastructure.gateways.apple_poi_category_mapping import (
-    GOOGLE_TYPE_TO_APPLE_POI_CATEGORY,
-    map_google_types_to_apple_poi_categories,
 )
 
 
 def _generate_es256_private_key_pem() -> str:
-    """テスト用の ES256 秘密鍵 PEM を生成する。"""
     private_key = ec.generate_private_key(ec.SECP256R1())
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -70,29 +64,6 @@ def token_provider(es256_pem: str) -> AppleMapsTokenProvider:
         base_url="https://maps-api.apple.test/v1",
         session=session,
     )
-
-
-class TestApplePoiCategoryMapping:
-    """Google → Apple カテゴリマッピング (参照用、検索本番では未使用)"""
-
-    def test_LANDMARKタイプがユニークなAppleカテゴリに畳み込まれること(self) -> None:
-        """複数 Google タイプが同一 Apple カテゴリへ重複なく畳み込まれる。"""
-        categories = map_google_types_to_apple_poi_categories()
-        assert "Park" in categories
-        assert "Museum" in categories
-        assert "Cafe" in categories
-        assert categories.count("Park") == 1
-
-    def test_ReligiousSiteがGoogleリストに無くても追加されること(self) -> None:
-        """神社・寺院向けに ReligiousSite を明示追加する。"""
-        categories = map_google_types_to_apple_poi_categories()
-        assert "ReligiousSite" in categories
-
-    def test_ギャップタイプが粗畳み込みされること(self) -> None:
-        """Apple に無い語彙は Spa / Hotel / Landmark へ寄せる。"""
-        assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["public_bath"] == "Spa"
-        assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["japanese_inn"] == "Hotel"
-        assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["ferris_wheel"] == "Landmark"
 
 
 class TestApplePoiCategoryToGenre:
@@ -149,6 +120,8 @@ class TestBboxAndDistanceBand:
         """Google place_id と衝突しないよう prefix する。"""
         assert prefix_apple_place_id("I123") == "apple:I123"
         assert prefix_apple_place_id("apple:I123") == "apple:I123"
+        assert is_apple_place_id("apple:I123")
+        assert not is_apple_place_id("ChIJXSModoWLGGARILWiCfeu2M0")
 
 
 class TestStratifiedQueryBag:
@@ -297,7 +270,7 @@ class TestAppleMapsTokenProvider:
             token_provider.get_access_token(now=1_000.0)
         assert "accessToken" in exc_info.value.message
         assert "keys=" in exc_info.value.message
-        assert "unexpectedSecret" in exc_info.value.message  # キー名は出る
+        assert "unexpectedSecret" in exc_info.value.message
         assert "should-not-appear-in-message" not in exc_info.value.message
 
 
@@ -323,7 +296,6 @@ class TestAppleMapsGatewaySearch:
     def _point_at_distance(
         self, center: Coordinate, distance_m: float, bearing_deg: float = 0.0
     ) -> Coordinate:
-        """簡易: bearing 方向へ distance_m だけずらす (テスト用近似)。"""
         delta_lat = distance_m / 111_320.0
         radians = math.radians(bearing_deg)
         lat = float(center.latitude) + delta_lat * math.cos(radians)
@@ -332,7 +304,6 @@ class TestAppleMapsGatewaySearch:
         return Coordinate(latitude=lat, longitude=lng)
 
     def _poi_response(self, place_id: str, name: str, coordinate: Coordinate) -> MagicMock:
-        """1 件の検索レスポンスを作る。"""
         response = MagicMock()
         response.raise_for_status = MagicMock()
         response.json.return_value = {
@@ -473,7 +444,6 @@ class TestAppleMapsGatewaySearch:
         center = Coordinate(latitude=35.0, longitude=139.0)
         bad = MagicMock()
         bad.status_code = 400
-        # 本文に "HTTP 400" が含まれても、判定は status_code 側を使う前提
         bad.text = "other status mention: HTTP 400 is not how we classify"
         bad.raise_for_status.side_effect = HTTPError(response=bad)
         gateway._session.get.return_value = bad

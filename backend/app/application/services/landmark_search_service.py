@@ -1,5 +1,3 @@
-"""目的地ランドマーク検索。中間地点は Google のまま。"""
-
 import logging
 
 from injector import inject
@@ -12,18 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class LandmarkSearchService:
-    """ランドマーク検索サービス
-
-    Apple Maps のクエリバッグ検索で、目標距離帯上のランドマークを集めます。
-    """
+    """目的地ランドマークを Apple Maps 経由で検索する。"""
 
     @inject
     def __init__(self, gateway: AppleMapsGateway) -> None:
-        """初期化
-
-        Args:
-            gateway: AppleMapsGateway のインスタンス
-        """
+        """初期化"""
         self._gateway = gateway
 
     def search_landmarks(
@@ -33,20 +24,7 @@ class LandmarkSearchService:
         target_count: int,
         max_calls: int,
     ) -> list[Landmark]:
-        """ランドマーク検索
-
-        Apple /v1/search で層別日本語クエリ → 不足時円周ファンアウトを行い、
-        目標距離 ±tolerance% 帯のユニーク件数を集める。
-
-        Args:
-            center: 中心座標
-            target_distance_m: 指定距離 (メートル)。距離帯フィルタリングに使用。
-            target_count: 目標件数
-            max_calls: 最大 API 呼び出し回数
-
-        Returns:
-            ランドマークのリスト (重複排除済み、距離フィルタリング適用済み)
-        """
+        """距離帯内のランドマークを返す。外部エラー時は空リスト。"""
         logger.debug(
             "Search landmarks via Apple Maps: center=%s distance=%s target=%s max_calls=%s",
             center,

@@ -1,4 +1,4 @@
-"""Apple Maps 目的地検索ポート。Directions / Street View / Roads は Google。"""
+"""Apple Maps Server API の検索ポート。"""
 
 from __future__ import annotations
 
@@ -6,83 +6,28 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal
 
+from app.application.gateway_interfaces.apple_poi_genre import apple_poi_category_to_genre
 from app.domain.value_objects import Coordinate, Landmark
 
 AppleSearchSource = Literal["query", "fanout"]
-
-# Apple PoiCategory (PascalCase) → フロントの genre_label が知る Google 系キー
-APPLE_POI_CATEGORY_TO_GENRE: dict[str, str] = {
-    "Airport": "airport",
-    "AmusementPark": "amusement_park",
-    "Aquarium": "aquarium",
-    "Bakery": "bakery",
-    "Bank": "bank",
-    "Beach": "beach",
-    "Brewery": "brewery",
-    "Cafe": "cafe",
-    "Campground": "campground",
-    "Castle": "castle",
-    "FoodMarket": "market",
-    "GasStation": "gas_station",
-    "Hiking": "hiking_area",
-    "Hospital": "hospital",
-    "Hotel": "resort_hotel",
-    "Landmark": "landmark",
-    "Library": "library",
-    "Marina": "marina",
-    "MovieTheater": "movie_theater",
-    "Museum": "museum",
-    "MusicVenue": "concert_hall",
-    "NationalPark": "national_park",
-    "Nightlife": "night_club",
-    "Park": "park",
-    "Parking": "parking",
-    "Pharmacy": "pharmacy",
-    "Planetarium": "planetarium",
-    "Playground": "playground",
-    "ReligiousSite": "religious_site",
-    "Restaurant": "restaurant",
-    "School": "school",
-    "SkatePark": "skateboard_park",
-    "Spa": "spa",
-    "Stadium": "stadium",
-    "Store": "store",
-    "Theater": "performing_arts_theater",
-    "University": "university",
-    "Winery": "vineyard",
-    "Zoo": "zoo",
-}
+APPLE_PLACE_ID_PREFIX = "apple:"
 
 
-def _pascal_to_snake(value: str) -> str:
-    """PascalCase / camelCase を snake_case にする。"""
-    chars: list[str] = []
-    for index, char in enumerate(value):
-        if char.isupper() and index > 0:
-            chars.append("_")
-        chars.append(char.lower())
-    return "".join(chars)
+def prefix_apple_place_id(raw_id: str) -> str:
+    """Google Place ID と衝突しないよう `apple:` を付ける。"""
+    if raw_id.startswith(APPLE_PLACE_ID_PREFIX):
+        return raw_id
+    return f"{APPLE_PLACE_ID_PREFIX}{raw_id}"
 
 
-def apple_poi_category_to_genre(poi_category: str | None) -> str | None:
-    """Apple PoiCategory をフロント表示用ジャンルキーへ寄せる。
-
-    既知カテゴリは Google Places 系の snake_case に固定する。
-    未知の PascalCase は機械変換し、どちらでもなければそのまま返す。
-    """
-    if not poi_category:
-        return None
-    mapped = APPLE_POI_CATEGORY_TO_GENRE.get(poi_category)
-    if mapped:
-        return mapped
-    if poi_category[:1].isupper() and "_" not in poi_category:
-        return _pascal_to_snake(poi_category)
-    return poi_category
+def is_apple_place_id(place_id: str) -> bool:
+    """`apple:` 付きの Apple Maps ID かどうか。"""
+    return place_id.startswith(APPLE_PLACE_ID_PREFIX)
 
 
 @dataclass(frozen=True, slots=True)
 class AppleSearchHit:
-    """Apple 検索の 1 ヒット (距離帯フィルタ後)"""
+    """距離帯フィルタ後の Apple 検索 1 件。"""
 
     place_id: str
     display_name: str
@@ -105,7 +50,7 @@ class AppleSearchHit:
 
 
 class AppleMapsGateway(ABC):
-    """Apple Maps Server API 検索ポート"""
+    """層別日本語クエリと不足時ファンアウトで距離帯内 POI を返す。"""
 
     @abstractmethod
     def search_landmarks_nearby(
@@ -117,16 +62,5 @@ class AppleMapsGateway(ABC):
         distance_tolerance_percent: float | None = None,
         max_calls: int | None = None,
     ) -> list[AppleSearchHit]:
-        """層別クエリ + ファンアウトで距離帯内のランドマークを検索する。
-
-        Args:
-            coordinate: 検索中心 (目的地リングの中心 = 現在地)
-            radius_m: 目標距離 (メートル)。±tolerance% の距離帯でフィルタする。
-            target_count: 目標件数 (未指定時は設定値)
-            distance_tolerance_percent: 距離帯の許容 % (未指定時は設定値)
-            max_calls: Apple /v1/search の最大呼び出し回数 (未指定時は設定値)
-
-        Returns:
-            list[AppleSearchHit]: place_id は `apple:<id>` 形式で dedup 済み
-        """
+        """距離帯内ヒットを返す。place_id は `apple:<id>` で dedup 済み。"""
         raise NotImplementedError

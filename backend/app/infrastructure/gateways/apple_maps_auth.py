@@ -1,4 +1,4 @@
-"""Apple Maps Server API の JWT / access token。キーは @kawayama から取得。"""
+"""Apple Maps Server API の JWT と access token。"""
 
 from __future__ import annotations
 
@@ -17,19 +17,18 @@ from app.domain.exceptions import ExternalServiceError, ExternalServiceTimeoutEr
 logger = logging.getLogger(__name__)
 
 APPLE_MAPS_BASE_URL = "https://maps-api.apple.com/v1"
-# maps_auth_token (自前署名 JWT) の寿命。access token は別途 expiresInSeconds で管理する。
+# maps_auth_token (自前署名 JWT) の寿命。access token は expiresInSeconds で別管理。
 MAPS_AUTH_TOKEN_TTL_SECONDS = 3600
-# access token 更新の安全マージン (秒)
 ACCESS_TOKEN_EXPIRY_SKEW_SECONDS = 60
 SERVICE_NAME = "Apple Maps Server API"
 
 
 class AppleMapsCredentialsError(ValueError):
-    """Apple Maps 認証に必要な環境変数 / 秘密鍵が不足している"""
+    """Apple Maps 認証に必要な環境変数または秘密鍵が不足している。"""
 
 
 class AppleMapsTokenProvider:
-    """Maps Server API 用 access token の発行とキャッシュ"""
+    """Maps Server API 用 access token の発行とキャッシュ。"""
 
     def __init__(
         self,
@@ -40,15 +39,7 @@ class AppleMapsTokenProvider:
         base_url: str = APPLE_MAPS_BASE_URL,
         session: requests.Session | None = None,
     ) -> None:
-        """初期化
-
-        Args:
-            team_id: Apple Developer Team ID (10 文字)
-            key_id: Maps 用秘密鍵の Key ID (10 文字)
-            private_key_pem: .p8 秘密鍵の PEM 文字列
-            base_url: API ベース URL (テスト差し替え用)
-            session: requests.Session (テスト差し替え用)
-        """
+        """初期化"""
         self._team_id = team_id
         self._key_id = key_id
         self._private_key_pem = private_key_pem
@@ -86,26 +77,7 @@ class AppleMapsTokenProvider:
         base_url: str = APPLE_MAPS_BASE_URL,
         session: requests.Session | None = None,
     ) -> AppleMapsTokenProvider:
-        """環境変数相当の値から Provider を構築する。
-
-        秘密鍵は APPLE_MAPS_PRIVATE_KEY (PEM) を優先し、無ければ
-        APPLE_MAPS_PRIVATE_KEY_PATH (.p8) を読む。
-
-        Args:
-            team_id: APPLE_TEAM_ID
-            key_id: APPLE_MAPS_KEY_ID
-            private_key_pem: APPLE_MAPS_PRIVATE_KEY (PEM 文字列)
-            private_key_path: APPLE_MAPS_PRIVATE_KEY_PATH (.p8 パス)
-            backend_dir: 相対パス解決の基準 (未指定なら CWD)
-            base_url: API ベース URL
-            session: requests.Session
-
-        Returns:
-            AppleMapsTokenProvider
-
-        Raises:
-            AppleMapsCredentialsError: 必須値が欠けている / 鍵が読めない場合
-        """
+        """PEM 文字列を優先し、無ければ .p8 パスを読む。"""
         missing_ids = [
             name
             for name, value in (
@@ -151,14 +123,7 @@ class AppleMapsTokenProvider:
         )
 
     def create_maps_auth_token(self, *, now: float | None = None) -> str:
-        """ES256 で maps_auth_token (JWT) を署名する。
-
-        Args:
-            now: 現在時刻 (UNIX 秒)。テスト差し替え用。
-
-        Returns:
-            str: 署名済み JWT
-        """
+        """ES256 で maps_auth_token (JWT) を署名する。"""
         issued_at = int(time.time() if now is None else now)
         headers = {
             "alg": "ES256",
@@ -174,19 +139,7 @@ class AppleMapsTokenProvider:
         return jwt.encode(payload, self._private_key_pem, algorithm="ES256", headers=headers)
 
     def get_access_token(self, *, force_refresh: bool = False, now: float | None = None) -> str:
-        """有効な access token を返す (期限までキャッシュ)。
-
-        Args:
-            force_refresh: True ならキャッシュを無視して再取得
-            now: 現在時刻 (UNIX 秒)。テスト差し替え用。
-
-        Returns:
-            str: Bearer に載せる access token
-
-        Raises:
-            ExternalServiceError: /v1/token 呼び出し失敗
-            ExternalServiceTimeoutError: タイムアウト
-        """
+        """有効な access token を返す。期限まではキャッシュする。"""
         current = time.time() if now is None else now
         if (
             not force_refresh

@@ -100,12 +100,10 @@ if not GOOGLE_API_KEY:
         "GOOGLE_API_KEY環境変数が設定されていません。.envファイルまたは環境変数に設定してください。"
     )
 
-# Apple Maps。未設定でも起動・単体テストは通す。キーは @kawayama から取得
 APPLE_TEAM_ID = os.environ.get("APPLE_TEAM_ID")
 APPLE_MAPS_KEY_ID = os.environ.get("APPLE_MAPS_KEY_ID")
 APPLE_MAPS_PRIVATE_KEY = os.environ.get("APPLE_MAPS_PRIVATE_KEY")
 APPLE_MAPS_PRIVATE_KEY_PATH = os.environ.get("APPLE_MAPS_PRIVATE_KEY_PATH")
-APPLE_MAPS_ID = os.environ.get("APPLE_MAPS_ID")
 
 # 環境 (dev または prod) を取得
 ENV = os.environ.get("ENV", "dev")

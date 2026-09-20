@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from pydantic import BaseModel, Discriminator, Field
 
+from app.application.gateway_interfaces.apple_maps_gateway import is_apple_place_id
 from app.application.usecases.route_result_dto import RoutePointDto, RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
 
@@ -160,29 +161,16 @@ class RouteResponse(BaseModel):
 
 
 def _extract_genre(point: RoutePointDto) -> str | None:
-    """地点DTOから表示用ジャンルを取得する"""
     landmark = point.landmark
     if landmark is None:
         return None
     return landmark.primary_type or (landmark.types[0] if landmark.types else None)
 
 
-_APPLE_PLACE_ID_PREFIX = "apple:"
-
-
-def _is_google_place_id(place_id: str) -> bool:
-    """Google Maps の query_place_id に載せられる ID かどうか。"""
-    return not place_id.startswith(_APPLE_PLACE_ID_PREFIX)
-
-
 def _build_google_maps_url(coordinate: Coordinate, place_id: str | None) -> str:
-    """Google Mapsで地点詳細を開くURLを構築する
-
-    目的地検索が Apple Maps のとき place_id は `apple:` 付きになる。
-    Google の query_place_id には渡せないので、その場合は座標検索だけにする。
-    """
+    """Google Maps の地点 URL。Apple ID は query_place_id に載せない。"""
     lat, lng = coordinate.to_float_tuple()
     query = {"api": "1", "query": f"{lat},{lng}"}
-    if place_id and _is_google_place_id(place_id):
+    if place_id and not is_apple_place_id(place_id):
         query["query_place_id"] = place_id
     return f"https://www.google.com/maps/search/?{urlencode(query)}"
