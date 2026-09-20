@@ -125,7 +125,7 @@ class GenerateRouteUseCase:
                 if not destination_landmarks:
                     raise ExternalServiceValidationError(
                         "指定距離付近にランドマークが見つかりませんでした",
-                        service_name="Places API",
+                        service_name="Apple Maps Server API",
                     )
 
                 destination_landmark, destination_image = self.landmark_selector.select(

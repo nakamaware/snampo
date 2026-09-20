@@ -167,10 +167,22 @@ def _extract_genre(point: RoutePointDto) -> str | None:
     return landmark.primary_type or (landmark.types[0] if landmark.types else None)
 
 
+_APPLE_PLACE_ID_PREFIX = "apple:"
+
+
+def _is_google_place_id(place_id: str) -> bool:
+    """Google Maps の query_place_id に載せられる ID かどうか。"""
+    return not place_id.startswith(_APPLE_PLACE_ID_PREFIX)
+
+
 def _build_google_maps_url(coordinate: Coordinate, place_id: str | None) -> str:
-    """Google Mapsで地点詳細を開くURLを構築する"""
+    """Google Mapsで地点詳細を開くURLを構築する
+
+    目的地検索が Apple Maps のとき place_id は `apple:` 付きになる。
+    Google の query_place_id には渡せないので、その場合は座標検索だけにする。
+    """
     lat, lng = coordinate.to_float_tuple()
     query = {"api": "1", "query": f"{lat},{lng}"}
-    if place_id:
+    if place_id and _is_google_place_id(place_id):
         query["query_place_id"] = place_id
     return f"https://www.google.com/maps/search/?{urlencode(query)}"

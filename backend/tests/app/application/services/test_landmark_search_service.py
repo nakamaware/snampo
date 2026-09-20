@@ -40,6 +40,8 @@ class TestLandmarkSearchService:
         assert len(landmarks) == 1
         assert landmarks[0].place_id == "apple:1"
         assert landmarks[0].display_name == "箱根公園"
+        assert landmarks[0].primary_type == "park"
+        assert landmarks[0].types == ["park"]
         gateway.search_landmarks_nearby.assert_called_once_with(
             center,
             2000,

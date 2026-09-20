@@ -13,6 +13,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from requests.exceptions import HTTPError
 
+from app.application.gateway_interfaces.apple_maps_gateway import (
+    AppleSearchHit,
+    apple_poi_category_to_genre,
+)
 from app.domain.exceptions import ExternalServiceError
 from app.domain.value_objects import Coordinate
 from app.infrastructure.gateways.apple_maps_auth import (
@@ -89,6 +93,39 @@ class TestApplePoiCategoryMapping:
         assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["public_bath"] == "Spa"
         assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["japanese_inn"] == "Hotel"
         assert GOOGLE_TYPE_TO_APPLE_POI_CATEGORY["ferris_wheel"] == "Landmark"
+
+
+class TestApplePoiCategoryToGenre:
+    """Apple PoiCategory → フロント用ジャンルキー"""
+
+    def test_既知カテゴリはGoogle系キーになること(self) -> None:
+        """Park / ReligiousSite などを snake_case に固定する。"""
+        assert apple_poi_category_to_genre("Park") == "park"
+        assert apple_poi_category_to_genre("ReligiousSite") == "religious_site"
+        assert apple_poi_category_to_genre("Cafe") == "cafe"
+
+    def test_未知のPascalCaseは機械変換すること(self) -> None:
+        """マップに無いカテゴリは snake_case へ落とす。"""
+        assert apple_poi_category_to_genre("ScenicLookout") == "scenic_lookout"
+
+    def test_空はNoneのままであること(self) -> None:
+        """カテゴリ無しは Landmark.primary_type も無し。"""
+        assert apple_poi_category_to_genre(None) is None
+        assert apple_poi_category_to_genre("") is None
+
+    def test_to_landmarkがジャンルを正規化すること(self) -> None:
+        """VO 変換後の primary_type はフロントが読めるキーになる。"""
+        hit = AppleSearchHit(
+            place_id="apple:1",
+            display_name="箱根神社",
+            coordinate=Coordinate(latitude=35.2, longitude=139.1),
+            distance_m=2000.0,
+            source="query",
+            poi_category="ReligiousSite",
+        )
+        landmark = hit.to_landmark()
+        assert landmark.primary_type == "religious_site"
+        assert landmark.types == ["religious_site"]
 
 
 class TestBboxAndDistanceBand:

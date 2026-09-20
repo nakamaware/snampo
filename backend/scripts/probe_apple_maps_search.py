@@ -42,6 +42,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -50,15 +51,22 @@ _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
+
+def _load_env() -> None:
+    load_dotenv(_BACKEND_DIR / ".env")
+
+
+# app.config は import 時に os.environ を読む。backend/.env を先に載せる。
+_load_env()
+
 # app.config が GOOGLE_API_KEY を要求するため、未設定時はダミーを入れる (本スクリプトでは未使用)
 if "GOOGLE_API_KEY" not in os.environ:
     os.environ["GOOGLE_API_KEY"] = "dummy-key-for-apple-maps-search-probe"
 
+from app.application.gateway_interfaces.apple_maps_gateway import (  # noqa: E402
+    AppleSearchHit,
+)
 from app.config import (  # noqa: E402
-    APPLE_MAPS_KEY_ID,
-    APPLE_MAPS_PRIVATE_KEY,
-    APPLE_MAPS_PRIVATE_KEY_PATH,
-    APPLE_TEAM_ID,
     LANDMARK_DISTANCE_TOLERANCE_PERCENT,
     LANDMARK_SEARCH_MAX_CALLS,
     LANDMARK_SEARCH_TARGET_COUNT,
@@ -82,23 +90,19 @@ DEFAULT_FIXTURES: dict[str, tuple[float, float, int, str]] = {
 }
 
 
-def _load_env() -> None:
-    load_dotenv(_BACKEND_DIR / ".env")
-
-
 def _build_gateway() -> AppleMapsGatewayImpl:
+    # app.config 定数は import 時評価。ここは _load_env() 後の os.environ のみ見る。
     provider = AppleMapsTokenProvider.from_env(
-        team_id=APPLE_TEAM_ID or os.environ.get("APPLE_TEAM_ID"),
-        key_id=APPLE_MAPS_KEY_ID or os.environ.get("APPLE_MAPS_KEY_ID"),
-        private_key_pem=APPLE_MAPS_PRIVATE_KEY or os.environ.get("APPLE_MAPS_PRIVATE_KEY"),
-        private_key_path=APPLE_MAPS_PRIVATE_KEY_PATH
-        or os.environ.get("APPLE_MAPS_PRIVATE_KEY_PATH"),
+        team_id=os.environ.get("APPLE_TEAM_ID"),
+        key_id=os.environ.get("APPLE_MAPS_KEY_ID"),
+        private_key_pem=os.environ.get("APPLE_MAPS_PRIVATE_KEY"),
+        private_key_path=os.environ.get("APPLE_MAPS_PRIVATE_KEY_PATH"),
         backend_dir=_BACKEND_DIR,
     )
     return AppleMapsGatewayImpl(provider)
 
 
-def _print_table(hits: list, *, center_label: str) -> None:
+def _print_table(hits: list[AppleSearchHit], *, center_label: str) -> None:
     print(f"\n=== {center_label} ===")
     print(f"{'source':<10} {'distance_m':>10} {'category':<16} {'name':<28} coordinate")
     print("-" * 100)
@@ -122,7 +126,7 @@ def _run_one(
     radius_m: int,
     label: str,
     as_json: bool,
-) -> dict:
+) -> dict[str, Any]:
     center = Coordinate(latitude=lat, longitude=lng)
     seed = stable_search_seed(center, radius_m)
     queries = build_stratified_query_bag(seed)
@@ -197,8 +201,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    _load_env()
-
     try:
         gateway = _build_gateway()
     except AppleMapsCredentialsError as error:
@@ -210,33 +212,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
 
-    if args.fixture == "all" or (args.fixture is None and args.lat is None):
-        for name, (lat, lng, radius_m, description) in DEFAULT_FIXTURES.items():
-            results.append(
-                _run_one(
-                    gateway,
-                    lat=lat,
-                    lng=lng,
-                    radius_m=args.radius_m if args.radius_m is not None else radius_m,
-                    label=f"{name}: {description}",
-                    as_json=args.json,
-                )
-            )
-    elif args.fixture:
-        lat, lng, radius_m, description = DEFAULT_FIXTURES[args.fixture]
-        results.append(
-            _run_one(
-                gateway,
-                lat=lat,
-                lng=lng,
-                radius_m=args.radius_m if args.radius_m is not None else radius_m,
-                label=f"{args.fixture}: {description}",
-                as_json=args.json,
-            )
-        )
-    elif args.lat is not None and args.lng is not None:
+    if args.lat is not None and args.lng is not None and not args.fixture:
         results.append(
             _run_one(
                 gateway,
@@ -248,7 +226,21 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
     else:
-        parser.error("--lat/--lng か --fixture を指定してください")
+        if args.fixture and args.fixture != "all":
+            targets = {args.fixture: DEFAULT_FIXTURES[args.fixture]}
+        else:
+            targets = DEFAULT_FIXTURES
+        for name, (lat, lng, radius_m, description) in targets.items():
+            results.append(
+                _run_one(
+                    gateway,
+                    lat=lat,
+                    lng=lng,
+                    radius_m=args.radius_m if args.radius_m is not None else radius_m,
+                    label=f"{name}: {description}",
+                    as_json=args.json,
+                )
+            )
 
     if args.save:
         output_path = _BACKEND_DIR / "apple_maps_search_probe_result.json"

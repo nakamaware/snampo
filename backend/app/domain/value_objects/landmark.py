@@ -13,7 +13,10 @@ class Landmark(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    place_id: str = Field(min_length=1, description="Places APIのPlace ID")
+    place_id: str = Field(
+        min_length=1,
+        description="場所ID (Google Place ID、または apple: 付き Apple Maps ID)",
+    )
     display_name: str = Field(min_length=1, description="表示名")
     coordinate: Coordinate = Field(description="座標")
     primary_type: str | None = Field(default=None, description="主要タイプ")

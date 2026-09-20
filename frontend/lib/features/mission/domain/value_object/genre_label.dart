@@ -1,5 +1,6 @@
-// Google Places API の primaryType を日本語ラベルに変換するマップ
-// テーブルAとテーブルBを統合したもの
+// ジャンルキーを日本語ラベルに変換するマップ
+// Google Places の primaryType (snake_case) を主とし、Apple PoiCategory は
+// バックエンドで寄せるか、ここでも PascalCase を snake_case に直して引く。
 // 参考: https://developers.google.com/maps/documentation/places/web-service/place-types?hl=ja
 const _genreLabelMap = <String, String>{
   // 自動車
@@ -40,6 +41,7 @@ const _genreLabelMap = <String, String>{
   'museum': '博物館',
   'performing_arts_theater': '劇場',
   'point_of_interest': '観光スポット',
+  'religious_site': '神社・寺院',
   'sculpture': '彫刻',
   // 教育
   'academic_department': '学部・学科',
@@ -537,8 +539,32 @@ const _genreLabelMap = <String, String>{
   'truck_stop': 'トラックステーション',
 };
 
+String _pascalToSnake(String value) {
+  final buffer = StringBuffer();
+  for (var i = 0; i < value.length; i++) {
+    final char = value[i];
+    final isUpper = char.toUpperCase() == char && char.toLowerCase() != char;
+    if (isUpper && i > 0) {
+      buffer.write('_');
+    }
+    buffer.write(char.toLowerCase());
+  }
+  return buffer.toString();
+}
+
 /// ジャンル識別子の日本語ラベル変換
 extension GenreLabel on String {
-  /// 存在しない値はそのまま返す
-  String get japaneseLabel => _genreLabelMap[this] ?? this;
+  /// Google の snake_case に加え、Apple PoiCategory の PascalCase も日本語化する。
+  /// 未知の値はそのまま返す。
+  String get japaneseLabel {
+    final direct = _genreLabelMap[this];
+    if (direct != null) {
+      return direct;
+    }
+    final snake = _pascalToSnake(this);
+    if (snake != this) {
+      return _genreLabelMap[snake] ?? this;
+    }
+    return this;
+  }
 }
