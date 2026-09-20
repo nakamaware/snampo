@@ -539,6 +539,7 @@ const _genreLabelMap = <String, String>{
   'truck_stop': 'トラックステーション',
 };
 
+/// PascalCase / camelCase を snake_case にする。
 String _pascalToSnake(String value) {
   final buffer = StringBuffer();
   for (var i = 0; i < value.length; i++) {
@@ -554,7 +555,8 @@ String _pascalToSnake(String value) {
 
 /// ジャンル識別子の日本語ラベル変換
 extension GenreLabel on String {
-  /// Google の snake_case に加え、Apple PoiCategory の PascalCase も日本語化する。
+  /// Google の snake_case に加え、
+  /// Apple の PascalCase も日本語化する。
   /// 未知の値はそのまま返す。
   String get japaneseLabel {
     final direct = _genreLabelMap[this];
