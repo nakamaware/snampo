@@ -1,18 +1,4 @@
-"""Apple Maps Server API の JWT / access token 管理
-
-認証フロー:
-1. Team ID + Key ID + .p8/PEM で ES256 JWT (maps_auth_token) を署名
-2. GET /v1/token で短い access token に交換
-3. 有効期限までキャッシュして再利用
-
-秘密鍵は Cloud Run では APPLE_MAPS_PRIVATE_KEY (PEM 文字列)、
-ローカルでは APPLE_MAPS_PRIVATE_KEY_PATH (.p8 ファイル) を優先順で読む。
-PEM / token はログに出さない。
-
-参考:
-https://developer.apple.com/documentation/applemapsserverapi/creating-and-using-tokens-with-maps-server-api
-https://developer.apple.com/documentation/applemapsserverapi/-v1-token
-"""
+"""Apple Maps Server API の JWT / access token。キーは @kawayama から取得。"""
 
 from __future__ import annotations
 

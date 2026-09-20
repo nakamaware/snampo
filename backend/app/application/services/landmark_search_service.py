@@ -1,9 +1,4 @@
-"""ランドマーク検索アプリケーションサービス
-
-目的地選定向けのランドマーク検索オーケストレーションを提供します。
-Apple Maps Server API の層別クエリ + ファンアウトを利用します。
-(中間地点検索・Directions・Street View は GoogleMapsGateway のまま)
-"""
+"""目的地ランドマーク検索。中間地点は Google のまま。"""
 
 import logging
 

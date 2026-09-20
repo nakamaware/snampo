@@ -27,7 +27,6 @@ module "snampo_dev" {
   project_env  = local.env
   project_id   = local.project_id
   project_name = local.project_name
-  # Apple Maps (目的地検索)。秘密鍵 PEM は Secret Manager へ別途 versions add。
   apple_team_id     = var.apple_team_id
   apple_maps_key_id = var.apple_maps_key_id
   # 有効化するAPI

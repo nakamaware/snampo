@@ -1,17 +1,4 @@
-"""Apple Maps Server API 検索 Gateway 実装
-
-本番の目的地ランドマーク検索用。Directions / Street View / Roads は Google のまま。
-
-検索戦略:
-1. 目標距離 * 1.15 の bbox を searchRegion とし、層別シャッフルした日本語クエリで検索
-   (searchLocation と同時指定しない。カテゴリのみ検索は使わない)
-2. 距離帯 (±tolerance%) 内のユニーク件数で早期停止 (予算は LANDMARK_SEARCH_MAX_CALLS)
-3. 不足時は円周上の点で searchLocation のみのファンアウト (残り予算)
-
-place_id は `apple:<id>` で Google と衝突しない。
-
-参考: https://developer.apple.com/documentation/applemapsserverapi/-v1-search
-"""
+"""Apple Maps 目的地検索。searchRegion と searchLocation は同時指定しない。"""
 
 from __future__ import annotations
 
@@ -241,7 +228,6 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
         hits_by_id: dict[str, AppleSearchHit] = {}
         calls = 0
 
-        # 1. クエリフェーズ (searchRegion のみ)
         for query in queries:
             if len(hits_by_id) >= resolved_target or calls >= resolved_max_calls:
                 break
@@ -256,7 +242,6 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
                 source="query",
             )
 
-        # 2. ファンアウト (searchLocation のみ、残り予算)
         if len(hits_by_id) < resolved_target and calls < resolved_max_calls:
             tolerance_ratio = resolved_tolerance / 100.0
             search_radius = calculate_search_radius(radius_m, tolerance_ratio, MIN_SEARCH_RADIUS_M)

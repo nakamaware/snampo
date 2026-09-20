@@ -1,7 +1,4 @@
-"""Apple Maps Server API Gateway ポート (目的地ランドマーク検索)
-
-Directions / Street View / Roads は GoogleMapsGateway のまま。
-"""
+"""Apple Maps 目的地検索ポート。Directions / Street View / Roads は Google。"""
 
 from __future__ import annotations
 

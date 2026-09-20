@@ -1,10 +1,4 @@
-"""Google Places タイプ → Apple Maps PoiCategory の粗マッピング
-
-スパイク用。1:1 対応ではないため、複数 Google タイプを同一 Apple カテゴリへ畳み込む。
-Apple に無い語彙 (public_bath / japanese_inn / ferris_wheel 等) は Spa / Hotel / Landmark へ寄せる。
-
-参考: https://developer.apple.com/documentation/applemapsserverapi/poicategory
-"""
+"""Google Places タイプ → Apple PoiCategory。1:1 ではない。"""
 
 from __future__ import annotations
 

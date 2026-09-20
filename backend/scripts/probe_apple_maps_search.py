@@ -1,38 +1,10 @@
 #!/usr/bin/env python3
-"""Apple Maps Server API の層別クエリ近傍検索をローカルから検証する probe。
-
-#235 目的地ランドマーク検索 (本番は LandmarkSearchService → AppleMapsGateway)。
-Directions / Street View / Roads / 中間地点検索は Google のまま。
-
-## 事前準備 (Maps Server API キー)
-
-1. [Apple Developer](https://developer.apple.com/account) にログイン
-2. Identifiers → Maps IDs で Maps ID を作成
-3. Keys → MapKit JS を有効化し Maps ID を紐づけて `.p8` を Download
-4. `backend/.env.example` を参考に設定
-
-環境変数:
-  APPLE_TEAM_ID
-  APPLE_MAPS_KEY_ID
-  APPLE_MAPS_PRIVATE_KEY       (PEM 文字列。Cloud Run / Secret Manager 向け。優先)
-  APPLE_MAPS_PRIVATE_KEY_PATH  (ローカル .p8。PEM が無いときのフォールバック)
-  APPLE_MAPS_ID                (任意。鍵作成時の Maps ID 追跡用)
-
-## 使い方
+"""Apple Maps 目的地検索のローカル probe。キーは @kawayama から取得。
 
 ```bash
 cd backend
-uv run python scripts/probe_apple_maps_search.py
-uv run python scripts/probe_apple_maps_search.py --lat 35.232 --lng 139.107 --radius-m 2000
-uv run python scripts/probe_apple_maps_search.py --fixture all --json
+uv run python scripts/probe_apple_maps_search.py --fixture hakone --json
 ```
-
-認証情報が無い場合は非ゼロ終了し、単体テストには影響しない。
-
-## 成功の目安
-
-箱根 (~35.232, 139.107) や栗橋/久喜 (~36.122, 139.700) で、目標距離 ±15% 帯に
-複数の POI が返り、`source` が `query` / `fanout` のどちらで拾えたか確認できること。
 """
 
 from __future__ import annotations
@@ -46,7 +18,6 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-# backend/ を import パスへ
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
@@ -56,10 +27,7 @@ def _load_env() -> None:
     load_dotenv(_BACKEND_DIR / ".env")
 
 
-# app.config は import 時に os.environ を読む。backend/.env を先に載せる。
 _load_env()
-
-# app.config が GOOGLE_API_KEY を要求するため、未設定時はダミーを入れる (本スクリプトでは未使用)
 if "GOOGLE_API_KEY" not in os.environ:
     os.environ["GOOGLE_API_KEY"] = "dummy-key-for-apple-maps-search-probe"
 
@@ -91,7 +59,6 @@ DEFAULT_FIXTURES: dict[str, tuple[float, float, int, str]] = {
 
 
 def _build_gateway() -> AppleMapsGatewayImpl:
-    # app.config 定数は import 時評価。ここは _load_env() 後の os.environ のみ見る。
     provider = AppleMapsTokenProvider.from_env(
         team_id=os.environ.get("APPLE_TEAM_ID"),
         key_id=os.environ.get("APPLE_MAPS_KEY_ID"),
