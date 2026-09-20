@@ -19,8 +19,8 @@ class CameraPageArgs {
   /// 正解画像の base64 文字列
   final String referenceImageBase64;
 
-  /// 画像確定後の処理
-  final Future<bool> Function(XFile file) onPhotoAccepted;
+  /// 画像確定後の処理。撮影時のズームレベルを合わせて渡す
+  final Future<bool> Function(XFile file, double zoomLevel) onPhotoAccepted;
 }
 
 /// カメラページウィジェット。
@@ -454,7 +454,10 @@ class _CameraPageState extends State<CameraPage> {
         ),
       );
 
-      final isAccepted = await widget.args.onPhotoAccepted(file);
+      final isAccepted = await widget.args.onPhotoAccepted(
+        file,
+        _currentZoomLevel,
+      );
 
       if (rootNavigator.mounted) {
         rootNavigator.pop();

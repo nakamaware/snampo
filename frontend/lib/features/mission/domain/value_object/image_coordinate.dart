@@ -29,6 +29,12 @@ abstract class ImageCoordinate with _$ImageCoordinate {
 
     /// Google Maps の詳細URL
     String? googleMapsUrl,
+
+    /// ストリートビュー撮影位置の緯度 (ランドマーク座標 [coordinate] とは別)
+    double? streetViewLatitude,
+
+    /// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
+    double? streetViewLongitude,
   }) = _ImageCoordinate;
 
   /// JSON から [ImageCoordinate] を生成する

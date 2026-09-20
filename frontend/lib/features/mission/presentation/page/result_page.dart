@@ -32,6 +32,7 @@ class ResultPage extends ConsumerWidget {
             }
 
             final points = [...mission.waypoints, mission.destination];
+            final isDestinationMode = mission.radius == null;
             return Scaffold(
               appBar: AppBar(
                 title: Text(
@@ -73,6 +74,9 @@ class ResultPage extends ConsumerWidget {
                                       : 'Spot ${index + 1}',
                               point: points[index],
                               checkpoint: checkpoint,
+                              isSelectedDestinationGoal:
+                                  isDestinationMode &&
+                                  index == points.length - 1,
                               onTap:
                                   !hasResultPhoto
                                       ? null
@@ -84,6 +88,7 @@ class ResultPage extends ConsumerWidget {
                                           missionPoint: points[index],
                                           checkpoint: checkpoint!,
                                           fromResultPage: true,
+                                          isDestinationMode: isDestinationMode,
                                         ),
                                       ),
                             );
@@ -152,17 +157,25 @@ class _ResultCard extends StatelessWidget {
     required this.title,
     required this.point,
     required this.checkpoint,
+    required this.isSelectedDestinationGoal,
     required this.onTap,
   });
 
   final String title;
   final ImageCoordinate point;
   final CheckpointProgress? checkpoint;
+  final bool isSelectedDestinationGoal;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final pointNameText =
+        point.name ?? (isSelectedDestinationGoal ? '指定したゴール地点' : '取得できませんでした');
+    final genreText =
+        point.genre?.japaneseLabel ??
+        (isSelectedDestinationGoal ? '目的地指定' : '取得できませんでした');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -197,8 +210,8 @@ class _ResultCard extends StatelessWidget {
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 4),
-                    Text(point.name ?? '取得できませんでした'),
-                    Text(point.genre?.japaneseLabel ?? '取得できませんでした'),
+                    Text(pointNameText),
+                    Text(genreText),
                     const SizedBox(height: 4),
                     Text('判定: ${checkpoint?.judgeRank?.label ?? '未採点'}'),
                     const SizedBox(height: 8),
