@@ -7,8 +7,10 @@ from fastapi import FastAPI
 
 from app.api.openapi import custom_openapi
 from app.api.routes import route
+from app.config import ENV
 
-logging.basicConfig(level=logging.INFO)
+LOG_LEVEL = logging.DEBUG if ENV == "dev" else logging.INFO
+logging.basicConfig(level=LOG_LEVEL)
 
 logger = logging.getLogger(__name__)
 app = FastAPI()

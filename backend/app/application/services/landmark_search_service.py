@@ -73,14 +73,14 @@ class LandmarkSearchService:
         calls = 0
 
         # 1. 中心地から指定した距離内のランドマークを検索
-        logger.info(f"Search landmarks around center: {center}")
+        logger.debug(f"Search landmarks around center: {center}")
         try:
             landmarks = self._gateway.search_landmarks_nearby(center, target_distance_m)
             calls += 1
             seen = self._add_landmarks(
                 seen, landmarks, min_filter_distance, max_filter_distance, center
             )
-            logger.info(f"Find {len(seen)} new landmarks around center")
+            logger.debug(f"Find {len(seen)} new landmarks around center")
             if self._should_stop(seen, target_count, calls, max_calls):
                 return list(seen.values())
         except ExternalServiceError:
@@ -95,7 +95,7 @@ class LandmarkSearchService:
         circle_points = generate_equidistant_circle_points(center, target_distance_m, search_radius)
 
         # 円周上の点から指定した距離内のランドマークを検索
-        logger.info(f"Search landmarks around circle points: {circle_points}")
+        logger.debug(f"Search landmarks around circle points: {circle_points}")
         for point_lat, point_lng in circle_points:
             try:
                 point_coordinate = Coordinate(latitude=point_lat, longitude=point_lng)
@@ -105,7 +105,7 @@ class LandmarkSearchService:
                 seen = self._add_landmarks(
                     seen, landmarks, min_filter_distance, max_filter_distance, center
                 )
-                logger.info(
+                logger.debug(
                     f"Find {len(seen) - prev_seen_length} new landmarks around circle points"
                 )
                 if self._should_stop(seen, target_count, calls, max_calls):
