@@ -85,10 +85,12 @@ void main() {
       container = ProviderContainer(
         overrides: [
           locationServiceProvider.overrideWithValue(fakeLocationService),
-          notificationServiceProvider
-              .overrideWithValue(fakeNotificationService),
-          missionProgressStoreProvider
-              .overrideWith(FakeMissionProgressStoreNotifier.new),
+          notificationServiceProvider.overrideWithValue(
+            fakeNotificationService,
+          ),
+          missionProgressStoreProvider.overrideWith(
+            FakeMissionProgressStoreNotifier.new,
+          ),
         ],
       );
     });
@@ -100,8 +102,7 @@ void main() {
 
     test('startMonitoring で位置情報を受信し、最接近から離脱して60秒経過で通知イベントが発火する', () {
       fakeAsync((async) {
-        final notifier =
-            container.read(spotProximityStoreProvider.notifier);
+        final notifier = container.read(spotProximityStoreProvider.notifier);
 
         SpotDepartureAlertEvent? receivedEvent;
         final sub = notifier.alertEvents.listen((event) {
@@ -153,10 +154,7 @@ void main() {
 
         // OSローカル通知も発火されていることを検証
         expect(fakeNotificationService.lastAlertId, 0);
-        expect(
-          fakeNotificationService.lastTitle,
-          contains('写真の撮り忘れはありませんか？'),
-        );
+        expect(fakeNotificationService.lastTitle, contains('写真の撮り忘れはありませんか？'));
         expect(fakeNotificationService.lastBody, contains('Spot 1'));
 
         final state4 = container.read(spotProximityStoreProvider);
@@ -168,8 +166,7 @@ void main() {
 
     test('離脱カウントダウン中に再接近した場合、タイマーが破棄され通知は発火しない', () {
       fakeAsync((async) {
-        final notifier =
-            container.read(spotProximityStoreProvider.notifier);
+        final notifier = container.read(spotProximityStoreProvider.notifier);
 
         SpotDepartureAlertEvent? receivedEvent;
         final sub = notifier.alertEvents.listen((event) {

@@ -30,9 +30,7 @@ class LocationService implements ILocationService {
       accuracy: LocationAccuracy.high,
       distanceFilter: distanceFilterMeters,
     );
-    return Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).map(
+    return Geolocator.getPositionStream(locationSettings: locationSettings).map(
       (position) => Coordinate(
         latitude: position.latitude,
         longitude: position.longitude,

@@ -118,10 +118,11 @@ class EvaluateSpotProximityUseCase {
       );
     }
 
-    final prevSmoothedDistance = currentState.recentDistances.isNotEmpty
-        ? currentState.recentDistances.reduce((a, b) => a + b) /
-            currentState.recentDistances.length
-        : currentDistance;
+    final prevSmoothedDistance =
+        currentState.recentDistances.isNotEmpty
+            ? currentState.recentDistances.reduce((a, b) => a + b) /
+                currentState.recentDistances.length
+            : currentDistance;
 
     // 4. 最短距離を更新した場合（接近フェーズ）
     if (smoothedDistance < minDistance) {

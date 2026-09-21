@@ -56,9 +56,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     state = null;
 
     final locationService = ref.read(locationServiceProvider);
-    _positionSubscription = locationService
-        .getPositionStream()
-        .listen(_onPositionUpdate);
+    _positionSubscription = locationService.getPositionStream().listen(
+      _onPositionUpdate,
+    );
   }
 
   /// 監視を停止する
@@ -191,19 +191,18 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
                 : '目的地');
 
     _alertEventController.add(
-      SpotDepartureAlertEvent(
-        spotIndex: targetIndex,
-        spotName: spotName,
-      ),
+      SpotDepartureAlertEvent(spotIndex: targetIndex, spotName: spotName),
     );
 
     // OSローカルプッシュ通知も発火
     unawaited(
-      ref.read(notificationServiceProvider).showDepartureAlert(
-        id: targetIndex,
-        title: '写真の撮り忘れはありませんか？',
-        body: '$spotName から離れています。撮影を忘れていないか確認してください。',
-      ),
+      ref
+          .read(notificationServiceProvider)
+          .showDepartureAlert(
+            id: targetIndex,
+            title: '写真の撮り忘れはありませんか？',
+            body: '$spotName から離れています。撮影を忘れていないか確認してください。',
+          ),
     );
   }
 
