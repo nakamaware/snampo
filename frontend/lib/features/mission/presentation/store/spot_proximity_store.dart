@@ -196,6 +196,15 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
         spotName: spotName,
       ),
     );
+
+    // OSローカルプッシュ通知も発火
+    unawaited(
+      ref.read(notificationServiceProvider).showDepartureAlert(
+        id: targetIndex,
+        title: '写真の撮り忘れはありませんか？',
+        body: '$spotName から離れています。撮影を忘れていないか確認してください。',
+      ),
+    );
   }
 
   void _cleanup() {

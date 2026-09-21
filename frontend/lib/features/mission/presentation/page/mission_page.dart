@@ -22,6 +22,7 @@ import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/mission/presentation/store/spot_proximity_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 // 競合解消メモ（main × 再開機能の統合）:
@@ -104,6 +105,66 @@ class MissionPage extends HookConsumerWidget {
     });
 
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
+
+    // ミッション確定時にスポット接近・離脱監視を開始
+    useEffect(() {
+      final mission = missionAsyncValue.value;
+      if (mission != null) {
+        ref.read(spotProximityStoreProvider.notifier).startMonitoring(mission);
+      }
+      return null;
+    }, [missionAsyncValue.value]);
+
+    // 撮り忘れ通知イベント（60秒継続離脱）を購読して SnackBar を表示
+    useEffect(() {
+      final sub = ref
+          .read(spotProximityStoreProvider.notifier)
+          .alertEvents
+          .listen((event) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.camera_alt_outlined,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '写真の撮り忘れはありませんか？\n${event.spotName} から離れています。',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange.shade800,
+            duration: const Duration(seconds: 8),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            action: SnackBarAction(
+              label: '閉じる',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      });
+
+      return () {
+        sub.cancel();
+        ref.read(spotProximityStoreProvider.notifier).stopMonitoring();
+      };
+    }, const []);
 
     return missionAsyncValue.when(
       data: (missionInfo) {

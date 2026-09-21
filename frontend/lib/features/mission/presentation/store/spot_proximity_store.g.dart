@@ -45,7 +45,7 @@ final class SpotProximityStoreNotifierProvider
 }
 
 String _$spotProximityStoreNotifierHash() =>
-    r'fdf2f8f4c95fee06a574cd52e06c3f442bdf5c9f';
+    r'2b5a22f1e4afb349a58429f0f74766db9cfb250c';
 
 /// スポット離脱監視と通知制御を行うストア
 

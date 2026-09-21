@@ -630,3 +630,56 @@ final class EvaluateSpotProximityUseCaseProvider
 
 String _$evaluateSpotProximityUseCaseHash() =>
     r'02baa4ff9757ce72041660e954c14aea1857a384';
+
+/// 通知サービスのプロバイダー
+
+@ProviderFor(notificationService)
+final notificationServiceProvider = NotificationServiceProvider._();
+
+/// 通知サービスのプロバイダー
+
+final class NotificationServiceProvider
+    extends
+        $FunctionalProvider<
+          INotificationService,
+          INotificationService,
+          INotificationService
+        >
+    with $Provider<INotificationService> {
+  /// 通知サービスのプロバイダー
+  NotificationServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'notificationServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$notificationServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<INotificationService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  INotificationService create(Ref ref) {
+    return notificationService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(INotificationService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<INotificationService>(value),
+    );
+  }
+}
+
+String _$notificationServiceHash() =>
+    r'e7ff11502a248b43337d88c346a27bfefe70ac99';

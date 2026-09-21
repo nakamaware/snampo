@@ -4,6 +4,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
+import 'package:snampo/features/mission/application/interface/notification_service.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -25,6 +26,29 @@ class FakeLocationService implements ILocationService {
       controller.stream;
 }
 
+class FakeNotificationService implements INotificationService {
+  int? lastAlertId;
+  String? lastTitle;
+  String? lastBody;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<void> showDepartureAlert({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    lastAlertId = id;
+    lastTitle = title;
+    lastBody = body;
+  }
+
+  @override
+  Future<void> cancel(int id) async {}
+}
+
 class FakeMissionProgressStoreNotifier extends MissionProgressStoreNotifier {
   @override
   Future<MissionProgressEntity?> build() async => null;
@@ -33,6 +57,7 @@ class FakeMissionProgressStoreNotifier extends MissionProgressStoreNotifier {
 void main() {
   group('SpotProximityStoreNotifier', () {
     late FakeLocationService fakeLocationService;
+    late FakeNotificationService fakeNotificationService;
     late ProviderContainer container;
 
     // Spot 1: (35.6812, 139.7671)
@@ -56,9 +81,12 @@ void main() {
 
     setUp(() {
       fakeLocationService = FakeLocationService();
+      fakeNotificationService = FakeNotificationService();
       container = ProviderContainer(
         overrides: [
           locationServiceProvider.overrideWithValue(fakeLocationService),
+          notificationServiceProvider
+              .overrideWithValue(fakeNotificationService),
           missionProgressStoreProvider
               .overrideWith(FakeMissionProgressStoreNotifier.new),
         ],
@@ -122,6 +150,14 @@ void main() {
         expect(receivedEvent, isNotNull);
         expect(receivedEvent!.spotIndex, 0);
         expect(receivedEvent!.spotName, contains('Spot 1'));
+
+        // OSローカル通知も発火されていることを検証
+        expect(fakeNotificationService.lastAlertId, 0);
+        expect(
+          fakeNotificationService.lastTitle,
+          contains('写真の撮り忘れはありませんか？'),
+        );
+        expect(fakeNotificationService.lastBody, contains('Spot 1'));
 
         final state4 = container.read(spotProximityStoreProvider);
         expect(state4!.status, SpotProximityStatus.notified);
