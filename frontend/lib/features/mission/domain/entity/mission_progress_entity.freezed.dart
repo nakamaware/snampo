@@ -55,7 +55,7 @@ abstract mixin class $CheckpointProgressCopyWith<$Res>  {
   factory $CheckpointProgressCopyWith(CheckpointProgress value, $Res Function(CheckpointProgress) _then) = _$CheckpointProgressCopyWithImpl;
 @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees,@PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 
@@ -273,7 +273,7 @@ abstract mixin class _$CheckpointProgressCopyWith<$Res> implements $CheckpointPr
   factory _$CheckpointProgressCopyWith(_CheckpointProgress value, $Res Function(_CheckpointProgress) _then) = __$CheckpointProgressCopyWithImpl;
 @override @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees,@PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 
