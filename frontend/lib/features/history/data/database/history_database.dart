@@ -88,7 +88,9 @@ class HistorySpots extends Table {
   /// 正解画像の基準方角 (度)
   RealColumn get referenceHeading => real().nullable()();
 
-  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  /// 採点ランク (`excellent` / `good` / `fair` / `miss`)
+  ///
+  /// 旧バージョンで保存された `retry` は読み込み時に `miss` として扱う。
   TextColumn get judgeRank => text().nullable()();
 
   /// 位置誤差 (m)

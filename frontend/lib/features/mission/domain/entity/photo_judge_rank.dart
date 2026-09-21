@@ -9,8 +9,8 @@ enum PhotoJudgeRank {
   /// ふつう
   fair,
 
-  /// 再挑戦
-  retry,
+  /// 基準外
+  miss,
 }
 
 /// 採点ランクの表示文言
@@ -24,8 +24,8 @@ extension PhotoJudgeRankLabel on PhotoJudgeRank {
         return 'Good';
       case PhotoJudgeRank.fair:
         return 'Fair';
-      case PhotoJudgeRank.retry:
-        return 'Retry';
+      case PhotoJudgeRank.miss:
+        return 'Miss';
     }
   }
 }

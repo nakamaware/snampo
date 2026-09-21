@@ -33,7 +33,7 @@ class StreetViewImageFetchService:
             gateway: Google Maps Gateway
         """
         self._gateway = gateway
-        self._default_image_size = ImageSize(width=600, height=300)
+        self._default_image_size = ImageSize(width=400, height=400)
 
     def get_image(
         self, coordinate: Coordinate, image_size: ImageSize | None = None

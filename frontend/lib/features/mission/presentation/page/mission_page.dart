@@ -373,6 +373,7 @@ class SnapViewState extends HookConsumerWidget {
           ...missionInfo.waypoints,
           missionInfo.destination,
         ];
+        final isDestinationMode = missionInfo.radius == null;
         final allCompleted = progressAsync.maybeWhen(
           data:
               (progress) =>
@@ -402,6 +403,7 @@ class SnapViewState extends HookConsumerWidget {
                   orElse: () => null,
                 ),
                 totalCheckpointCount: missionSpots.length,
+                isDestinationMode: isDestinationMode,
               ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -474,12 +476,14 @@ class _MissionSpotRow extends StatelessWidget {
     required this.missionPoint,
     required this.checkpoint,
     required this.totalCheckpointCount,
+    required this.isDestinationMode,
   });
 
   final int index;
   final ImageCoordinate missionPoint;
   final CheckpointProgress? checkpoint;
   final int totalCheckpointCount;
+  final bool isDestinationMode;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +498,11 @@ class _MissionSpotRow extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TakeSnap(spotIndex: index, missionPoint: missionPoint),
+              TakeSnap(
+                spotIndex: index,
+                missionPoint: missionPoint,
+                isDestinationMode: isDestinationMode,
+              ),
               if (checkpoint != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(
@@ -506,6 +514,7 @@ class _MissionSpotRow extends StatelessWidget {
                           totalCheckpointCount: totalCheckpointCount,
                           missionPoint: missionPoint,
                           checkpoint: checkpoint!,
+                          isDestinationMode: isDestinationMode,
                         ),
                       ),
                   child: const Text('結果を見る'),
@@ -560,6 +569,7 @@ class TakeSnap extends HookConsumerWidget {
   const TakeSnap({
     required this.spotIndex,
     required this.missionPoint,
+    required this.isDestinationMode,
     super.key,
   });
 
@@ -568,6 +578,9 @@ class TakeSnap extends HookConsumerWidget {
 
   /// 撮影対象の地点情報
   final ImageCoordinate missionPoint;
+
+  /// 目的地指定モードのミッションかどうか
+  final bool isDestinationMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -624,7 +637,7 @@ class TakeSnap extends HookConsumerWidget {
       '/camera',
       extra: CameraPageArgs(
         referenceImageBase64: missionPoint.imageBase64,
-        onPhotoAccepted: (capturedFile) async {
+        onPhotoAccepted: (capturedFile, zoomLevel) async {
           final path = capturedFile.path;
           final currentPosition =
               await ref.read(getCurrentPositionUseCaseProvider).call();
@@ -636,6 +649,7 @@ class TakeSnap extends HookConsumerWidget {
                 currentPosition: currentPosition,
                 target: missionPoint,
                 capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
               );
 
           final checkpoint = await ref
@@ -667,6 +681,7 @@ class TakeSnap extends HookConsumerWidget {
                 spotIndex + 1,
             missionPoint: missionPoint,
             checkpoint: checkpoint,
+            isDestinationMode: isDestinationMode,
           );
           return true;
         },

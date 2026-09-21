@@ -21,7 +21,7 @@ mixin _$CheckpointProgress {
  double? get capturedHeading;/// 位置誤差 (メートル)
  double? get distanceErrorMeters;/// 方角誤差 (度)
  double? get headingErrorDegrees;/// 採点ランク
- PhotoJudgeRank? get judgeRank;/// 達成した日時
+@PhotoJudgeRankConverter() PhotoJudgeRank? get judgeRank;/// 達成した日時
  DateTime? get achievedAt;
 /// Create a copy of CheckpointProgress
 /// with the given fields replaced by the non-null parameter values.
@@ -55,7 +55,7 @@ abstract mixin class $CheckpointProgressCopyWith<$Res>  {
   factory $CheckpointProgressCopyWith(CheckpointProgress value, $Res Function(CheckpointProgress) _then) = _$CheckpointProgressCopyWithImpl;
 @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, PhotoJudgeRank? judgeRank, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 
@@ -166,7 +166,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees, @PhotoJudgeRankConverter()  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckpointProgress() when $default != null:
 return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
@@ -187,7 +187,7 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees, @PhotoJudgeRankConverter()  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)  $default,) {final _that = this;
 switch (_that) {
 case _CheckpointProgress():
 return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
@@ -207,7 +207,7 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees,  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@NullableCoordinateConverter()  Coordinate? guessPosition,  String? userPhotoPath,  double? capturedHeading,  double? distanceErrorMeters,  double? headingErrorDegrees, @PhotoJudgeRankConverter()  PhotoJudgeRank? judgeRank,  DateTime? achievedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _CheckpointProgress() when $default != null:
 return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.judgeRank,_that.achievedAt);case _:
@@ -222,7 +222,7 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_t
 @JsonSerializable()
 
 class _CheckpointProgress implements CheckpointProgress {
-  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.capturedHeading, this.distanceErrorMeters, this.headingErrorDegrees, this.judgeRank, this.achievedAt});
+  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.capturedHeading, this.distanceErrorMeters, this.headingErrorDegrees, @PhotoJudgeRankConverter() this.judgeRank, this.achievedAt});
   factory _CheckpointProgress.fromJson(Map<String, dynamic> json) => _$CheckpointProgressFromJson(json);
 
 /// 撮影時の位置
@@ -236,7 +236,7 @@ class _CheckpointProgress implements CheckpointProgress {
 /// 方角誤差 (度)
 @override final  double? headingErrorDegrees;
 /// 採点ランク
-@override final  PhotoJudgeRank? judgeRank;
+@override@PhotoJudgeRankConverter() final  PhotoJudgeRank? judgeRank;
 /// 達成した日時
 @override final  DateTime? achievedAt;
 
@@ -273,7 +273,7 @@ abstract mixin class _$CheckpointProgressCopyWith<$Res> implements $CheckpointPr
   factory _$CheckpointProgressCopyWith(_CheckpointProgress value, $Res Function(_CheckpointProgress) _then) = __$CheckpointProgressCopyWithImpl;
 @override @useResult
 $Res call({
-@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, PhotoJudgeRank? judgeRank, DateTime? achievedAt
+@NullableCoordinateConverter() Coordinate? guessPosition, String? userPhotoPath, double? capturedHeading, double? distanceErrorMeters, double? headingErrorDegrees, @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank, DateTime? achievedAt
 });
 
 

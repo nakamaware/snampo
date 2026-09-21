@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/presentation/widget/spot_result_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// SpotResultPage の引数
@@ -18,6 +18,7 @@ class SpotResultPageArgs {
     required this.missionPoint,
     required this.checkpoint,
     this.fromResultPage = false,
+    this.isDestinationMode = false,
   });
 
   /// Spot のインデックス
@@ -34,6 +35,9 @@ class SpotResultPageArgs {
 
   /// プレイ結果画面から遷移してきたかどうか
   final bool fromResultPage;
+
+  /// 目的地指定モードのミッションかどうか
+  final bool isDestinationMode;
 }
 
 /// Spot単位の採点結果画面
@@ -49,12 +53,13 @@ class SpotResultPage extends StatelessWidget {
     final theme = Theme.of(context);
     final checkpoint = args.checkpoint;
     final isGoal = args.spotIndex == args.totalCheckpointCount - 1;
+    final isSelectedDestinationGoal = isGoal && args.isDestinationMode;
     if (checkpoint.userPhotoPath == null) {
       return _ErrorScaffold(message: '採点結果を表示できませんでした。', isGoal: isGoal);
     }
 
     final point = args.missionPoint;
-    final rank = checkpoint.judgeRank ?? PhotoJudgeRank.retry;
+    final rank = checkpoint.judgeRank ?? PhotoJudgeRank.miss;
     final distanceErrorText =
         checkpoint.distanceErrorMeters == null
             ? '取得できませんでした'
@@ -62,6 +67,11 @@ class SpotResultPage extends StatelessWidget {
     final headingErrorText = _buildHeadingErrorText(
       checkpoint.headingErrorDegrees,
     );
+    final pointNameText =
+        point.name ?? (isSelectedDestinationGoal ? '指定したゴール地点' : '取得できませんでした');
+    final genreText =
+        point.genre?.japaneseLabel ??
+        (isSelectedDestinationGoal ? '目的地指定' : '取得できませんでした');
 
     return Scaffold(
       appBar: AppBar(
@@ -86,46 +96,22 @@ class SpotResultPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: Image.file(
                   File(checkpoint.userPhotoPath!),
-                  height: 220,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                 ),
               ),
               const SizedBox(height: 16),
               _RankCard(rank: rank),
               const SizedBox(height: 16),
-              _InfoTile(label: '名称', value: point.name ?? '取得できませんでした'),
-              _InfoTile(
-                label: 'ジャンル',
-                value: point.genre?.japaneseLabel ?? '取得できませんでした',
-              ),
+              _InfoTile(label: '名称', value: pointNameText),
+              _InfoTile(label: 'ジャンル', value: genreText),
               _InfoTile(label: 'スポットまで残り', value: distanceErrorText),
               _InfoTile(label: '向きのずれ', value: headingErrorText),
               const SizedBox(height: 16),
               SizedBox(
                 height: 220,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(
-                        point.coordinate.latitude,
-                        point.coordinate.longitude,
-                      ),
-                      zoom: 16,
-                    ),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('spot'),
-                        position: LatLng(
-                          point.coordinate.latitude,
-                          point.coordinate.longitude,
-                        ),
-                      ),
-                    },
-                    zoomControlsEnabled: false,
-                    myLocationButtonEnabled: false,
-                    compassEnabled: false,
-                  ),
+                child: SpotResultMap(
+                  missionPoint: point,
+                  checkpoint: checkpoint,
                 ),
               ),
               const SizedBox(height: 16),
@@ -190,7 +176,7 @@ class _RankCard extends StatelessWidget {
       PhotoJudgeRank.excellent => Colors.green,
       PhotoJudgeRank.good => Colors.blue,
       PhotoJudgeRank.fair => Colors.orange,
-      PhotoJudgeRank.retry => Colors.red,
+      PhotoJudgeRank.miss => Colors.red,
     };
 
     return Card(
