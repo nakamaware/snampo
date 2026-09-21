@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from pydantic import BaseModel, Discriminator, Field
 
+from app.application.gateway_interfaces.apple_maps_gateway import is_apple_place_id
 from app.application.usecases.route_result_dto import RoutePointDto, RouteResultDto
 from app.domain.value_objects.coordinate import Coordinate
 
@@ -168,9 +169,13 @@ def _extract_genre(point: RoutePointDto) -> str | None:
 
 
 def _build_google_maps_url(coordinate: Coordinate, place_id: str | None) -> str:
-    """Google Mapsで地点詳細を開くURLを構築する"""
+    """Google Mapsで地点詳細を開くURLを構築する
+
+    目的地検索が Apple Maps のとき place_id は `apple:` 付きになる。
+    Google の query_place_id には渡せないので、その場合は座標検索だけにする。
+    """
     lat, lng = coordinate.to_float_tuple()
     query = {"api": "1", "query": f"{lat},{lng}"}
-    if place_id:
+    if place_id and not is_apple_place_id(place_id):
         query["query_place_id"] = place_id
     return f"https://www.google.com/maps/search/?{urlencode(query)}"

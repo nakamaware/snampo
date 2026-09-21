@@ -3,9 +3,18 @@
 外部サービスへのインターフェースを定義します。
 """
 
+from app.application.gateway_interfaces.apple_maps_gateway import (
+    AppleMapsGateway,
+    AppleSearchHit,
+)
 from app.application.gateway_interfaces.google_maps_gateway import (
     GoogleMapsGateway,
     StreetViewMetadata,
 )
 
-__all__ = ["GoogleMapsGateway", "StreetViewMetadata"]
+__all__ = [
+    "AppleMapsGateway",
+    "AppleSearchHit",
+    "GoogleMapsGateway",
+    "StreetViewMetadata",
+]

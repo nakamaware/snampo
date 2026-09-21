@@ -101,3 +101,17 @@ variable "cloud_run_service_configs" {
 
   default = []
 }
+
+# Apple Maps Server API (目的地ランドマーク検索)
+# 秘密鍵 PEM は tfvars に入れず、Secret Manager へ out-of-band で versions add する。
+variable "apple_team_id" {
+  type        = string
+  description = "Apple Developer Team ID (Cloud Run APPLE_TEAM_ID)"
+  default     = ""
+}
+
+variable "apple_maps_key_id" {
+  type        = string
+  description = "Apple Maps Key ID (Cloud Run APPLE_MAPS_KEY_ID)"
+  default     = ""
+}
