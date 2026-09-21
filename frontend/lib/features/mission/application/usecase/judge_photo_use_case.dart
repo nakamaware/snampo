@@ -4,13 +4,13 @@ import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 
 const _excellentDistanceThresholdMeters = 12.0;
-const _excellentHeadingThresholdDegrees = 15.0;
+const _excellentHeadingThresholdDegrees = 90.0;
 
 const _goodDistanceThresholdMeters = 25.0;
-const _goodHeadingThresholdDegrees = 30.0;
+const _goodHeadingThresholdDegrees = 90.0;
 
 const _fairDistanceThresholdMeters = 50.0;
-const _fairHeadingThresholdDegrees = 60.0;
+const _fairHeadingThresholdDegrees = 90.0;
 
 /// 写真採点結果
 class PhotoJudgeResult {
@@ -34,16 +34,25 @@ class PhotoJudgeResult {
 /// 写真を採点するユースケース
 class JudgePhotoUseCase {
   /// 現在位置と基準地点から採点する
+  ///
+  /// [zoomLevel] はカメラの光学ズーム倍率。N 倍ズームすると被写体が N 倍近く
+  /// 見えることを利用し、実距離を N で割った有効距離でランクを判定する。
+  /// UI 表示には生の実距離 ([PhotoJudgeResult.distanceErrorMeters]) を使う。
   PhotoJudgeResult call({
     required Coordinate currentPosition,
     required ImageCoordinate target,
     required double? capturedHeading,
+    required double zoomLevel,
   }) {
     final distanceErrorMeters = Geolocator.distanceBetween(
       currentPosition.latitude,
       currentPosition.longitude,
       target.coordinate.latitude,
       target.coordinate.longitude,
+    );
+    final effectiveDistanceMeters = _applyZoomCorrection(
+      distanceErrorMeters,
+      zoomLevel,
     );
     final headingErrorDegrees = _calculateHeadingError(
       referenceHeading: target.referenceHeading,
@@ -52,12 +61,20 @@ class JudgePhotoUseCase {
 
     return PhotoJudgeResult(
       rank: _resolveRank(
-        distanceErrorMeters: distanceErrorMeters,
+        distanceErrorMeters: effectiveDistanceMeters,
         headingErrorDegrees: headingErrorDegrees,
       ),
       distanceErrorMeters: distanceErrorMeters,
       headingErrorDegrees: headingErrorDegrees,
     );
+  }
+
+  /// ズームレベルによる距離補正を適用する
+  ///
+  /// ズームレベルが 1.0 未満の場合は補正なし (1.0 に切り上げる)。
+  double _applyZoomCorrection(double distanceMeters, double zoomLevel) {
+    final effectiveZoom = zoomLevel.clamp(1.0, double.infinity);
+    return distanceMeters / effectiveZoom;
   }
 
   PhotoJudgeRank _resolveRank({
@@ -88,7 +105,7 @@ class JudgePhotoUseCase {
     )) {
       return PhotoJudgeRank.fair;
     }
-    return PhotoJudgeRank.retry;
+    return PhotoJudgeRank.miss;
   }
 
   bool _matches(

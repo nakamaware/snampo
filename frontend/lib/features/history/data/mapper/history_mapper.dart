@@ -20,6 +20,9 @@ PhotoJudgeRank? _judgeRankFromDb(String? value) {
   if (value == null || value.isEmpty) {
     return null;
   }
+  if (value == 'retry') {
+    return PhotoJudgeRank.miss;
+  }
   for (final rank in PhotoJudgeRank.values) {
     if (rank.name == value) {
       return rank;

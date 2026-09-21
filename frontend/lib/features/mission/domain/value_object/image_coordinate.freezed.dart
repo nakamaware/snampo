@@ -21,7 +21,9 @@ mixin _$ImageCoordinate {
  double? get referenceHeading;/// 表示名
  String? get name;/// ジャンル
  String? get genre;/// Google Maps の詳細URL
- String? get googleMapsUrl;
+ String? get googleMapsUrl;/// ストリートビュー撮影位置の緯度 (ランドマーク座標 [coordinate] とは別)
+ double? get streetViewLatitude;/// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
+ double? get streetViewLongitude;
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -34,16 +36,16 @@ $ImageCoordinateCopyWith<ImageCoordinate> get copyWith => _$ImageCoordinateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.streetViewLatitude, streetViewLatitude) || other.streetViewLatitude == streetViewLatitude)&&(identical(other.streetViewLongitude, streetViewLongitude) || other.streetViewLongitude == streetViewLongitude));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,coordinate,imageBase64,referenceHeading,name,genre,googleMapsUrl);
+int get hashCode => Object.hash(runtimeType,coordinate,imageBase64,referenceHeading,name,genre,googleMapsUrl,streetViewLatitude,streetViewLongitude);
 
 @override
 String toString() {
-  return 'ImageCoordinate(coordinate: $coordinate, imageBase64: $imageBase64, referenceHeading: $referenceHeading, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl)';
+  return 'ImageCoordinate(coordinate: $coordinate, imageBase64: $imageBase64, referenceHeading: $referenceHeading, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, streetViewLatitude: $streetViewLatitude, streetViewLongitude: $streetViewLongitude)';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $ImageCoordinateCopyWith<$Res>  {
   factory $ImageCoordinateCopyWith(ImageCoordinate value, $Res Function(ImageCoordinate) _then) = _$ImageCoordinateCopyWithImpl;
 @useResult
 $Res call({
-@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl
+@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude
 });
 
 
@@ -71,7 +73,7 @@ class _$ImageCoordinateCopyWithImpl<$Res>
 
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? coordinate = null,Object? imageBase64 = null,Object? referenceHeading = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? coordinate = null,Object? imageBase64 = null,Object? referenceHeading = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? streetViewLatitude = freezed,Object? streetViewLongitude = freezed,}) {
   return _then(_self.copyWith(
 coordinate: null == coordinate ? _self.coordinate : coordinate // ignore: cast_nullable_to_non_nullable
 as Coordinate,imageBase64: null == imageBase64 ? _self.imageBase64 : imageBase64 // ignore: cast_nullable_to_non_nullable
@@ -79,7 +81,9 @@ as String,referenceHeading: freezed == referenceHeading ? _self.referenceHeading
 as double?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,genre: freezed == genre ? _self.genre : genre // ignore: cast_nullable_to_non_nullable
 as String?,googleMapsUrl: freezed == googleMapsUrl ? _self.googleMapsUrl : googleMapsUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,streetViewLatitude: freezed == streetViewLatitude ? _self.streetViewLatitude : streetViewLatitude // ignore: cast_nullable_to_non_nullable
+as double?,streetViewLongitude: freezed == streetViewLongitude ? _self.streetViewLongitude : streetViewLongitude // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 
@@ -164,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
-return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl);case _:
+return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude);case _:
   return orElse();
 
 }
@@ -185,10 +189,10 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude)  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate():
-return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl);case _:
+return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +209,10 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude)?  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
-return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl);case _:
+return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude);case _:
   return null;
 
 }
@@ -220,7 +224,7 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 @JsonSerializable()
 
 class _ImageCoordinate implements ImageCoordinate {
-  const _ImageCoordinate({@CoordinateConverter() required this.coordinate, required this.imageBase64, this.referenceHeading, this.name, this.genre, this.googleMapsUrl});
+  const _ImageCoordinate({@CoordinateConverter() required this.coordinate, required this.imageBase64, this.referenceHeading, this.name, this.genre, this.googleMapsUrl, this.streetViewLatitude, this.streetViewLongitude});
   factory _ImageCoordinate.fromJson(Map<String, dynamic> json) => _$ImageCoordinateFromJson(json);
 
 /// 座標
@@ -235,6 +239,10 @@ class _ImageCoordinate implements ImageCoordinate {
 @override final  String? genre;
 /// Google Maps の詳細URL
 @override final  String? googleMapsUrl;
+/// ストリートビュー撮影位置の緯度 (ランドマーク座標 [coordinate] とは別)
+@override final  double? streetViewLatitude;
+/// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
+@override final  double? streetViewLongitude;
 
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
@@ -249,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ImageCoordinate&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.imageBase64, imageBase64) || other.imageBase64 == imageBase64)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.streetViewLatitude, streetViewLatitude) || other.streetViewLatitude == streetViewLatitude)&&(identical(other.streetViewLongitude, streetViewLongitude) || other.streetViewLongitude == streetViewLongitude));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,coordinate,imageBase64,referenceHeading,name,genre,googleMapsUrl);
+int get hashCode => Object.hash(runtimeType,coordinate,imageBase64,referenceHeading,name,genre,googleMapsUrl,streetViewLatitude,streetViewLongitude);
 
 @override
 String toString() {
-  return 'ImageCoordinate(coordinate: $coordinate, imageBase64: $imageBase64, referenceHeading: $referenceHeading, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl)';
+  return 'ImageCoordinate(coordinate: $coordinate, imageBase64: $imageBase64, referenceHeading: $referenceHeading, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, streetViewLatitude: $streetViewLatitude, streetViewLongitude: $streetViewLongitude)';
 }
 
 
@@ -269,7 +277,7 @@ abstract mixin class _$ImageCoordinateCopyWith<$Res> implements $ImageCoordinate
   factory _$ImageCoordinateCopyWith(_ImageCoordinate value, $Res Function(_ImageCoordinate) _then) = __$ImageCoordinateCopyWithImpl;
 @override @useResult
 $Res call({
-@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl
+@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude
 });
 
 
@@ -286,7 +294,7 @@ class __$ImageCoordinateCopyWithImpl<$Res>
 
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? coordinate = null,Object? imageBase64 = null,Object? referenceHeading = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? coordinate = null,Object? imageBase64 = null,Object? referenceHeading = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? streetViewLatitude = freezed,Object? streetViewLongitude = freezed,}) {
   return _then(_ImageCoordinate(
 coordinate: null == coordinate ? _self.coordinate : coordinate // ignore: cast_nullable_to_non_nullable
 as Coordinate,imageBase64: null == imageBase64 ? _self.imageBase64 : imageBase64 // ignore: cast_nullable_to_non_nullable
@@ -294,7 +302,9 @@ as String,referenceHeading: freezed == referenceHeading ? _self.referenceHeading
 as double?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,genre: freezed == genre ? _self.genre : genre // ignore: cast_nullable_to_non_nullable
 as String?,googleMapsUrl: freezed == googleMapsUrl ? _self.googleMapsUrl : googleMapsUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,streetViewLatitude: freezed == streetViewLatitude ? _self.streetViewLatitude : streetViewLatitude // ignore: cast_nullable_to_non_nullable
+as double?,streetViewLongitude: freezed == streetViewLongitude ? _self.streetViewLongitude : streetViewLongitude // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 

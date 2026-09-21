@@ -16,6 +16,8 @@ _ImageCoordinate _$ImageCoordinateFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       genre: json['genre'] as String?,
       googleMapsUrl: json['googleMapsUrl'] as String?,
+      streetViewLatitude: (json['streetViewLatitude'] as num?)?.toDouble(),
+      streetViewLongitude: (json['streetViewLongitude'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$ImageCoordinateToJson(_ImageCoordinate instance) =>
@@ -26,4 +28,6 @@ Map<String, dynamic> _$ImageCoordinateToJson(_ImageCoordinate instance) =>
       'name': instance.name,
       'genre': instance.genre,
       'googleMapsUrl': instance.googleMapsUrl,
+      'streetViewLatitude': instance.streetViewLatitude,
+      'streetViewLongitude': instance.streetViewLongitude,
     };

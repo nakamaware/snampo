@@ -28,7 +28,7 @@ abstract class CheckpointProgress with _$CheckpointProgress {
     double? headingErrorDegrees,
 
     /// 採点ランク
-    PhotoJudgeRank? judgeRank,
+    @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank,
 
     /// 達成した日時
     DateTime? achievedAt,
@@ -54,6 +54,35 @@ class NullableCoordinateConverter
   @override
   Map<String, dynamic>? toJson(Coordinate? object) =>
       object == null ? null : const CoordinateConverter().toJson(object);
+}
+
+/// PhotoJudgeRank? の JSON 変換
+///
+/// 旧バージョンで永続化された未知の値 `retry` は [PhotoJudgeRank.miss] として
+/// 復元する (未知の enum 名で `$enumDecodeNullable` が例外を投げるのを防ぐ)。
+class PhotoJudgeRankConverter
+    implements JsonConverter<PhotoJudgeRank?, String?> {
+  /// [PhotoJudgeRankConverter] を作成する
+  const PhotoJudgeRankConverter();
+
+  @override
+  PhotoJudgeRank? fromJson(String? json) {
+    if (json == null) {
+      return null;
+    }
+    if (json == 'retry') {
+      return PhotoJudgeRank.miss;
+    }
+    for (final rank in PhotoJudgeRank.values) {
+      if (rank.name == json) {
+        return rank;
+      }
+    }
+    return null;
+  }
+
+  @override
+  String? toJson(PhotoJudgeRank? object) => object?.name;
 }
 
 /// ミッション進捗エンティティ

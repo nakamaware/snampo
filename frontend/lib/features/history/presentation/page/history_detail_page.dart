@@ -277,7 +277,7 @@ class _RankBadge extends StatelessWidget {
       PhotoJudgeRank.excellent => Colors.green,
       PhotoJudgeRank.good => Colors.blue,
       PhotoJudgeRank.fair => Colors.orange,
-      PhotoJudgeRank.retry => Colors.red,
+      PhotoJudgeRank.miss => Colors.red,
     };
 
     return Container(
