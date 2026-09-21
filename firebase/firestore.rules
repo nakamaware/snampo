@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function roomDoc(roomCode) {
+      return /databases/$(database)/documents/rooms/$(roomCode);
+    }
+
+    function isHost(roomCode) {
+      return isSignedIn()
+        && get(roomDoc(roomCode)).data.hostId == request.auth.uid;
+    }
+
+    function isMember(roomCode) {
+      return isSignedIn() && (
+        isHost(roomCode)
+        || exists(/databases/$(database)/documents/rooms/$(roomCode)/members/$(request.auth.uid))
+      );
+    }
+
+    function roomIsLive(roomCode) {
+      return get(roomDoc(roomCode)).data.expiresAt > request.time;
+    }
+
+    match /rooms/{roomCode} {
+      allow create: if isSignedIn()
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+          'hostId', 'createdAt', 'expiresAt', 'missionRef', 'spotCount'
+        ])
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.spotCount is int
+        && request.resource.data.spotCount > 0
+        && request.resource.data.missionRef is string
+        && request.resource.data.missionRef.size() > 0;
+
+      allow read: if isMember(roomCode) && resource.data.expiresAt > request.time;
+      allow update, delete: if false;
+
+      match /members/{uid} {
+        allow create: if isSignedIn()
+          && uid == request.auth.uid
+          && exists(roomDoc(roomCode))
+          && roomIsLive(roomCode);
+        allow read: if isMember(roomCode) && roomIsLive(roomCode);
+        allow update, delete: if false;
+      }
+
+      match /clears/{spotId} {
+        allow create: if isSignedIn()
+          && isMember(roomCode)
+          && roomIsLive(roomCode)
+          && request.resource.data.clearedBy == request.auth.uid
+          && request.resource.data.clearedAt is timestamp
+          && !exists(/databases/$(database)/documents/rooms/$(roomCode)/clears/$(spotId));
+        allow read: if isMember(roomCode) && roomIsLive(roomCode);
+        allow update, delete: if false;
+      }
+    }
+  }
+}
