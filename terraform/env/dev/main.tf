@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~>7.15.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~>7.15.0"
+    }
   }
 }
 
@@ -21,6 +25,14 @@ provider "google" {
   region                = "asia-northeast1"
 }
 
+# Identity Toolkit は quota project が無いと 403 になる。
+provider "google-beta" {
+  user_project_override = true
+  billing_project       = local.project_id
+  project               = local.project_id
+  region                = "asia-northeast1"
+}
+
 module "snampo_dev" {
   source = "../../modules/common"
 
@@ -30,6 +42,11 @@ module "snampo_dev" {
   # 有効化するAPI
   api_list = [
     "cloudbuild.googleapis.com", # TODO: GitHub Actionsに移行するため削除予定。
+    "firebase.googleapis.com",
+    "identitytoolkit.googleapis.com",
+    "firestore.googleapis.com",
+    "firebaserules.googleapis.com",
+    "firebasestorage.googleapis.com",
   ]
   # グループの権限
   group_iam_config = [
