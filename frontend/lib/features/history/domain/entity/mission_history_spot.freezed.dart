@@ -49,6 +49,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class _$MissionHistorySpotCopyWithImpl<$Res>
@@ -219,7 +221,7 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 
 class _MissionHistorySpot implements MissionHistorySpot {
   const _MissionHistorySpot({required this.coordinate, required this.sortOrder, required this.isDestination, required this.streetViewImagePath, this.userPhotoPath, this.achievedAt, this.name, this.genre, this.googleMapsUrl, this.referenceHeading, this.judgeRank, this.distanceErrorMeters, this.headingErrorDegrees, this.guessPosition, this.capturedHeading});
-
+  
 
 @override final  Coordinate coordinate;
 @override final  int sortOrder;
@@ -271,6 +273,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class __$MissionHistorySpotCopyWithImpl<$Res>
@@ -302,6 +306,7 @@ as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeadi
 as double?,
   ));
 }
+
 
 }
 
