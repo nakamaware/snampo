@@ -110,7 +110,12 @@ class MissionPage extends HookConsumerWidget {
     useEffect(() {
       final mission = missionAsyncValue.value;
       if (mission != null) {
-        ref.read(spotProximityStoreProvider.notifier).startMonitoring(mission);
+        // build() 完了後に provider の変更を行うよう遅延実行
+        Future(() {
+          ref
+              .read(spotProximityStoreProvider.notifier)
+              .startMonitoring(mission);
+        });
       }
       return null;
     }, [missionAsyncValue.value]);
@@ -159,7 +164,10 @@ class MissionPage extends HookConsumerWidget {
 
       return () {
         sub.cancel();
-        ref.read(spotProximityStoreProvider.notifier).stopMonitoring();
+        // dispose 完了後にクリーンアップを実行
+        Future(() {
+          ref.read(spotProximityStoreProvider.notifier).stopMonitoring();
+        });
       };
     }, const []);
 
