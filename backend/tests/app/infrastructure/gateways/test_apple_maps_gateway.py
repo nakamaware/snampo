@@ -1,3 +1,5 @@
+"""Apple Maps Gateway / Auth / クエリバッグのテスト (HTTP はモック、ネットワーク無し)"""
+
 from __future__ import annotations
 
 import math
@@ -38,6 +40,7 @@ from app.infrastructure.gateways.apple_maps_gateway_impl import (
 
 
 def _generate_es256_private_key_pem() -> str:
+    """テスト用の ES256 秘密鍵 PEM を生成する。"""
     private_key = ec.generate_private_key(ec.SECP256R1())
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,

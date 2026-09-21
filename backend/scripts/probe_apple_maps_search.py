@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apple Maps 目的地検索のローカル probe。
+"""Apple Maps 目的地検索のローカル probe。キーは @kawayama から取得。
 
 ```bash
 cd backend
@@ -51,6 +51,7 @@ from app.infrastructure.gateways.apple_maps_gateway_impl import (  # noqa: E402
 )
 
 DEFAULT_FIXTURES: dict[str, tuple[float, float, int, str]] = {
+    # name -> (lat, lng, radius_m, description)
     "hakone": (35.232, 139.107, 2000, "箱根 (観光密集)"),
     "kurihashi": (36.122, 139.700, 2500, "栗橋/久喜付近"),
     "rural": (36.650, 138.190, 3000, "疎な山間寄り (長野寄り)"),

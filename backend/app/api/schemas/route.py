@@ -161,6 +161,7 @@ class RouteResponse(BaseModel):
 
 
 def _extract_genre(point: RoutePointDto) -> str | None:
+    """地点DTOから表示用ジャンルを取得する"""
     landmark = point.landmark
     if landmark is None:
         return None
@@ -168,7 +169,11 @@ def _extract_genre(point: RoutePointDto) -> str | None:
 
 
 def _build_google_maps_url(coordinate: Coordinate, place_id: str | None) -> str:
-    """Google Maps の地点 URL。Apple ID は query_place_id に載せない。"""
+    """Google Mapsで地点詳細を開くURLを構築する
+
+    目的地検索が Apple Maps のとき place_id は `apple:` 付きになる。
+    Google の query_place_id には渡せないので、その場合は座標検索だけにする。
+    """
     lat, lng = coordinate.to_float_tuple()
     query = {"api": "1", "query": f"{lat},{lng}"}
     if place_id and not is_apple_place_id(place_id):

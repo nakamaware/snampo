@@ -1,3 +1,6 @@
+// ジャンルキーを日本語ラベルに変換するマップ
+// Google Places の primaryType (snake_case) を主とし、Apple PoiCategory は
+// バックエンドで寄せるか、ここでも PascalCase を snake_case に直して引く。
 // 参考: https://developers.google.com/maps/documentation/places/web-service/place-types?hl=ja
 const _genreLabelMap = <String, String>{
   // 自動車
@@ -549,9 +552,11 @@ String _pascalToSnake(String value) {
   return buffer.toString();
 }
 
-/// ジャンル識別子の日本語ラベル。未知の PascalCase は snake_case に直して引く。
+/// ジャンル識別子の日本語ラベル変換
 extension GenreLabel on String {
-  /// マップに無い値はそのまま返す。
+  /// Google の snake_case に加え、
+  /// Apple の PascalCase も日本語化する。
+  /// 未知の値はそのまま返す。
   String get japaneseLabel {
     final direct = _genreLabelMap[this];
     if (direct != null) {

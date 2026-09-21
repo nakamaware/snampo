@@ -1,7 +1,8 @@
-"""Apple PoiCategory をフロントのジャンルキーへ寄せる。"""
+"""Apple PoiCategory をフロント表示用ジャンルキーへ寄せる。"""
 
 from __future__ import annotations
 
+# Apple PoiCategory (PascalCase) → フロントの genre_label が知る Google 系キー
 APPLE_POI_CATEGORY_TO_GENRE: dict[str, str] = {
     "Airport": "airport",
     "AmusementPark": "amusement_park",
@@ -46,6 +47,7 @@ APPLE_POI_CATEGORY_TO_GENRE: dict[str, str] = {
 
 
 def _pascal_to_snake(value: str) -> str:
+    """PascalCase / camelCase を snake_case にする。"""
     chars: list[str] = []
     for index, char in enumerate(value):
         if char.isupper() and index > 0:
@@ -55,7 +57,11 @@ def _pascal_to_snake(value: str) -> str:
 
 
 def apple_poi_category_to_genre(poi_category: str | None) -> str | None:
-    """既知カテゴリは Google 系 snake_case。未知の PascalCase は機械変換する。"""
+    """Apple PoiCategory をフロント表示用ジャンルキーへ寄せる。
+
+    既知カテゴリは Google Places 系の snake_case に固定する。
+    未知の PascalCase は機械変換し、どちらでもなければそのまま返す。
+    """
     if not poi_category:
         return None
     mapped = APPLE_POI_CATEGORY_TO_GENRE.get(poi_category)

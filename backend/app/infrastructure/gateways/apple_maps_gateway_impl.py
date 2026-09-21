@@ -39,12 +39,18 @@ from app.infrastructure.gateways.apple_maps_auth import (
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "Apple Maps Server API"
+# 例外メッセージ / ログに載せる Apple レスポンス本文の上限
 _MAX_ERROR_BODY_CHARS = 300
+
+# 1 度の緯度あたりのおよそのメートル (bbox 近似用)
 _METERS_PER_DEGREE_LAT = 111_320.0
 
+# 高収穫バケット (先頭 3 クエリ用: 各バケットから 1 つ)
 OUTDOOR_QUERY_BUCKET: tuple[str, ...] = ("公園", "展望台")
 CULTURE_QUERY_BUCKET: tuple[str, ...] = ("神社", "寺", "城")
 CASUAL_QUERY_BUCKET: tuple[str, ...] = ("カフェ", "パン", "温泉")
+
+# 残りクエリ (バケットの余りと合わせてシャッフル)
 REMAINING_QUERY_BAG: tuple[str, ...] = (
     "博物館",
     "美術館",
@@ -61,7 +67,10 @@ SearchRegion = tuple[float, float, float, float]  # north, east, south, west
 
 
 class AppleMapsHTTPError(ExternalServiceError):
-    """Apple Maps API の HTTP エラー"""
+    """Apple Maps API の HTTP エラー (status_code を数値で保持する)
+
+    ステータス判定はメッセージ文字列ではなく status_code を使うこと。
+    """
 
     def __init__(
         self,
@@ -70,16 +79,23 @@ class AppleMapsHTTPError(ExternalServiceError):
         service_name: str | None = None,
         status_code: int | None = None,
     ) -> None:
-        """初期化"""
+        """初期化
+
+        Args:
+            message: エラーメッセージ
+            service_name: サービス名
+            status_code: HTTP ステータスコード
+        """
         self.status_code = status_code
         super().__init__(message, service_name=service_name)
 
     def is_bad_request(self) -> bool:
-        """HTTP 400 かどうか。"""
+        """HTTP 400 かどうか。メッセージ文字列ではなく status_code で判定する。"""
         return self.status_code == 400
 
 
 def _truncate_error_body(text: str | None, *, limit: int = _MAX_ERROR_BODY_CHARS) -> str:
+    """例外メッセージ用にレスポンス本文を切り詰める。"""
     if not text:
         return ""
     if len(text) <= limit:
@@ -88,7 +104,7 @@ def _truncate_error_body(text: str | None, *, limit: int = _MAX_ERROR_BODY_CHARS
 
 
 def circle_to_search_region(center: Coordinate, radius_m: float) -> SearchRegion:
-    """中心と半径 (m) を Apple searchRegion (north,east,south,west) に近似する。"""
+    """中心 + 半径 (m) を Apple searchRegion (north,east,south,west) に近似する。"""
     lat = float(center.latitude)
     lng = float(center.longitude)
     delta_lat = radius_m / _METERS_PER_DEGREE_LAT
@@ -130,7 +146,11 @@ def stable_search_seed(center: Coordinate, radius_m: int) -> int:
 
 
 def build_stratified_query_bag(seed: int) -> list[str]:
-    """先頭 3 件は outdoor / culture / casual から 1 つずつ。残りは余りと REMAINING を混ぜる。"""
+    """層別シャッフルしたクエリバッグを返す。
+
+    先頭 3 件: outdoor / culture / casual 各バケットをシャッフルした先頭 1 件。
+    以降: バケット余り + REMAINING をシャッフル。
+    """
     rng = random.Random(seed)  # noqa: S311 — クエリ順の再現用。暗号用途ではない
     outdoor = list(OUTDOOR_QUERY_BUCKET)
     culture = list(CULTURE_QUERY_BUCKET)
@@ -156,7 +176,7 @@ def _poi_search_params(query: str, **geo: str) -> dict[str, str]:
 
 
 class AppleMapsGatewayImpl(AppleMapsGateway):
-    """Apple Maps Server API の目的地検索。"""
+    """Apple Maps Server API 検索の実装 (目的地ランドマーク検索向け)"""
 
     def __init__(
         self,
@@ -165,7 +185,13 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
         base_url: str = APPLE_MAPS_BASE_URL,
         session: requests.Session | None = None,
     ) -> None:
-        """初期化"""
+        """初期化
+
+        Args:
+            token_provider: access token 供給 (None なら初回アクセス時に from_config)
+            base_url: API ベース URL
+            session: requests.Session
+        """
         self._token_provider = token_provider
         self._base_url = base_url.rstrip("/")
         self._session = session or requests.Session()
@@ -184,7 +210,7 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
         distance_tolerance_percent: float | None = None,
         max_calls: int | None = None,
     ) -> list[AppleSearchHit]:
-        """層別クエリ検索のあと、不足時だけ円周ファンアウトする。"""
+        """層別クエリ検索 → 不足時円周ファンアウトで距離帯内 POI を返す。"""
         if radius_m <= 0:
             raise ValueError("radius_m must be positive")
 
@@ -261,6 +287,7 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
         region: SearchRegion,
         query: str,
     ) -> list[dict[str, Any]]:
+        """searchRegion + 日本語 q (searchLocation は付けない)。"""
         return self._get_search_results(
             _poi_search_params(query, searchRegion=format_search_region(region))
         )
@@ -271,6 +298,7 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
         location: Coordinate,
         query: str,
     ) -> list[dict[str, Any]]:
+        """searchLocation + 日本語 q (searchRegion は付けない)。"""
         lat, lng = location.to_float_tuple()
         return self._get_search_results(
             _poi_search_params(query, searchLocation=f"{lat},{lng}")
