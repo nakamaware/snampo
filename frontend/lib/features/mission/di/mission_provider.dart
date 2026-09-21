@@ -8,6 +8,7 @@ import 'package:snampo/features/mission/application/interface/mission_repository
 import 'package:snampo/features/mission/application/usecase/clear_mission_progress_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_destination_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_random_mission_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/evaluate_spot_proximity_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_heading_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/judge_photo_use_case.dart';
@@ -96,3 +97,10 @@ SavePhotoUseCase savePhotoUseCase(Ref ref) {
 ClearMissionProgressUseCase clearMissionProgressUseCase(Ref ref) {
   return ClearMissionProgressUseCase(ref.read(photoStorageProvider));
 }
+
+/// スポット接近・離脱評価ユースケースのプロバイダー
+@riverpod
+EvaluateSpotProximityUseCase evaluateSpotProximityUseCase(Ref ref) {
+  return const EvaluateSpotProximityUseCase();
+}
+

@@ -576,3 +576,57 @@ final class ClearMissionProgressUseCaseProvider
 
 String _$clearMissionProgressUseCaseHash() =>
     r'70dac75f75b4788274b633c961864c2b01b137de';
+
+/// スポット接近・離脱評価ユースケースのプロバイダー
+
+@ProviderFor(evaluateSpotProximityUseCase)
+final evaluateSpotProximityUseCaseProvider =
+    EvaluateSpotProximityUseCaseProvider._();
+
+/// スポット接近・離脱評価ユースケースのプロバイダー
+
+final class EvaluateSpotProximityUseCaseProvider
+    extends
+        $FunctionalProvider<
+          EvaluateSpotProximityUseCase,
+          EvaluateSpotProximityUseCase,
+          EvaluateSpotProximityUseCase
+        >
+    with $Provider<EvaluateSpotProximityUseCase> {
+  /// スポット接近・離脱評価ユースケースのプロバイダー
+  EvaluateSpotProximityUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'evaluateSpotProximityUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$evaluateSpotProximityUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<EvaluateSpotProximityUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  EvaluateSpotProximityUseCase create(Ref ref) {
+    return evaluateSpotProximityUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EvaluateSpotProximityUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EvaluateSpotProximityUseCase>(value),
+    );
+  }
+}
+
+String _$evaluateSpotProximityUseCaseHash() =>
+    r'02baa4ff9757ce72041660e954c14aea1857a384';
