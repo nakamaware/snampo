@@ -300,9 +300,7 @@ class AppleMapsGatewayImpl(AppleMapsGateway):
     ) -> list[dict[str, Any]]:
         """searchLocation + 日本語 q (searchRegion は付けない)。"""
         lat, lng = location.to_float_tuple()
-        return self._get_search_results(
-            _poi_search_params(query, searchLocation=f"{lat},{lng}")
-        )
+        return self._get_search_results(_poi_search_params(query, searchLocation=f"{lat},{lng}"))
 
     def _get_search_results(self, params: dict[str, str]) -> list[dict[str, Any]]:
         access_token = self._provider().get_access_token()
