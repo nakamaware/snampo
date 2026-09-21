@@ -47,6 +47,7 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -66,6 +67,7 @@ android {
         manifestPlaceholders += [
             googleMapApiKey: "$dartDefines.GOOGLE_MAP_API_KEY",
         ]
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -95,4 +97,6 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}

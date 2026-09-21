@@ -24,6 +24,11 @@ class LocalNotificationService implements INotificationService {
     );
 
     await _plugin.initialize(settings: settings);
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
     _initialized = true;
   }
 
