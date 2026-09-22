@@ -1,18 +1,33 @@
 import 'package:go_router/go_router.dart';
+import 'package:snampo/features/coop/presentation/page/coop_room_page.dart';
+import 'package:snampo/features/coop/presentation/page/join_coop_page.dart';
+import 'package:snampo/features/coop/presentation/page/scan_room_code_page.dart';
 import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
 import 'package:snampo/features/history/presentation/page/history_page.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
-import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const HomePage()),
     GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
+    GoRoute(
+      path: '/coop/join',
+      builder: (context, state) => const JoinCoopPage(),
+    ),
+    GoRoute(
+      path: '/coop/scan',
+      builder: (context, state) => const ScanRoomCodePage(),
+    ),
+    GoRoute(
+      path: '/coop/room',
+      builder: (context, state) => const CoopRoomPage(),
+    ),
     GoRoute(
       path: '/mission/random/:radius',
       builder: (context, state) {

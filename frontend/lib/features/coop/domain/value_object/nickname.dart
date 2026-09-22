@@ -6,13 +6,16 @@ class Nickname {
   /// [raw] を trim して [Nickname] にする。
   factory Nickname(String raw) {
     final value = raw.trim();
-    if (value.isEmpty) {
+    if (!canCreate(raw)) {
       throw ArgumentError.value(raw, 'value', 'ニックネームは空にできません');
     }
     return Nickname._(value);
   }
 
   const Nickname._(this.value);
+
+  /// trim して空でなければ作れる。
+  static bool canCreate(String raw) => raw.trim().isNotEmpty;
 
   /// 表示名。
   final String value;

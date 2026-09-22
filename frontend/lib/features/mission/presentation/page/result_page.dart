@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/coop/presentation/coop_controller.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
@@ -66,11 +67,14 @@ class ResultPage extends ConsumerWidget {
                                     : null;
                             final hasResultPhoto =
                                 checkpoint?.userPhotoPath != null;
+                            final discoverer =
+                                ref.watch(coopDiscovererProvider)[index];
                             return _ResultCard(
                               title:
                                   index == points.length - 1
                                       ? 'GOAL'
                                       : 'Spot ${index + 1}',
+                              discoverer: discoverer,
                               point: points[index],
                               checkpoint: checkpoint,
                               onTap:
@@ -153,9 +157,11 @@ class _ResultCard extends StatelessWidget {
     required this.point,
     required this.checkpoint,
     required this.onTap,
+    this.discoverer,
   });
 
   final String title;
+  final String? discoverer;
   final ImageCoordinate point;
   final CheckpointProgress? checkpoint;
   final VoidCallback? onTap;
@@ -196,6 +202,7 @@ class _ResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
+                    if (discoverer != null) Text('$discoverer が発見'),
                     const SizedBox(height: 4),
                     Text(point.name ?? '取得できませんでした'),
                     Text(point.genre?.japaneseLabel ?? '取得できませんでした'),

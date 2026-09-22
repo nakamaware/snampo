@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/coop/presentation/coop_clear_listener.dart';
+import 'package:snampo/features/coop/presentation/coop_mission_binder.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
@@ -98,6 +100,13 @@ class MissionPage extends HookConsumerWidget {
             await progressNotifier.clearProgress();
             progressNotifier.startProgress(checkpointCount);
             persistedNotifier.setMission(mission);
+            if (context.mounted) {
+              await publishCoopRoomIfDraft(
+                context: context,
+                ref: ref,
+                mission: mission,
+              );
+            }
           });
         }
       });
@@ -115,6 +124,7 @@ class MissionPage extends HookConsumerWidget {
           ),
           body: Stack(
             children: [
+              const CoopClearListener(),
               MapView(currentLocation: missionInfo.departure, params: _params),
               SnapView(params: _params),
             ],
@@ -651,6 +661,19 @@ class TakeSnap extends HookConsumerWidget {
               );
           if (checkpoint == null) {
             return false;
+          }
+          try {
+            await shareAcceptedPhoto(
+              ref: ref,
+              spotIndex: spotIndex,
+              checkpoint: checkpoint,
+            );
+          } on Object {
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('クリア写真を共有できませんでした')));
+            }
           }
 
           ref

@@ -40,7 +40,11 @@ service cloud.firestore {
         && request.resource.data.missionRef is string
         && request.resource.data.missionRef.size() > 0;
 
-      allow read: if isMember(roomCode) && resource.data.expiresAt > request.time;
+      // 参加前の get を許す。コードそのものが合言葉。
+      // 未作成ドキュメントは exists == false を返せるようにする。
+      // list は禁止する。
+      allow get: if resource == null || isSignedIn();
+      allow list: if false;
       allow update, delete: if false;
 
       match /members/{uid} {

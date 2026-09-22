@@ -30,7 +30,9 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: 10),
                 ],
                 const StartButton(),
-                const SizedBox(height: 10), // 2つの間を空ける
+                const SizedBox(height: 10),
+                const JoinCoopButton(),
+                const SizedBox(height: 10),
                 const HistoryButton(),
               ],
             ),
@@ -91,6 +93,32 @@ class StartButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text('START', style: style),
+      ),
+    );
+  }
+}
+
+/// 協力プレイへ参加するボタン。
+class JoinCoopButton extends StatelessWidget {
+  /// [JoinCoopButton] を作成する。
+  const JoinCoopButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+      ),
+      onPressed: () => context.push('/coop/join'),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text('参加', style: style),
       ),
     );
   }

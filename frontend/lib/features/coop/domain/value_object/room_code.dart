@@ -8,7 +8,7 @@ class RoomCode {
   /// [raw] を trim して [RoomCode] にする。
   factory RoomCode(String raw) {
     final value = raw.trim();
-    if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+    if (!canCreate(raw)) {
       throw ArgumentError.value(raw, 'value', 'ルームコードは数字 6 桁です');
     }
     return RoomCode._(value);
@@ -21,6 +21,9 @@ class RoomCode {
   }
 
   const RoomCode._(this.value);
+
+  /// trim して数字 6 桁なら作れる。
+  static bool canCreate(String raw) => RegExp(r'^\d{6}$').hasMatch(raw.trim());
 
   /// コード文字列。
   final String value;

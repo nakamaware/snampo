@@ -75,6 +75,11 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     return checkpoint;
   }
 
+  /// 協力プレイの反映で進捗を置き換える。
+  void replaceProgress(MissionProgressEntity progress) {
+    state = AsyncValue.data(progress);
+  }
+
   /// 進捗状態のみリセットする（写真ファイルは削除しない）
   ///
   /// ミッション完了後に履歴へ写したあと、再開用ストアだけ空にする場合に使う。

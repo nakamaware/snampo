@@ -8,8 +8,12 @@ environment:
 
 dependencies:
   camera: ^0.11.2
+  cloud_firestore: ^6.10.0
   dio: ^5.4.0
   drift: ^2.31.0
+  firebase_auth: ^6.7.0
+  firebase_core: ^4.15.0
+  firebase_storage: ^13.6.0
   flutter:
     sdk: flutter
   flutter_compass: ^0.8.1
@@ -27,8 +31,10 @@ dependencies:
   image_picker: ^1.0.7
   json_annotation: ^4.8.1
   loading_animation_widget: ^1.2.0+4
+  mobile_scanner: ^7.4.2
   path: ^1.9.0
   path_provider: ^2.1.5
+  qr_flutter: ^4.1.0
   riverpod: ^3.1.0
   riverpod_annotation: ^4.0.0
   riverpod_sqflite: ^0.4.0
