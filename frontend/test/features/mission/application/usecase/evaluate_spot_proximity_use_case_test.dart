@@ -137,6 +137,46 @@ void main() {
       expect(result3.minDistanceMeters! < 20, isTrue);
     });
 
+    test('引き返し中にデッドバンド外であっても距離縮小中ならタイマーが再開されない', () {
+      // minDistance: 10m, 離脱して 30m に達した後、引き返して 25m, 20m と接近中
+      final departTime = baseTime;
+      final departingState = SpotProximityState(
+        spotIndex: 0,
+        status: SpotProximityStatus.departing,
+        minDistanceMeters: 10,
+        recentDistances: [30, 30, 30, 30, 30],
+        departedAt: departTime,
+      );
+
+      // 1. 引き返し1回目 (25m) -> approaching に復帰、タイマーキャンセル
+      final result1 = useCase.call(
+        currentDistance: 25,
+        currentState: departingState,
+        isPhotoTaken: false,
+        now: departTime.add(const Duration(seconds: 10)),
+      );
+      expect(result1.newStatus, SpotProximityStatus.approaching);
+      expect(result1.action, ProximityAction.cancelTimer);
+
+      // 2. 引き返し2回目 (20m) -> smoothedDistance は約26m
+      // (minDistance 10m から 16m 離れておりデッドバンド6mの外側)
+      // だが前回の smoothedDistance より距離が縮小中なので、
+      // departing に再遷移せずタイマーも再開しない
+      final approachingState = departingState.copyWith(
+        status: result1.newStatus,
+        recentDistances: result1.recentDistances,
+        minDistanceMeters: result1.minDistanceMeters,
+      );
+      final result2 = useCase.call(
+        currentDistance: 20,
+        currentState: approachingState,
+        isPhotoTaken: false,
+        now: departTime.add(const Duration(seconds: 15)),
+      );
+      expect(result2.newStatus, SpotProximityStatus.approaching);
+      expect(result2.action, ProximityAction.none);
+    });
+
     test('離脱中に写真が撮影された場合、タイマーキャンセル&完了アクションが返る', () {
       final state = SpotProximityState(
         spotIndex: 0,

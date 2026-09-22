@@ -163,7 +163,9 @@ class EvaluateSpotProximityUseCase {
     }
 
     // 5. 最短距離から遠ざかり始めた場合（離脱判定）
-    final isMovingAway = (smoothedDistance - minDistance) > deadbandMeters;
+    final isMovingAway =
+        (smoothedDistance - minDistance) > deadbandMeters &&
+        smoothedDistance > prevSmoothedDistance;
 
     if (isMovingAway) {
       if (currentState.status == SpotProximityStatus.approaching ||
