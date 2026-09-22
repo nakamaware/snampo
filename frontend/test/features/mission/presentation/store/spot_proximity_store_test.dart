@@ -400,19 +400,32 @@ void main() {
     });
 
     test('位置情報ストリームでエラーが発生した際、トラッキングが安全に停止される', () {
-      final notifier = container.read(spotProximityStoreProvider.notifier);
-      notifier.startMonitoring(testMission);
+      fakeAsync((async) {
+        final notifier = container.read(spotProximityStoreProvider.notifier);
+        notifier.startMonitoring(testMission);
 
-      expect(
-        () => fakeLocationService.controller.addError(Exception('GPS error')),
-        returnsNormally,
-      );
+        // 初回位置情報を送信して状態を生成
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6812, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
 
-      // トラッキング停止後、後続の位置情報が来ても更新されない
-      fakeLocationService.controller.add(
-        Coordinate(latitude: 35.6812, longitude: 139.7671),
-      );
-      expect(container.read(spotProximityStoreProvider), isNull);
+        final stateBeforeError = container.read(spotProximityStoreProvider);
+        expect(stateBeforeError, isNotNull);
+
+        // エラーを送信してマイクロタスクを実行
+        fakeLocationService.controller.addError(Exception('GPS error'));
+        async.flushMicrotasks();
+
+        // トラッキング停止後、後続の位置情報が届いても状態が更新されないことを検証
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6800, longitude: 139.7670),
+        );
+        async.flushMicrotasks();
+
+        final stateAfterSubsequent = container.read(spotProximityStoreProvider);
+        expect(stateAfterSubsequent, equals(stateBeforeError));
+      });
     });
 
     test('通知の送信やキャンセルが例外を投げても、エラーが回収され監視処理がクラッシュしない', () {
