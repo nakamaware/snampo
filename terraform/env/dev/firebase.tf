@@ -94,6 +94,17 @@ resource "google_firebaserules_ruleset" "storage" {
   }
 }
 
+# rooms.expiresAt を過ぎたルーム本体を消す。members / clears / Storage は残る。
+resource "google_firestore_field" "room_expires_at_ttl" {
+  provider   = google-beta
+  project    = google_firestore_database.default.project
+  database   = google_firestore_database.default.name
+  collection = "rooms"
+  field      = "expiresAt"
+
+  ttl_config {}
+}
+
 resource "google_firebaserules_release" "storage" {
   provider     = google-beta
   project      = google_firebase_project.default.project

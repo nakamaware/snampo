@@ -1,18 +1,23 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
-/// ルームコード。空と内部空白は拒否する。生成規則はここでは決めない。
+/// 数字 6 桁のルームコード。QR も同じ数字を載せる。
 @immutable
 class RoomCode {
   /// [raw] を trim して [RoomCode] にする。
   factory RoomCode(String raw) {
     final value = raw.trim();
-    if (value.isEmpty) {
-      throw ArgumentError.value(raw, 'value', 'ルームコードは空にできません');
-    }
-    if (value.contains(RegExp(r'\s'))) {
-      throw ArgumentError.value(raw, 'value', 'ルームコードに空白を含められません');
+    if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+      throw ArgumentError.value(raw, 'value', 'ルームコードは数字 6 桁です');
     }
     return RoomCode._(value);
+  }
+
+  /// [random] から数字 6 桁を作る。`000000` から `999999` まで。
+  factory RoomCode.generate(Random random) {
+    final n = random.nextInt(1000000);
+    return RoomCode(n.toString().padLeft(6, '0'));
   }
 
   const RoomCode._(this.value);

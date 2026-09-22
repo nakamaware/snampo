@@ -4,7 +4,9 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 /// リモートの先着クリアをローカル進捗へマージする。
 ///
 /// 埋まっている slot は触らない。空の slot だけ `achievedAt` を入れる。
-/// 写真パスは付けない。
+///
+/// [SpotClear.thumbPath] は Storage のオブジェクトパスなので、
+/// ローカルファイル用の `userPhotoPath` には入れない。
 class MergeRemoteClearsUseCase {
   /// [MergeRemoteClearsUseCase] を作成する。
   const MergeRemoteClearsUseCase();

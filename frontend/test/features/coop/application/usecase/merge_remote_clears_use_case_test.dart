@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/coop/application/usecase/merge_remote_clears_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/coop/domain/value_object/clear_thumb.dart';
+import 'package:snampo/features/coop/domain/value_object/nickname.dart';
 import 'package:snampo/features/coop/domain/value_object/player_id.dart';
+import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/coop/domain/value_object/spot_id.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 
@@ -17,11 +20,14 @@ void main() {
   }
 
   SpotClear clearAt(int index) {
-    return SpotClear(
-      spotId: SpotId.fromIndex(index),
+    return SpotClear.share(
+      thumb: ClearThumb(
+        roomCode: RoomCode('123456'),
+        spotId: SpotId.fromIndex(index),
+      ),
       clearedBy: PlayerId('uid-1'),
+      nickname: Nickname('host'),
       clearedAt: clearedAt,
-      nickname: 'host',
     );
   }
 
