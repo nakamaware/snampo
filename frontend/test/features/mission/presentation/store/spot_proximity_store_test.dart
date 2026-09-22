@@ -31,6 +31,7 @@ class FakeNotificationService implements INotificationService {
   String? lastTitle;
   String? lastBody;
   int? lastCanceledId;
+  bool shouldThrow = false;
 
   @override
   Future<void> initialize() async {}
@@ -41,6 +42,9 @@ class FakeNotificationService implements INotificationService {
     required String title,
     required String body,
   }) async {
+    if (shouldThrow) {
+      throw Exception('Notification error');
+    }
     lastAlertId = id;
     lastTitle = title;
     lastBody = body;
@@ -48,6 +52,9 @@ class FakeNotificationService implements INotificationService {
 
   @override
   Future<void> cancel(int id) async {
+    if (shouldThrow) {
+      throw Exception('Cancel error');
+    }
     lastCanceledId = id;
     if (lastAlertId == id) {
       lastAlertId = null;
@@ -389,6 +396,48 @@ void main() {
         expect(receivedEvent?.spotIndex, 0);
 
         sub.cancel();
+      });
+    });
+
+    test('位置情報ストリームでエラーが発生した際、トラッキングが安全に停止される', () {
+      final notifier = container.read(spotProximityStoreProvider.notifier);
+      notifier.startMonitoring(testMission);
+
+      expect(
+        () => fakeLocationService.controller.addError(Exception('GPS error')),
+        returnsNormally,
+      );
+
+      // トラッキング停止後、後続の位置情報が来ても更新されない
+      fakeLocationService.controller.add(
+        Coordinate(latitude: 35.6812, longitude: 139.7671),
+      );
+      expect(container.read(spotProximityStoreProvider), isNull);
+    });
+
+    test('通知の送信やキャンセルが例外を投げても、エラーが回収され監視処理がクラッシュしない', () {
+      fakeAsync((async) {
+        fakeNotificationService.shouldThrow = true;
+        final notifier = container.read(spotProximityStoreProvider.notifier);
+        notifier.startMonitoring(testMission);
+
+        // 接近 -> 離脱 -> 60秒（通知発火）
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6812, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6825, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        expect(
+          () => async.elapse(const Duration(seconds: 60)),
+          returnsNormally,
+        );
+
+        // 監視停止時のキャンセルエラーもクラッシュしない
+        expect(notifier.stopMonitoring, returnsNormally);
       });
     });
   });

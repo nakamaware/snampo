@@ -17,10 +17,21 @@ class LocalNotificationService implements INotificationService {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const iosSettings = DarwinInitializationSettings();
+    const darwinSettings = DarwinInitializationSettings();
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open notification',
+    );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: 'snampo',
+      appUserModelId: 'com.example.snampo',
+      guid: '9a924b1d-91b5-419b-a0ea-7a1b4d081bb2',
+    );
     const settings = InitializationSettings(
       android: androidSettings,
-      iOS: iosSettings,
+      iOS: darwinSettings,
+      macOS: darwinSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
     );
 
     await _plugin.initialize(settings: settings);

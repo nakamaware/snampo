@@ -66,6 +66,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     final locationService = ref.read(locationServiceProvider);
     _positionSubscription = locationService.getPositionStream().listen(
       _onPositionUpdate,
+      onError: (Object error, StackTrace stackTrace) {
+        _stopTracking();
+      },
     );
   }
 
@@ -73,7 +76,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   void stopMonitoring() {
     final currentSpotIndex = state?.spotIndex;
     if (currentSpotIndex != null) {
-      unawaited(ref.read(notificationServiceProvider).cancel(currentSpotIndex));
+      _runNotificationOperation(
+        ref.read(notificationServiceProvider).cancel(currentSpotIndex),
+      );
     }
     _stopTracking();
     _currentMission = null;
@@ -98,7 +103,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
 
     if (isCurrentSpotCompleted) {
       // 撮影完了した地点のOS通知をキャンセル
-      unawaited(ref.read(notificationServiceProvider).cancel(currentSpotIndex));
+      _runNotificationOperation(
+        ref.read(notificationServiceProvider).cancel(currentSpotIndex),
+      );
     }
 
     if (targetIndex == null) {
@@ -205,7 +212,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
       case ProximityAction.cancelTimerAndComplete:
         _departureTimer?.cancel();
         _departureTimer = null;
-        unawaited(ref.read(notificationServiceProvider).cancel(targetIndex));
+        _runNotificationOperation(
+          ref.read(notificationServiceProvider).cancel(targetIndex),
+        );
       case ProximityAction.triggerNotification:
         _triggerNotification(targetIndex, spots);
       case ProximityAction.none:
@@ -234,7 +243,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     if (isPhotoTaken) {
       _departureTimer?.cancel();
       _departureTimer = null;
-      unawaited(ref.read(notificationServiceProvider).cancel(targetIndex));
+      _runNotificationOperation(
+        ref.read(notificationServiceProvider).cancel(targetIndex),
+      );
       state = state?.copyWith(status: SpotProximityStatus.completed);
       return;
     }
@@ -261,7 +272,7 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     );
 
     // OSローカルプッシュ通知も発火
-    unawaited(
+    _runNotificationOperation(
       ref
           .read(notificationServiceProvider)
           .showDepartureAlert(
@@ -269,6 +280,14 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
             title: '写真の撮り忘れはありませんか？',
             body: '$spotName から離れています。撮影を忘れていないか確認してください。',
           ),
+    );
+  }
+
+  void _runNotificationOperation(Future<void> operation) {
+    unawaited(
+      operation.catchError((Object error, StackTrace stackTrace) {
+        // 通知操作の失敗が離脱監視本体に波及しないよう捕捉
+      }),
     );
   }
 
