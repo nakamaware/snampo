@@ -18,9 +18,9 @@ AsyncValue<Coordinate> useCurrentPosition(WidgetRef ref) {
     ConnectionState.done =>
       snapshot.hasError
           ? AsyncValue.error(
-            snapshot.error!,
-            snapshot.stackTrace ?? StackTrace.current,
-          )
+              snapshot.error!,
+              snapshot.stackTrace ?? StackTrace.current,
+            )
           : AsyncValue.data(snapshot.data!),
     _ => const AsyncValue.loading(),
   };

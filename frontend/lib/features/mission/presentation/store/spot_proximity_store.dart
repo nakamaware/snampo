@@ -199,10 +199,9 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
         _departureTimer?.cancel();
         _departureTimer = Timer(
           Duration(
-            seconds:
-                ref
-                    .read(evaluateSpotProximityUseCaseProvider)
-                    .departureDurationSeconds,
+            seconds: ref
+                .read(evaluateSpotProximityUseCaseProvider)
+                .departureDurationSeconds,
           ),
           () => _onTimerExpired(targetIndex, spots),
         );
@@ -258,14 +257,13 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   /// 通知を発火する
   void _triggerNotification(int targetIndex, List<ImageCoordinate> spots) {
     final spot = spots[targetIndex];
-    final spotName =
-        targetIndex < spots.length - 1
-            ? (spot.name != null && spot.name!.isNotEmpty
-                ? 'Spot ${targetIndex + 1} (${spot.name})'
-                : 'Spot ${targetIndex + 1}')
-            : (spot.name != null && spot.name!.isNotEmpty
-                ? '目的地 (${spot.name})'
-                : '目的地');
+    final spotName = targetIndex < spots.length - 1
+        ? (spot.name != null && spot.name!.isNotEmpty
+              ? 'Spot ${targetIndex + 1} (${spot.name})'
+              : 'Spot ${targetIndex + 1}')
+        : (spot.name != null && spot.name!.isNotEmpty
+              ? '目的地 (${spot.name})'
+              : '目的地');
 
     _alertEventController.add(
       SpotDepartureAlertEvent(spotIndex: targetIndex, spotName: spotName),

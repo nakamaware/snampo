@@ -19,10 +19,11 @@ class HistoryPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final titleTextStyle = (theme.textTheme.displayMedium ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
+    final titleTextStyle =
+        (theme.textTheme.displayMedium ??
+                theme.textTheme.headlineMedium ??
+                const TextStyle())
+            .copyWith(color: theme.colorScheme.onPrimary);
 
     final historyAsync = useHistories(ref);
     final removedIds = useState<Set<String>>({});
@@ -216,8 +217,8 @@ class _HistoryListTile extends ConsumerWidget {
             content: const Text('履歴の削除に失敗しました'),
             action: SnackBarAction(
               label: '再試行',
-              onPressed:
-                  () => _executeRemove(context, ref, showRetryOnFailure: false),
+              onPressed: () =>
+                  _executeRemove(context, ref, showRetryOnFailure: false),
             ),
           ),
         );
@@ -252,10 +253,9 @@ class _HistoryThumbnail extends StatelessWidget {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
               fullscreenDialog: true,
-              builder:
-                  (_) => HistoryFullscreenImageViewer(
-                    child: Image.file(File(filePath), fit: BoxFit.contain),
-                  ),
+              builder: (_) => HistoryFullscreenImageViewer(
+                child: Image.file(File(filePath), fit: BoxFit.contain),
+              ),
             ),
           );
         },

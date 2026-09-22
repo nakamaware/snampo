@@ -37,10 +37,11 @@ class ResultPage extends ConsumerWidget {
               appBar: AppBar(
                 title: Text(
                   'RESULT',
-                  style: (theme.textTheme.displayMedium ??
-                          theme.textTheme.headlineMedium ??
-                          const TextStyle())
-                      .copyWith(color: theme.colorScheme.onPrimary),
+                  style:
+                      (theme.textTheme.displayMedium ??
+                              theme.textTheme.headlineMedium ??
+                              const TextStyle())
+                          .copyWith(color: theme.colorScheme.onPrimary),
                 ),
                 centerTitle: true,
                 backgroundColor: theme.colorScheme.primary,
@@ -63,34 +64,32 @@ class ResultPage extends ConsumerWidget {
                           itemBuilder: (context, index) {
                             final checkpoint =
                                 index < progress.checkpoints.length
-                                    ? progress.checkpoints[index]
-                                    : null;
+                                ? progress.checkpoints[index]
+                                : null;
                             final hasResultPhoto =
                                 checkpoint?.userPhotoPath != null;
                             return _ResultCard(
-                              title:
-                                  index == points.length - 1
-                                      ? 'GOAL'
-                                      : 'Spot ${index + 1}',
+                              title: index == points.length - 1
+                                  ? 'GOAL'
+                                  : 'Spot ${index + 1}',
                               point: points[index],
                               checkpoint: checkpoint,
                               isSelectedDestinationGoal:
                                   isDestinationMode &&
                                   index == points.length - 1,
-                              onTap:
-                                  !hasResultPhoto
-                                      ? null
-                                      : () => context.push(
-                                        '/spot-result',
-                                        extra: SpotResultPageArgs(
-                                          spotIndex: index,
-                                          totalCheckpointCount: points.length,
-                                          missionPoint: points[index],
-                                          checkpoint: checkpoint!,
-                                          fromResultPage: true,
-                                          isDestinationMode: isDestinationMode,
-                                        ),
+                              onTap: !hasResultPhoto
+                                  ? null
+                                  : () => context.push(
+                                      '/spot-result',
+                                      extra: SpotResultPageArgs(
+                                        spotIndex: index,
+                                        totalCheckpointCount: points.length,
+                                        missionPoint: points[index],
+                                        checkpoint: checkpoint!,
+                                        fromResultPage: true,
+                                        isDestinationMode: isDestinationMode,
                                       ),
+                                    ),
                             );
                           },
                         ),
@@ -106,10 +105,8 @@ class ResultPage extends ConsumerWidget {
               ),
             );
           },
-          loading:
-              () => const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (error, stackTrace) {
             log(
               '進捗データの読み込みに失敗しました',
@@ -121,9 +118,8 @@ class ResultPage extends ConsumerWidget {
           },
         );
       },
-      loading:
-          () =>
-              const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stackTrace) {
         log(
           'ミッションデータの読み込みに失敗しました',
@@ -191,16 +187,15 @@ class _ResultCard extends StatelessWidget {
                 height: 88,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child:
-                      checkpoint?.userPhotoPath == null
-                          ? const ColoredBox(
-                            color: Colors.black12,
-                            child: SizedBox.expand(),
-                          )
-                          : Image.file(
-                            File(checkpoint!.userPhotoPath!),
-                            fit: BoxFit.cover,
-                          ),
+                  child: checkpoint?.userPhotoPath == null
+                      ? const ColoredBox(
+                          color: Colors.black12,
+                          child: SizedBox.expand(),
+                        )
+                      : Image.file(
+                          File(checkpoint!.userPhotoPath!),
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -218,10 +213,9 @@ class _ResultCard extends StatelessWidget {
                     Text(
                       onTap == null ? '未撮影' : 'タップして結果を見る',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            onTap == null
-                                ? theme.colorScheme.outline
-                                : theme.colorScheme.primary,
+                        color: onTap == null
+                            ? theme.colorScheme.outline
+                            : theme.colorScheme.primary,
                       ),
                     ),
                   ],

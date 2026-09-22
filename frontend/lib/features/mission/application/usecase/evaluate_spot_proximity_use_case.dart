@@ -118,21 +118,19 @@ class EvaluateSpotProximityUseCase {
       );
     }
 
-    final prevSmoothedDistance =
-        currentState.recentDistances.isNotEmpty
-            ? currentState.recentDistances.reduce((a, b) => a + b) /
-                currentState.recentDistances.length
-            : currentDistance;
+    final prevSmoothedDistance = currentState.recentDistances.isNotEmpty
+        ? currentState.recentDistances.reduce((a, b) => a + b) /
+              currentState.recentDistances.length
+        : currentDistance;
 
     // 4. 最短距離を更新した場合（接近フェーズ）
     if (smoothedDistance < minDistance) {
       return ProximityEvaluationResult(
         newStatus: SpotProximityStatus.approaching,
         // 離脱中から再接近へ転じた場合はタイマーをキャンセル
-        action:
-            currentState.status == SpotProximityStatus.departing
-                ? ProximityAction.cancelTimer
-                : ProximityAction.none,
+        action: currentState.status == SpotProximityStatus.departing
+            ? ProximityAction.cancelTimer
+            : ProximityAction.none,
         minDistanceMeters: smoothedDistance,
         recentDistances: updatedRecent,
         smoothedDistance: smoothedDistance,

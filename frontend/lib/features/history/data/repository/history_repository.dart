@@ -134,8 +134,9 @@ class HistoryRepository implements IHistoryRepository {
             .get();
 
     await _db.transaction(() async {
-      await (_db.delete(_db.missionHistories)
-        ..where((t) => t.id.equals(id))).go();
+      await (_db.delete(
+        _db.missionHistories,
+      )..where((t) => t.id.equals(id))).go();
     });
 
     for (final path in userPhotoPaths) {
@@ -193,9 +194,9 @@ class HistoryRepository implements IHistoryRepository {
   /// id で 1 件取得
   @override
   Future<MissionHistory?> getHistoryById(String id) async {
-    final h =
-        await (_db.select(_db.missionHistories)
-          ..where((t) => t.id.equals(id))).getSingleOrNull();
+    final h = await (_db.select(
+      _db.missionHistories,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     if (h == null) {
       return null;
     }
@@ -227,10 +228,9 @@ class HistoryRepository implements IHistoryRepository {
     const chunkSize = 500;
     final out = <HistorySpotRow>[];
     for (var i = 0; i < historyIds.length; i += chunkSize) {
-      final end =
-          (i + chunkSize > historyIds.length)
-              ? historyIds.length
-              : i + chunkSize;
+      final end = (i + chunkSize > historyIds.length)
+          ? historyIds.length
+          : i + chunkSize;
       final chunk = historyIds.sublist(i, end);
       final part =
           await (_db.select(_db.historySpots)
