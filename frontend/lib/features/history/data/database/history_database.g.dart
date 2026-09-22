@@ -240,45 +240,38 @@ class $MissionHistoriesTable extends MissionHistories
   MissionHistoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MissionHistoryRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      completedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}completed_at'],
-          )!,
-      startedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}started_at'],
-          )!,
-      departureLat:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}departure_lat'],
-          )!,
-      departureLng:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}departure_lng'],
-          )!,
-      overviewPolyline:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}overview_polyline'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_at'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}started_at'],
+      )!,
+      departureLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}departure_lat'],
+      )!,
+      departureLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}departure_lng'],
+      )!,
+      overviewPolyline: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}overview_polyline'],
+      )!,
       radiusMeters: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}radius_meters'],
       ),
-      mode:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}mode'],
-          )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
       destinationLat: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}destination_lat'],
@@ -369,19 +362,16 @@ class MissionHistoryRow extends DataClass
       departureLat: Value(departureLat),
       departureLng: Value(departureLng),
       overviewPolyline: Value(overviewPolyline),
-      radiusMeters:
-          radiusMeters == null && nullToAbsent
-              ? const Value.absent()
-              : Value(radiusMeters),
+      radiusMeters: radiusMeters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(radiusMeters),
       mode: Value(mode),
-      destinationLat:
-          destinationLat == null && nullToAbsent
-              ? const Value.absent()
-              : Value(destinationLat),
-      destinationLng:
-          destinationLng == null && nullToAbsent
-              ? const Value.absent()
-              : Value(destinationLng),
+      destinationLat: destinationLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destinationLat),
+      destinationLng: destinationLng == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destinationLng),
     );
   }
 
@@ -440,42 +430,39 @@ class MissionHistoryRow extends DataClass
     overviewPolyline: overviewPolyline ?? this.overviewPolyline,
     radiusMeters: radiusMeters.present ? radiusMeters.value : this.radiusMeters,
     mode: mode ?? this.mode,
-    destinationLat:
-        destinationLat.present ? destinationLat.value : this.destinationLat,
-    destinationLng:
-        destinationLng.present ? destinationLng.value : this.destinationLng,
+    destinationLat: destinationLat.present
+        ? destinationLat.value
+        : this.destinationLat,
+    destinationLng: destinationLng.present
+        ? destinationLng.value
+        : this.destinationLng,
   );
   MissionHistoryRow copyWithCompanion(MissionHistoriesCompanion data) {
     return MissionHistoryRow(
       id: data.id.present ? data.id.value : this.id,
-      completedAt:
-          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
-      departureLat:
-          data.departureLat.present
-              ? data.departureLat.value
-              : this.departureLat,
-      departureLng:
-          data.departureLng.present
-              ? data.departureLng.value
-              : this.departureLng,
-      overviewPolyline:
-          data.overviewPolyline.present
-              ? data.overviewPolyline.value
-              : this.overviewPolyline,
-      radiusMeters:
-          data.radiusMeters.present
-              ? data.radiusMeters.value
-              : this.radiusMeters,
+      departureLat: data.departureLat.present
+          ? data.departureLat.value
+          : this.departureLat,
+      departureLng: data.departureLng.present
+          ? data.departureLng.value
+          : this.departureLng,
+      overviewPolyline: data.overviewPolyline.present
+          ? data.overviewPolyline.value
+          : this.overviewPolyline,
+      radiusMeters: data.radiusMeters.present
+          ? data.radiusMeters.value
+          : this.radiusMeters,
       mode: data.mode.present ? data.mode.value : this.mode,
-      destinationLat:
-          data.destinationLat.present
-              ? data.destinationLat.value
-              : this.destinationLat,
-      destinationLng:
-          data.destinationLng.present
-              ? data.destinationLng.value
-              : this.destinationLng,
+      destinationLat: data.destinationLat.present
+          ? data.destinationLat.value
+          : this.destinationLat,
+      destinationLng: data.destinationLng.present
+          ? data.destinationLng.value
+          : this.destinationLng,
     );
   }
 
@@ -1084,41 +1071,34 @@ class $HistorySpotsTable extends HistorySpots
   HistorySpotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return HistorySpotRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      historyId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}history_id'],
-          )!,
-      sortOrder:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}sort_order'],
-          )!,
-      isDestination:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_destination'],
-          )!,
-      lat:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}lat'],
-          )!,
-      lng:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}lng'],
-          )!,
-      streetViewImagePath:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}street_view_image_path'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      historyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}history_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      isDestination: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_destination'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lng'],
+      )!,
+      streetViewImagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}street_view_image_path'],
+      )!,
       userPhotoPath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}user_photo_path'],
@@ -1216,7 +1196,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 正解画像の基準方角 (度)
   final double? referenceHeading;
 
-  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  /// 採点ランク (`excellent` / `good` / `fair` / `miss`)
+  ///
+  /// 旧バージョンで保存された `retry` は読み込み時に `miss` として扱う。
   final String? judgeRank;
 
   /// 位置誤差 (m)
@@ -1312,49 +1294,40 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       lat: Value(lat),
       lng: Value(lng),
       streetViewImagePath: Value(streetViewImagePath),
-      userPhotoPath:
-          userPhotoPath == null && nullToAbsent
-              ? const Value.absent()
-              : Value(userPhotoPath),
-      achievedAt:
-          achievedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(achievedAt),
+      userPhotoPath: userPhotoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userPhotoPath),
+      achievedAt: achievedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(achievedAt),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
-      genre:
-          genre == null && nullToAbsent ? const Value.absent() : Value(genre),
-      googleMapsUrl:
-          googleMapsUrl == null && nullToAbsent
-              ? const Value.absent()
-              : Value(googleMapsUrl),
-      referenceHeading:
-          referenceHeading == null && nullToAbsent
-              ? const Value.absent()
-              : Value(referenceHeading),
-      judgeRank:
-          judgeRank == null && nullToAbsent
-              ? const Value.absent()
-              : Value(judgeRank),
-      distanceErrorMeters:
-          distanceErrorMeters == null && nullToAbsent
-              ? const Value.absent()
-              : Value(distanceErrorMeters),
-      headingErrorDegrees:
-          headingErrorDegrees == null && nullToAbsent
-              ? const Value.absent()
-              : Value(headingErrorDegrees),
-      guessLat:
-          guessLat == null && nullToAbsent
-              ? const Value.absent()
-              : Value(guessLat),
-      guessLng:
-          guessLng == null && nullToAbsent
-              ? const Value.absent()
-              : Value(guessLng),
-      capturedHeading:
-          capturedHeading == null && nullToAbsent
-              ? const Value.absent()
-              : Value(capturedHeading),
+      genre: genre == null && nullToAbsent
+          ? const Value.absent()
+          : Value(genre),
+      googleMapsUrl: googleMapsUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(googleMapsUrl),
+      referenceHeading: referenceHeading == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceHeading),
+      judgeRank: judgeRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(judgeRank),
+      distanceErrorMeters: distanceErrorMeters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(distanceErrorMeters),
+      headingErrorDegrees: headingErrorDegrees == null && nullToAbsent
+          ? const Value.absent()
+          : Value(headingErrorDegrees),
+      guessLat: guessLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(guessLat),
+      guessLng: guessLng == null && nullToAbsent
+          ? const Value.absent()
+          : Value(guessLng),
+      capturedHeading: capturedHeading == null && nullToAbsent
+          ? const Value.absent()
+          : Value(capturedHeading),
     );
   }
 
@@ -1445,77 +1418,70 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     lat: lat ?? this.lat,
     lng: lng ?? this.lng,
     streetViewImagePath: streetViewImagePath ?? this.streetViewImagePath,
-    userPhotoPath:
-        userPhotoPath.present ? userPhotoPath.value : this.userPhotoPath,
+    userPhotoPath: userPhotoPath.present
+        ? userPhotoPath.value
+        : this.userPhotoPath,
     achievedAt: achievedAt.present ? achievedAt.value : this.achievedAt,
     name: name.present ? name.value : this.name,
     genre: genre.present ? genre.value : this.genre,
-    googleMapsUrl:
-        googleMapsUrl.present ? googleMapsUrl.value : this.googleMapsUrl,
-    referenceHeading:
-        referenceHeading.present
-            ? referenceHeading.value
-            : this.referenceHeading,
+    googleMapsUrl: googleMapsUrl.present
+        ? googleMapsUrl.value
+        : this.googleMapsUrl,
+    referenceHeading: referenceHeading.present
+        ? referenceHeading.value
+        : this.referenceHeading,
     judgeRank: judgeRank.present ? judgeRank.value : this.judgeRank,
-    distanceErrorMeters:
-        distanceErrorMeters.present
-            ? distanceErrorMeters.value
-            : this.distanceErrorMeters,
-    headingErrorDegrees:
-        headingErrorDegrees.present
-            ? headingErrorDegrees.value
-            : this.headingErrorDegrees,
+    distanceErrorMeters: distanceErrorMeters.present
+        ? distanceErrorMeters.value
+        : this.distanceErrorMeters,
+    headingErrorDegrees: headingErrorDegrees.present
+        ? headingErrorDegrees.value
+        : this.headingErrorDegrees,
     guessLat: guessLat.present ? guessLat.value : this.guessLat,
     guessLng: guessLng.present ? guessLng.value : this.guessLng,
-    capturedHeading:
-        capturedHeading.present ? capturedHeading.value : this.capturedHeading,
+    capturedHeading: capturedHeading.present
+        ? capturedHeading.value
+        : this.capturedHeading,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
     return HistorySpotRow(
       id: data.id.present ? data.id.value : this.id,
       historyId: data.historyId.present ? data.historyId.value : this.historyId,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
-      isDestination:
-          data.isDestination.present
-              ? data.isDestination.value
-              : this.isDestination,
+      isDestination: data.isDestination.present
+          ? data.isDestination.value
+          : this.isDestination,
       lat: data.lat.present ? data.lat.value : this.lat,
       lng: data.lng.present ? data.lng.value : this.lng,
-      streetViewImagePath:
-          data.streetViewImagePath.present
-              ? data.streetViewImagePath.value
-              : this.streetViewImagePath,
-      userPhotoPath:
-          data.userPhotoPath.present
-              ? data.userPhotoPath.value
-              : this.userPhotoPath,
-      achievedAt:
-          data.achievedAt.present ? data.achievedAt.value : this.achievedAt,
+      streetViewImagePath: data.streetViewImagePath.present
+          ? data.streetViewImagePath.value
+          : this.streetViewImagePath,
+      userPhotoPath: data.userPhotoPath.present
+          ? data.userPhotoPath.value
+          : this.userPhotoPath,
+      achievedAt: data.achievedAt.present
+          ? data.achievedAt.value
+          : this.achievedAt,
       name: data.name.present ? data.name.value : this.name,
       genre: data.genre.present ? data.genre.value : this.genre,
-      googleMapsUrl:
-          data.googleMapsUrl.present
-              ? data.googleMapsUrl.value
-              : this.googleMapsUrl,
-      referenceHeading:
-          data.referenceHeading.present
-              ? data.referenceHeading.value
-              : this.referenceHeading,
+      googleMapsUrl: data.googleMapsUrl.present
+          ? data.googleMapsUrl.value
+          : this.googleMapsUrl,
+      referenceHeading: data.referenceHeading.present
+          ? data.referenceHeading.value
+          : this.referenceHeading,
       judgeRank: data.judgeRank.present ? data.judgeRank.value : this.judgeRank,
-      distanceErrorMeters:
-          data.distanceErrorMeters.present
-              ? data.distanceErrorMeters.value
-              : this.distanceErrorMeters,
-      headingErrorDegrees:
-          data.headingErrorDegrees.present
-              ? data.headingErrorDegrees.value
-              : this.headingErrorDegrees,
+      distanceErrorMeters: data.distanceErrorMeters.present
+          ? data.distanceErrorMeters.value
+          : this.distanceErrorMeters,
+      headingErrorDegrees: data.headingErrorDegrees.present
+          ? data.headingErrorDegrees.value
+          : this.headingErrorDegrees,
       guessLat: data.guessLat.present ? data.guessLat.value : this.guessLat,
       guessLng: data.guessLng.present ? data.guessLng.value : this.guessLng,
-      capturedHeading:
-          data.capturedHeading.present
-              ? data.capturedHeading.value
-              : this.capturedHeading,
+      capturedHeading: data.capturedHeading.present
+          ? data.capturedHeading.value
+          : this.capturedHeading,
     );
   }
 
@@ -2183,19 +2149,12 @@ class $$MissionHistoriesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () =>
-                  $$MissionHistoriesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$MissionHistoriesTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$MissionHistoriesTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () =>
+              $$MissionHistoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MissionHistoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MissionHistoriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -2248,16 +2207,14 @@ class $$MissionHistoriesTableTableManager
                 destinationLng: destinationLng,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$MissionHistoriesTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MissionHistoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
           prefetchHooksCallback: ({historySpotsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -2274,17 +2231,14 @@ class $$MissionHistoriesTableTableManager
                       currentTable: table,
                       referencedTable: $$MissionHistoriesTableReferences
                           ._historySpotsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$MissionHistoriesTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).historySpotsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.historyId == item.id,
-                          ),
+                      managerFromTypedResult: (p0) =>
+                          $$MissionHistoriesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).historySpotsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.historyId == item.id),
                       typedResults: items,
                     ),
                 ];
@@ -2752,13 +2706,12 @@ class $$HistorySpotsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$HistorySpotsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$HistorySpotsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$HistorySpotsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$HistorySpotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HistorySpotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HistorySpotsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -2843,52 +2796,50 @@ class $$HistorySpotsTableTableManager
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$HistorySpotsTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$HistorySpotsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
           prefetchHooksCallback: ({historyId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (historyId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.historyId,
-                            referencedTable: $$HistorySpotsTableReferences
-                                ._historyIdTable(db),
-                            referencedColumn:
-                                $$HistorySpotsTableReferences
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (historyId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.historyId,
+                                referencedTable: $$HistorySpotsTableReferences
+                                    ._historyIdTable(db),
+                                referencedColumn: $$HistorySpotsTableReferences
                                     ._historyIdTable(db)
                                     .id,
-                          )
-                          as T;
-                }
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },

@@ -60,10 +60,9 @@ class SpotResultPage extends StatelessWidget {
 
     final point = args.missionPoint;
     final rank = checkpoint.judgeRank ?? PhotoJudgeRank.miss;
-    final distanceErrorText =
-        checkpoint.distanceErrorMeters == null
-            ? '取得できませんでした'
-            : '${checkpoint.distanceErrorMeters!.toStringAsFixed(1)} m';
+    final distanceErrorText = checkpoint.distanceErrorMeters == null
+        ? '取得できませんでした'
+        : '${checkpoint.distanceErrorMeters!.toStringAsFixed(1)} m';
     final headingErrorText = _buildHeadingErrorText(
       checkpoint.headingErrorDegrees,
     );
@@ -116,10 +115,9 @@ class SpotResultPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed:
-                    point.googleMapsUrl == null
-                        ? null
-                        : () => _openGoogleMaps(context, point.googleMapsUrl!),
+                onPressed: point.googleMapsUrl == null
+                    ? null
+                    : () => _openGoogleMaps(context, point.googleMapsUrl!),
                 child: const Text('Google Mapでスポットを確認する'),
               ),
               const SizedBox(height: 12),
@@ -206,7 +204,9 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(child: ListTile(title: Text(label), subtitle: Text(value)));
+    return Card(
+      child: ListTile(title: Text(label), subtitle: Text(value)),
+    );
   }
 }
 

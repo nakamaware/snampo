@@ -30,11 +30,10 @@ String formatCompletedDate(DateTime dateTime) {
 String formatMissionSettings(MissionSettings settings) {
   return settings.when(
     random: (r) => 'ミッション設定: ランダム (半径 ${r.meters} m)',
-    destination:
-        (c) =>
-            'ミッション設定: 目的地指定 '
-            '(${c.latitude.toStringAsFixed(5)}, '
-            '${c.longitude.toStringAsFixed(5)})',
+    destination: (c) =>
+        'ミッション設定: 目的地指定 '
+        '(${c.latitude.toStringAsFixed(5)}, '
+        '${c.longitude.toStringAsFixed(5)})',
   );
 }
 

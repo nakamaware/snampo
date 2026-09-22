@@ -107,8 +107,9 @@ class _SpotResultMapState extends State<SpotResultMap> {
     final guessPos = widget.checkpoint.guessPosition;
     final capturedHeading = widget.checkpoint.capturedHeading;
 
-    final shotLatLng =
-        guessPos != null ? LatLng(guessPos.latitude, guessPos.longitude) : null;
+    final shotLatLng = guessPos != null
+        ? LatLng(guessPos.latitude, guessPos.longitude)
+        : null;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -138,8 +139,9 @@ class _SpotResultMapState extends State<SpotResultMap> {
     final landmarkName = widget.missionPoint.name ?? 'ランドマーク';
     final svLat = widget.missionPoint.streetViewLatitude;
     final svLng = widget.missionPoint.streetViewLongitude;
-    final svLatLng =
-        svLat != null && svLng != null ? LatLng(svLat, svLng) : null;
+    final svLatLng = svLat != null && svLng != null
+        ? LatLng(svLat, svLng)
+        : null;
 
     return {
       // ランドマーク: 赤ピン + 名前 InfoWindow (タップで詳細表示)

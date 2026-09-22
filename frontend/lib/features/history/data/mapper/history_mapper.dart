@@ -82,34 +82,29 @@ MissionHistory missionHistoryFromDriftRows(
   if (spotRows.isEmpty) {
     throw StateError('履歴 ${h.id} にスポット行がありません');
   }
-  final spots =
-      spotRows
-          .map(
-            (s) => MissionHistorySpot(
-              coordinate: Coordinate(latitude: s.lat, longitude: s.lng),
-              sortOrder: s.sortOrder,
-              isDestination: s.isDestination != 0,
-              streetViewImagePath: s.streetViewImagePath,
-              userPhotoPath: s.userPhotoPath,
-              achievedAt:
-                  s.achievedAt == null
-                      ? null
-                      : DateTime.fromMillisecondsSinceEpoch(s.achievedAt!),
-              name: s.name,
-              genre: s.genre,
-              googleMapsUrl: s.googleMapsUrl,
-              referenceHeading: s.referenceHeading,
-              judgeRank: _judgeRankFromDb(s.judgeRank),
-              distanceErrorMeters: s.distanceErrorMeters,
-              headingErrorDegrees: s.headingErrorDegrees,
-              guessPosition: _guessPositionFromDb(
-                lat: s.guessLat,
-                lng: s.guessLng,
-              ),
-              capturedHeading: s.capturedHeading,
-            ),
-          )
-          .toList();
+  final spots = spotRows
+      .map(
+        (s) => MissionHistorySpot(
+          coordinate: Coordinate(latitude: s.lat, longitude: s.lng),
+          sortOrder: s.sortOrder,
+          isDestination: s.isDestination != 0,
+          streetViewImagePath: s.streetViewImagePath,
+          userPhotoPath: s.userPhotoPath,
+          achievedAt: s.achievedAt == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(s.achievedAt!),
+          name: s.name,
+          genre: s.genre,
+          googleMapsUrl: s.googleMapsUrl,
+          referenceHeading: s.referenceHeading,
+          judgeRank: _judgeRankFromDb(s.judgeRank),
+          distanceErrorMeters: s.distanceErrorMeters,
+          headingErrorDegrees: s.headingErrorDegrees,
+          guessPosition: _guessPositionFromDb(lat: s.guessLat, lng: s.guessLng),
+          capturedHeading: s.capturedHeading,
+        ),
+      )
+      .toList();
 
   final settings = missionSettingsFromHistoryRow(h, spots);
 

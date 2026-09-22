@@ -159,11 +159,11 @@ GOOGLE_API_KEY=your_google_maps_api_key_here
 
 ## 使用しているツールバージョン
 
-- **Flutter**: 3.32.0
+- **Flutter**: 3.47.5
 - **Java**: 17
-- **Gradle**: 8.10.2
-- **Kotlin**: 2.0.21
-- **Android Gradle Plugin**: 8.8.0
+- **Gradle**: 9.5.0
+- **Kotlin**: 2.4.0
+- **Android Gradle Plugin**: 9.0.1
 - **Android SDK**: 36 (compileSdkVersion, targetSdkVersion)
 - **Python**: 3.13
 - **FastAPI**: >=0.104.0

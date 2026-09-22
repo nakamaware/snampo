@@ -18,10 +18,9 @@ _CheckpointProgress _$CheckpointProgressFromJson(Map<String, dynamic> json) =>
       judgeRank: const PhotoJudgeRankConverter().fromJson(
         json['judgeRank'] as String?,
       ),
-      achievedAt:
-          json['achievedAt'] == null
-              ? null
-              : DateTime.parse(json['achievedAt'] as String),
+      achievedAt: json['achievedAt'] == null
+          ? null
+          : DateTime.parse(json['achievedAt'] as String),
     );
 
 Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
@@ -44,10 +43,9 @@ _MissionProgressEntity _$MissionProgressEntityFromJson(
   checkpoints:
       (json['checkpoints'] as List<dynamic>?)
           ?.map(
-            (e) =>
-                e == null
-                    ? null
-                    : CheckpointProgress.fromJson(e as Map<String, dynamic>),
+            (e) => e == null
+                ? null
+                : CheckpointProgress.fromJson(e as Map<String, dynamic>),
           )
           .toList() ??
       const [],

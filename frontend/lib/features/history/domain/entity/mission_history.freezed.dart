@@ -79,7 +79,7 @@ as MissionSettings,
 @override
 @pragma('vm:prefer-inline')
 $MissionSettingsCopyWith<$Res> get settings {
-
+  
   return $MissionSettingsCopyWith<$Res>(_self.settings, (value) {
     return _then(_self.copyWith(settings: value));
   });
@@ -222,7 +222,7 @@ return $default(_that.id,_that.completedAt,_that.startedAt,_that.departure,_that
 
 class _MissionHistory implements MissionHistory {
   const _MissionHistory({required this.id, required this.completedAt, required this.startedAt, required this.departure, required this.overviewPolyline, required final  List<MissionHistorySpot> spots, required this.settings}): _spots = spots;
-
+  
 
 @override final  String id;
 @override final  DateTime completedAt;
@@ -303,7 +303,7 @@ as MissionSettings,
 @override
 @pragma('vm:prefer-inline')
 $MissionSettingsCopyWith<$Res> get settings {
-
+  
   return $MissionSettingsCopyWith<$Res>(_self.settings, (value) {
     return _then(_self.copyWith(settings: value));
   });

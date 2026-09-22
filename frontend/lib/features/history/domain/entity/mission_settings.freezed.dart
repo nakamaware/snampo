@@ -176,7 +176,7 @@ return destination(_that.destination);case _:
 
 class MissionSettingsRandom implements MissionSettings {
   const MissionSettingsRandom({required this.radius});
-
+  
 
  final  Radius radius;
 
@@ -214,6 +214,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class _$MissionSettingsRandomCopyWithImpl<$Res>
@@ -232,6 +234,7 @@ as Radius,
   ));
 }
 
+
 }
 
 /// @nodoc
@@ -239,7 +242,7 @@ as Radius,
 
 class MissionSettingsDestination implements MissionSettings {
   const MissionSettingsDestination({required this.destination});
-
+  
 
  final  Coordinate destination;
 
@@ -277,6 +280,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class _$MissionSettingsDestinationCopyWithImpl<$Res>
@@ -294,6 +299,7 @@ destination: null == destination ? _self.destination : destination // ignore: ca
 as Coordinate,
   ));
 }
+
 
 }
 

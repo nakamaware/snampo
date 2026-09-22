@@ -5,9 +5,11 @@ import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/mission/application/interface/heading_service.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
+import 'package:snampo/features/mission/application/interface/notification_service.dart';
 import 'package:snampo/features/mission/application/usecase/clear_mission_progress_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_destination_mission_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/create_random_mission_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/evaluate_spot_proximity_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_heading_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/judge_photo_use_case.dart';
@@ -15,6 +17,7 @@ import 'package:snampo/features/mission/application/usecase/save_photo_use_case.
 import 'package:snampo/features/mission/data/heading_service.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/mission_repository.dart';
+import 'package:snampo/features/mission/data/notification_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 export 'package:snampo/core/di/photo_storage_provider.dart';
@@ -95,4 +98,16 @@ SavePhotoUseCase savePhotoUseCase(Ref ref) {
 @riverpod
 ClearMissionProgressUseCase clearMissionProgressUseCase(Ref ref) {
   return ClearMissionProgressUseCase(ref.read(photoStorageProvider));
+}
+
+/// スポット接近・離脱評価ユースケースのプロバイダー
+@riverpod
+EvaluateSpotProximityUseCase evaluateSpotProximityUseCase(Ref ref) {
+  return const EvaluateSpotProximityUseCase();
+}
+
+/// 通知サービスのプロバイダー
+@riverpod
+INotificationService notificationService(Ref ref) {
+  return LocalNotificationService();
 }

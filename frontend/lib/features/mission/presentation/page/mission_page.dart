@@ -22,6 +22,7 @@ import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/mission/presentation/store/spot_proximity_store.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 // 競合解消メモ（main × 再開機能の統合）:
@@ -68,10 +69,11 @@ class MissionPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
     final theme = Theme.of(context);
-    final textStyle = (theme.textTheme.displaySmall ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
+    final textStyle =
+        (theme.textTheme.displaySmall ??
+                theme.textTheme.headlineMedium ??
+                const TextStyle())
+            .copyWith(color: theme.colorScheme.onPrimary);
 
     // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
     // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
@@ -105,6 +107,69 @@ class MissionPage extends HookConsumerWidget {
 
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
+    // ミッション確定時にスポット接近・離脱監視を開始
+    useEffect(() {
+      final mission = missionAsyncValue.value;
+      if (mission != null) {
+        final proximityNotifier = ref.read(spotProximityStoreProvider.notifier);
+        // build() 完了後に provider の変更を行うよう遅延実行
+        Future(() {
+          if (!context.mounted) return;
+          proximityNotifier.startMonitoring(mission);
+        });
+      }
+      return null;
+    }, [missionAsyncValue.value]);
+
+    // 撮り忘れ通知イベント（60秒継続離脱）を購読して SnackBar を表示
+    useEffect(() {
+      final proximityNotifier = ref.read(spotProximityStoreProvider.notifier);
+      final sub = proximityNotifier.alertEvents.listen((event) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.camera_alt_outlined, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '写真の撮り忘れはありませんか？\n${event.spotName} から離れています。',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange.shade800,
+            duration: const Duration(seconds: 8),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            action: SnackBarAction(
+              label: '閉じる',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      });
+
+      return () {
+        sub.cancel();
+        // dispose 完了後にクリーンアップを実行
+        Future(() {
+          proximityNotifier.stopMonitoring();
+        });
+      };
+    }, const []);
+
     return missionAsyncValue.when(
       data: (missionInfo) {
         return Scaffold(
@@ -121,26 +186,25 @@ class MissionPage extends HookConsumerWidget {
           ),
         );
       },
-      loading:
-          () => Scaffold(
-            appBar: AppBar(
-              title: Text('On MISSION', style: textStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LoadingAnimationWidget.staggeredDotsWave(
-                    color: Colors.blue,
-                    size: 100,
-                  ),
-                  const Text('NOW LOADING'),
-                ],
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: Text('On MISSION', style: textStyle),
+          centerTitle: true,
+          backgroundColor: theme.colorScheme.primary,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue,
+                size: 100,
               ),
-            ),
+              const Text('NOW LOADING'),
+            ],
           ),
+        ),
+      ),
       error: (error, stackTrace) {
         log('error: $error');
         return Scaffold(
@@ -375,13 +439,10 @@ class SnapViewState extends HookConsumerWidget {
         ];
         final isDestinationMode = missionInfo.radius == null;
         final allCompleted = progressAsync.maybeWhen(
-          data:
-              (progress) =>
-                  progress != null &&
-                  progress.checkpoints.isNotEmpty &&
-                  progress.checkpoints.every(
-                    (checkpoint) => checkpoint != null,
-                  ),
+          data: (progress) =>
+              progress != null &&
+              progress.checkpoints.isNotEmpty &&
+              progress.checkpoints.every((checkpoint) => checkpoint != null),
           orElse: () => false,
         );
 
@@ -393,13 +454,12 @@ class SnapViewState extends HookConsumerWidget {
                 index: i,
                 missionPoint: missionSpots[i],
                 checkpoint: progressAsync.maybeWhen(
-                  data:
-                      (progress) =>
-                          progress != null &&
-                                  i < progress.checkpoints.length &&
-                                  progress.checkpoints[i] != null
-                              ? progress.checkpoints[i]
-                              : null,
+                  data: (progress) =>
+                      progress != null &&
+                          i < progress.checkpoints.length &&
+                          progress.checkpoints[i] != null
+                      ? progress.checkpoints[i]
+                      : null,
                   orElse: () => null,
                 ),
                 totalCheckpointCount: missionSpots.length,
@@ -415,47 +475,44 @@ class SnapViewState extends HookConsumerWidget {
                   borderRadius: BorderRadius.circular(10), // 角の丸み
                 ),
               ),
-              onPressed:
-                  !allCompleted || isSubmitting.value
-                      ? null
-                      : () async {
-                        isSubmitting.value = true;
-                        try {
-                          final progress = await _resolveCurrentProgress(
-                            ref,
-                            missionInfo,
-                          );
-                          if (progress == null) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('進捗情報を取得できませんでした'),
-                                ),
-                              );
-                            }
-                            return;
-                          }
-                          try {
-                            await ref
-                                .read(addMissionHistoryUseCaseProvider)
-                                .call(mission: missionInfo, progress: progress);
-                          } on Exception {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('履歴の保存に失敗しました')),
-                              );
-                            }
-                            return;
-                          }
+              onPressed: !allCompleted || isSubmitting.value
+                  ? null
+                  : () async {
+                      isSubmitting.value = true;
+                      try {
+                        final progress = await _resolveCurrentProgress(
+                          ref,
+                          missionInfo,
+                        );
+                        if (progress == null) {
                           if (context.mounted) {
-                            context.go('/result');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('進捗情報を取得できませんでした')),
+                            );
                           }
-                        } finally {
-                          if (context.mounted) {
-                            isSubmitting.value = false;
-                          }
+                          return;
                         }
-                      },
+                        try {
+                          await ref
+                              .read(addMissionHistoryUseCaseProvider)
+                              .call(mission: missionInfo, progress: progress);
+                        } on Exception {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('履歴の保存に失敗しました')),
+                            );
+                          }
+                          return;
+                        }
+                        if (context.mounted) {
+                          context.go('/result');
+                        }
+                      } finally {
+                        if (context.mounted) {
+                          isSubmitting.value = false;
+                        }
+                      }
+                    },
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text('プレイ結果', style: buttonTextStyle),
@@ -506,17 +563,16 @@ class _MissionSpotRow extends StatelessWidget {
               if (checkpoint != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(
-                  onPressed:
-                      () => context.push(
-                        '/spot-result',
-                        extra: SpotResultPageArgs(
-                          spotIndex: index,
-                          totalCheckpointCount: totalCheckpointCount,
-                          missionPoint: missionPoint,
-                          checkpoint: checkpoint!,
-                          isDestinationMode: isDestinationMode,
-                        ),
-                      ),
+                  onPressed: () => context.push(
+                    '/spot-result',
+                    extra: SpotResultPageArgs(
+                      spotIndex: index,
+                      totalCheckpointCount: totalCheckpointCount,
+                      missionPoint: missionPoint,
+                      checkpoint: checkpoint!,
+                      isDestinationMode: isDestinationMode,
+                    ),
+                  ),
                   child: const Text('結果を見る'),
                 ),
               ],
@@ -608,17 +664,16 @@ class TakeSnap extends HookConsumerWidget {
     if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
-        onPressed:
-            isCapturing.value
-                ? null
-                : () async {
-                  isCapturing.value = true;
-                  try {
-                    await _handleCameraCapture(context, ref);
-                  } finally {
-                    if (context.mounted) isCapturing.value = false;
-                  }
-                },
+        onPressed: isCapturing.value
+            ? null
+            : () async {
+                isCapturing.value = true;
+                try {
+                  await _handleCameraCapture(context, ref);
+                } finally {
+                  if (context.mounted) isCapturing.value = false;
+                }
+              },
         child: const Icon(Icons.add_a_photo),
       );
     }
@@ -639,10 +694,12 @@ class TakeSnap extends HookConsumerWidget {
         referenceImageBase64: missionPoint.imageBase64,
         onPhotoAccepted: (capturedFile, zoomLevel) async {
           final path = capturedFile.path;
-          final currentPosition =
-              await ref.read(getCurrentPositionUseCaseProvider).call();
-          final capturedHeading =
-              await ref.read(getCurrentHeadingUseCaseProvider).call();
+          final currentPosition = await ref
+              .read(getCurrentPositionUseCaseProvider)
+              .call();
+          final capturedHeading = await ref
+              .read(getCurrentHeadingUseCaseProvider)
+              .call();
           final judgeResult = ref
               .read(judgePhotoUseCaseProvider)
               .call(

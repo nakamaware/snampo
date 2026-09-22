@@ -226,10 +226,11 @@ class _CameraPageState extends State<CameraPage> {
     }
 
     final theme = Theme.of(context);
-    final textStyle = (theme.textTheme.displaySmall ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
+    final textStyle =
+        (theme.textTheme.displaySmall ??
+                theme.textTheme.headlineMedium ??
+                const TextStyle())
+            .copyWith(color: theme.colorScheme.onPrimary);
     // FAB (56dp) + FAB margin (16dp) + safe area + gap (16dp)
     final sliderBottom = MediaQuery.paddingOf(context).bottom + 56 + 16 + 16;
 
@@ -404,13 +405,12 @@ class _CameraPageState extends State<CameraPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder:
-          (_) => PhotoConfirmDialog(
-            args: PhotoConfirmDialogArgs(
-              referenceImageBase64: widget.args.referenceImageBase64,
-              capturedPhotoPath: file.path,
-            ),
-          ),
+      builder: (_) => PhotoConfirmDialog(
+        args: PhotoConfirmDialogArgs(
+          referenceImageBase64: widget.args.referenceImageBase64,
+          capturedPhotoPath: file.path,
+        ),
+      ),
     );
     if (confirmed != true || !context.mounted) {
       await _controller!.resumePreview();
@@ -428,29 +428,28 @@ class _CameraPageState extends State<CameraPage> {
           context: context,
           barrierDismissible: false,
           barrierColor: Colors.black,
-          pageBuilder:
-              (_, __, ___) => PopScope(
-                canPop: false,
-                child: Scaffold(
-                  backgroundColor: Colors.black,
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        LoadingAnimationWidget.staggeredDotsWave(
-                          color: Colors.blue,
-                          size: 100,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          '採点中...',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ],
+          pageBuilder: (_, __, ___) => PopScope(
+            canPop: false,
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    LoadingAnimationWidget.staggeredDotsWave(
+                      color: Colors.blue,
+                      size: 100,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '採点中...',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
+            ),
+          ),
         ),
       );
 

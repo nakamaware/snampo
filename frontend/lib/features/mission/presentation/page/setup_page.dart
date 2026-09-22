@@ -46,7 +46,10 @@ class _SetupPageState extends State<SetupPage>
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white,
-          tabs: const [Tab(text: 'ランダム'), Tab(text: '目的地指定')],
+          tabs: const [
+            Tab(text: 'ランダム'),
+            Tab(text: '目的地指定'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -152,10 +155,8 @@ class DestinationPickerWidget extends HookConsumerWidget {
     return currentPosition.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => const _MapContent(initialPosition: _defaultPosition),
-      data:
-          (coord) => _MapContent(
-            initialPosition: LatLng(coord.latitude, coord.longitude),
-          ),
+      data: (coord) =>
+          _MapContent(initialPosition: LatLng(coord.latitude, coord.longitude)),
     );
   }
 }
@@ -176,15 +177,14 @@ class _MapContent extends StatefulWidget {
 class _MapContentState extends State<_MapContent> {
   LatLng? _selectedDestination;
 
-  Set<Marker> get _markers =>
-      _selectedDestination != null
-          ? {
-            Marker(
-              markerId: const MarkerId('destination'),
-              position: _selectedDestination!,
-            ),
-          }
-          : {};
+  Set<Marker> get _markers => _selectedDestination != null
+      ? {
+          Marker(
+            markerId: const MarkerId('destination'),
+            position: _selectedDestination!,
+          ),
+        }
+      : {};
 
   void _onMapTap(LatLng position) {
     setState(() => _selectedDestination = position);
@@ -226,14 +226,13 @@ class _MapContentState extends State<_MapContent> {
                 elevation: 8,
                 shadowColor: Colors.black.withValues(alpha: 0.3),
               ),
-              onPressed:
-                  _selectedDestination != null
-                      ? () {
-                        context.push(
-                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
-                        );
-                      }
-                      : null,
+              onPressed: _selectedDestination != null
+                  ? () {
+                      context.push(
+                        '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
+                      );
+                    }
+                  : null,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text('GO', style: smallTextStyle),

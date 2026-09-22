@@ -26,10 +26,11 @@ class HistoryDetailPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final titleTextStyle = (theme.textTheme.displayMedium ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
+    final titleTextStyle =
+        (theme.textTheme.displayMedium ??
+                theme.textTheme.headlineMedium ??
+                const TextStyle())
+            .copyWith(color: theme.colorScheme.onPrimary);
     final detailAsync = useHistoryDetail(ref, recordId);
 
     return Scaffold(
@@ -99,9 +100,8 @@ class _HistoryDetailBody extends StatelessWidget {
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: record.spots.length,
-            itemBuilder:
-                (context, index) =>
-                    _SpotCard(spot: record.spots[index], index: index),
+            itemBuilder: (context, index) =>
+                _SpotCard(spot: record.spots[index], index: index),
           ),
         ),
       ],
@@ -118,8 +118,9 @@ class _RouteMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final encoded = record.overviewPolyline;
-    final polylinePoints =
-        encoded.isNotEmpty ? decodePolyline(encoded) : <LatLng>[];
+    final polylinePoints = encoded.isNotEmpty
+        ? decodePolyline(encoded)
+        : <LatLng>[];
 
     final polylines = <Polyline>{
       if (polylinePoints.isNotEmpty)
@@ -231,8 +232,8 @@ class _SpotCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed:
-                      () => _openGoogleMaps(context, spot.googleMapsUrl!),
+                  onPressed: () =>
+                      _openGoogleMaps(context, spot.googleMapsUrl!),
                   child: const Text('Google Mapでスポットを確認する'),
                 ),
               ),
@@ -387,22 +388,21 @@ class _PhotoThumbnail extends StatelessWidget {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 fullscreenDialog: true,
-                builder:
-                    (_) => HistoryFullscreenImageViewer(
-                      child: Image.file(
-                        file,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.image_not_supported_outlined,
-                              color: Colors.white54,
-                              size: 64,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                builder: (_) => HistoryFullscreenImageViewer(
+                  child: Image.file(
+                    file,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.white54,
+                          size: 64,
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             );
           },

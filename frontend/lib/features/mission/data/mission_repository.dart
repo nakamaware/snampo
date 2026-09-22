@@ -103,26 +103,25 @@ class MissionRepository implements IMissionRepository {
         streetViewLatitude: response.destination.imageLatitude?.toDouble(),
         streetViewLongitude: response.destination.imageLongitude?.toDouble(),
       ),
-      waypoints:
-          response.midpoints.map((midpoint) {
-            // waypointsのimageBase64もnullチェック
-            if (midpoint.imageBase64 == null || midpoint.imageBase64!.isEmpty) {
-              throw Exception('通過地点の画像情報が取得できませんでした');
-            }
-            return ImageCoordinate(
-              coordinate: Coordinate(
-                latitude: midpoint.latitude.toDouble(),
-                longitude: midpoint.longitude.toDouble(),
-              ),
-              imageBase64: midpoint.imageBase64!,
-              referenceHeading: midpoint.heading?.toDouble(),
-              name: midpoint.name,
-              genre: midpoint.genre,
-              googleMapsUrl: midpoint.googleMapsUrl,
-              streetViewLatitude: midpoint.imageLatitude?.toDouble(),
-              streetViewLongitude: midpoint.imageLongitude?.toDouble(),
-            );
-          }).toList(),
+      waypoints: response.midpoints.map((midpoint) {
+        // waypointsのimageBase64もnullチェック
+        if (midpoint.imageBase64 == null || midpoint.imageBase64!.isEmpty) {
+          throw Exception('通過地点の画像情報が取得できませんでした');
+        }
+        return ImageCoordinate(
+          coordinate: Coordinate(
+            latitude: midpoint.latitude.toDouble(),
+            longitude: midpoint.longitude.toDouble(),
+          ),
+          imageBase64: midpoint.imageBase64!,
+          referenceHeading: midpoint.heading?.toDouble(),
+          name: midpoint.name,
+          genre: midpoint.genre,
+          googleMapsUrl: midpoint.googleMapsUrl,
+          streetViewLatitude: midpoint.imageLatitude?.toDouble(),
+          streetViewLongitude: midpoint.imageLongitude?.toDouble(),
+        );
+      }).toList(),
       overviewPolyline: response.overviewPolyline,
       radius: radius,
     );

@@ -12,4 +12,9 @@ abstract class ILocationService {
   ///
   /// 高精度で現在位置を取得します
   Future<Coordinate> getCurrentPosition();
+
+  /// 位置情報の変更を監視するストリーム
+  ///
+  /// [distanceFilterMeters] は位置情報の更新を通知する移動距離の閾値（メートル）
+  Stream<Coordinate> getPositionStream({int distanceFilterMeters = 5});
 }

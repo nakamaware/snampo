@@ -22,4 +22,19 @@ class LocationService implements ILocationService {
       longitude: position.longitude,
     );
   }
+
+  /// 位置情報の変更を監視するストリームを取得する
+  @override
+  Stream<Coordinate> getPositionStream({int distanceFilterMeters = 5}) {
+    final locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: distanceFilterMeters,
+    );
+    return Geolocator.getPositionStream(locationSettings: locationSettings).map(
+      (position) => Coordinate(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      ),
+    );
+  }
 }
