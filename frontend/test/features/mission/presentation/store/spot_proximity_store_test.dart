@@ -30,6 +30,7 @@ class FakeNotificationService implements INotificationService {
   int? lastAlertId;
   String? lastTitle;
   String? lastBody;
+  int? lastCanceledId;
 
   @override
   Future<void> initialize() async {}
@@ -46,7 +47,12 @@ class FakeNotificationService implements INotificationService {
   }
 
   @override
-  Future<void> cancel(int id) async {}
+  Future<void> cancel(int id) async {
+    lastCanceledId = id;
+    if (lastAlertId == id) {
+      lastAlertId = null;
+    }
+  }
 }
 
 class FakeMissionProgressStoreNotifier extends MissionProgressStoreNotifier {
@@ -298,6 +304,47 @@ void main() {
 
         // 全スポット完了で監視停止（state が null）
         expect(container.read(spotProximityStoreProvider), isNull);
+      });
+    });
+
+    test('通知発火後に写真撮影が完了した場合、発火済み通知がキャンセルされる', () {
+      fakeAsync((async) {
+        container
+            .read(spotProximityStoreProvider.notifier)
+            .startMonitoring(testMission);
+
+        // 1. 至近距離
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6812, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        // 2. 離脱
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6825, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        // 3. 60秒経過して通知発火
+        async.elapse(const Duration(seconds: 60));
+        expect(fakeNotificationService.lastAlertId, 0);
+
+        // 4. 通知発火後に写真撮影が完了（進捗更新）
+        final progressNotifier =
+            container.read(missionProgressStoreProvider.notifier)
+                as FakeMissionProgressStoreNotifier;
+        final completedProgress = MissionProgressEntity(
+          startedAt: DateTime.now(),
+          checkpoints: [
+            const CheckpointProgress(userPhotoPath: '/path/to/photo.jpg'),
+          ],
+        );
+        progressNotifier.setProgress(completedProgress);
+        async.flushMicrotasks();
+
+        // Spot 0 の通知がキャンセルされていることを検証
+        expect(fakeNotificationService.lastCanceledId, 0);
+        expect(fakeNotificationService.lastAlertId, isNull);
       });
     });
 

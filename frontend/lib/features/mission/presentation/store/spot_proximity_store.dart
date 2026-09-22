@@ -69,6 +69,10 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
 
   /// 監視を停止する
   void stopMonitoring() {
+    final currentSpotIndex = state?.spotIndex;
+    if (currentSpotIndex != null) {
+      unawaited(ref.read(notificationServiceProvider).cancel(currentSpotIndex));
+    }
     _cleanup();
     state = null;
   }
@@ -80,20 +84,25 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
 
     final spots = [...mission.waypoints, mission.destination];
     final targetIndex = _resolveCurrentTargetIndex(progress, spots.length);
+    final currentSpotIndex = state?.spotIndex;
+
+    // 現在監視していたスポットの写真が撮影完了しているか判定
+    final isCurrentSpotCompleted =
+        currentSpotIndex != null &&
+        progress != null &&
+        currentSpotIndex < progress.checkpoints.length &&
+        progress.checkpoints[currentSpotIndex] != null;
+
+    if (isCurrentSpotCompleted) {
+      // 撮影完了した地点のOS通知をキャンセル
+      unawaited(ref.read(notificationServiceProvider).cancel(currentSpotIndex));
+    }
 
     if (targetIndex == null) {
       // 全スポット完了
       stopMonitoring();
       return;
     }
-
-    // 現在監視中のスポットが撮影完了した、または監視対象スポットが変わった場合
-    final currentSpotIndex = state?.spotIndex;
-    final isCurrentSpotCompleted =
-        currentSpotIndex != null &&
-        progress != null &&
-        currentSpotIndex < progress.checkpoints.length &&
-        progress.checkpoints[currentSpotIndex] != null;
 
     if (isCurrentSpotCompleted ||
         (currentSpotIndex != null && currentSpotIndex != targetIndex)) {
@@ -193,6 +202,7 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
       case ProximityAction.cancelTimerAndComplete:
         _departureTimer?.cancel();
         _departureTimer = null;
+        unawaited(ref.read(notificationServiceProvider).cancel(targetIndex));
       case ProximityAction.triggerNotification:
         _triggerNotification(targetIndex, spots);
       case ProximityAction.none:
@@ -221,6 +231,7 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     if (isPhotoTaken) {
       _departureTimer?.cancel();
       _departureTimer = null;
+      unawaited(ref.read(notificationServiceProvider).cancel(targetIndex));
       state = state?.copyWith(status: SpotProximityStatus.completed);
       return;
     }
