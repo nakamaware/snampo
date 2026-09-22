@@ -45,6 +45,12 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   @override
   SpotProximityState? build() {
     ref.onDispose(_cleanup);
+
+    // 写真撮影等によるミッション進捗更新を監視し、タイマーキャンセルや状態更新を行う
+    ref.listen(missionProgressStoreProvider, (prev, next) {
+      _onProgressUpdated(next.value);
+    });
+
     return null;
   }
 
@@ -65,6 +71,39 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   void stopMonitoring() {
     _cleanup();
     state = null;
+  }
+
+  /// ミッション進捗更新ハンドラ（写真撮影完了等）
+  void _onProgressUpdated(MissionProgressEntity? progress) {
+    final mission = _currentMission;
+    if (mission == null) return;
+
+    final spots = [...mission.waypoints, mission.destination];
+    final targetIndex = _resolveCurrentTargetIndex(progress, spots.length);
+
+    if (targetIndex == null) {
+      // 全スポット完了
+      stopMonitoring();
+      return;
+    }
+
+    // 現在監視中のスポットが撮影完了した、または監視対象スポットが変わった場合
+    final currentSpotIndex = state?.spotIndex;
+    final isCurrentSpotCompleted =
+        currentSpotIndex != null &&
+        progress != null &&
+        currentSpotIndex < progress.checkpoints.length &&
+        progress.checkpoints[currentSpotIndex] != null;
+
+    if (isCurrentSpotCompleted ||
+        (currentSpotIndex != null && currentSpotIndex != targetIndex)) {
+      _departureTimer?.cancel();
+      _departureTimer = null;
+      state = SpotProximityState(
+        spotIndex: targetIndex,
+        status: SpotProximityStatus.initial,
+      );
+    }
   }
 
   /// カレントスポット（最初の未撮影地点）のインデックスを特定する
@@ -172,6 +211,19 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   void _onTimerExpired(int targetIndex, List<ImageCoordinate> spots) {
     if (state == null || state!.spotIndex != targetIndex) return;
     if (state!.status != SpotProximityStatus.departing) return;
+
+    // 最新の進捗を再確認（タイマー発火までに撮影が完了していないか）
+    final progress = ref.read(missionProgressStoreProvider).value;
+    final isPhotoTaken =
+        progress != null &&
+        targetIndex < progress.checkpoints.length &&
+        progress.checkpoints[targetIndex] != null;
+    if (isPhotoTaken) {
+      _departureTimer?.cancel();
+      _departureTimer = null;
+      state = state?.copyWith(status: SpotProximityStatus.completed);
+      return;
+    }
 
     _triggerNotification(targetIndex, spots);
 

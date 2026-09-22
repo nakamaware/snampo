@@ -52,6 +52,10 @@ class FakeNotificationService implements INotificationService {
 class FakeMissionProgressStoreNotifier extends MissionProgressStoreNotifier {
   @override
   Future<MissionProgressEntity?> build() async => null;
+
+  void setProgress(MissionProgressEntity? progress) {
+    state = AsyncData(progress);
+  }
 }
 
 void main() {
@@ -209,6 +213,91 @@ void main() {
         expect(receivedEvent, isNull);
 
         sub.cancel();
+      });
+    });
+
+    test('離脱カウントダウン中に写真撮影が完了した場合（進捗更新）、タイマーが破棄され60秒経過しても通知は発火しない', () {
+      fakeAsync((async) {
+        final notifier = container.read(spotProximityStoreProvider.notifier);
+
+        SpotDepartureAlertEvent? receivedEvent;
+        final sub = notifier.alertEvents.listen((event) {
+          receivedEvent = event;
+        });
+
+        notifier.startMonitoring(testMission);
+
+        // 1. 至近距離
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6812, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        // 2. 離脱
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6825, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        expect(
+          container.read(spotProximityStoreProvider)!.status,
+          SpotProximityStatus.departing,
+        );
+
+        // 3. 30秒後、位置情報イベントがないまま写真撮影完了（進捗更新）
+        async.elapse(const Duration(seconds: 30));
+        final progressNotifier =
+            container.read(missionProgressStoreProvider.notifier)
+                as FakeMissionProgressStoreNotifier;
+
+        final completedProgress = MissionProgressEntity(
+          startedAt: DateTime.now(),
+          checkpoints: [
+            const CheckpointProgress(userPhotoPath: '/path/to/photo.jpg'),
+          ],
+        );
+        progressNotifier.setProgress(completedProgress);
+        async.flushMicrotasks();
+
+        // 次のスポット（インデックス1: 目的地）へ遷移し、状態が initial にリセットされている
+        expect(container.read(spotProximityStoreProvider)!.spotIndex, 1);
+        expect(
+          container.read(spotProximityStoreProvider)!.status,
+          SpotProximityStatus.initial,
+        );
+
+        // 4. さらに40秒（合計70秒）待ってもSpot 1の撮り忘れ通知は発火しない
+        async.elapse(const Duration(seconds: 40));
+        expect(receivedEvent, isNull);
+        expect(fakeNotificationService.lastAlertId, isNull);
+
+        sub.cancel();
+      });
+    });
+
+    test('全スポット完了時に監視が自動停止する', () {
+      fakeAsync((async) {
+        container
+            .read(spotProximityStoreProvider.notifier)
+            .startMonitoring(testMission);
+
+        final progressNotifier =
+            container.read(missionProgressStoreProvider.notifier)
+                as FakeMissionProgressStoreNotifier;
+
+        // Spot 1 & 目的地の両方が完了
+        final allCompletedProgress = MissionProgressEntity(
+          startedAt: DateTime.now(),
+          checkpoints: [
+            const CheckpointProgress(userPhotoPath: 'p1.jpg'),
+            const CheckpointProgress(userPhotoPath: 'p2.jpg'),
+          ],
+        );
+        progressNotifier.setProgress(allCompletedProgress);
+        async.flushMicrotasks();
+
+        // 全スポット完了で監視停止（state が null）
+        expect(container.read(spotProximityStoreProvider), isNull);
       });
     });
 
