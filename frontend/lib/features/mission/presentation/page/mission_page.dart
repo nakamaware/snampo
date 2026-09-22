@@ -110,11 +110,11 @@ class MissionPage extends HookConsumerWidget {
     useEffect(() {
       final mission = missionAsyncValue.value;
       if (mission != null) {
+        final proximityNotifier = ref.read(spotProximityStoreProvider.notifier);
         // build() 完了後に provider の変更を行うよう遅延実行
         Future(() {
-          ref
-              .read(spotProximityStoreProvider.notifier)
-              .startMonitoring(mission);
+          if (!context.mounted) return;
+          proximityNotifier.startMonitoring(mission);
         });
       }
       return null;
@@ -122,51 +122,49 @@ class MissionPage extends HookConsumerWidget {
 
     // 撮り忘れ通知イベント（60秒継続離脱）を購読して SnackBar を表示
     useEffect(() {
-      final sub = ref
-          .read(spotProximityStoreProvider.notifier)
-          .alertEvents
-          .listen((event) {
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.camera_alt_outlined, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '写真の撮り忘れはありませんか？\n${event.spotName} から離れています。',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+      final proximityNotifier = ref.read(spotProximityStoreProvider.notifier);
+      final sub = proximityNotifier.alertEvents.listen((event) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.camera_alt_outlined, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '写真の撮り忘れはありませんか？\n${event.spotName} から離れています。',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                  ],
+                  ),
                 ),
-                backgroundColor: Colors.orange.shade800,
-                duration: const Duration(seconds: 8),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                action: SnackBarAction(
-                  label: '閉じる',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
-          });
+              ],
+            ),
+            backgroundColor: Colors.orange.shade800,
+            duration: const Duration(seconds: 8),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            action: SnackBarAction(
+              label: '閉じる',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      });
 
       return () {
         sub.cancel();
         // dispose 完了後にクリーンアップを実行
         Future(() {
-          ref.read(spotProximityStoreProvider.notifier).stopMonitoring();
+          proximityNotifier.stopMonitoring();
         });
       };
     }, const []);

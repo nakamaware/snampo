@@ -359,5 +359,37 @@ void main() {
       container.read(spotProximityStoreProvider.notifier).stopMonitoring();
       expect(container.read(spotProximityStoreProvider), isNull);
     });
+
+    test('stopMonitoring 後に再度 startMonitoring しても alertEvents が機能する', () {
+      fakeAsync((async) {
+        final notifier = container.read(spotProximityStoreProvider.notifier);
+        notifier.startMonitoring(testMission);
+        notifier.stopMonitoring();
+
+        SpotDepartureAlertEvent? receivedEvent;
+        final sub = notifier.alertEvents.listen((event) {
+          receivedEvent = event;
+        });
+
+        // 2回目の監視開始
+        notifier.startMonitoring(testMission);
+
+        // 接近 -> 離脱 -> 60秒
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6812, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+        fakeLocationService.controller.add(
+          Coordinate(latitude: 35.6825, longitude: 139.7671),
+        );
+        async.flushMicrotasks();
+
+        async.elapse(const Duration(seconds: 60));
+        expect(receivedEvent, isNotNull);
+        expect(receivedEvent?.spotIndex, 0);
+
+        sub.cancel();
+      });
+    });
   });
 }

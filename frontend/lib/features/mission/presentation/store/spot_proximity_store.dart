@@ -44,7 +44,10 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
 
   @override
   SpotProximityState? build() {
-    ref.onDispose(_cleanup);
+    ref.onDispose(() {
+      _stopTracking();
+      _alertEventController.close();
+    });
 
     // 写真撮影等によるミッション進捗更新を監視し、タイマーキャンセルや状態更新を行う
     ref.listen(missionProgressStoreProvider, (prev, next) {
@@ -57,8 +60,7 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
   /// 監視を開始する
   void startMonitoring(MissionEntity mission) {
     _currentMission = mission;
-    _positionSubscription?.cancel();
-    _departureTimer?.cancel();
+    _stopTracking();
     state = null;
 
     final locationService = ref.read(locationServiceProvider);
@@ -73,7 +75,8 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     if (currentSpotIndex != null) {
       unawaited(ref.read(notificationServiceProvider).cancel(currentSpotIndex));
     }
-    _cleanup();
+    _stopTracking();
+    _currentMission = null;
     state = null;
   }
 
@@ -269,11 +272,10 @@ class SpotProximityStoreNotifier extends _$SpotProximityStoreNotifier {
     );
   }
 
-  void _cleanup() {
+  void _stopTracking() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
     _departureTimer?.cancel();
     _departureTimer = null;
-    _alertEventController.close();
   }
 }
