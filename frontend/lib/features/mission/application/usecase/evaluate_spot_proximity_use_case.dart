@@ -132,7 +132,8 @@ class EvaluateSpotProximityUseCase {
         : currentDistance;
 
     // 4. 最短距離を更新した場合（接近フェーズ: 距離が減少）
-    if (smoothedDistance < minDistance) {
+    if (smoothedDistance < minDistance &&
+        currentState.status != SpotProximityStatus.notified) {
       return ProximityEvaluationResult(
         newStatus: SpotProximityStatus.approaching,
         // 離脱中から再接近へ転じた場合はタイマーをキャンセル
