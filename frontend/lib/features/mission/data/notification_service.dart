@@ -74,6 +74,7 @@ class LocalNotificationService implements INotificationService {
 
   @override
   Future<void> cancel(int id) async {
+    await initialize();
     await _plugin.cancel(id: id);
   }
 }

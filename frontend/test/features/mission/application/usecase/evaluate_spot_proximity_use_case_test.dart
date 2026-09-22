@@ -243,5 +243,106 @@ void main() {
       expect(result.newStatus, SpotProximityStatus.notified);
       expect(result.action, ProximityAction.none);
     });
+
+    test('スポットから遠い初期状態から単調に遠ざかる場合、タイマーは開始されず initial が維持される', () {
+      var state = const SpotProximityState(
+        spotIndex: 0,
+        status: SpotProximityStatus.initial,
+      );
+
+      // 1. 初回サンプル: スポットから 500m (閾値 100m 外)
+      var result = useCase.call(
+        currentDistance: 500,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime,
+      );
+      expect(result.newStatus, SpotProximityStatus.initial);
+      expect(result.action, ProximityAction.none);
+      expect(result.minDistanceMeters, 500);
+
+      state = state.copyWith(
+        status: result.newStatus,
+        minDistanceMeters: result.minDistanceMeters,
+        recentDistances: result.recentDistances,
+      );
+
+      // 2. 単調に遠ざかる: 520m
+      result = useCase.call(
+        currentDistance: 520,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime.add(const Duration(seconds: 10)),
+      );
+      expect(result.newStatus, SpotProximityStatus.initial);
+      expect(result.action, ProximityAction.none);
+
+      state = state.copyWith(
+        status: result.newStatus,
+        minDistanceMeters: result.minDistanceMeters,
+        recentDistances: result.recentDistances,
+      );
+
+      // 3. さらに遠ざかる: 550m (デッドバンド超でも接近履歴がないためタイマーは開始されない)
+      result = useCase.call(
+        currentDistance: 550,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime.add(const Duration(seconds: 20)),
+      );
+      expect(result.newStatus, SpotProximityStatus.initial);
+      expect(result.action, ProximityAction.none);
+    });
+
+    test('スポットから遠い初期状態からスポットに向かって接近した場合、approaching に遷移する', () {
+      var state = const SpotProximityState(
+        spotIndex: 0,
+        status: SpotProximityStatus.initial,
+      );
+
+      // 1. 初回サンプル: 500m
+      var result = useCase.call(
+        currentDistance: 500,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime,
+      );
+      expect(result.newStatus, SpotProximityStatus.initial);
+
+      state = state.copyWith(
+        status: result.newStatus,
+        minDistanceMeters: result.minDistanceMeters,
+        recentDistances: result.recentDistances,
+      );
+
+      // 2. 接近: 450m (距離減少により approaching に遷移)
+      result = useCase.call(
+        currentDistance: 450,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime.add(const Duration(seconds: 10)),
+      );
+      expect(result.newStatus, SpotProximityStatus.approaching);
+      expect(result.action, ProximityAction.none);
+      expect(result.minDistanceMeters, 475);
+    });
+
+    test('最初から接近圏内（150m以内）にいる場合、初回から approaching になる', () {
+      const state = SpotProximityState(
+        spotIndex: 0,
+        status: SpotProximityStatus.initial,
+      );
+
+      // 初回サンプル: 50m (デフォルト閾値 150m 以内)
+      final result = useCase.call(
+        currentDistance: 50,
+        currentState: state,
+        isPhotoTaken: false,
+        now: baseTime,
+      );
+      expect(result.newStatus, SpotProximityStatus.approaching);
+      expect(result.action, ProximityAction.none);
+      expect(result.minDistanceMeters, 50);
+    });
   });
 }

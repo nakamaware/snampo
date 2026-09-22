@@ -56,6 +56,7 @@ class EvaluateSpotProximityUseCase {
     this.deadbandMeters = 6.0,
     this.departureDurationSeconds = 60,
     this.maxRecentSamples = 5,
+    this.proximityThresholdMeters = 150.0,
   });
 
   /// GPSノイズ不感帯（メートル）
@@ -66,6 +67,9 @@ class EvaluateSpotProximityUseCase {
 
   /// 移動平均に用いる最大サンプル数
   final int maxRecentSamples;
+
+  /// 接近中とみなす明示的な距離閾値（メートル）
+  final double proximityThresholdMeters;
 
   /// 接近・離脱の評価を行う
   ProximityEvaluationResult call({
@@ -109,8 +113,12 @@ class EvaluateSpotProximityUseCase {
 
     // 3. 初回計測時（最短距離が未記録）
     if (minDistance == null) {
+      final isInitiallyApproaching =
+          smoothedDistance <= proximityThresholdMeters;
       return ProximityEvaluationResult(
-        newStatus: SpotProximityStatus.approaching,
+        newStatus: isInitiallyApproaching
+            ? SpotProximityStatus.approaching
+            : SpotProximityStatus.initial,
         action: ProximityAction.none,
         minDistanceMeters: smoothedDistance,
         recentDistances: updatedRecent,
@@ -123,7 +131,7 @@ class EvaluateSpotProximityUseCase {
               currentState.recentDistances.length
         : currentDistance;
 
-    // 4. 最短距離を更新した場合（接近フェーズ）
+    // 4. 最短距離を更新した場合（接近フェーズ: 距離が減少）
     if (smoothedDistance < minDistance) {
       return ProximityEvaluationResult(
         newStatus: SpotProximityStatus.approaching,
@@ -149,6 +157,18 @@ class EvaluateSpotProximityUseCase {
       );
     }
 
+    // 4-c. 未接近（initial）状態で接近閾値内に入った場合
+    if (currentState.status == SpotProximityStatus.initial &&
+        smoothedDistance <= proximityThresholdMeters) {
+      return ProximityEvaluationResult(
+        newStatus: SpotProximityStatus.approaching,
+        action: ProximityAction.none,
+        minDistanceMeters: minDistance,
+        recentDistances: updatedRecent,
+        smoothedDistance: smoothedDistance,
+      );
+    }
+
     // 既に通知済みの場合は、最短距離を更新しない限り通知済み状態を維持
     if (currentState.status == SpotProximityStatus.notified) {
       return ProximityEvaluationResult(
@@ -166,8 +186,7 @@ class EvaluateSpotProximityUseCase {
         smoothedDistance > prevSmoothedDistance;
 
     if (isMovingAway) {
-      if (currentState.status == SpotProximityStatus.approaching ||
-          currentState.status == SpotProximityStatus.initial) {
+      if (currentState.status == SpotProximityStatus.approaching) {
         // 接近状態から初めてノイズ不感帯を超えて離脱に転じた -> タイマー開始
         return ProximityEvaluationResult(
           newStatus: SpotProximityStatus.departing,
