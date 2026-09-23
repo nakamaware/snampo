@@ -19,6 +19,16 @@ class CoopAuthService implements ICoopAuthService {
   }
 
   @override
+  Future<String?> signedInUid() async {
+    try {
+      await _firebaseSetup();
+    } on Object {
+      return null;
+    }
+    return FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  @override
   Future<String> ensureSignedIn() async {
     try {
       await _firebaseSetup();

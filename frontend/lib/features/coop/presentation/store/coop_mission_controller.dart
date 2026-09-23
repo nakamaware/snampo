@@ -262,6 +262,9 @@ class CoopMissionController extends _$CoopMissionController {
         continue;
       }
       final index = spots.indexWhere((s) => s.spotId == clear.spotId);
+      if (index < 0) {
+        continue;
+      }
       final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
       _notify('${clear.nickname}さんが$labelを発見!');
     }
@@ -341,6 +344,11 @@ class CoopMissionController extends _$CoopMissionController {
             () =>
                 state = state.copyWith(
                   sharingSpotIds: {...state.sharingSpotIds, rawSpotId},
+                ),
+        onSharingDone:
+            () =>
+                state = state.copyWith(
+                  sharingSpotIds: {...state.sharingSpotIds}..remove(rawSpotId),
                 ),
       );
       switch (result) {

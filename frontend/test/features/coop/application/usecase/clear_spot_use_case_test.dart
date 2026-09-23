@@ -99,4 +99,25 @@ void main() {
 
     expect(notified, isTrue);
   });
+
+  test('「発見を共有中…」はクリアの送信 (オフラインなら送信待ち) を待たずに終える', () async {
+    final events = <String>[];
+    final gate = Completer<void>();
+    rooms.createClearGate = gate;
+
+    final future = useCase(
+      room: room,
+      uid: 'me',
+      nickname: 'me',
+      spotId: spotId,
+      photoPath: '/photos/a.jpg',
+      onSharing: () => events.add('start'),
+      onSharingDone: () => events.add('done'),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    expect(events, ['start', 'done']);
+    gate.complete();
+    await future;
+  });
 }

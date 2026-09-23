@@ -62,7 +62,9 @@ class ClearSpotUseCase {
 
   /// クリアにする
   ///
-  /// [onSharing] はサムネの共有を始めたときに呼ぶ (「発見を共有中…」の表示用)。
+  /// [onSharing] はサムネの共有を始めたとき、[onSharingDone] はサムネのアップロードが
+  /// 終わるかタイムアウトしたときに呼ぶ (「発見を共有中…」の表示用)。クリアの送信は
+  /// オフラインなら復帰まで完了しないため、表示はそれを待たずに終える。
   Future<ClearSpotResult> call({
     required Room room,
     required String uid,
@@ -70,6 +72,7 @@ class ClearSpotUseCase {
     required SpotId spotId,
     required String photoPath,
     void Function()? onSharing,
+    void Function()? onSharingDone,
   }) async {
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
     onSharing?.call();
@@ -86,6 +89,8 @@ class ClearSpotUseCase {
           .timeout(thumbUploadTimeout);
     } on Object catch (e) {
       log('サムネのアップロードが間に合わなかった: $e', name: 'ClearSpotUseCase');
+    } finally {
+      onSharingDone?.call();
     }
 
     final task = ThumbUploadTask(

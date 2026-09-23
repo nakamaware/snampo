@@ -26,8 +26,10 @@ class CoopAuthException implements Exception {
 }
 
 /// 協力プレイの認証 (Firebase Auth 匿名)
-// ignore: one_member_abstracts
 abstract class ICoopAuthService {
+  /// サインイン済みならその uid を返す。未サインインなら null (サインインは試さない)
+  Future<String?> signedInUid();
+
   /// サインイン済みならその uid を返し、未サインインならサインインする
   ///
   /// 失敗したら [CoopAuthException] を投げる。

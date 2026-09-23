@@ -63,6 +63,8 @@ class _Lobby extends HookConsumerWidget {
       coopMissionControllerProvider(code).select((s) => s.isReady),
     );
     final room = roomAsync.value;
+    // ホストのこの端末で生成中か。generating のままホストがキルされた場合は、再度開始できる
+    final isStartingHere = useState(false);
 
     // playing でミッションを端末に用意できたら、全員が Mission 画面へ一斉に遷移する
     useEffect(() {
@@ -132,7 +134,13 @@ class _Lobby extends HookConsumerWidget {
               if (isHost && !isStarted)
                 FilledButton(
                   onPressed:
-                      isGenerating ? null : () => _start(context, ref, room),
+                      isStartingHere.value
+                          ? null
+                          : () async {
+                            isStartingHere.value = true;
+                            await _start(context, ref, room);
+                            if (context.mounted) isStartingHere.value = false;
+                          },
                   child: const Padding(
                     padding: EdgeInsets.all(16),
                     child: Text('開始する'),
@@ -142,7 +150,8 @@ class _Lobby extends HookConsumerWidget {
                 const Center(child: Text('ホストが開始するのを待っています')),
             ],
           ),
-          if (isGenerating || (isStarted && !isReady))
+          if ((isGenerating && (!isHost || isStartingHere.value)) ||
+              (isStarted && !isReady))
             _GeneratingOverlay(
               message: isGenerating ? 'ミッション生成中' : 'ミッションを受け取っています',
             ),

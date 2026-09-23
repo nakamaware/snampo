@@ -11,14 +11,17 @@ import 'package:snampo/features/coop/di/coop_provider.dart';
 ///
 /// - 起動時: 匿名サインイン (失敗してもユーザーには見せない)、サムネの再送、未確定の履歴の同期
 /// - フォアグラウンドに復帰したとき: サインインの再試行、サムネの再送
-/// - ネットワークが復帰したとき: サムネの再送
+/// - ネットワークが復帰したとき: サムネの再送 (サインイン済みのときだけ)
 ///
-/// 定期的なポーリングはしない。
+/// サインインを再試行するのは、起動時のほかは「みんなで」を押したときと
+/// フォアグラウンドに復帰したときだけ。定期的なポーリングはしない。
 void useCoopBackgroundSync(WidgetRef ref) {
   useEffect(() {
-    Future<void> run({required bool syncHistory}) async {
+    Future<void> run({required bool syncHistory, bool signIn = true}) async {
       try {
-        await ref.read(coopAuthServiceProvider).ensureSignedIn();
+        if (signIn) {
+          await ref.read(coopAuthServiceProvider).ensureSignedIn();
+        }
         await ref.read(retryThumbUploadsUseCaseProvider)();
         if (syncHistory) {
           await ref.read(syncCoopHistoryUseCaseProvider)();
@@ -34,7 +37,7 @@ void useCoopBackgroundSync(WidgetRef ref) {
     );
     final connectivity = Connectivity().onConnectivityChanged.listen((results) {
       if (results.any((r) => r != ConnectivityResult.none)) {
-        unawaited(run(syncHistory: false));
+        unawaited(run(syncHistory: false, signIn: false));
       }
     });
     return () {

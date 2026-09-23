@@ -18,7 +18,10 @@ AsyncValue<List<MissionHistory>> useHistories(WidgetRef ref) {
     var disposed = false;
     Future(() async {
       try {
-        await ref.read(coopAuthServiceProvider).ensureSignedIn();
+        // サインインの再試行はしない (未サインインなら同期しない)
+        if (await ref.read(coopAuthServiceProvider).signedInUid() == null) {
+          return;
+        }
         await ref.read(syncCoopHistoryUseCaseProvider)();
       } on Object catch (e) {
         // オフラインや協力プレイを使えない端末では、手元の履歴だけを表示する

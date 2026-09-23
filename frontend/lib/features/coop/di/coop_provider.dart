@@ -91,7 +91,7 @@ RetryThumbUploadsUseCase retryThumbUploadsUseCase(Ref ref) =>
       rooms: ref.read(roomRepositoryProvider),
       storage: ref.read(coopStorageProvider),
       queue: ref.read(thumbUploadQueueStoreProvider),
-      uid: () => ref.read(coopAuthServiceProvider).ensureSignedIn(),
+      uid: () => ref.read(coopAuthServiceProvider).signedInUid(),
     );
 
 /// `clears` を履歴に反映するユースケース

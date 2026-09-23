@@ -26,6 +26,9 @@ class FakeRoomRepository implements IRoomRepository {
   final clears = <String, Map<String, SpotClear>>{};
   final thumbPathFills = <String>[];
 
+  /// null 以外なら createClear はこの Future を待つ (オフラインの送信待ちの再現)
+  Completer<void>? createClearGate;
+
   /// 次に createRoom で衝突させる回数
   int collisions = 0;
 
@@ -141,6 +144,7 @@ class FakeRoomRepository implements IRoomRepository {
     required String nickname,
     required String? thumbPath,
   }) async {
+    await createClearGate?.future;
     final map = clears.putIfAbsent(room.code.value, () => {});
     final existing = map[spotId];
     if (existing != null) {

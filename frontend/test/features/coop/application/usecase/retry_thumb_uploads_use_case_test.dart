@@ -96,4 +96,21 @@ void main() {
 
     expect(storage.uploadedThumbs, hasLength(1));
   });
+
+  test('未サインインなら再送せずにキューに残す (サインインの再試行はしない)', () async {
+    seedClear('a', 'me');
+    queue.queue = ThumbUploadQueue(tasks: [task('a')]);
+    useCase = RetryThumbUploadsUseCase(
+      rooms: rooms,
+      storage: storage,
+      queue: queue,
+      uid: () async => null,
+      now: () => now,
+    );
+
+    await useCase();
+
+    expect(storage.uploadedThumbs, isEmpty);
+    expect(queue.queue.tasks, hasLength(1));
+  });
 }

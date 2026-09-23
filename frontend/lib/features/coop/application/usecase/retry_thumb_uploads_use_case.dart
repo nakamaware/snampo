@@ -15,7 +15,7 @@ class RetryThumbUploadsUseCase {
     required IRoomRepository rooms,
     required ICoopStorage storage,
     required IThumbUploadQueueStore queue,
-    required Future<String> Function() uid,
+    required Future<String?> Function() uid,
     DateTime Function()? now,
   }) : _rooms = rooms,
        _storage = storage,
@@ -26,7 +26,9 @@ class RetryThumbUploadsUseCase {
   final IRoomRepository _rooms;
   final ICoopStorage _storage;
   final IThumbUploadQueueStore _queue;
-  final Future<String> Function() _uid;
+
+  /// サインイン済みならその uid (未サインインなら null。ここではサインインを試さない)
+  final Future<String?> Function() _uid;
   final DateTime Function() _now;
 
   Future<void>? _running;
@@ -42,6 +44,9 @@ class RetryThumbUploadsUseCase {
       return;
     }
     final uid = await _uid();
+    if (uid == null) {
+      return;
+    }
     for (final task in queue.tasks) {
       final code = RoomCode.tryParse(task.roomCode);
       if (code == null) {
