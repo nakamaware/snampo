@@ -98,12 +98,23 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     }
 
     final previous = latest.checkpoints[index];
+    final hasDiscoverer = previous?.discovererUid != null;
     final merged = checkpoint.copyWith(
       discovererUid: previous?.discovererUid,
       discovererNickname: previous?.discovererNickname,
       discovererThumbPath: previous?.discovererThumbPath,
-      achievedAt: previous?.achievedAt ?? checkpoint.achievedAt,
+      // 発見者がいれば、達成日時は発見された日時のままにする
+      achievedAt: hasDiscoverer ? previous!.achievedAt : checkpoint.achievedAt,
     );
+    // 撮り直し (協力プレイで共有に失敗したときなど) なら、前の写真を消す
+    final previousPhoto = previous?.userPhotoPath;
+    if (previousPhoto != null && previousPhoto != merged.userPhotoPath) {
+      try {
+        await photoStorage.deletePhoto(previousPhoto);
+      } on Object {
+        // 消せなくても撮り直しは続ける
+      }
+    }
     final updated = List<CheckpointProgress?>.from(latest.checkpoints);
     updated[index] = merged;
     state = AsyncValue.data(latest.copyWith(checkpoints: updated));

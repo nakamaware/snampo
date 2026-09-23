@@ -144,6 +144,17 @@ void main() {
     );
   });
 
+  test('時間切れのあとに届いた自分のクリアが先にあれば (撮り直したときなど)、自分が発見者として扱う', () async {
+    rooms.clears[fx.code] = {spotId: fx.clear('a', 'me')};
+
+    final result = await clear();
+
+    expect(result, isA<ClearSpotCleared>());
+    final spot = histories.histories[fx.code]!.spots.single;
+    expect(spot.discovererUid, 'me');
+    expect(spot.discovererThumbPath, 'history:/photos/a.jpg.thumb');
+  });
+
   test('Rules に拒否されたら (ルームが終わったあとなど)、共有できなかったとして返す', () async {
     rooms.rejectClears = true;
 

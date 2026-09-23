@@ -113,30 +113,31 @@ class ClearSpotUseCase {
       return const ClearSpotFailed();
     }
 
-    switch (result) {
-      case ClearCreated():
-        await _histories.applyCoopDiscoverer(
-          roomCode: room.code,
-          spotId: spotId,
-          discovererUid: uid,
-          discovererNickname: nickname.value,
-          clearedAt: checkpoint.achievedAt ?? _now(),
-        );
-        await _histories.saveCoopThumb(
-          roomCode: room.code,
-          spotId: spotId,
-          sourcePath: localThumbPath,
-        );
-        try {
-          // 画面でルームを監視していなくても、最後のクリアを書いた端末が finished にする
-          await _finishIfAllCleared(room, await _rooms.fetchClears(room.code));
-        } on Object catch (e) {
-          log('finished への更新に失敗した: $e', name: 'ClearSpot');
-        }
-        return const ClearSpotCleared();
-      case ClearAlreadyExists(:final existing):
-        return ClearSpotAlreadyCleared(existing);
+    if (result case ClearAlreadyExists(
+      :final existing,
+    ) when existing.clearedBy != uid) {
+      return ClearSpotAlreadyCleared(existing);
     }
+    // 作成できたか、時間切れのあとに届いた自分のクリアが先にあった (どちらも自分が発見者)
+    await _histories.applyCoopDiscoverer(
+      roomCode: room.code,
+      spotId: spotId,
+      discovererUid: uid,
+      discovererNickname: nickname.value,
+      clearedAt: checkpoint.achievedAt ?? _now(),
+    );
+    await _histories.saveCoopThumb(
+      roomCode: room.code,
+      spotId: spotId,
+      sourcePath: localThumbPath,
+    );
+    try {
+      // 画面でルームを監視していなくても、最後のクリアを書いた端末が finished にする
+      await _finishIfAllCleared(room, await _rooms.fetchClears(room.code));
+    } on Object catch (e) {
+      log('finished への更新に失敗した: $e', name: 'ClearSpot');
+    }
+    return const ClearSpotCleared();
   }
 
   Future<CreateClearResult> _share(
