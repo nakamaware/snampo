@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/config.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/coop/application/interface/coop_auth_service.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
@@ -10,7 +11,6 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/hook/use_coop_sign_in.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// 「みんなで」: ルームを作るか、ルームに入るかを選ぶ画面
@@ -37,7 +37,7 @@ class CoopEntryPage extends HookConsumerWidget {
           nickname: name,
           settings: RoomSettings.random(radius: Radius(meters: 1000)),
         );
-        ref
+        await ref
             .read(coopSessionStoreProvider.notifier)
             .enter(CoopSession(roomCode: room.code, uid: uid));
         if (context.mounted) {

@@ -58,12 +58,3 @@ variable "firestore_rules" {
 variable "storage_rules" {
   type = string
 }
-
-# App Checkを強制するサービス
-variable "app_check_enforced_services" {
-  type = list(string)
-  default = [
-    "firestore.googleapis.com",
-    "firebasestorage.googleapis.com",
-  ]
-}

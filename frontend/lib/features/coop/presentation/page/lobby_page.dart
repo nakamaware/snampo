@@ -64,7 +64,10 @@ class _Lobby extends HookConsumerWidget {
     // playing でミッションを端末に用意できたら、全員が Mission 画面へ一斉に遷移する
     useEffect(() {
       if (room == null || !isReady) return null;
+      // 遊べる期限を過ぎたプレイは、Mission 画面と同じく結果画面へ移る
+      final expired = !room.isPlayable(DateTime.now());
       final target = switch (room.status) {
+        RoomStatus.playing when expired => '/coop/result',
         RoomStatus.playing => '/coop/mission',
         RoomStatus.finished => '/coop/result',
         _ => null,

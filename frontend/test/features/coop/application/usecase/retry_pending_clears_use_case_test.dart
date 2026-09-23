@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -46,9 +47,11 @@ void main() {
         storage: storage,
         queue: queue,
         completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
+        finishIfAllCleared: FinishIfAllClearedUseCase(rooms, now: () => now),
         uid: uid ?? () async => 'me',
         now: () => now,
         createClearTimeout: const Duration(milliseconds: 50),
+        thumbUploadTimeout: const Duration(milliseconds: 50),
       );
 
   setUp(() {
@@ -85,6 +88,26 @@ void main() {
       );
       expect(queue.queue.tasks, isEmpty);
       expect(result.failures, isEmpty);
+    });
+
+    test('サムネが時間内に上がらなければ、クリアを先に作ってサムネの再送を残す', () async {
+      storage.thumbUploadGate = Completer<void>();
+      queue.queue = PendingClearQueue(tasks: [task('a')]);
+
+      await useCase();
+
+      expect(rooms.clears[fx.code]![fx.spot('a')]!.thumbPath, isNull);
+      expect(queue.queue.tasks.single.clearCreated, isTrue);
+    });
+
+    test('作り直したクリアで全スポットがそろったら finished にする', () async {
+      rooms.rooms[fx.code] = fx.room(spotIds: ['a', 'b']);
+      seedClear('b', 'other');
+      queue.queue = PendingClearQueue(tasks: [task('a')]);
+
+      await useCase();
+
+      expect(rooms.rooms[fx.code]!.status, RoomStatus.finished);
     });
 
     test('サムネを上げられなければ、クリアだけ作ってサムネの再送を残す', () async {

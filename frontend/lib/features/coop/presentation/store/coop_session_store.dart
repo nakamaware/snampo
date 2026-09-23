@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/di/storage_provider.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
-import 'package:snampo/features/mission/di/mission_provider.dart';
 
 part 'coop_session_store.g.dart';
 
@@ -21,7 +21,14 @@ class CoopSessionStore extends _$CoopSessionStore {
   }
 
   /// 入室したルームを記録する
-  void enter(CoopSession session) {
+  ///
+  /// 別のルームに参加中なら、そのルームを抜けてから記録する (入室に成功したあとに呼ぶ。
+  /// 失敗したときに前のルームを抜けてしまわないように)。
+  Future<void> enter(CoopSession session) async {
+    final current = state.value;
+    if (current != null && current.roomCode != session.roomCode) {
+      await leave();
+    }
     state = AsyncValue.data(session);
   }
 

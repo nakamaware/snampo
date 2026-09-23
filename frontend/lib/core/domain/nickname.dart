@@ -77,3 +77,15 @@ Map<String, String> displayNicknames(
       }(),
   };
 }
+
+/// 協力プレイのスポットの発見者の表示
+///
+/// [displayName] は発見者の表示名 ([displayNicknames] で番号を付けたもの)。
+/// 発見者がいなければ「未クリア」。クリア済みなのに発見者が分からない
+/// (データが消えた後など) 場合は、取得できなかったと表示する。
+String discovererLabel(String? displayName, {bool isCleared = false}) {
+  if (displayName != null) {
+    return '発見: $displayName';
+  }
+  return isCleared ? '発見者: 取得できませんでした' : '未クリア';
+}

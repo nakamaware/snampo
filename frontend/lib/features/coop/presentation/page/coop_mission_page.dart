@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -13,7 +16,6 @@ import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart'
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 
 /// 協力プレイの Mission 画面 (端末で進行中のルーム)
@@ -48,6 +50,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
   @override
   List<Widget> appBarActions(BuildContext context) => [
     _CoopHostEndButton(roomCode: roomCode),
+    const _CoopMissionMenu(),
   ];
 
   @override
@@ -86,7 +89,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
 }
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
-class _CoopMissionEffects extends ConsumerWidget {
+class _CoopMissionEffects extends HookConsumerWidget {
   const _CoopMissionEffects({required this.roomCode, required this.child});
 
   /// ルームコード
@@ -94,6 +97,14 @@ class _CoopMissionEffects extends ConsumerWidget {
 
   /// 中身
   final Widget child;
+
+  /// 期限切れを知らせて結果画面へ移る
+  static void _goToResultAsExpired(BuildContext context) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('このルームは期限切れです')));
+    context.go('/coop/result');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -121,6 +132,26 @@ class _CoopMissionEffects extends ConsumerWidget {
           context.go('/coop/result');
         }
       });
+
+    // 遊べる期限を過ぎると誰も finished にできないので、期限切れとして結果画面へ移る
+    final expiresAt = ref.watch(
+      coopRoomProvider(roomCode).select((room) => room.value?.expiresAt),
+    );
+    useEffect(() {
+      if (expiresAt == null) return null;
+      final remaining = expiresAt.difference(DateTime.now());
+      if (remaining <= Duration.zero) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) _goToResultAsExpired(context);
+        });
+        return null;
+      }
+      final timer = Timer(remaining, () {
+        if (context.mounted) _goToResultAsExpired(context);
+      });
+      return timer.cancel;
+    }, [expiresAt]);
+
     final prepareError = ref.watch(
       coopMissionStoreProvider(roomCode).select((s) => s.prepareError),
     );
@@ -128,6 +159,49 @@ class _CoopMissionEffects extends ConsumerWidget {
       return _PrepareErrorView(roomCode: roomCode);
     }
     return child;
+  }
+}
+
+/// AppBar のメニュー (「ルームを抜ける」)
+class _CoopMissionMenu extends ConsumerWidget {
+  const _CoopMissionMenu();
+
+  Future<void> _leave(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('ルームを抜けますか?'),
+            content: const Text('抜けた時点までの進捗は履歴に残ります。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('キャンセル'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('抜ける'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true) return;
+    await ref.read(coopSessionStoreProvider.notifier).leave();
+    if (context.mounted) context.go('/');
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<void>(
+      iconColor: Theme.of(context).colorScheme.onPrimary,
+      itemBuilder:
+          (context) => [
+            PopupMenuItem(
+              onTap: () => _leave(context, ref),
+              child: const Text('ルームを抜ける'),
+            ),
+          ],
+    );
   }
 }
 
@@ -243,7 +317,16 @@ class _CoopDiscovererView extends ConsumerWidget {
         roomCode,
       ).select((s) => spotId != null && s.sharingSpotIds.contains(spotId)),
     );
-    final discoverer = checkpoint?.discovererNickname;
+    final discovererUid = checkpoint?.discovererUid;
+    // 重複した名前には、表示するときだけ入室順に番号を付ける
+    final members = ref.watch(coopMembersProvider(roomCode)).value ?? const [];
+    final discoverer =
+        discovererUid == null
+            ? null
+            : displayNicknames([
+                  for (final m in members) (uid: m.uid, nickname: m.nickname),
+                ])[discovererUid] ??
+                checkpoint?.discovererNickname;
     final thumbPath = checkpoint?.discovererThumbPath;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -264,7 +347,7 @@ class _CoopDiscovererView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text('発見: $discoverer', style: theme.textTheme.bodySmall),
+          Text(discovererLabel(discoverer), style: theme.textTheme.bodySmall),
         ],
         if (isSharing)
           Text(

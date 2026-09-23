@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 /// Storage にアップロードするミッションバンドル
 typedef MissionBundle =
@@ -43,7 +43,7 @@ class MissionBundleMapper {
   static MissionBundle toBundle(RoomCode code, MissionEntity mission) {
     final images = <String, Uint8List>{};
     final spots = [
-      for (final spot in [...mission.waypoints, mission.destination])
+      for (final spot in mission.spots)
         () {
           final spotId =
               spot.spotId ?? (throw StateError('スポット ID がないスポットがあります'));

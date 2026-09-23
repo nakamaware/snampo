@@ -57,4 +57,18 @@ void main() {
       expect(names, {'a': 'たろう', 'b': 'はなこ', 'c': 'たろう(2)', 'd': 'たろう(3)'});
     });
   });
+
+  group('discovererLabel', () {
+    test('発見者がいれば「発見: 名前」', () {
+      expect(discovererLabel('たろう(2)'), '発見: たろう(2)');
+    });
+
+    test('発見者がいなければ「未クリア」', () {
+      expect(discovererLabel(null), '未クリア');
+    });
+
+    test('クリア済みで発見者が分からなければ、取得できなかったと表示する', () {
+      expect(discovererLabel(null, isCleared: true), '発見者: 取得できませんでした');
+    });
+  });
 }

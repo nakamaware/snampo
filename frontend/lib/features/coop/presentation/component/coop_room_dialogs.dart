@@ -60,10 +60,10 @@ Future<Nickname?> ensureNickname(BuildContext context, WidgetRef ref) async {
   return ref.read(nicknameStoreProvider.notifier).save(input);
 }
 
-/// 別のルームへ入る前に、協力プレイ中のルームを抜けるかを確認する
+/// 別のルームへ入る前に、協力プレイ中のルームを抜けてよいかを確認する
 ///
-/// 抜けたルームは `leftAt` を記録し、履歴の同期は続ける。
-/// 続けてよければ true を返す。
+/// 実際に抜けるのは、新しいルームへの入室や作成に成功したとき ([CoopSessionStore.enter])。
+/// 抜けたルームは `leftAt` を記録し、履歴の同期は続ける。続けてよければ true を返す。
 Future<bool> confirmLeaveCurrentRoom(
   BuildContext context,
   WidgetRef ref, {
@@ -94,9 +94,5 @@ Future<bool> confirmLeaveCurrentRoom(
           ],
         ),
   );
-  if (confirmed != true) {
-    return false;
-  }
-  await ref.read(coopSessionStoreProvider.notifier).leave();
-  return true;
+  return confirmed ?? false;
 }

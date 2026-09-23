@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/di/storage_provider.dart';
 import 'package:snampo/core/domain/nickname.dart';
-import 'package:snampo/features/mission/di/mission_provider.dart';
 
 part 'nickname_store.g.dart';
 

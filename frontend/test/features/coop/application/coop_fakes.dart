@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
@@ -18,7 +19,6 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 /// メモリ上のルームリポジトリ
 class FakeRoomRepository implements IRoomRepository {
@@ -325,7 +325,7 @@ class FakeHistoryRepository implements IHistoryRepository {
       );
       return;
     }
-    final spots = [...mission.waypoints, mission.destination];
+    final spots = mission.spots;
     histories[coop.roomCode] = MissionHistory(
       id: 'history-${coop.roomCode.value}',
       completedAt: startedAt,

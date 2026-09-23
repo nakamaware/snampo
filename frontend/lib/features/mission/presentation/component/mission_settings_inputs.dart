@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
 
 /// ミッションの設定の入力部品 (Setup 画面と、協力プレイのロビーで使う)

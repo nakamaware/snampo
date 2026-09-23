@@ -153,9 +153,12 @@ resource "google_firebase_app_check_app_attest_config" "ios" {
   app_id  = google_firebase_apple_app.default.app_id
 }
 
-# App Check の強制を最初から有効にする
+# Firestore と Storage への App Check の強制を最初から有効にする
 resource "google_firebase_app_check_service_config" "enforced" {
-  for_each = toset(var.app_check_enforced_services)
+  for_each = toset([
+    "firestore.googleapis.com",
+    "firebasestorage.googleapis.com",
+  ])
 
   project          = var.project_id
   service_id       = each.key

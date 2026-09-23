@@ -173,7 +173,7 @@ return internal(_that.meters);case _:
 
 class _Radius extends Radius {
   const _Radius({required this.meters}): super._();
-  
+
 
 @override final  int meters;
 

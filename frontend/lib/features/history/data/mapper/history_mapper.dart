@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
@@ -12,8 +14,6 @@ import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeRandom = 'random';
@@ -193,7 +193,7 @@ class HistoryFromMissionMapper {
 
   /// 経由地のあとに目的地を並べた一覧 (履歴の sortOrder と一致)
   static List<ImageCoordinate> orderedSpots(MissionEntity mission) {
-    return [...mission.waypoints, mission.destination];
+    return mission.spots;
   }
 
   /// Drift `mission_histories` へ挿入する 1 行分

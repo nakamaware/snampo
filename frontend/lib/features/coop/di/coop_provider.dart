@@ -155,6 +155,7 @@ RetryPendingClearsUseCase retryPendingClearsUseCase(Ref ref) =>
       storage: ref.read(coopStorageProvider),
       queue: ref.read(pendingClearRepositoryProvider),
       completeClearTask: ref.read(completeClearTaskUseCaseProvider),
+      finishIfAllCleared: ref.read(finishIfAllClearedUseCaseProvider),
       uid: () => ref.read(getCoopSignedInUidUseCaseProvider)(),
     );
 

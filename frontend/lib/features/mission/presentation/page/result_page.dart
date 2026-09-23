@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
@@ -30,6 +30,10 @@ class ResultPage extends ConsumerWidget {
   /// モード固有の部品 (ソロでは null)
   final ResultPageExtension? extension;
 
+  /// モード固有の部品 (ソロでは何もしない既定のもの)
+  ResultPageExtension get _extension =>
+      extension ?? const _DefaultResultPageExtension();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final missionAsync = ref.watch(persistedMissionProvider(kind));
@@ -44,7 +48,7 @@ class ResultPage extends ConsumerWidget {
               return const _ResultErrorScaffold(message: '結果データが見つかりませんでした。');
             }
 
-            final points = [...mission.waypoints, mission.destination];
+            final points = mission.spots;
             final isDestinationMode = mission.radius == null;
             return Scaffold(
               appBar: AppBar(
@@ -70,7 +74,7 @@ class ResultPage extends ConsumerWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
-                      if (extension?.buildHeader(context, progress)
+                      if (_extension.buildHeader(context, progress)
                           case final header?) ...[
                         header,
                         const SizedBox(height: 16),
@@ -95,15 +99,12 @@ class ResultPage extends ConsumerWidget {
                               isSelectedDestinationGoal:
                                   isDestinationMode &&
                                   index == points.length - 1,
-                              statusLabel: extension?.spotStatusLabel(
+                              statusLabel: _extension.spotStatusLabel(
                                 checkpoint,
                               ),
-                              thumbnailPath:
-                                  extension == null
-                                      ? checkpoint?.userPhotoPath
-                                      : extension!.spotThumbnailPath(
-                                        checkpoint,
-                                      ),
+                              thumbnailPath: _extension.spotThumbnailPath(
+                                checkpoint,
+                              ),
                               onTap:
                                   !hasResultPhoto
                                       ? null
@@ -173,7 +174,7 @@ class ResultPage extends ConsumerWidget {
       await progressStore.clearProgress();
     } finally {
       persistedMission.clearMission();
-      await extension?.onFinish(ref);
+      await _extension.onFinish(ref);
     }
 
     if (context.mounted) {
@@ -309,4 +310,9 @@ abstract class ResultPageExtension {
 
   /// 「ホームへ戻る」で、その種別の枠を片付けたあとに呼ぶ
   Future<void> onFinish(WidgetRef ref) async {}
+}
+
+/// ソロの結果画面 (差し込む部品がない) で使う既定の [ResultPageExtension]
+class _DefaultResultPageExtension extends ResultPageExtension {
+  const _DefaultResultPageExtension();
 }

@@ -1,6 +1,4 @@
-import 'package:path/path.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:riverpod_sqflite/riverpod_sqflite.dart';
 import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/features/mission/application/interface/heading_service.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
@@ -15,21 +13,11 @@ import 'package:snampo/features/mission/application/usecase/save_photo_use_case.
 import 'package:snampo/features/mission/data/heading_service.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
 import 'package:snampo/features/mission/data/repository/mission_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 export 'package:snampo/core/di/photo_storage_provider.dart';
+export 'package:snampo/core/di/storage_provider.dart';
 
 part 'mission_provider.g.dart';
-
-/// SQLite ストレージのプロバイダー (keepAlive で DB 接続を維持)
-@Riverpod(keepAlive: true)
-Future<JsonSqFliteStorage> storage(Ref ref) async {
-  final databasesPath = await getDatabasesPath();
-  final dbPath = join(databasesPath, 'snampo.db');
-  final storage = await JsonSqFliteStorage.open(dbPath);
-  ref.onDispose(storage.close);
-  return storage;
-}
 
 /// 位置情報サービスのプロバイダー
 @riverpod

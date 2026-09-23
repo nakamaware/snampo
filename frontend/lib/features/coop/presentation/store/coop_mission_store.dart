@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
@@ -15,7 +16,6 @@ import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
@@ -108,9 +108,7 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   List<ImageCoordinate> get _spots {
     final mission = _mission;
-    return mission == null
-        ? const []
-        : [...mission.waypoints, mission.destination];
+    return mission == null ? const [] : mission.spots;
   }
 
   /// ルーム内での自分のニックネーム
@@ -125,6 +123,16 @@ class CoopMissionStore extends _$CoopMissionStore {
       }
     }
     return ref.read(nicknameStoreProvider).value ?? Nickname.orAuto('');
+  }
+
+  /// メンバーの表示名 (重複した名前には、表示するときだけ入室順に番号を付ける)
+  String _displayName(String uid, String fallback) {
+    final members =
+        ref.read(coopMembersProvider(roomCode)).value ?? const <RoomMember>[];
+    return displayNicknames([
+          for (final m in members) (uid: m.uid, nickname: m.nickname),
+        ])[uid] ??
+        fallback;
   }
 
   void _notify(String message) {
@@ -182,7 +190,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       if (!alreadyPrepared) {
         // 前のルームの進捗 (写真は履歴にコピー済み) を片付けてから始める
         await _progress.restartProgress(
-          mission.waypoints.length + 1,
+          mission.spots.length,
           roomCode: room.code,
         );
         ref
@@ -269,7 +277,7 @@ class CoopMissionStore extends _$CoopMissionStore {
         continue;
       }
       final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
-      _notify('${clear.nickname}さんが$labelを発見!');
+      _notify('${_displayName(clear.clearedBy, clear.nickname)}さんが$labelを発見!');
     }
   }
 
@@ -310,7 +318,10 @@ class CoopMissionStore extends _$CoopMissionStore {
         case ClearSpotCleared():
           break;
         case ClearSpotAlreadyCleared(:final existing):
-          _notify('先に${existing.nickname}さんが発見しました');
+          _notify(
+            '先に${_displayName(existing.clearedBy, existing.nickname)}'
+            'さんが発見しました',
+          );
         case ClearSpotRejected():
           _notify('ルームが終了していたため、発見を共有できませんでした');
       }

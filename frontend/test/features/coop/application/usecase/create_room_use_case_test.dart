@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/coop/application/usecase/create_room_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 import '../coop_fakes.dart';
 

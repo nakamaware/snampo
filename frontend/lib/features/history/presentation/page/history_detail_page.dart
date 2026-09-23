@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
@@ -74,6 +75,15 @@ class _HistoryDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final coop = record.coop;
+    // 重複した名前には、表示するときだけ入室順に番号を付ける
+    final displayNames =
+        coop == null
+            ? const <String, String>{}
+            : displayNicknames([
+              for (final m in coop.members) (uid: m.uid, nickname: m.nickname),
+            ]);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -112,6 +122,7 @@ class _HistoryDetailBody extends StatelessWidget {
                   spot: record.spots[index],
                   index: index,
                   isCoop: record.coop != null,
+                  displayNames: displayNames,
                 ),
           ),
         ),
@@ -180,7 +191,11 @@ class _SpotCard extends StatelessWidget {
     required this.spot,
     required this.index,
     this.isCoop = false,
+    this.displayNames = const {},
   });
+
+  /// 協力プレイのメンバーの uid ごとの表示名 (重複した名前には番号を付けたもの)
+  final Map<String, String> displayNames;
 
   final MissionHistorySpot spot;
   final int index;
@@ -204,11 +219,10 @@ class _SpotCard extends StatelessWidget {
             ),
             if (isCoop)
               Text(
-                spot.discovererNickname != null
-                    ? '発見: ${spot.discovererNickname}'
-                    : spot.isCleared
-                    ? '発見者: 取得できませんでした'
-                    : '未クリア',
+                discovererLabel(
+                  displayNames[spot.discovererUid] ?? spot.discovererNickname,
+                  isCleared: spot.isCleared,
+                ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color:
                       spot.isCleared

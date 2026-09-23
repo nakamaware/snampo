@@ -10,13 +10,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
@@ -116,7 +116,7 @@ class MissionPage extends HookConsumerWidget {
           final persistedNotifier = ref.read(
             persistedMissionProvider(MissionSessionKind.solo).notifier,
           );
-          final checkpointCount = mission.waypoints.length + 1;
+          final checkpointCount = mission.spots.length;
           Future(() async {
             await progressNotifier.restartProgress(checkpointCount);
             persistedNotifier.setMission(mission);
@@ -400,10 +400,7 @@ class SnapViewState extends HookConsumerWidget {
     return missionAsyncValue.when(
       data: (missionInfo) {
         // main: 経由地 + 目的地を可変長スポットとして列挙
-        final missionSpots = [
-          ...missionInfo.waypoints,
-          missionInfo.destination,
-        ];
+        final missionSpots = missionInfo.spots;
         final isDestinationMode = missionInfo.radius == null;
         final allCompleted = progressAsync.maybeWhen(
           data:
@@ -835,7 +832,7 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
     }
   }
   if (progress == null) {
-    final checkpointCount = missionInfo.waypoints.length + 1;
+    final checkpointCount = missionInfo.spots.length;
     ref
         .read(missionProgressStoreProvider(kind).notifier)
         .startProgress(checkpointCount);

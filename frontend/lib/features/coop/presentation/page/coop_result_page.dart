@@ -4,6 +4,7 @@ import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/coop_checkpoint.dart';
+import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
@@ -20,19 +21,36 @@ class CoopResultPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final myUid = ref.watch(coopSessionStoreProvider).value?.uid;
+    final session = ref.watch(coopSessionStoreProvider).value;
+    final members =
+        session == null
+            ? const <RoomMember>[]
+            : ref.watch(coopMembersProvider(session.roomCode)).value ??
+                const [];
     return ResultPage(
       kind: MissionSessionKind.coop,
-      extension: _CoopResultPageExtension(myUid: myUid),
+      extension: _CoopResultPageExtension(
+        myUid: session?.uid,
+        // 重複した名前には、表示するときだけ入室順に番号を付ける
+        displayNames: displayNicknames([
+          for (final m in members) (uid: m.uid, nickname: m.nickname),
+        ]),
+      ),
     );
   }
 }
 
 class _CoopResultPageExtension extends ResultPageExtension {
-  const _CoopResultPageExtension({required this.myUid});
+  const _CoopResultPageExtension({
+    required this.myUid,
+    required this.displayNames,
+  });
 
   /// 自分の Auth uid (セッションがなければ null)
   final String? myUid;
+
+  /// uid ごとの表示名 (重複した名前には番号を付けたもの)
+  final Map<String, String> displayNames;
 
   @override
   Widget? buildHeader(BuildContext context, MissionProgressEntity progress) {
@@ -44,8 +62,10 @@ class _CoopResultPageExtension extends ResultPageExtension {
 
   @override
   String? spotStatusLabel(CheckpointProgress? checkpoint) {
-    final discoverer = checkpoint?.discovererNickname;
-    return discoverer == null ? '未クリア' : '発見: $discoverer';
+    final uid = checkpoint?.discovererUid;
+    return discovererLabel(
+      uid == null ? null : displayNames[uid] ?? checkpoint?.discovererNickname,
+    );
   }
 
   /// 発見者の写真を表示する。同時に撮影して先着に負けたスポットでも、自分の写真ではなく

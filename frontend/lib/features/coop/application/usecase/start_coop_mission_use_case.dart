@@ -32,7 +32,7 @@ class StartCoopMissionUseCase {
     try {
       final mission = await _createMission(room.settings);
       final spotIds = [
-        for (final spot in [...mission.waypoints, mission.destination])
+        for (final spot in mission.spots)
           spot.spotId ?? (throw StateError('スポット ID がないミッションは協力プレイに使えません')),
       ];
       final missionRef = await _storage.uploadMissionBundle(room.code, mission);

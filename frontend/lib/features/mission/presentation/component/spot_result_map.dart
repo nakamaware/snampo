@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/util/map_overlay_util.dart';
 
 /// スポット結果画面用マップ
