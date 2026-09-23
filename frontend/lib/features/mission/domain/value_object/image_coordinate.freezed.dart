@@ -24,7 +24,7 @@ mixin _$ImageCoordinate {
  String? get googleMapsUrl;/// ストリートビュー撮影位置の緯度 (ランドマーク座標 [coordinate] とは別)
  double? get streetViewLatitude;/// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
  double? get streetViewLongitude;/// スポット ID (place_id / geo URI)。旧データ (ソロの再開データ) を読めるように nullable
- String? get spotId;
+@SpotIdConverter() SpotId? get spotId;
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -57,7 +57,7 @@ abstract mixin class $ImageCoordinateCopyWith<$Res>  {
   factory $ImageCoordinateCopyWith(ImageCoordinate value, $Res Function(ImageCoordinate) _then) = _$ImageCoordinateCopyWithImpl;
 @useResult
 $Res call({
-@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude, String? spotId
+@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude,@SpotIdConverter() SpotId? spotId
 });
 
 
@@ -85,7 +85,7 @@ as String?,googleMapsUrl: freezed == googleMapsUrl ? _self.googleMapsUrl : googl
 as String?,streetViewLatitude: freezed == streetViewLatitude ? _self.streetViewLatitude : streetViewLatitude // ignore: cast_nullable_to_non_nullable
 as double?,streetViewLongitude: freezed == streetViewLongitude ? _self.streetViewLongitude : streetViewLongitude // ignore: cast_nullable_to_non_nullable
 as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
-as String?,
+as SpotId?,
   ));
 }
 
@@ -170,7 +170,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude,  String? spotId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude, @SpotIdConverter()  SpotId? spotId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
 return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude,_that.spotId);case _:
@@ -191,7 +191,7 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude,  String? spotId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude, @SpotIdConverter()  SpotId? spotId)  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate():
 return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude,_that.spotId);case _:
@@ -211,7 +211,7 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude,  String? spotId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@CoordinateConverter()  Coordinate coordinate,  String imageBase64,  double? referenceHeading,  String? name,  String? genre,  String? googleMapsUrl,  double? streetViewLatitude,  double? streetViewLongitude, @SpotIdConverter()  SpotId? spotId)?  $default,) {final _that = this;
 switch (_that) {
 case _ImageCoordinate() when $default != null:
 return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.name,_that.genre,_that.googleMapsUrl,_that.streetViewLatitude,_that.streetViewLongitude,_that.spotId);case _:
@@ -226,7 +226,7 @@ return $default(_that.coordinate,_that.imageBase64,_that.referenceHeading,_that.
 @JsonSerializable()
 
 class _ImageCoordinate implements ImageCoordinate {
-  const _ImageCoordinate({@CoordinateConverter() required this.coordinate, required this.imageBase64, this.referenceHeading, this.name, this.genre, this.googleMapsUrl, this.streetViewLatitude, this.streetViewLongitude, this.spotId});
+  const _ImageCoordinate({@CoordinateConverter() required this.coordinate, required this.imageBase64, this.referenceHeading, this.name, this.genre, this.googleMapsUrl, this.streetViewLatitude, this.streetViewLongitude, @SpotIdConverter() this.spotId});
   factory _ImageCoordinate.fromJson(Map<String, dynamic> json) => _$ImageCoordinateFromJson(json);
 
 /// 座標
@@ -246,7 +246,7 @@ class _ImageCoordinate implements ImageCoordinate {
 /// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
 @override final  double? streetViewLongitude;
 /// スポット ID (place_id / geo URI)。旧データ (ソロの再開データ) を読めるように nullable
-@override final  String? spotId;
+@override@SpotIdConverter() final  SpotId? spotId;
 
 /// Create a copy of ImageCoordinate
 /// with the given fields replaced by the non-null parameter values.
@@ -281,7 +281,7 @@ abstract mixin class _$ImageCoordinateCopyWith<$Res> implements $ImageCoordinate
   factory _$ImageCoordinateCopyWith(_ImageCoordinate value, $Res Function(_ImageCoordinate) _then) = __$ImageCoordinateCopyWithImpl;
 @override @useResult
 $Res call({
-@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude, String? spotId
+@CoordinateConverter() Coordinate coordinate, String imageBase64, double? referenceHeading, String? name, String? genre, String? googleMapsUrl, double? streetViewLatitude, double? streetViewLongitude,@SpotIdConverter() SpotId? spotId
 });
 
 
@@ -309,7 +309,7 @@ as String?,googleMapsUrl: freezed == googleMapsUrl ? _self.googleMapsUrl : googl
 as String?,streetViewLatitude: freezed == streetViewLatitude ? _self.streetViewLatitude : streetViewLatitude // ignore: cast_nullable_to_non_nullable
 as double?,streetViewLongitude: freezed == streetViewLongitude ? _self.streetViewLongitude : streetViewLongitude // ignore: cast_nullable_to_non_nullable
 as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
-as String?,
+as SpotId?,
   ));
 }
 

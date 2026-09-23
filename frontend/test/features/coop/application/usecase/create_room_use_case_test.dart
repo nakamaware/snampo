@@ -29,8 +29,8 @@ void main() {
     expect(room.createdAt, now);
     expect(room.expiresAt, now.add(const Duration(hours: 12)));
     expect(room.deleteAt, now.add(const Duration(days: 7)));
-    expect(rooms.rooms[room.code.value], room);
-    expect(rooms.members[room.code.value]!.single.nickname, 'たろう');
+    expect(rooms.rooms[room.code], room);
+    expect(rooms.members[room.code]!.single.nickname, 'たろう');
   });
 
   test('コードが衝突したら作り直して再試行する', () async {
@@ -42,7 +42,7 @@ void main() {
       settings: RoomSettings.random(radius: Radius(meters: 1000)),
     );
 
-    expect(rooms.rooms.keys, [room.code.value]);
+    expect(rooms.rooms.keys, [room.code]);
   });
 
   test('衝突が続いたら諦める', () async {

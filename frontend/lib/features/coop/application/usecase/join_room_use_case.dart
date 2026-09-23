@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 
 /// 入室の結果
 @immutable

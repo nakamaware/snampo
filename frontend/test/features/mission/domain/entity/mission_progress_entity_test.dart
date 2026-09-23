@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
@@ -39,6 +40,74 @@ void main() {
 
       expect(entity.checkpoints[0]?.judgeRank, PhotoJudgeRank.miss);
       expect(entity.checkpoints[1], isNull);
+    });
+  });
+
+  group('MissionProgressEntity.withCoopDiscoveries', () {
+    final roomA = RoomCode.tryParse('AAAA22')!;
+    final roomB = RoomCode.tryParse('BBBB22')!;
+    final clearedAt = DateTime.utc(2026, 9, 23);
+
+    MissionProgressEntity progress(RoomCode? roomCode) => MissionProgressEntity(
+      startedAt: clearedAt,
+      roomCode: roomCode,
+      checkpoints: const [null, null],
+    );
+
+    test('同じルームの発見を「発見者情報つき・自分の写真なし」で反映する', () {
+      final updated = progress(roomA).withCoopDiscoveries(roomA, {
+        1: (
+          uid: 'x',
+          nickname: 'はなこ',
+          clearedAt: clearedAt,
+          thumbPath: '/t.jpg',
+        ),
+      });
+
+      expect(updated.checkpoints[0], isNull);
+      final checkpoint = updated.checkpoints[1]!;
+      expect(checkpoint.discovererUid, 'x');
+      expect(checkpoint.discovererNickname, 'はなこ');
+      expect(checkpoint.discovererThumbPath, '/t.jpg');
+      expect(checkpoint.userPhotoPath, isNull);
+    });
+
+    test('別のルームの発見は反映しない (抜けた前のルームの通知が混ざらないように)', () {
+      final current = progress(roomB);
+
+      final updated = current.withCoopDiscoveries(roomA, {
+        0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+      });
+
+      expect(updated, current);
+    });
+
+    test('ソロの進捗には反映しない', () {
+      final current = progress(null);
+
+      expect(
+        current.withCoopDiscoveries(roomA, {
+          0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+        }),
+        current,
+      );
+    });
+
+    test('発見者が同じなら、新しいサムネがなくても取得済みのサムネを残す', () {
+      final withThumb = progress(roomA).withCoopDiscoveries(roomA, {
+        0: (
+          uid: 'x',
+          nickname: 'はなこ',
+          clearedAt: clearedAt,
+          thumbPath: '/t.jpg',
+        ),
+      });
+
+      final updated = withThumb.withCoopDiscoveries(roomA, {
+        0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+      });
+
+      expect(updated.checkpoints[0]!.discovererThumbPath, '/t.jpg');
     });
   });
 }

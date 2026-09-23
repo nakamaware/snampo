@@ -21,7 +21,7 @@ final class CoopRoomProvider
   /// ルームを監視する (消えたら null)
   CoopRoomProvider._({
     required CoopRoomFamily super.from,
-    required String super.argument,
+    required RoomCode super.argument,
   }) : super(
          retry: null,
          name: r'coopRoomProvider',
@@ -47,7 +47,7 @@ final class CoopRoomProvider
 
   @override
   Stream<Room?> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as RoomCode;
     return coopRoom(ref, argument);
   }
 
@@ -62,12 +62,12 @@ final class CoopRoomProvider
   }
 }
 
-String _$coopRoomHash() => r'363f8b3bac9e91126f0cffa10d515429e0b013d9';
+String _$coopRoomHash() => r'121d97f4a52193086abe4f31f359f95db60e7438';
 
 /// ルームを監視する (消えたら null)
 
 final class CoopRoomFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<Room?>, String> {
+    with $FunctionalFamilyOverride<Stream<Room?>, RoomCode> {
   CoopRoomFamily._()
     : super(
         retry: null,
@@ -79,7 +79,7 @@ final class CoopRoomFamily extends $Family
 
   /// ルームを監視する (消えたら null)
 
-  CoopRoomProvider call(String roomCode) =>
+  CoopRoomProvider call(RoomCode roomCode) =>
       CoopRoomProvider._(argument: roomCode, from: this);
 
   @override
@@ -104,7 +104,7 @@ final class CoopMembersProvider
   /// メンバーを監視する (入室順)
   CoopMembersProvider._({
     required CoopMembersFamily super.from,
-    required String super.argument,
+    required RoomCode super.argument,
   }) : super(
          retry: null,
          name: r'coopMembersProvider',
@@ -131,7 +131,7 @@ final class CoopMembersProvider
 
   @override
   Stream<List<RoomMember>> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as RoomCode;
     return coopMembers(ref, argument);
   }
 
@@ -146,12 +146,12 @@ final class CoopMembersProvider
   }
 }
 
-String _$coopMembersHash() => r'2b88e4822d8188e13411f0d65472c2de659055de';
+String _$coopMembersHash() => r'0424cc6acf5fe84a577539e496de61e31e561eb8';
 
 /// メンバーを監視する (入室順)
 
 final class CoopMembersFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<List<RoomMember>>, String> {
+    with $FunctionalFamilyOverride<Stream<List<RoomMember>>, RoomCode> {
   CoopMembersFamily._()
     : super(
         retry: null,
@@ -163,7 +163,7 @@ final class CoopMembersFamily extends $Family
 
   /// メンバーを監視する (入室順)
 
-  CoopMembersProvider call(String roomCode) =>
+  CoopMembersProvider call(RoomCode roomCode) =>
       CoopMembersProvider._(argument: roomCode, from: this);
 
   @override
@@ -188,7 +188,7 @@ final class CoopClearsProvider
   /// クリアを監視する
   CoopClearsProvider._({
     required CoopClearsFamily super.from,
-    required String super.argument,
+    required RoomCode super.argument,
   }) : super(
          retry: null,
          name: r'coopClearsProvider',
@@ -215,7 +215,7 @@ final class CoopClearsProvider
 
   @override
   Stream<List<SpotClear>> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as RoomCode;
     return coopClears(ref, argument);
   }
 
@@ -230,12 +230,12 @@ final class CoopClearsProvider
   }
 }
 
-String _$coopClearsHash() => r'd1eb01eeb09b779fb88027818c400b88b1a44c52';
+String _$coopClearsHash() => r'4e20be921fbe676dd3163096194ba43ff7e8e428';
 
 /// クリアを監視する
 
 final class CoopClearsFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<List<SpotClear>>, String> {
+    with $FunctionalFamilyOverride<Stream<List<SpotClear>>, RoomCode> {
   CoopClearsFamily._()
     : super(
         retry: null,
@@ -247,7 +247,7 @@ final class CoopClearsFamily extends $Family
 
   /// クリアを監視する
 
-  CoopClearsProvider call(String roomCode) =>
+  CoopClearsProvider call(RoomCode roomCode) =>
       CoopClearsProvider._(argument: roomCode, from: this);
 
   @override

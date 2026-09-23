@@ -3,17 +3,17 @@ import 'dart:developer';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
-import 'package:snampo/features/history/di/history_provider.dart';
-import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
@@ -44,8 +44,8 @@ abstract class CoopMissionState with _$CoopMissionState {
     /// ミッションの用意に失敗した理由
     Object? prepareError,
 
-    /// サムネを共有中のスポット ID (「発見を共有中…」の表示用)
-    @Default(<String>{}) Set<String> sharingSpotIds,
+    /// サムネを共有中のスポット (「発見を共有中…」の表示用)
+    @Default(<SpotId>{}) Set<SpotId> sharingSpotIds,
 
     /// 最新のお知らせ
     CoopNotice? notice,
@@ -60,18 +60,18 @@ abstract class CoopMissionState with _$CoopMissionState {
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
 ///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///
+/// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 @Riverpod(keepAlive: true)
 class CoopMissionController extends _$CoopMissionController {
-  late RoomCode _code;
-  Set<String>? _knownClearedSpotIds;
+  Set<SpotId>? _knownClearedSpotIds;
   var _noticeId = 0;
   var _preparing = false;
   List<SpotClear> _latestClears = const [];
   Future<void> _clearSync = Future.value();
 
   @override
-  CoopMissionState build(String roomCode) {
-    _code = RoomCode.tryParse(roomCode)!;
+  CoopMissionState build(RoomCode roomCode) {
     ref
       ..listen(coopRoomProvider(roomCode), (_, next) {
         final room = next.value;
@@ -83,7 +83,7 @@ class CoopMissionController extends _$CoopMissionController {
         final clears = next.value;
         if (clears != null) {
           _latestClears = clears;
-          _clearSync = _clearSync.then((_) => _onClears(clears));
+          _syncClears();
         }
       }, fireImmediately: true)
       ..listen(coopMembersProvider(roomCode), (_, next) {
@@ -95,12 +95,44 @@ class CoopMissionController extends _$CoopMissionController {
     return const CoopMissionState();
   }
 
-  Future<String> _uid() => ref.read(coopAuthServiceProvider).ensureSignedIn();
+  Future<String> _uid() => ref.read(ensureCoopSignInUseCaseProvider)();
+
+  MissionProgressStoreNotifier get _progress =>
+      ref.read(missionProgressStoreProvider(MissionSessionKind.coop).notifier);
+
+  MissionEntity? get _mission =>
+      ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
+
+  Room? get _room => ref.read(coopRoomProvider(roomCode)).value;
+
+  List<ImageCoordinate> get _spots {
+    final mission = _mission;
+    return mission == null
+        ? const []
+        : [...mission.waypoints, mission.destination];
+  }
+
+  /// ルーム内での自分のニックネーム (メンバーを読めなければ既定の名前)
+  String _myNickname(String uid) {
+    final members =
+        ref.read(coopMembersProvider(roomCode)).value ?? const <RoomMember>[];
+    for (final member in members) {
+      if (member.uid == uid) {
+        return member.nickname;
+      }
+    }
+    return 'プレイヤー';
+  }
 
   void _notify(String message) {
     state = state.copyWith(
       notice: CoopNotice(id: ++_noticeId, message: message),
     );
+  }
+
+  /// `clears` の反映を順番に行う (前の反映が終わってから次を始める)
+  void _syncClears() {
+    _clearSync = _clearSync.then((_) => _onClears(_latestClears));
   }
 
   Future<void> _onRoom(Room room) async {
@@ -110,8 +142,19 @@ class CoopMissionController extends _$CoopMissionController {
     }
     if (room.status == RoomStatus.finished && state.isReady) {
       // 最後の同期で、サムネがそろっていれば履歴を確定する
-      _clearSync = _clearSync.then((_) => _onClears(_latestClears));
+      _syncClears();
     }
+  }
+
+  /// ミッションの用意に失敗したあと、もう一度用意する
+  Future<void> retryPrepare() async {
+    final room = _room;
+    if (room == null) {
+      ref.invalidate(coopRoomProvider(roomCode));
+      return;
+    }
+    state = state.copyWith(prepareError: null);
+    await _prepare(room);
   }
 
   /// バンドルを取得してミッションを端末に用意する (済んでいれば何もしない)
@@ -121,41 +164,30 @@ class CoopMissionController extends _$CoopMissionController {
     }
     _preparing = true;
     try {
-      final progressNotifier = ref.read(
-        missionProgressStoreProvider(MissionSessionKind.coop).notifier,
-      );
-      final persistedNotifier = ref.read(
-        persistedMissionProvider(MissionSessionKind.coop).notifier,
-      );
       final progress = await ref.read(
         missionProgressStoreProvider(MissionSessionKind.coop).future,
       );
-      var mission = await ref.read(
+      final saved = await ref.read(
         persistedMissionProvider(MissionSessionKind.coop).future,
       );
-      final alreadyPrepared =
-          mission != null && progress?.roomCode == room.code.value;
-      if (!alreadyPrepared) {
-        final missionRef =
-            room.missionRef ?? (throw StateError('missionRef がありません'));
-        mission = await ref
-            .read(coopStorageProvider)
-            .downloadMissionBundle(missionRef);
-        // 前のルームの進捗 (写真は履歴にコピー済み) を片付けてから始める
-        await progressNotifier.clearProgress();
-        persistedNotifier.setMission(mission);
-        progressNotifier.startProgress(
-          mission.waypoints.length + 1,
-          roomCode: room.code.value,
-        );
-      }
-      await _upsertHistory(
+      final alreadyPrepared = saved != null && progress?.roomCode == room.code;
+      final mission = await ref.read(prepareCoopMissionUseCaseProvider)(
         room,
-        mission,
-        await ref.read(roomRepositoryProvider).fetchMembers(room.code),
+        uid: await _uid(),
+        prepared: alreadyPrepared ? saved : null,
       );
+      if (!alreadyPrepared) {
+        // 前のルームの進捗 (写真は履歴にコピー済み) を片付けてから始める
+        await _progress.restartProgress(
+          mission.waypoints.length + 1,
+          roomCode: room.code,
+        );
+        ref
+            .read(persistedMissionProvider(MissionSessionKind.coop).notifier)
+            .setMission(mission);
+      }
       state = state.copyWith(isReady: true, prepareError: null);
-      _clearSync = _clearSync.then((_) => _onClears(_latestClears));
+      _syncClears();
     } on Object catch (e, st) {
       log('ミッションの用意に失敗した', error: e, stackTrace: st, name: 'CoopMission');
       state = state.copyWith(prepareError: e);
@@ -164,39 +196,19 @@ class CoopMissionController extends _$CoopMissionController {
     }
   }
 
-  Future<void> _upsertHistory(
-    Room room,
-    MissionEntity mission,
-    List<RoomMember> members,
-  ) async {
-    await ref
-        .read(historyRepositoryProvider)
-        .upsertCoopHistory(
-          mission: mission,
-          startedAt: room.startedAt ?? room.createdAt,
-          coop: CoopHistoryInfo(
-            roomCode: room.code.value,
-            syncState: CoopSyncState.inProgress,
-            isHost: room.isHost(await _uid()),
-            members: [
-              for (final m in members)
-                CoopHistoryMember(uid: m.uid, nickname: m.nickname),
-            ],
-            expiresAt: room.expiresAt,
-            deleteAt: room.deleteAt,
-          ),
-        );
-  }
-
   Future<void> _updateHistoryMembers(List<RoomMember> members) async {
-    final room = ref.read(coopRoomProvider(_code.value)).value;
-    final mission =
-        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
+    final room = _room;
+    final mission = _mission;
     if (room == null || mission == null) {
       return;
     }
     try {
-      await _upsertHistory(room, mission, members);
+      await ref.read(upsertCoopHistoryUseCaseProvider)(
+        room: room,
+        mission: mission,
+        members: members,
+        uid: await _uid(),
+      );
     } on Object catch (e) {
       log('メンバー一覧の更新に失敗した: $e', name: 'CoopMission');
     }
@@ -208,38 +220,38 @@ class CoopMissionController extends _$CoopMissionController {
       return;
     }
     try {
-      final hasAllThumbs = await ref.read(syncCoopClearsUseCaseProvider)(
-        _code.value,
+      final result = await ref.read(syncCoopClearsUseCaseProvider)(
+        roomCode,
         clears,
       );
-      await _applyHistoryToProgress();
+      _applyDiscoveriesToProgress(result.discoveries);
       await _announceNewDiscoveries(clears);
-      await _finishIfAllCleared(clears);
-      await _finalizeHistoryIfDone(hasAllThumbs: hasAllThumbs);
+      final room = _room;
+      if (room != null) {
+        await ref.read(finishIfAllClearedUseCaseProvider)(room, clears);
+        await ref.read(finalizeCoopHistoryUseCaseProvider)(
+          roomCode: roomCode,
+          room: room,
+          expiresAt: room.expiresAt,
+          hasAllThumbs: result.hasAllThumbs,
+        );
+      }
     } on Object catch (e, st) {
       log('クリアの反映に失敗した', error: e, stackTrace: st, name: 'CoopMission');
     }
   }
 
-  Future<void> _applyHistoryToProgress() async {
-    final history = await ref
-        .read(historyRepositoryProvider)
-        .getCoopHistory(_code.value);
-    if (history == null) {
-      return;
-    }
-    ref
-        .read(missionProgressStoreProvider(MissionSessionKind.coop).notifier)
-        .applyCoopDiscoveries({
-          for (final spot in history.spots)
-            if (spot.discovererUid != null)
-              spot.sortOrder: (
-                uid: spot.discovererUid!,
-                nickname: spot.discovererNickname ?? '',
-                clearedAt: spot.achievedAt ?? DateTime.now(),
-                thumbPath: spot.discovererThumbPath,
-              ),
-        });
+  void _applyDiscoveriesToProgress(Map<SpotId, CoopSpotDiscovery> found) {
+    _progress.applyCoopDiscoveries(roomCode, {
+      for (final (index, spot) in _spots.indexed)
+        if (found[spot.spotId] case final d?)
+          index: (
+            uid: d.uid,
+            nickname: d.nickname,
+            clearedAt: d.clearedAt,
+            thumbPath: d.localThumbPath,
+          ),
+    });
   }
 
   Future<void> _announceNewDiscoveries(List<SpotClear> clears) async {
@@ -250,12 +262,7 @@ class CoopMissionController extends _$CoopMissionController {
       return;
     }
     final uid = await _uid();
-    final mission =
-        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
-    if (mission == null) {
-      return;
-    }
-    final spots = [...mission.waypoints, mission.destination];
+    final spots = _spots;
     for (final clear in clears) {
       if (known.contains(clear.spotId) || clear.clearedBy == uid) {
         continue;
@@ -269,43 +276,6 @@ class CoopMissionController extends _$CoopMissionController {
     }
   }
 
-  Future<void> _finishIfAllCleared(List<SpotClear> clears) async {
-    final room = ref.read(coopRoomProvider(_code.value)).value;
-    if (room == null ||
-        room.status != RoomStatus.playing ||
-        !isAllCleared(room, clears) ||
-        !room.isPlayable(DateTime.now())) {
-      return;
-    }
-    // 書き込みが競合しても結果は同じなので、どの端末が書いてもよい
-    try {
-      await ref
-          .read(roomRepositoryProvider)
-          .finish(room.code, FinishReason.allCleared);
-    } on Object catch (e) {
-      log('finished への更新に失敗した: $e', name: 'CoopMission');
-    }
-  }
-
-  Future<void> _finalizeHistoryIfDone({required bool hasAllThumbs}) async {
-    final room = ref.read(coopRoomProvider(_code.value)).value;
-    if (room == null ||
-        !shouldFinalizeHistory(
-          room: room,
-          expiresAt: room.expiresAt,
-          now: DateTime.now(),
-          hasAllThumbs: hasAllThumbs,
-        )) {
-      return;
-    }
-    await ref
-        .read(historyRepositoryProvider)
-        .finalizeCoopHistory(
-          room.code.value,
-          completedAt: room.finishedAt ?? DateTime.now(),
-        );
-  }
-
   /// 撮影して採点したスポットをクリアにする
   ///
   /// 自分の写真と採点は、先に他の人が発見していても手元 (進捗と履歴) に残す。
@@ -313,91 +283,44 @@ class CoopMissionController extends _$CoopMissionController {
     required int spotIndex,
     required CheckpointProgress checkpoint,
   }) async {
-    final room = ref.read(coopRoomProvider(_code.value)).value;
-    final mission =
-        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
-    final photoPath = checkpoint.userPhotoPath;
-    if (room == null || mission == null || photoPath == null) {
+    final room = _room;
+    final spots = _spots;
+    if (room == null || spotIndex >= spots.length) {
       return;
     }
-    final spots = [...mission.waypoints, mission.destination];
-    final rawSpotId = spots[spotIndex].spotId;
-    if (rawSpotId == null) {
+    final spotId = spots[spotIndex].spotId;
+    if (spotId == null || checkpoint.userPhotoPath == null) {
       return;
     }
-    final histories = ref.read(historyRepositoryProvider);
-    try {
-      await histories.saveCoopUserPhoto(
-        roomCode: _code.value,
-        spotId: rawSpotId,
-        checkpoint: checkpoint,
-      );
-    } on Object catch (e) {
-      log('履歴への写真の保存に失敗した: $e', name: 'CoopMission');
+    void setSharing({required bool sharing}) {
+      final ids = {...state.sharingSpotIds};
+      sharing ? ids.add(spotId) : ids.remove(spotId);
+      state = state.copyWith(sharingSpotIds: ids);
     }
 
-    final uid = await _uid();
-    final nickname =
-        ref
-            .read(coopMembersProvider(_code.value))
-            .value
-            ?.firstWhere(
-              (m) => m.uid == uid,
-              orElse:
-                  () => RoomMember(
-                    uid: uid,
-                    nickname: 'プレイヤー',
-                    joinedAt: DateTime.now(),
-                  ),
-            )
-            .nickname;
     try {
+      final uid = await _uid();
       final result = await ref.read(clearSpotUseCaseProvider)(
         room: room,
         uid: uid,
-        nickname: nickname ?? 'プレイヤー',
-        spotId: SpotId.parse(rawSpotId),
-        photoPath: photoPath,
-        onSharing:
-            () =>
-                state = state.copyWith(
-                  sharingSpotIds: {...state.sharingSpotIds, rawSpotId},
-                ),
-        onSharingDone:
-            () =>
-                state = state.copyWith(
-                  sharingSpotIds: {...state.sharingSpotIds}..remove(rawSpotId),
-                ),
+        nickname: _myNickname(uid),
+        spotId: spotId,
+        checkpoint: checkpoint,
+        onSharing: () => setSharing(sharing: true),
+        onSharingDone: () => setSharing(sharing: false),
       );
-      switch (result) {
-        case ClearSpotCleared(:final localThumbPath):
-          await histories.applyCoopDiscoverer(
-            roomCode: _code.value,
-            spotId: rawSpotId,
-            discovererUid: uid,
-            discovererNickname: nickname ?? 'プレイヤー',
-            clearedAt: checkpoint.achievedAt ?? DateTime.now(),
-          );
-          await histories.saveCoopThumb(
-            roomCode: _code.value,
-            spotId: rawSpotId,
-            sourcePath: localThumbPath,
-          );
-        case ClearSpotAlreadyCleared(:final existing):
-          _notify('先に${existing.nickname}さんが発見しました');
+      if (result case ClearSpotAlreadyCleared(:final existing)) {
+        _notify('先に${existing.nickname}さんが発見しました');
       }
-      _clearSync = _clearSync.then((_) => _onClears(_latestClears));
+      _syncClears();
     } on Object catch (e, st) {
       log('クリアの共有に失敗した', error: e, stackTrace: st, name: 'CoopMission');
       _notify('発見を共有できませんでした。電波の良い場所で再度お試しください');
     } finally {
-      state = state.copyWith(
-        sharingSpotIds: {...state.sharingSpotIds}..remove(rawSpotId),
-      );
+      setSharing(sharing: false);
     }
   }
 
   /// ホストが途中終了する
-  Future<void> endByHost() =>
-      ref.read(roomRepositoryProvider).finish(_code, FinishReason.hostEnded);
+  Future<void> endByHost() => ref.read(endCoopMissionUseCaseProvider)(roomCode);
 }

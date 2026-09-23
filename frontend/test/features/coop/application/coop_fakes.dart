@@ -1,14 +1,14 @@
 import 'dart:async';
 
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
@@ -21,19 +21,22 @@ import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// メモリ上のルームリポジトリ
 class FakeRoomRepository implements IRoomRepository {
-  final rooms = <String, Room>{};
-  final members = <String, List<RoomMember>>{};
-  final clears = <String, Map<String, SpotClear>>{};
+  final rooms = <RoomCode, Room>{};
+  final members = <RoomCode, List<RoomMember>>{};
+  final clears = <RoomCode, Map<SpotId, SpotClear>>{};
   final thumbPathFills = <String>[];
-
-  /// null 以外なら createClear はこの Future を待つ (オフラインの送信待ちの再現)
-  Completer<void>? createClearGate;
 
   /// 次に createRoom で衝突させる回数
   int collisions = 0;
 
   /// true なら fetch 系をオフラインとして失敗させる
   bool offline = false;
+
+  /// null 以外なら createClear はこの Future を待つ (オフラインの送信待ちの再現)
+  Completer<void>? createClearGate;
+
+  /// 指定したユーザーだけが thumbPath を埋められる (Rules の再現)
+  String? currentUid;
 
   DateTime now = DateTime.utc(2026, 9, 23, 10);
 
@@ -43,10 +46,10 @@ class FakeRoomRepository implements IRoomRepository {
       collisions--;
       return false;
     }
-    if (rooms.containsKey(room.code.value)) {
+    if (rooms.containsKey(room.code)) {
       return false;
     }
-    rooms[room.code.value] = room;
+    rooms[room.code] = room;
     return true;
   }
 
@@ -55,11 +58,11 @@ class FakeRoomRepository implements IRoomRepository {
     if (offline) {
       throw StateError('offline');
     }
-    return rooms[code.value];
+    return rooms[code];
   }
 
   @override
-  Stream<Room?> watchRoom(RoomCode code) => Stream.value(rooms[code.value]);
+  Stream<Room?> watchRoom(RoomCode code) => Stream.value(rooms[code]);
 
   @override
   Future<void> joinRoom(
@@ -67,7 +70,7 @@ class FakeRoomRepository implements IRoomRepository {
     required String uid,
     required String nickname,
   }) async {
-    final list = members.putIfAbsent(room.code.value, () => []);
+    final list = members.putIfAbsent(room.code, () => []);
     final index = list.indexWhere((m) => m.uid == uid);
     if (index >= 0) {
       list[index] = list[index].copyWith(nickname: nickname, leftAt: null);
@@ -79,27 +82,31 @@ class FakeRoomRepository implements IRoomRepository {
 
   @override
   Future<void> leaveRoom(RoomCode code, String uid) async {
-    final list = members[code.value]!;
+    final list = members[code]!;
     final index = list.indexWhere((m) => m.uid == uid);
     list[index] = list[index].copyWith(leftAt: now);
   }
 
   @override
-  Future<List<RoomMember>> fetchMembers(RoomCode code) async =>
-      List.of(members[code.value] ?? const []);
+  Future<List<RoomMember>> fetchMembers(RoomCode code) async {
+    if (offline) {
+      throw StateError('offline');
+    }
+    return List.of(members[code] ?? const []);
+  }
 
   @override
   Stream<List<RoomMember>> watchMembers(RoomCode code) =>
-      Stream.value(members[code.value] ?? const []);
+      Stream.value(members[code] ?? const []);
 
   @override
   Future<void> updateSettings(RoomCode code, RoomSettings settings) async {
-    rooms[code.value] = rooms[code.value]!.copyWith(settings: settings);
+    rooms[code] = rooms[code]!.copyWith(settings: settings);
   }
 
   @override
   Future<void> markGenerating(RoomCode code) async {
-    rooms[code.value] = rooms[code.value]!.copyWith(
+    rooms[code] = rooms[code]!.copyWith(
       status: RoomStatus.generating,
       generationError: null,
     );
@@ -107,7 +114,7 @@ class FakeRoomRepository implements IRoomRepository {
 
   @override
   Future<void> markGenerationFailed(RoomCode code, String reason) async {
-    rooms[code.value] = rooms[code.value]!.copyWith(
+    rooms[code] = rooms[code]!.copyWith(
       status: RoomStatus.waiting,
       generationError: reason,
     );
@@ -117,9 +124,9 @@ class FakeRoomRepository implements IRoomRepository {
   Future<void> markPlaying(
     RoomCode code, {
     required String missionRef,
-    required List<String> spotIds,
+    required List<SpotId> spotIds,
   }) async {
-    rooms[code.value] = rooms[code.value]!.copyWith(
+    rooms[code] = rooms[code]!.copyWith(
       status: RoomStatus.playing,
       missionRef: missionRef,
       spotIds: spotIds,
@@ -129,7 +136,7 @@ class FakeRoomRepository implements IRoomRepository {
 
   @override
   Future<void> finish(RoomCode code, FinishReason reason) async {
-    rooms[code.value] = rooms[code.value]!.copyWith(
+    rooms[code] = rooms[code]!.copyWith(
       status: RoomStatus.finished,
       finishReason: reason,
       finishedAt: now,
@@ -139,18 +146,18 @@ class FakeRoomRepository implements IRoomRepository {
   @override
   Future<CreateClearResult> createClear(
     Room room, {
-    required String spotId,
+    required SpotId spotId,
     required String uid,
     required String nickname,
     required String? thumbPath,
   }) async {
     await createClearGate?.future;
-    final map = clears.putIfAbsent(room.code.value, () => {});
+    final map = clears.putIfAbsent(room.code, () => {});
     final existing = map[spotId];
     if (existing != null) {
       // 自分の送信待ちのクリアが先に届いていた場合は、作成できたものとして扱う
       return existing.clearedBy == uid
-          ? const ClearCreated()
+          ? ClearCreated(thumbPathSaved: existing.thumbPath != null)
           : ClearAlreadyExists(existing);
     }
     map[spotId] = SpotClear(
@@ -160,28 +167,25 @@ class FakeRoomRepository implements IRoomRepository {
       clearedAt: now,
       thumbPath: thumbPath,
     );
-    return const ClearCreated();
+    return ClearCreated(thumbPathSaved: thumbPath != null);
   }
-
-  /// 指定したユーザーだけが thumbPath を埋められる (Rules の再現)
-  String? currentUid;
 
   @override
   Future<void> fillThumbPath(
     RoomCode code,
-    String spotId,
+    SpotId spotId,
     String thumbPath,
   ) async {
     if (offline) {
       throw StateError('offline');
     }
-    final clear = clears[code.value]?[spotId];
+    final clear = clears[code]?[spotId];
     if (clear == null ||
         clear.thumbPath != null ||
         (currentUid != null && clear.clearedBy != currentUid)) {
       throw const CoopPermissionDeniedException();
     }
-    clears[code.value]![spotId] = clear.copyWith(thumbPath: thumbPath);
+    clears[code]![spotId] = clear.copyWith(thumbPath: thumbPath);
     thumbPathFills.add(thumbPath);
   }
 
@@ -190,12 +194,12 @@ class FakeRoomRepository implements IRoomRepository {
     if (offline) {
       throw StateError('offline');
     }
-    return (clears[code.value] ?? const {}).values.toList();
+    return (clears[code] ?? const {}).values.toList();
   }
 
   @override
   Stream<List<SpotClear>> watchClears(RoomCode code) =>
-      Stream.value((clears[code.value] ?? const {}).values.toList());
+      Stream.value((clears[code] ?? const {}).values.toList());
 }
 
 /// メモリ上の Storage
@@ -207,6 +211,7 @@ class FakeCoopStorage implements ICoopStorage {
   Completer<void>? thumbUploadGate;
   Exception? thumbUploadError;
   Exception? bundleUploadError;
+  Exception? bundleDownloadError;
   MissionEntity? uploadedMission;
 
   @override
@@ -222,8 +227,12 @@ class FakeCoopStorage implements ICoopStorage {
   }
 
   @override
-  Future<MissionEntity> downloadMissionBundle(String missionRef) async =>
-      uploadedMission!;
+  Future<MissionEntity> downloadMissionBundle(String missionRef) async {
+    if (bundleDownloadError != null) {
+      throw bundleDownloadError!;
+    }
+    return uploadedMission!;
+  }
 
   @override
   Future<String> uploadThumb({
@@ -255,7 +264,7 @@ class FakeThumbnailService implements IThumbnailService {
 }
 
 /// メモリ上の再送キュー
-class InMemoryPendingClearQueueStore implements IPendingClearQueueStore {
+class InMemoryPendingClearRepository implements IPendingClearRepository {
   PendingClearQueue queue = const PendingClearQueue();
 
   @override
@@ -267,14 +276,17 @@ class InMemoryPendingClearQueueStore implements IPendingClearQueueStore {
 
 /// 協力プレイの履歴だけを扱うメモリ上の履歴リポジトリ
 class FakeHistoryRepository implements IHistoryRepository {
-  final histories = <String, MissionHistory>{};
+  final histories = <RoomCode, MissionHistory>{};
 
-  MissionHistory _update(
-    String roomCode,
-    String spotId,
+  MissionHistory? _update(
+    RoomCode roomCode,
+    SpotId spotId,
     MissionHistorySpot Function(MissionHistorySpot spot) update,
   ) {
-    final history = histories[roomCode]!;
+    final history = histories[roomCode];
+    if (history == null) {
+      return null;
+    }
     return histories[roomCode] = history.copyWith(
       spots: [
         for (final spot in history.spots)
@@ -298,7 +310,7 @@ class FakeHistoryRepository implements IHistoryRepository {
     }
     final spots = [...mission.waypoints, mission.destination];
     histories[coop.roomCode] = MissionHistory(
-      id: 'history-${coop.roomCode}',
+      id: 'history-${coop.roomCode.value}',
       completedAt: startedAt,
       startedAt: startedAt,
       departure: mission.departure,
@@ -320,13 +332,13 @@ class FakeHistoryRepository implements IHistoryRepository {
   }
 
   @override
-  Future<MissionHistory?> getCoopHistory(String roomCode) async =>
+  Future<MissionHistory?> getCoopHistory(RoomCode roomCode) async =>
       histories[roomCode];
 
   @override
   Future<void> applyCoopDiscoverer({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required String discovererUid,
     required String discovererNickname,
     required DateTime clearedAt,
@@ -349,8 +361,8 @@ class FakeHistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> saveCoopThumb({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required String sourcePath,
   }) async {
     _update(
@@ -362,8 +374,8 @@ class FakeHistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> saveCoopUserPhoto({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required CheckpointProgress checkpoint,
   }) async {
     _update(
@@ -375,7 +387,7 @@ class FakeHistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> finalizeCoopHistory(
-    String roomCode, {
+    RoomCode roomCode, {
     required DateTime completedAt,
   }) async {
     final history = histories[roomCode]!;

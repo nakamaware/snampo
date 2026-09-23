@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/data/mapper/mission_bundle_mapper.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 void main() {
   final code = RoomCode.tryParse('ABCD23')!;
@@ -22,13 +23,13 @@ void main() {
         googleMapsUrl: 'https://maps.example/1',
         streetViewLatitude: 35.11,
         streetViewLongitude: 139.11,
-        spotId: 'ChIJ_abc',
+        spotId: SpotId.parse('ChIJ_abc'),
       ),
     ],
     destination: ImageCoordinate(
       coordinate: Coordinate(latitude: 35.2, longitude: 139.2),
       imageBase64: base64Encode([4, 5, 6]),
-      spotId: 'geo:35.200000,139.200000',
+      spotId: SpotId.parse('geo:35.200000,139.200000'),
     ),
     overviewPolyline: 'polyline',
     radius: Radius(meters: 1000),

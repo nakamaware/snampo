@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
+import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// 発見を共有できなかった理由
 enum PendingClearFailureReason {
@@ -44,19 +44,22 @@ class RetryPendingClearsUseCase {
   RetryPendingClearsUseCase({
     required IRoomRepository rooms,
     required ICoopStorage storage,
-    required IPendingClearQueueStore queue,
+    required IPendingClearRepository queue,
+    required CompleteClearTaskUseCase completeClearTask,
     required Future<String?> Function() uid,
     DateTime Function()? now,
     this.createClearTimeout = const Duration(seconds: 30),
   }) : _rooms = rooms,
        _storage = storage,
        _queue = queue,
+       _completeClearTask = completeClearTask,
        _uid = uid,
        _now = now ?? DateTime.now;
 
   final IRoomRepository _rooms;
   final ICoopStorage _storage;
-  final IPendingClearQueueStore _queue;
+  final IPendingClearRepository _queue;
+  final CompleteClearTaskUseCase _completeClearTask;
 
   /// サインイン済みならその uid (未サインインなら null。ここではサインインを試さない)
   final Future<String?> Function() _uid;
@@ -83,11 +86,7 @@ class RetryPendingClearsUseCase {
       return (failures: failures);
     }
     for (final task in queue.tasks) {
-      final code = RoomCode.tryParse(task.roomCode);
-      if (code == null) {
-        await _remove(task);
-        continue;
-      }
+      final code = task.roomCode;
       try {
         final failure =
             task.clearCreated
@@ -115,7 +114,7 @@ class RetryPendingClearsUseCase {
     try {
       return await _storage.uploadThumb(
         code: code,
-        spotId: SpotId.parse(task.spotId),
+        spotId: task.spotId,
         uid: uid,
         localPath: task.localThumbPath,
       );
@@ -159,10 +158,7 @@ class RetryPendingClearsUseCase {
     }
     switch (result) {
       case ClearCreated():
-        final queue = await _queue.load();
-        await _queue.save(
-          thumbPath == null ? queue.markClearCreated(task) : queue.remove(task),
-        );
+        await _completeClearTask(task, result: result, thumbPath: thumbPath);
         return null;
       case ClearAlreadyExists(:final existing):
         await _remove(task);

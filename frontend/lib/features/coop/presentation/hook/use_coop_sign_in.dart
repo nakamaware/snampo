@@ -10,7 +10,7 @@ typedef CoopSignIn = ({AsyncSnapshot<String> uid, void Function() retry});
 CoopSignIn useCoopSignIn(WidgetRef ref) {
   final attempt = useState(0);
   final future = useMemoized(
-    () => ref.read(coopAuthServiceProvider).ensureSignedIn(),
+    () => ref.read(ensureCoopSignInUseCaseProvider)(),
     [attempt.value],
   );
   final snapshot = useFuture(future);

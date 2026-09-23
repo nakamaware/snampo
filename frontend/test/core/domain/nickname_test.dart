@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
+import 'package:snampo/core/domain/nickname.dart';
 
 void main() {
   group('Nickname', () {

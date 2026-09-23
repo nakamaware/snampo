@@ -108,7 +108,7 @@ class MissionPage extends HookConsumerWidget {
         // 再開時は missionProgressStore が SQLite から復元済みなので、
         // startProgress するとチェックポイントが空に上書きされ写真が消える。
         if (_params is! MissionStoreParamsResume) {
-          // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
+          // 新規開始前に、捨てる進捗の mission_photos を削除してから始める
           // （startProgress だけだとパス参照が失われオーファンが残る）
           final progressNotifier = ref.read(
             missionProgressStoreProvider(MissionSessionKind.solo).notifier,
@@ -118,14 +118,7 @@ class MissionPage extends HookConsumerWidget {
           );
           final checkpointCount = mission.waypoints.length + 1;
           Future(() async {
-            // build() の完了を待ってから state を書き換える。
-            // build() と startProgress が並行すると、build() の返り値 (null) が
-            // Riverpod によって遅延適用され startProgress の entity を上書きするため。
-            await ref.read(
-              missionProgressStoreProvider(MissionSessionKind.solo).future,
-            );
-            await progressNotifier.clearProgress();
-            progressNotifier.startProgress(checkpointCount);
+            await progressNotifier.restartProgress(checkpointCount);
             persistedNotifier.setMission(mission);
           });
         }

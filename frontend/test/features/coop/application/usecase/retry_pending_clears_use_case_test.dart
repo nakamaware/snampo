@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -13,7 +14,7 @@ void main() {
   final now = fx.createdAt.add(const Duration(hours: 1));
   late FakeRoomRepository rooms;
   late FakeCoopStorage storage;
-  late InMemoryPendingClearQueueStore queue;
+  late InMemoryPendingClearRepository queue;
   late RetryPendingClearsUseCase useCase;
 
   PendingClearTask task(
@@ -21,8 +22,8 @@ void main() {
     Duration left = const Duration(hours: 1),
     bool clearCreated = false,
   }) => PendingClearTask(
-    roomCode: 'ABCD23',
-    spotId: spotId,
+    roomCode: fx.code,
+    spotId: fx.spot(spotId),
     nickname: 'me',
     localThumbPath: '/thumbs/$spotId.jpg',
     expiresAt: now.add(left),
@@ -30,8 +31,8 @@ void main() {
   );
 
   void seedClear(String spotId, String uid) {
-    rooms.clears.putIfAbsent('ABCD23', () => {})[spotId] = SpotClear(
-      spotId: spotId,
+    rooms.clears.putIfAbsent(fx.code, () => {})[fx.spot(spotId)] = SpotClear(
+      spotId: fx.spot(spotId),
       clearedBy: uid,
       nickname: uid,
       clearedAt: now,
@@ -43,6 +44,7 @@ void main() {
         rooms: rooms,
         storage: storage,
         queue: queue,
+        completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
         uid: uid ?? () async => 'me',
         now: () => now,
         createClearTimeout: const Duration(milliseconds: 50),
@@ -50,9 +52,9 @@ void main() {
 
   setUp(() {
     rooms = FakeRoomRepository()..currentUid = 'me';
-    rooms.rooms['ABCD23'] = fx.room();
+    rooms.rooms[fx.code] = fx.room();
     storage = FakeCoopStorage();
-    queue = InMemoryPendingClearQueueStore();
+    queue = InMemoryPendingClearRepository();
     useCase = build();
   });
 
@@ -62,9 +64,24 @@ void main() {
 
       final result = await useCase();
 
-      final created = rooms.clears['ABCD23']!['a']!;
+      final created = rooms.clears[fx.code]![fx.spot('a')]!;
       expect(created.clearedBy, 'me');
       expect(created.thumbPath, 'rooms/ABCD23/thumbs/a/me.jpg');
+      expect(queue.queue.tasks, isEmpty);
+      expect(result.failures, isEmpty);
+    });
+
+    test('送信待ちだった自分のクリアが先に届いていても、thumbPath を埋めて取り除く', () async {
+      // キルされる前の自分の書き込みが、サムネなしでサーバに届いていた
+      seedClear('a', 'me');
+      queue.queue = PendingClearQueue(tasks: [task('a')]);
+
+      final result = await useCase();
+
+      expect(
+        rooms.clears[fx.code]![fx.spot('a')]!.thumbPath,
+        'rooms/ABCD23/thumbs/a/me.jpg',
+      );
       expect(queue.queue.tasks, isEmpty);
       expect(result.failures, isEmpty);
     });
@@ -75,7 +92,7 @@ void main() {
 
       await useCase();
 
-      expect(rooms.clears['ABCD23']!['a']!.thumbPath, isNull);
+      expect(rooms.clears[fx.code]![fx.spot('a')]!.thumbPath, isNull);
       expect(queue.queue.tasks.single.clearCreated, isTrue);
     });
 
@@ -92,7 +109,7 @@ void main() {
     });
 
     test('ルームが終わっていたら、共有できなかったとして返して破棄する', () async {
-      rooms.rooms['ABCD23'] = fx.room(status: RoomStatus.finished);
+      rooms.rooms[fx.code] = fx.room(status: RoomStatus.finished);
       queue.queue = PendingClearQueue(tasks: [task('a')]);
 
       final result = await useCase();
@@ -122,7 +139,7 @@ void main() {
       await useCase();
 
       expect(
-        rooms.clears['ABCD23']!['a']!.thumbPath,
+        rooms.clears[fx.code]![fx.spot('a')]!.thumbPath,
         'rooms/ABCD23/thumbs/a/me.jpg',
       );
       expect(queue.queue.tasks, isEmpty);

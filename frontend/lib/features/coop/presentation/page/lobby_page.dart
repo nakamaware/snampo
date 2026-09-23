@@ -1,28 +1,23 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
-import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
+import 'package:snampo/features/mission/presentation/component/mission_settings_inputs.dart';
 
 /// ロビー: メンバーを集め、ホストが設定を決めて開始する画面
 ///
@@ -61,6 +56,9 @@ class _Lobby extends HookConsumerWidget {
     final members = ref.watch(coopMembersProvider(code)).value ?? const [];
     final isReady = ref.watch(
       coopMissionControllerProvider(code).select((s) => s.isReady),
+    );
+    final prepareError = ref.watch(
+      coopMissionControllerProvider(code).select((s) => s.prepareError),
     );
     final room = roomAsync.value;
     // ホストのこの端末で生成中か。generating のままホストがキルされた場合は、再度開始できる
@@ -131,12 +129,30 @@ class _Lobby extends HookConsumerWidget {
               if (room.generationError != null &&
                   room.status == RoomStatus.waiting)
                 _GenerationErrorCard(isHost: isHost, room: room),
+              if (isStarted && prepareError != null)
+                _PrepareErrorCard(
+                  onRetry:
+                      () =>
+                          ref
+                              .read(
+                                coopMissionControllerProvider(code).notifier,
+                              )
+                              .retryPrepare(),
+                ),
               if (isHost && !isStarted)
                 FilledButton(
                   onPressed:
                       isStartingHere.value
                           ? null
                           : () async {
+                            // generating のままなら、前回の生成が途中で止まった
+                            // (ホストのアプリが落ちたなど) 可能性がある。二重に生成しない
+                            // よう、やり直すかを確認する
+                            if (isGenerating &&
+                                !await _confirmRestart(context)) {
+                              return;
+                            }
+                            if (!context.mounted) return;
                             isStartingHere.value = true;
                             await _start(context, ref, room);
                             if (context.mounted) isStartingHere.value = false;
@@ -151,13 +167,38 @@ class _Lobby extends HookConsumerWidget {
             ],
           ),
           if ((isGenerating && (!isHost || isStartingHere.value)) ||
-              (isStarted && !isReady))
+              (isStarted && !isReady && prepareError == null))
             _GeneratingOverlay(
               message: isGenerating ? 'ミッション生成中' : 'ミッションを受け取っています',
             ),
         ],
       ),
     );
+  }
+
+  Future<bool> _confirmRestart(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('ミッションの生成をやり直しますか?'),
+            content: const Text(
+              '前回の生成が途中で止まった可能性があります。'
+              '生成中の場合は、しばらく待ってからやり直してください。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('キャンセル'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('やり直す'),
+              ),
+            ],
+          ),
+    );
+    return confirmed ?? false;
   }
 
   Future<void> _start(BuildContext context, WidgetRef ref, Room room) async {
@@ -192,7 +233,7 @@ class _Lobby extends HookConsumerWidget {
           ),
     );
     if (confirmed != true) return;
-    await leaveCoopRoom(ref, session.roomCode, session.uid);
+    await ref.read(coopSessionStoreProvider.notifier).leave();
     if (context.mounted) context.go('/');
   }
 }
@@ -312,6 +353,8 @@ class _MembersCard extends StatelessWidget {
 }
 
 /// ミッションの設定。ホストは編集でき、メンバーはリアルタイムで閲覧のみ
+///
+/// 入力部品は Setup 画面と同じもの ([RadiusSlider] / [DestinationMap]) を使う。
 class _SettingsCard extends HookConsumerWidget {
   const _SettingsCard({required this.room, required this.editable});
 
@@ -324,9 +367,7 @@ class _SettingsCard extends HookConsumerWidget {
     RoomSettings settings,
   ) async {
     try {
-      await ref
-          .read(roomRepositoryProvider)
-          .updateSettings(room.code, settings);
+      await ref.read(updateRoomSettingsUseCaseProvider)(room.code, settings);
     } on Object {
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -341,11 +382,11 @@ class _SettingsCard extends HookConsumerWidget {
     final theme = Theme.of(context);
     final settings = room.settings;
     // スライダー操作中の値 (離したときに保存する)
-    final draftMeters = useState<int?>(null);
-    final meters = switch (settings) {
-      RoomSettingsRandom(:final radius) => draftMeters.value ?? radius.meters,
-      RoomSettingsDestination() => null,
-    };
+    final draftRadius = useState<Radius?>(null);
+    // 目的地指定に切り替えたが、まだ目的地を選んでいない
+    final choosingDestination = useState(false);
+    final isDestination =
+        settings is RoomSettingsDestination || choosingDestination.value;
 
     return Card(
       child: Padding(
@@ -360,76 +401,83 @@ class _SettingsCard extends HookConsumerWidget {
                 ButtonSegment(value: false, label: Text('ランダム')),
                 ButtonSegment(value: true, label: Text('目的地指定')),
               ],
-              selected: {settings is RoomSettingsDestination},
+              selected: {isDestination},
               onSelectionChanged:
                   !editable
                       ? null
                       : (selection) async {
                         final toDestination = selection.first;
-                        if (toDestination ==
+                        choosingDestination.value =
+                            toDestination &&
+                            settings is! RoomSettingsDestination;
+                        if (!toDestination &&
                             settings is RoomSettingsDestination) {
-                          return;
-                        }
-                        if (!toDestination) {
                           await _update(
                             context,
                             ref,
                             RoomSettings.random(radius: Radius(meters: 1000)),
                           );
                         }
-                        // 目的地指定は地図をタップしてピンを置いたときに保存する
-                        else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('地図をタップして目的地を選んでください'),
-                            ),
-                          );
-                        }
                       },
             ),
             const SizedBox(height: 16),
-            if (meters != null) ...[
-              Text(
-                '${(meters / 1000).toStringAsFixed(1)} km',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium,
-              ),
-              Slider(
-                value: meters.toDouble(),
-                min: 500,
-                max: 10000,
-                divisions: 19,
-                onChanged:
-                    editable ? (v) => draftMeters.value = v.toInt() : null,
-                onChangeEnd:
-                    editable
-                        ? (v) async {
-                          await _update(
-                            context,
-                            ref,
-                            RoomSettings.random(
-                              radius: Radius(meters: v.toInt()),
-                            ),
-                          );
-                          draftMeters.value = null;
-                        }
-                        : null,
-              ),
-            ],
-            if (meters == null || editable)
-              _DestinationMap(
-                destination: switch (settings) {
-                  RoomSettingsDestination(:final destination) => destination,
-                  RoomSettingsRandom() => null,
-                },
-                editable: editable,
-                onPick:
-                    (coordinate) => _update(
-                      context,
-                      ref,
-                      RoomSettings.destination(destination: coordinate),
+            switch (settings) {
+              RoomSettingsRandom(:final radius) when !isDestination =>
+                RadiusSlider(
+                  radius: draftRadius.value ?? radius,
+                  textStyle: theme.textTheme.headlineMedium,
+                  onChanged:
+                      editable ? (radius) => draftRadius.value = radius : null,
+                  onChangeEnd:
+                      editable
+                          ? (radius) async {
+                            await _update(
+                              context,
+                              ref,
+                              RoomSettings.random(radius: radius),
+                            );
+                            draftRadius.value = null;
+                          }
+                          : null,
+                ),
+              _ => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (settings is! RoomSettingsDestination)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: Text('地図をタップして目的地を選んでください'),
                     ),
+                  SizedBox(
+                    height: 240,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: DestinationMap(
+                        destination: switch (settings) {
+                          RoomSettingsDestination(:final destination) =>
+                            destination,
+                          RoomSettingsRandom() => null,
+                        },
+                        insideScrollable: true,
+                        onPick:
+                            editable
+                                ? (coordinate) async {
+                                  await _update(
+                                    context,
+                                    ref,
+                                    RoomSettings.destination(
+                                      destination: coordinate,
+                                    ),
+                                  );
+                                  choosingDestination.value = false;
+                                }
+                                : null,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            },
           ],
         ),
       ),
@@ -437,65 +485,30 @@ class _SettingsCard extends HookConsumerWidget {
   }
 }
 
-/// 目的地指定モードの地図 (ピンを表示する。ホストはタップで目的地を選べる)
-class _DestinationMap extends HookConsumerWidget {
-  const _DestinationMap({
-    required this.destination,
-    required this.editable,
-    required this.onPick,
-  });
+/// 開始後にミッションを受け取れなかったときの表示 (再試行できる)
+class _PrepareErrorCard extends StatelessWidget {
+  const _PrepareErrorCard({required this.onRetry});
 
-  static const _defaultPosition = LatLng(35.6812, 139.7671);
-
-  final Coordinate? destination;
-  final bool editable;
-  final ValueChanged<Coordinate> onPick;
+  final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = useCurrentPosition(ref);
-    final pin = destination;
-    final initial =
-        pin != null
-            ? LatLng(pin.latitude, pin.longitude)
-            : current.whenOrNull(
-                  data: (c) => LatLng(c.latitude, c.longitude),
-                ) ??
-                _defaultPosition;
-    if (current.isLoading && pin == null) {
-      return const SizedBox(
-        height: 240,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    return SizedBox(
-      height: 240,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(target: initial, zoom: 14),
-          myLocationEnabled: true,
-          tiltGesturesEnabled: false,
-          // ListView の中でも地図を操作できるようにする
-          gestureRecognizers: const {
-            Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
-          },
-          onTap:
-              editable
-                  ? (latLng) => onPick(
-                    Coordinate(
-                      latitude: latLng.latitude,
-                      longitude: latLng.longitude,
-                    ),
-                  )
-                  : null,
-          markers: {
-            if (pin != null)
-              Marker(
-                markerId: const MarkerId('destination'),
-                position: LatLng(pin.latitude, pin.longitude),
-              ),
-          },
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.errorContainer,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'ミッションを受け取れませんでした。電波の良い場所で再試行してください。',
+              style: TextStyle(color: theme.colorScheme.onErrorContainer),
+            ),
+            const SizedBox(height: 8),
+            FilledButton(onPressed: onRetry, child: const Text('再試行')),
+          ],
         ),
       ),
     );
@@ -602,7 +615,7 @@ class _ClosedRoomScaffold extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                ref.read(coopSessionStoreProvider.notifier).clear();
+                ref.read(coopSessionStoreProvider.notifier).close();
                 context.go('/');
               },
               child: const Text('ホームへ戻る'),

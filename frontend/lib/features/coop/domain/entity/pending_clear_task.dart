@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 part 'pending_clear_task.freezed.dart';
 part 'pending_clear_task.g.dart';
@@ -8,8 +10,8 @@ part 'pending_clear_task.g.dart';
 abstract class PendingClearTask with _$PendingClearTask {
   /// [PendingClearTask] を作成する
   const factory PendingClearTask({
-    required String roomCode,
-    required String spotId,
+    @RoomCodeConverter() required RoomCode roomCode,
+    @SpotIdConverter() required SpotId spotId,
 
     /// 発見時点の自分のニックネーム (クリアを作り直すときに使う)
     required String nickname,
@@ -58,6 +60,14 @@ abstract class PendingClearQueue with _$PendingClearQueue {
         _sameTarget(t, task) ? t.copyWith(clearCreated: true) : t,
     ],
   );
+
+  /// クリアを作成できたタスクを片付ける
+  ///
+  /// thumbPath まで入っていれば取り除き、まだならサムネの再送だけを残す。
+  PendingClearQueue settle(
+    PendingClearTask task, {
+    required bool thumbPathSaved,
+  }) => thumbPathSaved ? remove(task) : markClearCreated(task);
 
   /// 遊べる期限を過ぎたタスクを破棄する
   PendingClearQueue pruneExpired(DateTime now) =>

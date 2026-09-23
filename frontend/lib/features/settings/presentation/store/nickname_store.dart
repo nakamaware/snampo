@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 
 part 'nickname_store.g.dart';

@@ -98,6 +98,12 @@ class ResultPage extends ConsumerWidget {
                               statusLabel: extension?.spotStatusLabel(
                                 checkpoint,
                               ),
+                              thumbnailPath:
+                                  extension == null
+                                      ? checkpoint?.userPhotoPath
+                                      : extension!.spotThumbnailPath(
+                                        checkpoint,
+                                      ),
                               onTap:
                                   !hasResultPhoto
                                       ? null
@@ -183,6 +189,7 @@ class _ResultCard extends StatelessWidget {
     required this.checkpoint,
     required this.isSelectedDestinationGoal,
     required this.onTap,
+    required this.thumbnailPath,
     this.statusLabel,
   });
 
@@ -194,6 +201,9 @@ class _ResultCard extends StatelessWidget {
 
   /// モード固有の状態 (協力プレイの発見者など)
   final String? statusLabel;
+
+  /// カードに表示する写真のパス (なければ null)
+  final String? thumbnailPath;
 
   @override
   Widget build(BuildContext context) {
@@ -219,8 +229,7 @@ class _ResultCard extends StatelessWidget {
                 height: 88,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: switch (checkpoint?.userPhotoPath ??
-                      checkpoint?.discovererThumbPath) {
+                  child: switch (thumbnailPath) {
                     null => const ColoredBox(
                       color: Colors.black12,
                       child: SizedBox.expand(),
@@ -293,6 +302,10 @@ abstract class ResultPageExtension {
 
   /// スポットのカードに表示する状態 (なければ null)
   String? spotStatusLabel(CheckpointProgress? checkpoint) => null;
+
+  /// スポットのカードに表示する写真のパス (既定は自分の写真)
+  String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
+      checkpoint?.userPhotoPath;
 
   /// 「ホームへ戻る」で、その種別の枠を片付けたあとに呼ぶ
   Future<void> onFinish(WidgetRef ref) async {}

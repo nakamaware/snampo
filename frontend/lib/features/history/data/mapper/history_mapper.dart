@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
@@ -12,6 +13,7 @@ import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeRandom = 'random';
@@ -119,7 +121,7 @@ MissionHistory missionHistoryFromDriftRows(
                 lng: s.guessLng,
               ),
               capturedHeading: s.capturedHeading,
-              spotId: s.spotId,
+              spotId: s.spotId == null ? null : SpotId.parse(s.spotId!),
               discovererUid: s.discovererUid,
               discovererNickname: s.discovererNickname,
               discovererThumbPath: s.discovererThumbPath,
@@ -143,10 +145,11 @@ MissionHistory missionHistoryFromDriftRows(
 }
 
 CoopHistoryInfo? _coopInfoFromRow(MissionHistoryRow h) {
-  final roomCode = h.roomCode;
-  if (h.mode != historyModeCoop || roomCode == null) {
+  final rawRoomCode = h.roomCode;
+  if (h.mode != historyModeCoop || rawRoomCode == null) {
     return null;
   }
+  final roomCode = const RoomCodeConverter().fromJson(rawRoomCode);
   final expiresAt = h.coopExpiresAt;
   final deleteAt = h.coopDeleteAt;
   if (expiresAt == null || deleteAt == null) {
@@ -245,7 +248,7 @@ class HistoryFromMissionMapper {
       destinationLng: Value(
         isRandom ? null : mission.destination.coordinate.longitude,
       ),
-      roomCode: Value(coop.roomCode),
+      roomCode: Value(coop.roomCode.value),
       coopSyncState: Value(coop.syncState.name),
       coopIsHost: Value(coop.isHost ? 1 : 0),
       coopMembers: Value(coopMembersToDb(coop.members)),
@@ -285,7 +288,7 @@ class HistoryFromMissionMapper {
       guessLat: Value(cp?.guessPosition?.latitude),
       guessLng: Value(cp?.guessPosition?.longitude),
       capturedHeading: Value(cp?.capturedHeading),
-      spotId: Value(spot.spotId),
+      spotId: Value(spot.spotId?.value),
       isCleared: Value(isCleared ? 1 : 0),
     );
   }

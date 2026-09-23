@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 
@@ -36,7 +36,7 @@ class JoinRoomPage extends HookConsumerWidget {
       if (!await confirmLeaveCurrentRoom(context, ref, nextCode: code)) return;
       isJoining.value = true;
       try {
-        final uid = await ref.read(coopAuthServiceProvider).ensureSignedIn();
+        final uid = await ref.read(ensureCoopSignInUseCaseProvider)();
         final result = await ref.read(joinRoomUseCaseProvider)(
           code: code,
           uid: uid,
@@ -46,7 +46,7 @@ class JoinRoomPage extends HookConsumerWidget {
           case JoinRoomJoined():
             ref
                 .read(coopSessionStoreProvider.notifier)
-                .enter(CoopSession(roomCode: code.value, uid: uid));
+                .enter(CoopSession(roomCode: code, uid: uid));
             if (context.mounted) context.go('/coop/lobby');
           case JoinRoomFailed(error: final e):
             error.value = _errorMessage(e);

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
@@ -45,12 +45,12 @@ class MissionBundleMapper {
     final spots = [
       for (final spot in [...mission.waypoints, mission.destination])
         () {
-          final rawSpotId =
+          final spotId =
               spot.spotId ?? (throw StateError('スポット ID がないスポットがあります'));
-          final path = imagePath(code, SpotId.parse(rawSpotId));
+          final path = imagePath(code, spotId);
           images[path] = base64Decode(spot.imageBase64);
           return {
-            'spotId': rawSpotId,
+            'spotId': spotId.value,
             'latitude': spot.coordinate.latitude,
             'longitude': spot.coordinate.longitude,
             'referenceHeading': spot.referenceHeading,
@@ -110,7 +110,7 @@ class MissionBundleMapper {
                 (spot['streetViewLatitude'] as num?)?.toDouble(),
             streetViewLongitude:
                 (spot['streetViewLongitude'] as num?)?.toDouble(),
-            spotId: spot['spotId'] as String,
+            spotId: SpotId.parse(spot['spotId'] as String),
           );
         }(),
     ];

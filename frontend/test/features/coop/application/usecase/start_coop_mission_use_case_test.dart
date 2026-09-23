@@ -11,7 +11,7 @@ import '../coop_fakes.dart';
 ImageCoordinate _spot(String? spotId) => ImageCoordinate(
   coordinate: Coordinate(latitude: 35, longitude: 139),
   imageBase64: '',
-  spotId: spotId,
+  spotId: spotId == null ? null : fx.spot(spotId),
 );
 
 void main() {
@@ -30,7 +30,7 @@ void main() {
     rooms = FakeRoomRepository();
     storage = FakeCoopStorage();
     room = fx.room(status: RoomStatus.waiting, spotIds: const []);
-    rooms.rooms[room.code.value] = room;
+    rooms.rooms[room.code] = room;
   });
 
   StartCoopMissionUseCase useCase(
@@ -45,15 +45,15 @@ void main() {
     final statuses = <RoomStatus>[];
 
     await useCase((settings) async {
-      statuses.add(rooms.rooms[room.code.value]!.status);
+      statuses.add(rooms.rooms[room.code]!.status);
       return mission;
     })(room);
 
     expect(statuses, [RoomStatus.generating]);
-    final updated = rooms.rooms[room.code.value]!;
+    final updated = rooms.rooms[room.code]!;
     expect(updated.status, RoomStatus.playing);
     expect(updated.missionRef, 'rooms/ABCD23/mission/bundle.json');
-    expect(updated.spotIds, ['a', 'b', 'c']);
+    expect(updated.spotIds, [fx.spot('a'), fx.spot('b'), fx.spot('c')]);
     expect(storage.uploadedMission, mission);
   });
 
@@ -63,7 +63,7 @@ void main() {
       throwsException,
     );
 
-    final updated = rooms.rooms[room.code.value]!;
+    final updated = rooms.rooms[room.code]!;
     expect(updated.status, RoomStatus.waiting);
     expect(updated.generationError, isNotNull);
   });
@@ -73,7 +73,7 @@ void main() {
 
     await expectLater(useCase((_) async => mission)(room), throwsException);
 
-    expect(rooms.rooms[room.code.value]!.status, RoomStatus.waiting);
+    expect(rooms.rooms[room.code]!.status, RoomStatus.waiting);
   });
 
   test('スポット ID がないミッションは協力プレイに使えない', () async {
@@ -81,6 +81,6 @@ void main() {
 
     await expectLater(useCase((_) async => legacy)(room), throwsStateError);
 
-    expect(rooms.rooms[room.code.value]!.status, RoomStatus.waiting);
+    expect(rooms.rooms[room.code]!.status, RoomStatus.waiting);
   });
 }

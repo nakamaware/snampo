@@ -4,18 +4,30 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/core/di/firebase_provider.dart';
 import 'package:snampo/features/coop/application/interface/coop_auth_service.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/create_room_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/end_coop_mission_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/ensure_coop_sign_in_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/finalize_coop_history_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/get_coop_signed_in_uid_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/leave_room_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/sync_coop_history_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/update_room_settings_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/upsert_coop_history_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/watch_room_use_case.dart';
 import 'package:snampo/features/coop/data/coop_auth_service.dart';
 import 'package:snampo/features/coop/data/firebase_coop_storage.dart';
-import 'package:snampo/features/coop/data/pending_clear_queue_storage.dart';
+import 'package:snampo/features/coop/data/repository/pending_clear_repository.dart';
 import 'package:snampo/features/coop/data/repository/room_repository.dart';
 import 'package:snampo/features/coop/data/thumbnail_service.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -45,8 +57,23 @@ IThumbnailService thumbnailService(Ref ref) => ThumbnailService();
 
 /// 共有しきれていない発見のキュー
 @Riverpod(keepAlive: true)
-IPendingClearQueueStore pendingClearQueueStore(Ref ref) =>
-    PendingClearQueueStorage();
+IPendingClearRepository pendingClearRepository(Ref ref) =>
+    PendingClearRepository();
+
+/// 協力プレイのサインインを済ませるユースケース
+@riverpod
+EnsureCoopSignInUseCase ensureCoopSignInUseCase(Ref ref) =>
+    EnsureCoopSignInUseCase(ref.read(coopAuthServiceProvider));
+
+/// サインイン済みの uid を返すユースケース (サインインは試さない)
+@riverpod
+GetCoopSignedInUidUseCase getCoopSignedInUidUseCase(Ref ref) =>
+    GetCoopSignedInUidUseCase(ref.read(coopAuthServiceProvider));
+
+/// ルームとメンバー、クリアを監視するユースケース
+@riverpod
+WatchRoomUseCase watchRoomUseCase(Ref ref) =>
+    WatchRoomUseCase(ref.watch(roomRepositoryProvider));
 
 /// ルームを作成するユースケース
 @riverpod
@@ -57,6 +84,16 @@ CreateRoomUseCase createRoomUseCase(Ref ref) =>
 @riverpod
 JoinRoomUseCase joinRoomUseCase(Ref ref) =>
     JoinRoomUseCase(ref.read(roomRepositoryProvider));
+
+/// ルームを抜けるユースケース
+@riverpod
+LeaveRoomUseCase leaveRoomUseCase(Ref ref) =>
+    LeaveRoomUseCase(ref.read(roomRepositoryProvider));
+
+/// ロビーでミッションの設定を変更するユースケース
+@riverpod
+UpdateRoomSettingsUseCase updateRoomSettingsUseCase(Ref ref) =>
+    UpdateRoomSettingsUseCase(ref.read(roomRepositoryProvider));
 
 /// ホストがミッションを生成して配るユースケース
 @riverpod
@@ -75,13 +112,37 @@ StartCoopMissionUseCase startCoopMissionUseCase(Ref ref) =>
           },
     );
 
+/// 協力プレイの履歴を作成・更新するユースケース
+@riverpod
+UpsertCoopHistoryUseCase upsertCoopHistoryUseCase(Ref ref) =>
+    UpsertCoopHistoryUseCase(ref.read(historyRepositoryProvider));
+
+/// ミッションを端末に用意するユースケース
+@riverpod
+PrepareCoopMissionUseCase prepareCoopMissionUseCase(Ref ref) =>
+    PrepareCoopMissionUseCase(
+      storage: ref.read(coopStorageProvider),
+      rooms: ref.read(roomRepositoryProvider),
+      upsertHistory: ref.read(upsertCoopHistoryUseCaseProvider),
+    );
+
+/// クリアを作成できたあとにキューを片付けるユースケース
+@riverpod
+CompleteClearTaskUseCase completeClearTaskUseCase(Ref ref) =>
+    CompleteClearTaskUseCase(
+      rooms: ref.read(roomRepositoryProvider),
+      queue: ref.read(pendingClearRepositoryProvider),
+    );
+
 /// スポットをクリアにするユースケース
 @riverpod
 ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
   rooms: ref.read(roomRepositoryProvider),
   storage: ref.read(coopStorageProvider),
   thumbnails: ref.read(thumbnailServiceProvider),
-  queue: ref.read(pendingClearQueueStoreProvider),
+  queue: ref.read(pendingClearRepositoryProvider),
+  histories: ref.read(historyRepositoryProvider),
+  completeClearTask: ref.read(completeClearTaskUseCaseProvider),
 );
 
 /// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
@@ -90,9 +151,20 @@ RetryPendingClearsUseCase retryPendingClearsUseCase(Ref ref) =>
     RetryPendingClearsUseCase(
       rooms: ref.read(roomRepositoryProvider),
       storage: ref.read(coopStorageProvider),
-      queue: ref.read(pendingClearQueueStoreProvider),
-      uid: () => ref.read(coopAuthServiceProvider).signedInUid(),
+      queue: ref.read(pendingClearRepositoryProvider),
+      completeClearTask: ref.read(completeClearTaskUseCaseProvider),
+      uid: () => ref.read(getCoopSignedInUidUseCaseProvider)(),
     );
+
+/// 全スポットがクリアされていれば finished にするユースケース
+@riverpod
+FinishIfAllClearedUseCase finishIfAllClearedUseCase(Ref ref) =>
+    FinishIfAllClearedUseCase(ref.read(roomRepositoryProvider));
+
+/// ホストが途中終了するユースケース
+@riverpod
+EndCoopMissionUseCase endCoopMissionUseCase(Ref ref) =>
+    EndCoopMissionUseCase(ref.read(roomRepositoryProvider));
 
 /// `clears` を履歴に反映するユースケース
 @riverpod
@@ -101,6 +173,11 @@ SyncCoopClearsUseCase syncCoopClearsUseCase(Ref ref) => SyncCoopClearsUseCase(
   histories: ref.read(historyRepositoryProvider),
 );
 
+/// 条件を満たしていれば協力プレイの履歴を確定するユースケース
+@riverpod
+FinalizeCoopHistoryUseCase finalizeCoopHistoryUseCase(Ref ref) =>
+    FinalizeCoopHistoryUseCase(ref.read(historyRepositoryProvider));
+
 /// 未確定の協力プレイ履歴を同期するユースケース
 @riverpod
 SyncCoopHistoryUseCase syncCoopHistoryUseCase(Ref ref) =>
@@ -108,4 +185,5 @@ SyncCoopHistoryUseCase syncCoopHistoryUseCase(Ref ref) =>
       rooms: ref.read(roomRepositoryProvider),
       histories: ref.read(historyRepositoryProvider),
       syncClears: ref.read(syncCoopClearsUseCaseProvider),
+      finalize: ref.read(finalizeCoopHistoryUseCaseProvider),
     );

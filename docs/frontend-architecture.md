@@ -62,6 +62,7 @@ lib/features/<feature>/
 ### 機能外 (`lib/`)
 
 - **機能を横断するインフラ** (ルーティング、HTTP クライアント、汎用ストレージなど) は **`lib/core/`** に置く。
+- **複数の機能で共有するドメインの概念** (値オブジェクトなど。例: ルームコード、ニックネーム) は **`lib/core/domain/`** に置く。1 つの機能でしか使わないものは、その機能の `domain/` に置く。
 - **`main.dart`**, **`config.dart`** のみルートに置いてよい。ビジネスロジックや画面を `features/` 外に増やさない。
 
 記事の Data / Logic (Use Case) / UI に相当する分離として、上記の **data / domain / application / presentation** を挟み、**di** で Riverpod の配線をまとめる。

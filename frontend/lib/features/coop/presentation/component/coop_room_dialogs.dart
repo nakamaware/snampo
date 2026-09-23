@@ -1,10 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/features/coop/di/coop_provider.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
@@ -73,7 +70,7 @@ Future<bool> confirmLeaveCurrentRoom(
   RoomCode? nextCode,
 }) async {
   final current = await ref.read(coopSessionStoreProvider.future);
-  if (current == null || current.roomCode == nextCode?.value) {
+  if (current == null || current.roomCode == nextCode) {
     return true;
   }
   if (!context.mounted) {
@@ -100,21 +97,6 @@ Future<bool> confirmLeaveCurrentRoom(
   if (confirmed != true) {
     return false;
   }
-  await leaveCoopRoom(ref, current.roomCode, current.uid);
+  await ref.read(coopSessionStoreProvider.notifier).leave();
   return true;
-}
-
-/// ルームを抜ける (`leftAt` を記録し、端末の「ルームに戻る」を消す)
-///
-/// 通信に失敗しても端末の記録は消す (履歴の同期は続く)。
-Future<void> leaveCoopRoom(WidgetRef ref, String roomCode, String uid) async {
-  final code = RoomCode.tryParse(roomCode);
-  try {
-    if (code != null) {
-      await ref.read(roomRepositoryProvider).leaveRoom(code, uid);
-    }
-  } on Object catch (e) {
-    log('ルームを抜ける記録に失敗した: $e', name: 'CoopRoom');
-  }
-  ref.read(coopSessionStoreProvider.notifier).clear();
 }

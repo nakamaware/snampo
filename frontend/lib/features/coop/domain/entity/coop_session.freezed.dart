@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CoopSession {
 
- String get roomCode;/// 入室したときの Auth uid (uid が変わった場合は戻れない)
+@RoomCodeConverter() RoomCode get roomCode;/// 入室したときの Auth uid (uid が変わった場合は戻れない)
  String get uid;
 /// Create a copy of CoopSession
 /// with the given fields replaced by the non-null parameter values.
@@ -49,7 +49,7 @@ abstract mixin class $CoopSessionCopyWith<$Res>  {
   factory $CoopSessionCopyWith(CoopSession value, $Res Function(CoopSession) _then) = _$CoopSessionCopyWithImpl;
 @useResult
 $Res call({
- String roomCode, String uid
+@RoomCodeConverter() RoomCode roomCode, String uid
 });
 
 
@@ -69,7 +69,7 @@ class _$CoopSessionCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? roomCode = null,Object? uid = null,}) {
   return _then(_self.copyWith(
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String,uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
+as RoomCode,uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String roomCode,  String uid)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode,  String uid)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CoopSession() when $default != null:
 return $default(_that.roomCode,_that.uid);case _:
@@ -176,7 +176,7 @@ return $default(_that.roomCode,_that.uid);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String roomCode,  String uid)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode,  String uid)  $default,) {final _that = this;
 switch (_that) {
 case _CoopSession():
 return $default(_that.roomCode,_that.uid);case _:
@@ -196,7 +196,7 @@ return $default(_that.roomCode,_that.uid);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String roomCode,  String uid)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@RoomCodeConverter()  RoomCode roomCode,  String uid)?  $default,) {final _that = this;
 switch (_that) {
 case _CoopSession() when $default != null:
 return $default(_that.roomCode,_that.uid);case _:
@@ -211,10 +211,10 @@ return $default(_that.roomCode,_that.uid);case _:
 @JsonSerializable()
 
 class _CoopSession implements CoopSession {
-  const _CoopSession({required this.roomCode, required this.uid});
+  const _CoopSession({@RoomCodeConverter() required this.roomCode, required this.uid});
   factory _CoopSession.fromJson(Map<String, dynamic> json) => _$CoopSessionFromJson(json);
 
-@override final  String roomCode;
+@override@RoomCodeConverter() final  RoomCode roomCode;
 /// 入室したときの Auth uid (uid が変わった場合は戻れない)
 @override final  String uid;
 
@@ -251,7 +251,7 @@ abstract mixin class _$CoopSessionCopyWith<$Res> implements $CoopSessionCopyWith
   factory _$CoopSessionCopyWith(_CoopSession value, $Res Function(_CoopSession) _then) = __$CoopSessionCopyWithImpl;
 @override @useResult
 $Res call({
- String roomCode, String uid
+@RoomCodeConverter() RoomCode roomCode, String uid
 });
 
 
@@ -271,7 +271,7 @@ class __$CoopSessionCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? roomCode = null,Object? uid = null,}) {
   return _then(_CoopSession(
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String,uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
+as RoomCode,uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 mixin _$MissionHistorySpot {
 
  Coordinate get coordinate; int get sortOrder; bool get isDestination; String get streetViewImagePath; String? get userPhotoPath; DateTime? get achievedAt; String? get name; String? get genre; String? get googleMapsUrl; double? get referenceHeading; PhotoJudgeRank? get judgeRank; double? get distanceErrorMeters; double? get headingErrorDegrees; Coordinate? get guessPosition; double? get capturedHeading;/// スポット ID (旧データでは null)
- String? get spotId;/// 協力プレイの発見者の uid
+ SpotId? get spotId;/// 協力プレイの発見者の uid
  String? get discovererUid;/// 協力プレイの発見者のニックネーム (発見時点)
  String? get discovererNickname;/// 協力プレイの発見者のサムネのパス (取得できなければ null)
  String? get discovererThumbPath;/// クリア済みか (協力プレイの途中終了では未クリアのスポットがある)
@@ -50,7 +50,7 @@ abstract mixin class $MissionHistorySpotCopyWith<$Res>  {
   factory $MissionHistorySpotCopyWith(MissionHistorySpot value, $Res Function(MissionHistorySpot) _then) = _$MissionHistorySpotCopyWithImpl;
 @useResult
 $Res call({
- Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, String? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, bool isCleared
+ Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, SpotId? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, bool isCleared
 });
 
 
@@ -85,7 +85,7 @@ as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingEr
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
 as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
-as String?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
+as SpotId?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
 as String?,discovererNickname: freezed == discovererNickname ? _self.discovererNickname : discovererNickname // ignore: cast_nullable_to_non_nullable
 as String?,discovererThumbPath: freezed == discovererThumbPath ? _self.discovererThumbPath : discovererThumbPath // ignore: cast_nullable_to_non_nullable
 as String?,isCleared: null == isCleared ? _self.isCleared : isCleared // ignore: cast_nullable_to_non_nullable
@@ -174,7 +174,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  String? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot() when $default != null:
 return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.isCleared);case _:
@@ -195,7 +195,7 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  String? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot():
 return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.isCleared);case _:
@@ -215,7 +215,7 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  String? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  bool isCleared)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot() when $default != null:
 return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.isCleared);case _:
@@ -249,7 +249,7 @@ class _MissionHistorySpot implements MissionHistorySpot {
 @override final  Coordinate? guessPosition;
 @override final  double? capturedHeading;
 /// スポット ID (旧データでは null)
-@override final  String? spotId;
+@override final  SpotId? spotId;
 /// 協力プレイの発見者の uid
 @override final  String? discovererUid;
 /// 協力プレイの発見者のニックネーム (発見時点)
@@ -289,7 +289,7 @@ abstract mixin class _$MissionHistorySpotCopyWith<$Res> implements $MissionHisto
   factory _$MissionHistorySpotCopyWith(_MissionHistorySpot value, $Res Function(_MissionHistorySpot) _then) = __$MissionHistorySpotCopyWithImpl;
 @override @useResult
 $Res call({
- Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, String? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, bool isCleared
+ Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, SpotId? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, bool isCleared
 });
 
 
@@ -324,7 +324,7 @@ as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingEr
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
 as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
-as String?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
+as SpotId?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
 as String?,discovererNickname: freezed == discovererNickname ? _self.discovererNickname : discovererNickname // ignore: cast_nullable_to_non_nullable
 as String?,discovererThumbPath: freezed == discovererThumbPath ? _self.discovererThumbPath : discovererThumbPath // ignore: cast_nullable_to_non_nullable
 as String?,isCleared: null == isCleared ? _self.isCleared : isCleared // ignore: cast_nullable_to_non_nullable

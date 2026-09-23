@@ -107,7 +107,7 @@ class BackToRoomButton extends StatelessWidget {
   }
 }
 
-/// 「みんなで」(協力プレイ) ボタン
+/// 「みんなで」 (協力プレイ) ボタン
 class CoopButton extends StatelessWidget {
   /// [CoopButton] を作成する
   const CoopButton({super.key});
@@ -149,7 +149,7 @@ class SettingsIconButton extends StatelessWidget {
   }
 }
 
-/// 「ひとりで」(ソロ) ボタンウィジェット
+/// 「ひとりで」 (ソロ) ボタンウィジェット
 class StartButton extends StatelessWidget {
   /// StartButtonのコンストラクタ
   const StartButton({super.key});

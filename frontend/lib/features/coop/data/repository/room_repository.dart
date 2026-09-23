@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/data/mapper/room_mapper.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// Firestore 上のルーム
 class RoomRepository implements IRoomRepository {
@@ -49,9 +50,11 @@ class RoomRepository implements IRoomRepository {
     }),
   );
 
+  static const _server = GetOptions(source: Source.server);
+
   @override
   Future<Room?> fetchRoom(RoomCode code) async {
-    final snapshot = await _room(code).get();
+    final snapshot = await _room(code).get(_server);
     final data = snapshot.data();
     return data == null ? null : RoomMapper.roomFromFirestore(code.value, data);
   }
@@ -98,7 +101,7 @@ class RoomRepository implements IRoomRepository {
 
   @override
   Future<List<RoomMember>> fetchMembers(RoomCode code) async {
-    final snapshot = await _members(code).orderBy('joinedAt').get();
+    final snapshot = await _members(code).orderBy('joinedAt').get(_server);
     return [
       for (final doc in snapshot.docs)
         RoomMapper.memberFromFirestore(doc.id, doc.data()),
@@ -141,12 +144,12 @@ class RoomRepository implements IRoomRepository {
   Future<void> markPlaying(
     RoomCode code, {
     required String missionRef,
-    required List<String> spotIds,
+    required List<SpotId> spotIds,
   }) => _mapDenied(
     () => _room(code).update({
       'status': RoomStatus.playing.name,
       'missionRef': missionRef,
-      'spotIds': spotIds,
+      'spotIds': [for (final id in spotIds) id.value],
       'generationError': null,
       'startedAt': FieldValue.serverTimestamp(),
     }),
@@ -164,12 +167,12 @@ class RoomRepository implements IRoomRepository {
   @override
   Future<CreateClearResult> createClear(
     Room room, {
-    required String spotId,
+    required SpotId spotId,
     required String uid,
     required String nickname,
     required String? thumbPath,
   }) async {
-    final ref = _clears(room.code).doc(spotId);
+    final ref = _clears(room.code).doc(spotId.value);
     try {
       // オフラインの間は SDK が端末に溜めておき、復帰したら送信する
       await ref.set({
@@ -179,7 +182,7 @@ class RoomRepository implements IRoomRepository {
         'thumbPath': thumbPath,
         'deleteAt': Timestamp.fromDate(room.deleteAt),
       });
-      return const ClearCreated();
+      return ClearCreated(thumbPathSaved: thumbPath != null);
     } on FirebaseException catch (e) {
       if (!_isPermissionDenied(e)) {
         rethrow;
@@ -192,21 +195,23 @@ class RoomRepository implements IRoomRepository {
       }
       // 自分の送信待ちのクリア (キルされる前の書き込み) が先に届いていた場合
       if (data['clearedBy'] == uid) {
-        return const ClearCreated();
+        return ClearCreated(thumbPathSaved: data['thumbPath'] != null);
       }
-      return ClearAlreadyExists(RoomMapper.clearFromFirestore(spotId, data));
+      return ClearAlreadyExists(
+        RoomMapper.clearFromFirestore(spotId.value, data),
+      );
     }
   }
 
   @override
-  Future<void> fillThumbPath(RoomCode code, String spotId, String thumbPath) =>
+  Future<void> fillThumbPath(RoomCode code, SpotId spotId, String thumbPath) =>
       _mapDenied(
-        () => _clears(code).doc(spotId).update({'thumbPath': thumbPath}),
+        () => _clears(code).doc(spotId.value).update({'thumbPath': thumbPath}),
       );
 
   @override
   Future<List<SpotClear>> fetchClears(RoomCode code) async {
-    final snapshot = await _clears(code).get();
+    final snapshot = await _clears(code).get(_server);
     return [
       for (final doc in snapshot.docs)
         RoomMapper.clearFromFirestore(doc.id, doc.data()),

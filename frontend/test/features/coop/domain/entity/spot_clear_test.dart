@@ -13,13 +13,13 @@ void main() {
           clear('c', 'z', thumbPath: 'rooms/R/thumbs/c/z.jpg'),
         ],
         local: {
-          'a': const LocalClearState(discovererUid: 'x', hasThumb: true),
-          'c': const LocalClearState(discovererUid: 'z', hasThumb: false),
+          spot('a'): const LocalClearState(discovererUid: 'x', hasThumb: true),
+          spot('c'): const LocalClearState(discovererUid: 'z', hasThumb: false),
         },
       );
 
-      expect(plan.discoverersToApply.map((c) => c.spotId), ['b']);
-      expect(plan.thumbsToFetch.map((c) => c.spotId), ['c']);
+      expect(plan.discoverersToApply.map((c) => c.spotId.value), ['b']);
+      expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['c']);
     });
 
     test('新しく知ったクリアのサムネも取得する', () {
@@ -28,8 +28,8 @@ void main() {
         local: const {},
       );
 
-      expect(plan.discoverersToApply.map((c) => c.spotId), ['a']);
-      expect(plan.thumbsToFetch.map((c) => c.spotId), ['a']);
+      expect(plan.discoverersToApply.map((c) => c.spotId.value), ['a']);
+      expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['a']);
     });
 
     test('thumbPath がないクリアのサムネは取得しない (プレースホルダを表示する)', () {
@@ -41,7 +41,9 @@ void main() {
     test('全部そろっていれば何もしない', () {
       final plan = planClearSync(
         clears: [clear('a', 'x', thumbPath: 'p')],
-        local: {'a': const LocalClearState(discovererUid: 'x', hasThumb: true)},
+        local: {
+          spot('a'): const LocalClearState(discovererUid: 'x', hasThumb: true),
+        },
       );
 
       expect(plan.isEmpty, isTrue);
@@ -51,12 +53,7 @@ void main() {
   group('rankDiscoverers', () {
     test('発見数の多い順に並べ、同数なら入室順にする', () {
       final ranking = rankDiscoverers(
-        clears: [
-          clear('a', 'y'),
-          clear('b', 'x'),
-          clear('c', 'y'),
-          clear('d', 'z'),
-        ],
+        discovererUids: ['y', 'x', 'y', 'z'],
         uidsInJoinOrder: ['x', 'y', 'z', 'w'],
       );
 
@@ -75,13 +72,23 @@ void main() {
         hasAllClearThumbs(
           clears: [clear('a', 'x', thumbPath: 'p'), clear('b', 'me')],
           local: {
-            'a': const LocalClearState(discovererUid: 'x', hasThumb: true),
+            spot('a'): const LocalClearState(
+              discovererUid: 'x',
+              hasThumb: true,
+            ),
             // 自分の発見は、thumbPath がまだなくても端末にサムネがある
-            'b': const LocalClearState(discovererUid: 'me', hasThumb: true),
+            spot('b'): const LocalClearState(
+              discovererUid: 'me',
+              hasThumb: true,
+            ),
           },
         ),
         isTrue,
       );
+    });
+
+    test('クリアが 0 件なら true (finished のあとにクリアは作れないため、待つものがない)', () {
+      expect(hasAllClearThumbs(clears: const [], local: const {}), isTrue);
     });
 
     test('サムネがまだ届いていないクリアがあれば false', () {
@@ -89,7 +96,10 @@ void main() {
         hasAllClearThumbs(
           clears: [clear('a', 'x')],
           local: {
-            'a': const LocalClearState(discovererUid: 'x', hasThumb: false),
+            spot('a'): const LocalClearState(
+              discovererUid: 'x',
+              hasThumb: false,
+            ),
           },
         ),
         isFalse,
@@ -101,7 +111,10 @@ void main() {
         hasAllClearThumbs(
           clears: [clear('a', 'x', thumbPath: 'p')],
           local: {
-            'a': const LocalClearState(discovererUid: 'me', hasThumb: true),
+            spot('a'): const LocalClearState(
+              discovererUid: 'me',
+              hasThumb: true,
+            ),
           },
         ),
         isFalse,

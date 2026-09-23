@@ -4,6 +4,7 @@ import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:snampo_api/api.dart' as snampo_api;
 
 /// ミッションリポジトリ
@@ -102,7 +103,7 @@ class MissionRepository implements IMissionRepository {
         googleMapsUrl: response.destination.googleMapsUrl,
         streetViewLatitude: response.destination.imageLatitude?.toDouble(),
         streetViewLongitude: response.destination.imageLongitude?.toDouble(),
-        spotId: response.destination.spotId,
+        spotId: SpotId.parse(response.destination.spotId),
       ),
       waypoints:
           response.midpoints.map((midpoint) {
@@ -122,7 +123,7 @@ class MissionRepository implements IMissionRepository {
               googleMapsUrl: midpoint.googleMapsUrl,
               streetViewLatitude: midpoint.imageLatitude?.toDouble(),
               streetViewLongitude: midpoint.imageLongitude?.toDouble(),
-              spotId: midpoint.spotId,
+              spotId: SpotId.parse(midpoint.spotId),
             );
           }).toList(),
       overviewPolyline: response.overviewPolyline,

@@ -39,7 +39,7 @@ class CoopEntryPage extends HookConsumerWidget {
         );
         ref
             .read(coopSessionStoreProvider.notifier)
-            .enter(CoopSession(roomCode: room.code.value, uid: uid));
+            .enter(CoopSession(roomCode: room.code, uid: uid));
         if (context.mounted) {
           context.go('/coop/lobby');
         }

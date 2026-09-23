@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
@@ -12,6 +13,7 @@ import 'package:snampo/features/coop/presentation/store/coop_session_store.dart'
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 
 /// 協力プレイの Mission 画面 (端末で進行中のルーム)
@@ -37,7 +39,7 @@ class CoopMissionPage extends ConsumerWidget {
 class _CoopMissionPageExtension extends MissionPageExtension {
   const _CoopMissionPageExtension(this.roomCode);
 
-  final String roomCode;
+  final RoomCode roomCode;
 
   @override
   Widget wrapBody(BuildContext context, Widget body) =>
@@ -88,7 +90,7 @@ class _CoopMissionEffects extends ConsumerWidget {
   const _CoopMissionEffects({required this.roomCode, required this.child});
 
   /// ルームコード
-  final String roomCode;
+  final RoomCode roomCode;
 
   /// 中身
   final Widget child;
@@ -132,7 +134,7 @@ class _CoopMissionEffects extends ConsumerWidget {
 class _PrepareErrorView extends ConsumerWidget {
   const _PrepareErrorView({required this.roomCode});
 
-  final String roomCode;
+  final RoomCode roomCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,7 +148,12 @@ class _PrepareErrorView extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton(
               onPressed:
-                  () => ref.invalidate(coopMissionControllerProvider(roomCode)),
+                  () =>
+                      ref
+                          .read(
+                            coopMissionControllerProvider(roomCode).notifier,
+                          )
+                          .retryPrepare(),
               child: const Text('再試行'),
             ),
           ],
@@ -161,7 +168,7 @@ class _CoopHostEndButton extends ConsumerWidget {
   const _CoopHostEndButton({required this.roomCode});
 
   /// ルームコード
-  final String roomCode;
+  final RoomCode roomCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -222,10 +229,10 @@ class _CoopDiscovererView extends ConsumerWidget {
   });
 
   /// ルームコード
-  final String roomCode;
+  final RoomCode roomCode;
 
   /// スポット ID
-  final String? spotId;
+  final SpotId? spotId;
 
   /// このスポットの進捗
   final CheckpointProgress? checkpoint;

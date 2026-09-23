@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 /// ルームコード値オブジェクト
@@ -60,4 +61,19 @@ class RoomCode {
 
   @override
   String toString() => value;
+}
+
+/// [RoomCode] を JSON (文字列) と相互変換する [JsonConverter]
+///
+/// 復元時も検証するため、破損した保存データからの不正値は [FormatException] で弾く。
+class RoomCodeConverter implements JsonConverter<RoomCode, String> {
+  /// [RoomCodeConverter] を作成する
+  const RoomCodeConverter();
+
+  @override
+  RoomCode fromJson(String json) =>
+      RoomCode.tryParse(json) ?? (throw FormatException('不正なルームコード', json));
+
+  @override
+  String toJson(RoomCode object) => object.value;
 }

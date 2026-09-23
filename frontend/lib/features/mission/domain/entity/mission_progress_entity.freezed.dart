@@ -327,7 +327,7 @@ mixin _$MissionProgressEntity {
 
 /// ミッション開始時刻
  DateTime get startedAt;/// 協力プレイのルームコード (ソロでは null)
- String? get roomCode;/// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
+@RoomCodeConverter() RoomCode? get roomCode;/// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
 @JsonKey(toJson: _missionProgressCheckpointsToJson) List<CheckpointProgress?> get checkpoints;
 /// Create a copy of MissionProgressEntity
 /// with the given fields replaced by the non-null parameter values.
@@ -361,7 +361,7 @@ abstract mixin class $MissionProgressEntityCopyWith<$Res>  {
   factory $MissionProgressEntityCopyWith(MissionProgressEntity value, $Res Function(MissionProgressEntity) _then) = _$MissionProgressEntityCopyWithImpl;
 @useResult
 $Res call({
- DateTime startedAt, String? roomCode,@JsonKey(toJson: _missionProgressCheckpointsToJson) List<CheckpointProgress?> checkpoints
+ DateTime startedAt,@RoomCodeConverter() RoomCode? roomCode,@JsonKey(toJson: _missionProgressCheckpointsToJson) List<CheckpointProgress?> checkpoints
 });
 
 
@@ -382,7 +382,7 @@ class _$MissionProgressEntityCopyWithImpl<$Res>
   return _then(_self.copyWith(
 startedAt: null == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,roomCode: freezed == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String?,checkpoints: null == checkpoints ? _self.checkpoints : checkpoints // ignore: cast_nullable_to_non_nullable
+as RoomCode?,checkpoints: null == checkpoints ? _self.checkpoints : checkpoints // ignore: cast_nullable_to_non_nullable
 as List<CheckpointProgress?>,
   ));
 }
@@ -468,7 +468,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime startedAt,  String? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime startedAt, @RoomCodeConverter()  RoomCode? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionProgressEntity() when $default != null:
 return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
@@ -489,7 +489,7 @@ return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime startedAt,  String? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime startedAt, @RoomCodeConverter()  RoomCode? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)  $default,) {final _that = this;
 switch (_that) {
 case _MissionProgressEntity():
 return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
@@ -509,7 +509,7 @@ return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime startedAt,  String? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime startedAt, @RoomCodeConverter()  RoomCode? roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson)  List<CheckpointProgress?> checkpoints)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionProgressEntity() when $default != null:
 return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
@@ -524,13 +524,13 @@ return $default(_that.startedAt,_that.roomCode,_that.checkpoints);case _:
 @JsonSerializable()
 
 class _MissionProgressEntity extends MissionProgressEntity {
-  const _MissionProgressEntity({required this.startedAt, this.roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson) final  List<CheckpointProgress?> checkpoints = const []}): _checkpoints = checkpoints,super._();
+  const _MissionProgressEntity({required this.startedAt, @RoomCodeConverter() this.roomCode, @JsonKey(toJson: _missionProgressCheckpointsToJson) final  List<CheckpointProgress?> checkpoints = const []}): _checkpoints = checkpoints,super._();
   factory _MissionProgressEntity.fromJson(Map<String, dynamic> json) => _$MissionProgressEntityFromJson(json);
 
 /// ミッション開始時刻
 @override final  DateTime startedAt;
 /// 協力プレイのルームコード (ソロでは null)
-@override final  String? roomCode;
+@override@RoomCodeConverter() final  RoomCode? roomCode;
 /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
  final  List<CheckpointProgress?> _checkpoints;
 /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
@@ -574,7 +574,7 @@ abstract mixin class _$MissionProgressEntityCopyWith<$Res> implements $MissionPr
   factory _$MissionProgressEntityCopyWith(_MissionProgressEntity value, $Res Function(_MissionProgressEntity) _then) = __$MissionProgressEntityCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime startedAt, String? roomCode,@JsonKey(toJson: _missionProgressCheckpointsToJson) List<CheckpointProgress?> checkpoints
+ DateTime startedAt,@RoomCodeConverter() RoomCode? roomCode,@JsonKey(toJson: _missionProgressCheckpointsToJson) List<CheckpointProgress?> checkpoints
 });
 
 
@@ -595,7 +595,7 @@ class __$MissionProgressEntityCopyWithImpl<$Res>
   return _then(_MissionProgressEntity(
 startedAt: null == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,roomCode: freezed == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String?,checkpoints: null == checkpoints ? _self._checkpoints : checkpoints // ignore: cast_nullable_to_non_nullable
+as RoomCode?,checkpoints: null == checkpoints ? _self._checkpoints : checkpoints // ignore: cast_nullable_to_non_nullable
 as List<CheckpointProgress?>,
   ));
 }

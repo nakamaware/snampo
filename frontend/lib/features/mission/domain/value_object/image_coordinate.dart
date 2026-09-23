@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 part 'image_coordinate.freezed.dart';
 part 'image_coordinate.g.dart';
@@ -37,7 +38,7 @@ abstract class ImageCoordinate with _$ImageCoordinate {
     double? streetViewLongitude,
 
     /// スポット ID (place_id / geo URI)。旧データ (ソロの再開データ) を読めるように nullable
-    String? spotId,
+    @SpotIdConverter() SpotId? spotId,
   }) = _ImageCoordinate;
 
   /// JSON から [ImageCoordinate] を生成する

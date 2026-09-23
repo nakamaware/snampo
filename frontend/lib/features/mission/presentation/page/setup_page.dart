@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/presentation/hook/use_current_position.dart';
+import 'package:snampo/features/mission/presentation/component/mission_settings_inputs.dart';
 
 /// ミッションパラメータを設定するためのセットアップページウィジェット。
 class SetupPage extends StatefulWidget {
@@ -81,20 +81,10 @@ class _SliderWidgetState extends State<SliderWidget> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            '${(slidervalue.meters / 1000).toStringAsFixed(1)} km',
-            style: textStyle,
-          ),
-          Slider(
-            value: slidervalue.meters.toDouble(),
-            min: 500,
-            max: 10000,
-            divisions: 19,
-            onChanged: (radius) {
-              setState(() {
-                slidervalue = Radius(meters: radius.toInt());
-              });
-            },
+          RadiusSlider(
+            radius: slidervalue,
+            textStyle: textStyle,
+            onChanged: (radius) => setState(() => slidervalue = radius),
           ),
           const SizedBox(height: 20),
           SubmitButton(radius: slidervalue),
@@ -138,57 +128,9 @@ class SubmitButton extends StatelessWidget {
 }
 
 /// 目的地を地図上で選択するウィジェット
-class DestinationPickerWidget extends HookConsumerWidget {
+class DestinationPickerWidget extends HookWidget {
   /// [DestinationPickerWidget] ウィジェットを作成します。
   const DestinationPickerWidget({super.key});
-
-  /// デフォルト位置 (東京駅)
-  static const LatLng _defaultPosition = LatLng(35.6812, 139.7671);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentPosition = useCurrentPosition(ref);
-
-    return currentPosition.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const _MapContent(initialPosition: _defaultPosition),
-      data:
-          (coord) => _MapContent(
-            initialPosition: LatLng(coord.latitude, coord.longitude),
-          ),
-    );
-  }
-}
-
-/// 地図と目的地選択の UI を担当するウィジェット。
-///
-/// 状態を子ウィジェットに閉じ込めることで、タップ時の再ビルド範囲を
-/// 親の [DestinationPickerWidget] まで広げずに済む。
-class _MapContent extends StatefulWidget {
-  const _MapContent({required this.initialPosition});
-
-  final LatLng initialPosition;
-
-  @override
-  State<_MapContent> createState() => _MapContentState();
-}
-
-class _MapContentState extends State<_MapContent> {
-  LatLng? _selectedDestination;
-
-  Set<Marker> get _markers =>
-      _selectedDestination != null
-          ? {
-            Marker(
-              markerId: const MarkerId('destination'),
-              position: _selectedDestination!,
-            ),
-          }
-          : {};
-
-  void _onMapTap(LatLng position) {
-    setState(() => _selectedDestination = position);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,23 +138,14 @@ class _MapContentState extends State<_MapContent> {
     final smallTextStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
+    final selected = useState<Coordinate?>(null);
+    final destination = selected.value;
 
     return Stack(
       children: [
-        RepaintBoundary(
-          child: GoogleMap(
-            key: ValueKey(
-              'map_${widget.initialPosition.latitude}_${widget.initialPosition.longitude}',
-            ),
-            initialCameraPosition: CameraPosition(
-              target: widget.initialPosition,
-              zoom: 14,
-            ),
-            onTap: _onMapTap,
-            markers: _markers,
-            myLocationEnabled: true, // 現在位置を表示
-            tiltGesturesEnabled: false, // 傾きの変更を禁止
-          ),
+        DestinationMap(
+          destination: destination,
+          onPick: (coordinate) => selected.value = coordinate,
         ),
         Positioned(
           bottom: 20,
@@ -227,13 +160,12 @@ class _MapContentState extends State<_MapContent> {
                 shadowColor: Colors.black.withValues(alpha: 0.3),
               ),
               onPressed:
-                  _selectedDestination != null
-                      ? () {
-                        context.push(
-                          '/mission/destination/${_selectedDestination!.latitude}/${_selectedDestination!.longitude}',
-                        );
-                      }
-                      : null,
+                  destination == null
+                      ? null
+                      : () => context.push(
+                        '/mission/destination/'
+                        '${destination.latitude}/${destination.longitude}',
+                      ),
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text('GO', style: smallTextStyle),

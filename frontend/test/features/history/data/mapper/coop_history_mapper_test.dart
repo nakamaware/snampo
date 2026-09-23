@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/data/mapper/history_mapper.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
@@ -8,6 +9,7 @@ import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 void main() {
   final startedAt = DateTime.utc(2026, 9, 23, 10);
@@ -75,7 +77,7 @@ void main() {
       expect(
         history.coop,
         CoopHistoryInfo(
-          roomCode: 'ABCD23',
+          roomCode: RoomCode.tryParse('ABCD23')!,
           syncState: CoopSyncState.inProgress,
           isHost: true,
           members: const [
@@ -108,7 +110,7 @@ void main() {
       );
 
       final first = history.spots[0];
-      expect(first.spotId, 'place-0');
+      expect(first.spotId, SpotId.parse('place-0'));
       expect(first.discovererUid, 'guest');
       expect(first.discovererNickname, 'はなこ');
       expect(first.discovererThumbPath, '/tmp/thumb0.jpg');
@@ -152,7 +154,7 @@ void main() {
       destination: ImageCoordinate(
         coordinate: Coordinate(latitude: 35.1, longitude: 139.1),
         imageBase64: '',
-        spotId: 'place-1',
+        spotId: SpotId.parse('place-1'),
       ),
       overviewPolyline: 'polyline',
     );
@@ -163,7 +165,7 @@ void main() {
         mission: mission,
         startedAt: startedAt,
         coop: CoopHistoryInfo(
-          roomCode: 'ABCD23',
+          roomCode: RoomCode.tryParse('ABCD23')!,
           syncState: CoopSyncState.inProgress,
           isHost: false,
           members: const [CoopHistoryMember(uid: 'host', nickname: 'たろう')],

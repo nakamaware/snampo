@@ -282,7 +282,7 @@ as String,
 /// @nodoc
 mixin _$CoopHistoryInfo {
 
- String get roomCode; CoopSyncState get syncState;/// 自分がホストだったか
+ RoomCode get roomCode; CoopSyncState get syncState;/// 自分がホストだったか
  bool get isHost;/// メンバー一覧 (入室順)
  List<CoopHistoryMember> get members;/// 遊べる期限
  DateTime get expiresAt;/// データの保持期限 (これを過ぎるとサーバのデータは消えている)
@@ -317,7 +317,7 @@ abstract mixin class $CoopHistoryInfoCopyWith<$Res>  {
   factory $CoopHistoryInfoCopyWith(CoopHistoryInfo value, $Res Function(CoopHistoryInfo) _then) = _$CoopHistoryInfoCopyWithImpl;
 @useResult
 $Res call({
- String roomCode, CoopSyncState syncState, bool isHost, List<CoopHistoryMember> members, DateTime expiresAt, DateTime deleteAt
+ RoomCode roomCode, CoopSyncState syncState, bool isHost, List<CoopHistoryMember> members, DateTime expiresAt, DateTime deleteAt
 });
 
 
@@ -337,7 +337,7 @@ class _$CoopHistoryInfoCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? roomCode = null,Object? syncState = null,Object? isHost = null,Object? members = null,Object? expiresAt = null,Object? deleteAt = null,}) {
   return _then(_self.copyWith(
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String,syncState: null == syncState ? _self.syncState : syncState // ignore: cast_nullable_to_non_nullable
+as RoomCode,syncState: null == syncState ? _self.syncState : syncState // ignore: cast_nullable_to_non_nullable
 as CoopSyncState,isHost: null == isHost ? _self.isHost : isHost // ignore: cast_nullable_to_non_nullable
 as bool,members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
 as List<CoopHistoryMember>,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -427,7 +427,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RoomCode roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CoopHistoryInfo() when $default != null:
 return $default(_that.roomCode,_that.syncState,_that.isHost,_that.members,_that.expiresAt,_that.deleteAt);case _:
@@ -448,7 +448,7 @@ return $default(_that.roomCode,_that.syncState,_that.isHost,_that.members,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RoomCode roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)  $default,) {final _that = this;
 switch (_that) {
 case _CoopHistoryInfo():
 return $default(_that.roomCode,_that.syncState,_that.isHost,_that.members,_that.expiresAt,_that.deleteAt);case _:
@@ -468,7 +468,7 @@ return $default(_that.roomCode,_that.syncState,_that.isHost,_that.members,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RoomCode roomCode,  CoopSyncState syncState,  bool isHost,  List<CoopHistoryMember> members,  DateTime expiresAt,  DateTime deleteAt)?  $default,) {final _that = this;
 switch (_that) {
 case _CoopHistoryInfo() when $default != null:
 return $default(_that.roomCode,_that.syncState,_that.isHost,_that.members,_that.expiresAt,_that.deleteAt);case _:
@@ -486,7 +486,7 @@ class _CoopHistoryInfo implements CoopHistoryInfo {
   const _CoopHistoryInfo({required this.roomCode, required this.syncState, required this.isHost, required final  List<CoopHistoryMember> members, required this.expiresAt, required this.deleteAt}): _members = members;
 
 
-@override final  String roomCode;
+@override final  RoomCode roomCode;
 @override final  CoopSyncState syncState;
 /// 自分がホストだったか
 @override final  bool isHost;
@@ -534,7 +534,7 @@ abstract mixin class _$CoopHistoryInfoCopyWith<$Res> implements $CoopHistoryInfo
   factory _$CoopHistoryInfoCopyWith(_CoopHistoryInfo value, $Res Function(_CoopHistoryInfo) _then) = __$CoopHistoryInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String roomCode, CoopSyncState syncState, bool isHost, List<CoopHistoryMember> members, DateTime expiresAt, DateTime deleteAt
+ RoomCode roomCode, CoopSyncState syncState, bool isHost, List<CoopHistoryMember> members, DateTime expiresAt, DateTime deleteAt
 });
 
 
@@ -554,7 +554,7 @@ class __$CoopHistoryInfoCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? roomCode = null,Object? syncState = null,Object? isHost = null,Object? members = null,Object? expiresAt = null,Object? deleteAt = null,}) {
   return _then(_CoopHistoryInfo(
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
-as String,syncState: null == syncState ? _self.syncState : syncState // ignore: cast_nullable_to_non_nullable
+as RoomCode,syncState: null == syncState ? _self.syncState : syncState // ignore: cast_nullable_to_non_nullable
 as CoopSyncState,isHost: null == isHost ? _self.isHost : isHost // ignore: cast_nullable_to_non_nullable
 as bool,members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
 as List<CoopHistoryMember>,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable

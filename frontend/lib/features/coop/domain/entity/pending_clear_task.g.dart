@@ -8,8 +8,8 @@ part of 'pending_clear_task.dart';
 
 _PendingClearTask _$PendingClearTaskFromJson(Map<String, dynamic> json) =>
     _PendingClearTask(
-      roomCode: json['roomCode'] as String,
-      spotId: json['spotId'] as String,
+      roomCode: const RoomCodeConverter().fromJson(json['roomCode'] as String),
+      spotId: const SpotIdConverter().fromJson(json['spotId'] as String),
       nickname: json['nickname'] as String,
       localThumbPath: json['localThumbPath'] as String,
       expiresAt: DateTime.parse(json['expiresAt'] as String),
@@ -18,8 +18,8 @@ _PendingClearTask _$PendingClearTaskFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$PendingClearTaskToJson(_PendingClearTask instance) =>
     <String, dynamic>{
-      'roomCode': instance.roomCode,
-      'spotId': instance.spotId,
+      'roomCode': const RoomCodeConverter().toJson(instance.roomCode),
+      'spotId': const SpotIdConverter().toJson(instance.spotId),
       'nickname': instance.nickname,
       'localThumbPath': instance.localThumbPath,
       'expiresAt': instance.expiresAt.toIso8601String(),

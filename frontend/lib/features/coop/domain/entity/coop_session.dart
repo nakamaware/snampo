@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 
 part 'coop_session.freezed.dart';
 part 'coop_session.g.dart';
@@ -8,7 +9,7 @@ part 'coop_session.g.dart';
 abstract class CoopSession with _$CoopSession {
   /// [CoopSession] を作成する
   const factory CoopSession({
-    required String roomCode,
+    @RoomCodeConverter() required RoomCode roomCode,
 
     /// 入室したときの Auth uid (uid が変わった場合は戻れない)
     required String uid,

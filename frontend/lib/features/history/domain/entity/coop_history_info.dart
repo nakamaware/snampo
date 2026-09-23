@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 
 part 'coop_history_info.freezed.dart';
 part 'coop_history_info.g.dart';
@@ -32,7 +33,7 @@ abstract class CoopHistoryMember with _$CoopHistoryMember {
 abstract class CoopHistoryInfo with _$CoopHistoryInfo {
   /// [CoopHistoryInfo] を作成する
   const factory CoopHistoryInfo({
-    required String roomCode,
+    required RoomCode roomCode,
     required CoopSyncState syncState,
 
     /// 自分がホストだったか

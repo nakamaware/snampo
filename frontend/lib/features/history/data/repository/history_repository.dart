@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:drift/drift.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/data/history_photo_storage.dart';
@@ -12,6 +13,7 @@ import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:uuid/uuid.dart';
 
 /// Drift 上の履歴 CRUD
@@ -182,7 +184,13 @@ class HistoryRepository implements IHistoryRepository {
     if (limit != null) {
       q.limit(limit, offset: offset);
     }
-    final rows = await q.get();
+    return _toMissionHistories(await q.get());
+  }
+
+  /// 履歴行のスポットを一括で取得して [MissionHistory] にする (行の順序を保つ)
+  Future<List<MissionHistory>> _toMissionHistories(
+    List<MissionHistoryRow> rows,
+  ) async {
     if (rows.isEmpty) {
       return [];
     }
@@ -266,22 +274,31 @@ class HistoryRepository implements IHistoryRepository {
       });
     } catch (error, stackTrace) {
       for (final path in createdStreetViewPaths) {
-        await _streetViewStorage.delete(path);
+        try {
+          await _streetViewStorage.delete(path);
+        } catch (cleanupError, cleanupStackTrace) {
+          log(
+            'upsertCoopHistory: failed to cleanup Street View file: $path',
+            error: cleanupError,
+            stackTrace: cleanupStackTrace,
+            name: 'HistoryRepository',
+          );
+        }
       }
       Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
   @override
-  Future<MissionHistory?> getCoopHistory(String roomCode) async {
+  Future<MissionHistory?> getCoopHistory(RoomCode roomCode) async {
     final row = await _selectCoopRow(roomCode);
     return row == null ? null : _rowToMissionHistory(row);
   }
 
   @override
   Future<void> applyCoopDiscoverer({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required String discovererUid,
     required String discovererNickname,
     required DateTime clearedAt,
@@ -311,8 +328,8 @@ class HistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> saveCoopThumb({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required String sourcePath,
   }) async {
     final spot = await _selectCoopSpot(roomCode, spotId);
@@ -338,8 +355,8 @@ class HistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> saveCoopUserPhoto({
-    required String roomCode,
-    required String spotId,
+    required RoomCode roomCode,
+    required SpotId spotId,
     required CheckpointProgress checkpoint,
   }) async {
     final spot = await _selectCoopSpot(roomCode, spotId);
@@ -368,11 +385,11 @@ class HistoryRepository implements IHistoryRepository {
 
   @override
   Future<void> finalizeCoopHistory(
-    String roomCode, {
+    RoomCode roomCode, {
     required DateTime completedAt,
   }) async {
     await (_db.update(_db.missionHistories)
-      ..where((t) => t.roomCode.equals(roomCode))).write(
+      ..where((t) => t.roomCode.equals(roomCode.value))).write(
       MissionHistoriesCompanion(
         coopSyncState: Value(CoopSyncState.finalized.name),
         completedAt: Value(completedAt.millisecondsSinceEpoch),
@@ -388,26 +405,26 @@ class HistoryRepository implements IHistoryRepository {
               t.mode.equals(historyModeCoop) &
               t.coopSyncState.equals(CoopSyncState.inProgress.name),
         )).get();
-    return [for (final row in rows) await _rowToMissionHistory(row)];
+    return _toMissionHistories(rows);
   }
 
-  Future<MissionHistoryRow?> _selectCoopRow(String roomCode) =>
+  Future<MissionHistoryRow?> _selectCoopRow(RoomCode roomCode) =>
       (_db.select(_db.missionHistories)
-            ..where((t) => t.roomCode.equals(roomCode))
+            ..where((t) => t.roomCode.equals(roomCode.value))
             ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
             ..limit(1))
           .getSingleOrNull();
 
   Future<HistorySpotRow?> _selectCoopSpot(
-    String roomCode,
-    String spotId,
+    RoomCode roomCode,
+    SpotId spotId,
   ) async {
     final history = await _selectCoopRow(roomCode);
     if (history == null) {
       return null;
     }
     return (_db.select(_db.historySpots)..where(
-      (t) => t.historyId.equals(history.id) & t.spotId.equals(spotId),
+      (t) => t.historyId.equals(history.id) & t.spotId.equals(spotId.value),
     )).getSingleOrNull();
   }
 

@@ -14,7 +14,7 @@ import 'package:snampo/features/mission/application/usecase/judge_photo_use_case
 import 'package:snampo/features/mission/application/usecase/save_photo_use_case.dart';
 import 'package:snampo/features/mission/data/heading_service.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
-import 'package:snampo/features/mission/data/mission_repository.dart';
+import 'package:snampo/features/mission/data/repository/mission_repository.dart';
 import 'package:sqflite/sqflite.dart';
 
 export 'package:snampo/core/di/photo_storage_provider.dart';

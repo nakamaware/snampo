@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/core/domain/room_code.dart';
 
 /// ルームの QR を読み取り、[RoomCode] を返す画面
 ///

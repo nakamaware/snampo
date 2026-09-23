@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 
 /// 撮影した写真の保存先 (`mission_photos/` の下のサブディレクトリ)
 ///
@@ -12,22 +13,14 @@ sealed class MissionPhotoDirectory {
   const factory MissionPhotoDirectory.solo() = _SoloPhotoDirectory;
 
   /// 協力プレイの保存先 (ルームごと)
-  ///
-  /// パスとして不正なルームコードなら [ArgumentError] を投げる。
-  factory MissionPhotoDirectory.coop(String roomCode) {
-    if (!_roomCodePattern.hasMatch(roomCode)) {
-      throw ArgumentError.value(roomCode, 'roomCode', '不正なルームコードです');
-    }
-    return _CoopPhotoDirectory(roomCode);
-  }
+  const factory MissionPhotoDirectory.coop(RoomCode roomCode) =
+      _CoopPhotoDirectory;
 
   /// ルームコードがあれば協力プレイ、なければソロの保存先
-  factory MissionPhotoDirectory.of({required String? roomCode}) =>
+  factory MissionPhotoDirectory.of({required RoomCode? roomCode}) =>
       roomCode == null
           ? const MissionPhotoDirectory.solo()
           : MissionPhotoDirectory.coop(roomCode);
-
-  static final _roomCodePattern = RegExp(r'^[A-Z0-9]+$');
 
   /// `mission_photos/` からの相対パスの要素
   List<String> get segments;
@@ -43,8 +36,8 @@ final class _SoloPhotoDirectory extends MissionPhotoDirectory {
 final class _CoopPhotoDirectory extends MissionPhotoDirectory {
   const _CoopPhotoDirectory(this.roomCode) : super._();
 
-  final String roomCode;
+  final RoomCode roomCode;
 
   @override
-  List<String> get segments => ['coop', roomCode];
+  List<String> get segments => ['coop', roomCode.value];
 }

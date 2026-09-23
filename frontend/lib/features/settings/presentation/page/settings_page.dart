@@ -4,8 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:snampo/config.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/firebase/app_check_debug_token.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// 設定画面 (ニックネーム / dev ビルドだけ App Check のデバッグトークン)

@@ -47,7 +47,10 @@ _MissionProgressEntity _$MissionProgressEntityFromJson(
   Map<String, dynamic> json,
 ) => _MissionProgressEntity(
   startedAt: DateTime.parse(json['startedAt'] as String),
-  roomCode: json['roomCode'] as String?,
+  roomCode: _$JsonConverterFromJson<String, RoomCode>(
+    json['roomCode'],
+    const RoomCodeConverter().fromJson,
+  ),
   checkpoints:
       (json['checkpoints'] as List<dynamic>?)
           ?.map(
@@ -64,6 +67,19 @@ Map<String, dynamic> _$MissionProgressEntityToJson(
   _MissionProgressEntity instance,
 ) => <String, dynamic>{
   'startedAt': instance.startedAt.toIso8601String(),
-  'roomCode': instance.roomCode,
+  'roomCode': _$JsonConverterToJson<String, RoomCode>(
+    instance.roomCode,
+    const RoomCodeConverter().toJson,
+  ),
   'checkpoints': _missionProgressCheckpointsToJson(instance.checkpoints),
 };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

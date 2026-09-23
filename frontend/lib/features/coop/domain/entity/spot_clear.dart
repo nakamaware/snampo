@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 part 'spot_clear.freezed.dart';
 
@@ -9,7 +10,7 @@ part 'spot_clear.freezed.dart';
 abstract class SpotClear with _$SpotClear {
   /// [SpotClear] を作成する
   const factory SpotClear({
-    required String spotId,
+    required SpotId spotId,
 
     /// 発見者の Auth uid
     required String clearedBy,
@@ -59,7 +60,7 @@ abstract class ClearSyncPlan with _$ClearSyncPlan {
 /// 基本方針は「サーバ (`clears`) が正で、端末は差分を取りにいく」。
 ClearSyncPlan planClearSync({
   required List<SpotClear> clears,
-  required Map<String, LocalClearState> local,
+  required Map<SpotId, LocalClearState> local,
 }) {
   final discoverers = <SpotClear>[];
   final thumbs = <SpotClear>[];
@@ -81,7 +82,7 @@ ClearSyncPlan planClearSync({
 /// 自分の発見は、thumbPath がまだ埋まっていなくても端末にサムネがある。
 bool hasAllClearThumbs({
   required List<SpotClear> clears,
-  required Map<String, LocalClearState> local,
+  required Map<SpotId, LocalClearState> local,
 }) => clears.every((clear) {
   final state = local[clear.spotId];
   return state != null &&
@@ -93,13 +94,15 @@ bool hasAllClearThumbs({
 typedef DiscovererRank = ({String uid, int count});
 
 /// 発見数ランキング (発見数の多い順、同数なら入室順)
+///
+/// [discovererUids] はスポットごとの発見者の uid。
 List<DiscovererRank> rankDiscoverers({
-  required List<SpotClear> clears,
+  required Iterable<String> discovererUids,
   required List<String> uidsInJoinOrder,
 }) {
   final counts = <String, int>{for (final uid in uidsInJoinOrder) uid: 0};
-  for (final clear in clears) {
-    counts[clear.clearedBy] = (counts[clear.clearedBy] ?? 0) + 1;
+  for (final uid in discovererUids) {
+    counts[uid] = (counts[uid] ?? 0) + 1;
   }
   final order = [
     ...uidsInJoinOrder,

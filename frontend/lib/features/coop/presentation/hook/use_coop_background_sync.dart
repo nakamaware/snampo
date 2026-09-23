@@ -25,7 +25,7 @@ void useCoopBackgroundSync(WidgetRef ref) {
     Future<void> run({required bool syncHistory, bool signIn = true}) async {
       try {
         if (signIn) {
-          await ref.read(coopAuthServiceProvider).ensureSignedIn();
+          await ref.read(ensureCoopSignInUseCaseProvider)();
         }
         final result = await ref.read(retryPendingClearsUseCaseProvider)();
         _showFailures(result.failures);

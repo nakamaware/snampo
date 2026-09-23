@@ -1,7 +1,7 @@
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 
 /// 共有しきれていない発見のキューの保存先 (キルされても消えないように端末に保存する)
-abstract class IPendingClearQueueStore {
+abstract class IPendingClearRepository {
   /// 読み込む
   Future<PendingClearQueue> load();
 

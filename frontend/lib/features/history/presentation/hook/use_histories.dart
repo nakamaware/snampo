@@ -19,7 +19,7 @@ AsyncValue<List<MissionHistory>> useHistories(WidgetRef ref) {
     Future(() async {
       try {
         // サインインの再試行はしない (未サインインなら同期しない)
-        if (await ref.read(coopAuthServiceProvider).signedInUid() == null) {
+        if (await ref.read(getCoopSignedInUidUseCaseProvider)() == null) {
           return;
         }
         await ref.read(syncCoopHistoryUseCaseProvider)();

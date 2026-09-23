@@ -45,4 +45,13 @@ void main() {
       expect(() => SpotId.parse('geo:95,0'), throwsFormatException);
     });
   });
+
+  group('SpotIdConverter', () {
+    test('JSON の文字列と相互変換できる', () {
+      const converter = SpotIdConverter();
+      final spotId = SpotId.parse('geo:35.681236,139.767125');
+
+      expect(converter.fromJson(converter.toJson(spotId)), spotId);
+    });
+  });
 }

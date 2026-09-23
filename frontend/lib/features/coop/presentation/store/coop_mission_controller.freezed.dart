@@ -278,8 +278,8 @@ mixin _$CoopMissionState {
 
 /// ミッションを端末に用意できたか (バンドルの取得と履歴の作成が済んだか)
  bool get isReady;/// ミッションの用意に失敗した理由
- Object? get prepareError;/// サムネを共有中のスポット ID (「発見を共有中…」の表示用)
- Set<String> get sharingSpotIds;/// 最新のお知らせ
+ Object? get prepareError;/// サムネを共有中のスポット (「発見を共有中…」の表示用)
+ Set<SpotId> get sharingSpotIds;/// 最新のお知らせ
  CoopNotice? get notice;
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
@@ -311,7 +311,7 @@ abstract mixin class $CoopMissionStateCopyWith<$Res>  {
   factory $CoopMissionStateCopyWith(CoopMissionState value, $Res Function(CoopMissionState) _then) = _$CoopMissionStateCopyWithImpl;
 @useResult
 $Res call({
- bool isReady, Object? prepareError, Set<String> sharingSpotIds, CoopNotice? notice
+ bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice
 });
 
 
@@ -332,7 +332,7 @@ class _$CoopMissionStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 isReady: null == isReady ? _self.isReady : isReady // ignore: cast_nullable_to_non_nullable
 as bool,prepareError: freezed == prepareError ? _self.prepareError : prepareError ,sharingSpotIds: null == sharingSpotIds ? _self.sharingSpotIds : sharingSpotIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
+as Set<SpotId>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as CoopNotice?,
   ));
 }
@@ -430,7 +430,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<String> sharingSpotIds,  CoopNotice? notice)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CoopMissionState() when $default != null:
 return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice);case _:
@@ -451,7 +451,7 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<String> sharingSpotIds,  CoopNotice? notice)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice)  $default,) {final _that = this;
 switch (_that) {
 case _CoopMissionState():
 return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice);case _:
@@ -471,7 +471,7 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isReady,  Object? prepareError,  Set<String> sharingSpotIds,  CoopNotice? notice)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice)?  $default,) {final _that = this;
 switch (_that) {
 case _CoopMissionState() when $default != null:
 return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice);case _:
@@ -486,17 +486,17 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 
 
 class _CoopMissionState implements CoopMissionState {
-  const _CoopMissionState({this.isReady = false, this.prepareError, final  Set<String> sharingSpotIds = const <String>{}, this.notice}): _sharingSpotIds = sharingSpotIds;
+  const _CoopMissionState({this.isReady = false, this.prepareError, final  Set<SpotId> sharingSpotIds = const <SpotId>{}, this.notice}): _sharingSpotIds = sharingSpotIds;
 
 
 /// ミッションを端末に用意できたか (バンドルの取得と履歴の作成が済んだか)
 @override@JsonKey() final  bool isReady;
 /// ミッションの用意に失敗した理由
 @override final  Object? prepareError;
-/// サムネを共有中のスポット ID (「発見を共有中…」の表示用)
- final  Set<String> _sharingSpotIds;
-/// サムネを共有中のスポット ID (「発見を共有中…」の表示用)
-@override@JsonKey() Set<String> get sharingSpotIds {
+/// サムネを共有中のスポット (「発見を共有中…」の表示用)
+ final  Set<SpotId> _sharingSpotIds;
+/// サムネを共有中のスポット (「発見を共有中…」の表示用)
+@override@JsonKey() Set<SpotId> get sharingSpotIds {
   if (_sharingSpotIds is EqualUnmodifiableSetView) return _sharingSpotIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_sharingSpotIds);
@@ -535,7 +535,7 @@ abstract mixin class _$CoopMissionStateCopyWith<$Res> implements $CoopMissionSta
   factory _$CoopMissionStateCopyWith(_CoopMissionState value, $Res Function(_CoopMissionState) _then) = __$CoopMissionStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isReady, Object? prepareError, Set<String> sharingSpotIds, CoopNotice? notice
+ bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice
 });
 
 
@@ -556,7 +556,7 @@ class __$CoopMissionStateCopyWithImpl<$Res>
   return _then(_CoopMissionState(
 isReady: null == isReady ? _self.isReady : isReady // ignore: cast_nullable_to_non_nullable
 as bool,prepareError: freezed == prepareError ? _self.prepareError : prepareError ,sharingSpotIds: null == sharingSpotIds ? _self._sharingSpotIds : sharingSpotIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
+as Set<SpotId>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as CoopNotice?,
   ));
 }

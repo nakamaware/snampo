@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
@@ -94,6 +95,17 @@ class PhotoJudgeRankConverter
   String? toJson(PhotoJudgeRank? object) => object?.name;
 }
 
+/// 協力プレイで、あるスポットを発見した人
+typedef CoopDiscovery =
+    ({
+      String uid,
+      String nickname,
+      DateTime clearedAt,
+
+      /// 端末に保存した発見者のサムネのパス (取得できていなければ null)
+      String? thumbPath,
+    });
+
 /// ミッション進捗エンティティ
 ///
 /// ミッション開始時刻と各チェックポイントの進捗を保持する
@@ -105,7 +117,7 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
     required DateTime startedAt,
 
     /// 協力プレイのルームコード (ソロでは null)
-    String? roomCode,
+    @RoomCodeConverter() RoomCode? roomCode,
 
     /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
     @Default([])
@@ -118,6 +130,36 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   /// JSON から [MissionProgressEntity] を生成する
   factory MissionProgressEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionProgressEntityFromJson(json);
+
+  /// 協力プレイの発見者を反映した進捗を返す (キーはチェックポイントのインデックス)
+  ///
+  /// 他の人のクリアは「発見者情報つき・自分の写真なし」として反映する。
+  /// [roomCode] がこの進捗のルームと違えば (抜けた前のルームの通知など)、何も変えない。
+  MissionProgressEntity withCoopDiscoveries(
+    RoomCode roomCode,
+    Map<int, CoopDiscovery> discoveries,
+  ) {
+    if (this.roomCode != roomCode) {
+      return this;
+    }
+    final updated = List<CheckpointProgress?>.from(checkpoints);
+    for (final MapEntry(key: index, value: d) in discoveries.entries) {
+      if (index < 0 || index >= updated.length) continue;
+      final previous = updated[index];
+      updated[index] = (previous ?? const CheckpointProgress()).copyWith(
+        discovererUid: d.uid,
+        discovererNickname: d.nickname,
+        discovererThumbPath:
+            d.thumbPath ??
+            (previous?.discovererUid == d.uid
+                ? previous?.discovererThumbPath
+                : null),
+        achievedAt: d.clearedAt,
+      );
+    }
+    final next = copyWith(checkpoints: updated);
+    return next == this ? this : next;
+  }
 }
 
 List<Object?> _missionProgressCheckpointsToJson(

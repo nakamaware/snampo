@@ -14,7 +14,10 @@ part of 'coop_mission_controller.dart';
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-/// - finished になったら履歴を確定する
+/// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///
+/// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
 @ProviderFor(CoopMissionController)
 final coopMissionControllerProvider = CoopMissionControllerFamily._();
@@ -25,7 +28,10 @@ final coopMissionControllerProvider = CoopMissionControllerFamily._();
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-/// - finished になったら履歴を確定する
+/// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///
+/// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 final class CoopMissionControllerProvider
     extends $NotifierProvider<CoopMissionController, CoopMissionState> {
   /// 協力プレイのミッションを進める
@@ -34,10 +40,13 @@ final class CoopMissionControllerProvider
   /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
   /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
   /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-  /// - finished になったら履歴を確定する
+  /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+  ///   (finished のあとも、サムネが再送で届くまでは確定しない)
+  ///
+  /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
   CoopMissionControllerProvider._({
     required CoopMissionControllerFamily super.from,
-    required String super.argument,
+    required RoomCode super.argument,
   }) : super(
          retry: null,
          name: r'coopMissionControllerProvider',
@@ -80,7 +89,7 @@ final class CoopMissionControllerProvider
 }
 
 String _$coopMissionControllerHash() =>
-    r'6be93d6ac7af432723e5aa62bd3e2bc3cc715e41';
+    r'4396abace1f5c589632cdbc117bb3cd03be613a3';
 
 /// 協力プレイのミッションを進める
 ///
@@ -88,7 +97,10 @@ String _$coopMissionControllerHash() =>
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-/// - finished になったら履歴を確定する
+/// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///
+/// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
 final class CoopMissionControllerFamily extends $Family
     with
@@ -97,7 +109,7 @@ final class CoopMissionControllerFamily extends $Family
           CoopMissionState,
           CoopMissionState,
           CoopMissionState,
-          String
+          RoomCode
         > {
   CoopMissionControllerFamily._()
     : super(
@@ -114,9 +126,12 @@ final class CoopMissionControllerFamily extends $Family
   /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
   /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
   /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-  /// - finished になったら履歴を確定する
+  /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+  ///   (finished のあとも、サムネが再送で届くまでは確定しない)
+  ///
+  /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
-  CoopMissionControllerProvider call(String roomCode) =>
+  CoopMissionControllerProvider call(RoomCode roomCode) =>
       CoopMissionControllerProvider._(argument: roomCode, from: this);
 
   @override
@@ -129,13 +144,16 @@ final class CoopMissionControllerFamily extends $Family
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-/// - finished になったら履歴を確定する
+/// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///
+/// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
 abstract class _$CoopMissionController extends $Notifier<CoopMissionState> {
-  late final _$args = ref.$arg as String;
-  String get roomCode => _$args;
+  late final _$args = ref.$arg as RoomCode;
+  RoomCode get roomCode => _$args;
 
-  CoopMissionState build(String roomCode);
+  CoopMissionState build(RoomCode roomCode);
   @$mustCallSuper
   @override
   void runBuild() {

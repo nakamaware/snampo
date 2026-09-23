@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/core/domain/room_code.dart';
 
 void main() {
   group('RoomCode', () {
@@ -37,6 +37,22 @@ void main() {
       expect(RoomCode.fromQrPayload('https://example.com'), isNull);
       expect(RoomCode.fromQrPayload('snampo:room:ABCDO2'), isNull);
       expect(RoomCode.fromQrPayload('ABCD23'), isNull);
+    });
+  });
+
+  group('RoomCodeConverter', () {
+    test('JSON の文字列と相互変換できる', () {
+      const converter = RoomCodeConverter();
+      final code = RoomCode.tryParse('ABCD23')!;
+
+      expect(converter.fromJson(converter.toJson(code)), code);
+    });
+
+    test('不正な文字列は FormatException', () {
+      expect(
+        () => const RoomCodeConverter().fromJson('ABCDO2'),
+        throwsFormatException,
+      );
     });
   });
 }

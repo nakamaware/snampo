@@ -311,7 +311,7 @@ mixin _$Room {
  DateTime get expiresAt;/// データの保持期限 (作成から 7 日)。TTL で削除する
  DateTime get deleteAt;/// Storage のバンドルのパス。playing で必須
  String? get missionRef;/// バンドル内のスポットの並び順
- List<String> get spotIds;/// generating が失敗したときの理由
+ List<SpotId> get spotIds;/// generating が失敗したときの理由
  String? get generationError; FinishReason? get finishReason; DateTime? get startedAt; DateTime? get finishedAt;
 /// Create a copy of Room
 /// with the given fields replaced by the non-null parameter values.
@@ -343,7 +343,7 @@ abstract mixin class $RoomCopyWith<$Res>  {
   factory $RoomCopyWith(Room value, $Res Function(Room) _then) = _$RoomCopyWithImpl;
 @useResult
 $Res call({
- RoomCode code, String hostId, RoomStatus status, RoomSettings settings, DateTime createdAt, DateTime expiresAt, DateTime deleteAt, String? missionRef, List<String> spotIds, String? generationError, FinishReason? finishReason, DateTime? startedAt, DateTime? finishedAt
+ RoomCode code, String hostId, RoomStatus status, RoomSettings settings, DateTime createdAt, DateTime expiresAt, DateTime deleteAt, String? missionRef, List<SpotId> spotIds, String? generationError, FinishReason? finishReason, DateTime? startedAt, DateTime? finishedAt
 });
 
 
@@ -371,7 +371,7 @@ as DateTime,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore
 as DateTime,deleteAt: null == deleteAt ? _self.deleteAt : deleteAt // ignore: cast_nullable_to_non_nullable
 as DateTime,missionRef: freezed == missionRef ? _self.missionRef : missionRef // ignore: cast_nullable_to_non_nullable
 as String?,spotIds: null == spotIds ? _self.spotIds : spotIds // ignore: cast_nullable_to_non_nullable
-as List<String>,generationError: freezed == generationError ? _self.generationError : generationError // ignore: cast_nullable_to_non_nullable
+as List<SpotId>,generationError: freezed == generationError ? _self.generationError : generationError // ignore: cast_nullable_to_non_nullable
 as String?,finishReason: freezed == finishReason ? _self.finishReason : finishReason // ignore: cast_nullable_to_non_nullable
 as FinishReason?,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,finishedAt: freezed == finishedAt ? _self.finishedAt : finishedAt // ignore: cast_nullable_to_non_nullable
@@ -469,7 +469,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<String> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<SpotId> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Room() when $default != null:
 return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.createdAt,_that.expiresAt,_that.deleteAt,_that.missionRef,_that.spotIds,_that.generationError,_that.finishReason,_that.startedAt,_that.finishedAt);case _:
@@ -490,7 +490,7 @@ return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.create
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<String> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<SpotId> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Room():
 return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.createdAt,_that.expiresAt,_that.deleteAt,_that.missionRef,_that.spotIds,_that.generationError,_that.finishReason,_that.startedAt,_that.finishedAt);case _:
@@ -510,7 +510,7 @@ return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.create
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<String> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RoomCode code,  String hostId,  RoomStatus status,  RoomSettings settings,  DateTime createdAt,  DateTime expiresAt,  DateTime deleteAt,  String? missionRef,  List<SpotId> spotIds,  String? generationError,  FinishReason? finishReason,  DateTime? startedAt,  DateTime? finishedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Room() when $default != null:
 return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.createdAt,_that.expiresAt,_that.deleteAt,_that.missionRef,_that.spotIds,_that.generationError,_that.finishReason,_that.startedAt,_that.finishedAt);case _:
@@ -525,7 +525,7 @@ return $default(_that.code,_that.hostId,_that.status,_that.settings,_that.create
 
 
 class _Room extends Room {
-  const _Room({required this.code, required this.hostId, required this.status, required this.settings, required this.createdAt, required this.expiresAt, required this.deleteAt, this.missionRef, final  List<String> spotIds = const [], this.generationError, this.finishReason, this.startedAt, this.finishedAt}): _spotIds = spotIds,super._();
+  const _Room({required this.code, required this.hostId, required this.status, required this.settings, required this.createdAt, required this.expiresAt, required this.deleteAt, this.missionRef, final  List<SpotId> spotIds = const [], this.generationError, this.finishReason, this.startedAt, this.finishedAt}): _spotIds = spotIds,super._();
 
 
 @override final  RoomCode code;
@@ -541,9 +541,9 @@ class _Room extends Room {
 /// Storage のバンドルのパス。playing で必須
 @override final  String? missionRef;
 /// バンドル内のスポットの並び順
- final  List<String> _spotIds;
+ final  List<SpotId> _spotIds;
 /// バンドル内のスポットの並び順
-@override@JsonKey() List<String> get spotIds {
+@override@JsonKey() List<SpotId> get spotIds {
   if (_spotIds is EqualUnmodifiableListView) return _spotIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_spotIds);
@@ -585,7 +585,7 @@ abstract mixin class _$RoomCopyWith<$Res> implements $RoomCopyWith<$Res> {
   factory _$RoomCopyWith(_Room value, $Res Function(_Room) _then) = __$RoomCopyWithImpl;
 @override @useResult
 $Res call({
- RoomCode code, String hostId, RoomStatus status, RoomSettings settings, DateTime createdAt, DateTime expiresAt, DateTime deleteAt, String? missionRef, List<String> spotIds, String? generationError, FinishReason? finishReason, DateTime? startedAt, DateTime? finishedAt
+ RoomCode code, String hostId, RoomStatus status, RoomSettings settings, DateTime createdAt, DateTime expiresAt, DateTime deleteAt, String? missionRef, List<SpotId> spotIds, String? generationError, FinishReason? finishReason, DateTime? startedAt, DateTime? finishedAt
 });
 
 
@@ -613,7 +613,7 @@ as DateTime,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore
 as DateTime,deleteAt: null == deleteAt ? _self.deleteAt : deleteAt // ignore: cast_nullable_to_non_nullable
 as DateTime,missionRef: freezed == missionRef ? _self.missionRef : missionRef // ignore: cast_nullable_to_non_nullable
 as String?,spotIds: null == spotIds ? _self._spotIds : spotIds // ignore: cast_nullable_to_non_nullable
-as List<String>,generationError: freezed == generationError ? _self.generationError : generationError // ignore: cast_nullable_to_non_nullable
+as List<SpotId>,generationError: freezed == generationError ? _self.generationError : generationError // ignore: cast_nullable_to_non_nullable
 as String?,finishReason: freezed == finishReason ? _self.finishReason : finishReason // ignore: cast_nullable_to_non_nullable
 as FinishReason?,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,finishedAt: freezed == finishedAt ? _self.finishedAt : finishedAt // ignore: cast_nullable_to_non_nullable

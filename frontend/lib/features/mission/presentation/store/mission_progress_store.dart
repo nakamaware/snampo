@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -9,10 +10,6 @@ import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 
 part 'mission_progress_store.g.dart';
-
-/// 協力プレイで、あるスポットを発見した人
-typedef CoopDiscovery =
-    ({String uid, String nickname, DateTime clearedAt, String? thumbPath});
 
 /// ミッション進捗を管理するストア
 ///
@@ -33,7 +30,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   ///
   /// [checkpointCount] はチェックポイントの数（waypoints + destination）
   /// [roomCode] は協力プレイのルームコード (ソロでは null)
-  void startProgress(int checkpointCount, {String? roomCode}) {
+  void startProgress(int checkpointCount, {RoomCode? roomCode}) {
     state = AsyncValue.data(
       MissionProgressEntity(
         startedAt: DateTime.now(),
@@ -41,6 +38,19 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
         checkpoints: List.filled(checkpointCount, null),
       ),
     );
+  }
+
+  /// 前の進捗 (保存した写真を含む) を片付けて、新しいミッションの進捗を始める
+  ///
+  /// build() の完了を待ってから書き換える。build() と並行すると、build() の返り値 (null) が
+  /// あとから適用されて、始めた進捗を上書きするため。
+  Future<void> restartProgress(
+    int checkpointCount, {
+    RoomCode? roomCode,
+  }) async {
+    await future;
+    await clearProgress();
+    startProgress(checkpointCount, roomCode: roomCode);
   }
 
   /// チェックポイントの撮影結果と採点結果を確定する
@@ -102,32 +112,16 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
 
   /// 協力プレイの発見者を進捗に反映する (キーはチェックポイントのインデックス)
   ///
-  /// 他の人のクリアは「発見者情報つき・自分の写真なし」として反映する。
-  void applyCoopDiscoveries(Map<int, CoopDiscovery> discoveries) {
+  /// [roomCode] がこの進捗のルームと違えば何もしない。
+  void applyCoopDiscoveries(
+    RoomCode roomCode,
+    Map<int, CoopDiscovery> discoveries,
+  ) {
     final current = state.value;
-    if (current == null || current.roomCode == null) return;
-    var changed = false;
-    final updated = List<CheckpointProgress?>.from(current.checkpoints);
-    for (final MapEntry(key: index, value: d) in discoveries.entries) {
-      if (index < 0 || index >= updated.length) continue;
-      final previous = updated[index];
-      final next = (previous ?? const CheckpointProgress()).copyWith(
-        discovererUid: d.uid,
-        discovererNickname: d.nickname,
-        discovererThumbPath:
-            d.thumbPath ??
-            (previous?.discovererUid == d.uid
-                ? previous?.discovererThumbPath
-                : null),
-        achievedAt: d.clearedAt,
-      );
-      if (next != previous) {
-        updated[index] = next;
-        changed = true;
-      }
-    }
-    if (changed) {
-      state = AsyncValue.data(current.copyWith(checkpoints: updated));
+    if (current == null) return;
+    final next = current.withCoopDiscoveries(roomCode, discoveries);
+    if (!identical(next, current)) {
+      state = AsyncValue.data(next);
     }
   }
 

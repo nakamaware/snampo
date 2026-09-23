@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 
 /// 共有しきれていない発見のキューを JSON ファイルとして端末に保存する (キルされても消えない)
-class PendingClearQueueStorage implements IPendingClearQueueStore {
+class PendingClearRepository implements IPendingClearRepository {
   static const _fileName = 'coop_pending_clear_queue.json';
 
   Future<File> _file() async {

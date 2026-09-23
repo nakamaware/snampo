@@ -145,7 +145,7 @@ class _HistoryListTile extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                _HistoryThumbnail(path: firstUserPhotoPath(record.spots)),
+                _HistoryThumbnail(path: historyThumbnailPath(record.spots)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

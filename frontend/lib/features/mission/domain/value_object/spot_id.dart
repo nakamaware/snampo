@@ -88,3 +88,15 @@ final class GeoSpotId extends SpotId {
   /// スポット ID から戻した座標
   final Coordinate coordinate;
 }
+
+/// [SpotId] を JSON (文字列) と相互変換する [JsonConverter]
+class SpotIdConverter implements JsonConverter<SpotId, String> {
+  /// [SpotIdConverter] を作成する
+  const SpotIdConverter();
+
+  @override
+  SpotId fromJson(String json) => SpotId.parse(json);
+
+  @override
+  String toJson(SpotId object) => object.value;
+}

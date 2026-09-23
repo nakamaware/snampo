@@ -1,4 +1,4 @@
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
@@ -40,10 +40,10 @@ String formatMissionSettings(MissionSettings settings) {
   );
 }
 
-/// スポット行一覧から最初のユーザー写真パスを返す
+/// 履歴の一覧に表示する代表のサムネのパスを返す (最初のユーザー写真)
 ///
 /// 自分の写真がなければ、協力プレイの発見者のサムネを使う。
-String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
+String? historyThumbnailPath(List<MissionHistorySpot> spots) {
   for (final line in spots) {
     final p = line.userPhotoPath;
     if (p != null && p.isNotEmpty) {

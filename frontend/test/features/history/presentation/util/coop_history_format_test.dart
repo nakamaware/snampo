@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
@@ -7,7 +8,7 @@ import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 void main() {
   final at = DateTime.utc(2026, 9, 23);
   CoopHistoryInfo coop(CoopSyncState state) => CoopHistoryInfo(
-    roomCode: 'ABCD23',
+    roomCode: RoomCode.tryParse('ABCD23')!,
     syncState: state,
     isHost: true,
     members: const [
@@ -39,6 +40,6 @@ void main() {
       discovererThumbPath: '/thumb.jpg',
     );
 
-    expect(firstUserPhotoPath([spot]), '/thumb.jpg');
+    expect(historyThumbnailPath([spot]), '/thumb.jpg');
   });
 }

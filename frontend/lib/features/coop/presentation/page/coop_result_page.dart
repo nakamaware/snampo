@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/value_object/nickname.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -40,10 +41,16 @@ class _CoopResultPageExtension extends ResultPageExtension {
     return discoverer == null ? '未クリア' : '発見: $discoverer';
   }
 
+  /// 発見者のサムネを表示する。同時に撮影して先着に負けたスポットでも、自分の写真ではなく
+  /// 発見者のサムネを出す (サムネがまだ届いていなければ自分の写真)
+  @override
+  String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
+      checkpoint?.discovererThumbPath ?? checkpoint?.userPhotoPath;
+
   /// 端末の「ルームに戻る」を消す (履歴の同期は続く)
   @override
   Future<void> onFinish(WidgetRef ref) async {
-    ref.read(coopSessionStoreProvider.notifier).clear();
+    ref.read(coopSessionStoreProvider.notifier).close();
   }
 }
 
@@ -52,7 +59,7 @@ class _CoopResultRanking extends ConsumerWidget {
   const _CoopResultRanking({required this.roomCode, required this.progress});
 
   /// ルームコード
-  final String roomCode;
+  final RoomCode roomCode;
 
   /// 協力プレイの進捗 (発見者つき)
   final MissionProgressEntity progress;
@@ -69,15 +76,7 @@ class _CoopResultRanking extends ConsumerWidget {
         if (cp?.discovererUid != null) cp!,
     ];
     final ranking = rankDiscoverers(
-      clears: [
-        for (final cp in discoveries)
-          SpotClear(
-            spotId: '',
-            clearedBy: cp.discovererUid!,
-            nickname: cp.discovererNickname ?? '',
-            clearedAt: cp.achievedAt ?? DateTime.now(),
-          ),
-      ],
+      discovererUids: [for (final cp in discoveries) cp.discovererUid!],
       uidsInJoinOrder: [for (final m in members) m.uid],
     );
     // メンバーを読めない場合 (オフラインなど) は発見時点のニックネームで表示する
