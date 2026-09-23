@@ -19,8 +19,8 @@ abstract class SpotClear with _$SpotClear {
     required String nickname,
     required DateTime clearedAt,
 
-    /// サムネの Storage パス。アップロード失敗時は null で、後から埋める
-    String? thumbPath,
+    /// サムネの Storage パス (サムネを上げてからクリアを作成するので必ずある)
+    required String thumbPath,
   }) = _SpotClear;
 }
 
@@ -70,7 +70,7 @@ ClearSyncPlan planClearSync({
       discoverers.add(clear);
     }
     final hasThumb = state?.discovererUid == clear.clearedBy && state!.hasThumb;
-    if (clear.thumbPath != null && !hasThumb) {
+    if (!hasThumb) {
       thumbs.add(clear);
     }
   }
@@ -78,8 +78,6 @@ ClearSyncPlan planClearSync({
 }
 
 /// すべてのクリアについて、発見者のサムネが端末にそろったか
-///
-/// 自分の発見は、thumbPath がまだ埋まっていなくても端末にサムネがある。
 bool hasAllClearThumbs({
   required List<SpotClear> clears,
   required Map<SpotId, LocalClearState> local,

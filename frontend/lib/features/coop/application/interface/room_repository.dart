@@ -25,13 +25,7 @@ sealed class CreateClearResult {
 /// 自分が発見者になった
 final class ClearCreated extends CreateClearResult {
   /// [ClearCreated] を作成する
-  const ClearCreated({required this.thumbPathSaved});
-
-  /// サーバのクリアに thumbPath が入っているか
-  ///
-  /// 送信待ちだった自分のクリア (キルされる前の書き込み) が先に届いていた場合は、
-  /// 今回の thumbPath は入っていないことがある。
-  final bool thumbPathSaved;
+  const ClearCreated();
 }
 
 /// 先に他の人がクリアしていた
@@ -95,20 +89,16 @@ abstract class IRoomRepository {
 
   /// クリアを作成する (先着勝ち)
   ///
-  /// オフラインの間は SDK が端末に溜めておき、復帰したら送信するため、
-  /// サーバが受け付けるまで完了しない。
+  /// サーバと通信して結果を確かめる (トランザクション)。オフラインなら例外を投げ、
+  /// 端末に書き込みを溜めない (共有に失敗したら撮り直してもらうため)。
+  /// 拒否されたら [CoopPermissionDeniedException] を投げる。
   Future<CreateClearResult> createClear(
     Room room, {
     required SpotId spotId,
     required String uid,
     required Nickname nickname,
-    required String? thumbPath,
+    required String thumbPath,
   });
-
-  /// サムネのパスを後から埋める (発見者本人が 1 回だけ)
-  ///
-  /// 拒否されたら [CoopPermissionDeniedException] を投げる。
-  Future<void> fillThumbPath(RoomCode code, SpotId spotId, String thumbPath);
 
   /// クリアを 1 回だけサーバから取得する (キャッシュは使わない)
   ///

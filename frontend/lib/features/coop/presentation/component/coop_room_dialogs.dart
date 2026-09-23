@@ -97,6 +97,6 @@ Future<void> leaveRoomWithConfirm(BuildContext context, WidgetRef ref) async {
     confirmLabel: '抜ける',
   );
   if (!confirmed) return;
-  await ref.read(coopSessionStoreProvider.notifier).leave();
+  ref.read(coopSessionStoreProvider.notifier).leave();
   if (context.mounted) context.go('/');
 }

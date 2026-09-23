@@ -15,7 +15,7 @@ part of 'coop_mission_store.dart';
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///   (finished のあとも、サムネを取得するまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
@@ -29,7 +29,7 @@ final coopMissionStoreProvider = CoopMissionStoreFamily._();
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///   (finished のあとも、サムネを取得するまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 final class CoopMissionStoreProvider
@@ -41,7 +41,7 @@ final class CoopMissionStoreProvider
   /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
   /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
   /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-  ///   (finished のあとも、サムネが再送で届くまでは確定しない)
+  ///   (finished のあとも、サムネを取得するまでは確定しない)
   ///
   /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
   CoopMissionStoreProvider._({
@@ -88,7 +88,7 @@ final class CoopMissionStoreProvider
   }
 }
 
-String _$coopMissionStoreHash() => r'bbaf49efc277e5616d5de8f5d7738823b294497b';
+String _$coopMissionStoreHash() => r'b03f1902a59d438e6d8c188c554a661be4624182';
 
 /// 協力プレイのミッションを進める
 ///
@@ -97,7 +97,7 @@ String _$coopMissionStoreHash() => r'bbaf49efc277e5616d5de8f5d7738823b294497b';
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///   (finished のあとも、サムネを取得するまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
@@ -126,7 +126,7 @@ final class CoopMissionStoreFamily extends $Family
   /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
   /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
   /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-  ///   (finished のあとも、サムネが再送で届くまでは確定しない)
+  ///   (finished のあとも、サムネを取得するまでは確定しない)
   ///
   /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
@@ -144,7 +144,7 @@ final class CoopMissionStoreFamily extends $Family
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///   (finished のあとも、サムネを取得するまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 

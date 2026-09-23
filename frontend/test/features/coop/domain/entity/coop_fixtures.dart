@@ -40,5 +40,5 @@ SpotClear clear(String spotId, String uid, {String? thumbPath}) => SpotClear(
   clearedBy: uid,
   nickname: uid,
   clearedAt: createdAt.add(const Duration(minutes: 30)),
-  thumbPath: thumbPath,
+  thumbPath: thumbPath ?? 'rooms/ABCD23/thumbs/$spotId/$uid.jpg',
 );

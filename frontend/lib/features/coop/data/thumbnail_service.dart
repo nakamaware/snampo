@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
 
 /// 撮影した写真から長辺 480px の JPEG のサムネを作る
+///
+/// 一時ディレクトリに作る (アップロードして履歴にコピーしたら使わないため)。
 class ThumbnailService implements IThumbnailService {
   /// サムネの長辺 (px)
   static const longSide = 480;
@@ -15,7 +17,7 @@ class ThumbnailService implements IThumbnailService {
 
   @override
   Future<String> createThumbnail(String photoPath) async {
-    final root = await getApplicationDocumentsDirectory();
+    final root = await getTemporaryDirectory();
     final dir = Directory(p.join(root.path, _directoryName));
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);

@@ -69,7 +69,7 @@ function newClear(uid: string, deleteAt: Timestamp, extra: object = {}) {
     clearedBy: uid,
     nickname: uid,
     clearedAt: serverTimestamp(),
-    thumbPath: null,
+    thumbPath: `rooms/${ROOM}/thumbs/${SPOT_PLACE}/${uid}.jpg`,
     deleteAt,
     ...extra,
   };
@@ -284,17 +284,16 @@ describe("clears", () => {
     await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt)));
   });
 
-  test("thumbPath は本人が 1 回だけ埋められ、他のフィールドは変更できない", async () => {
+  test("thumbPath のないクリアは作成できない (サムネを上げてから作成する)", async () => {
+    const { deleteAt } = await seedRoom(env);
+    await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt, { thumbPath: null })));
+    const { thumbPath: _, ...withoutThumb } = newClear(MEMBER, deleteAt);
+    await assertFails(setDoc(clearRef(MEMBER), withoutThumb));
+  });
+
+  test("作成したクリアは発見者本人も変更できない", async () => {
     const { deleteAt } = await seedRoom(env);
     await assertSucceeds(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt)));
-
-    await assertFails(updateDoc(clearRef(HOST), { thumbPath: "rooms/x/thumbs/y/host-uid.jpg" }));
-    await assertFails(
-      updateDoc(clearRef(MEMBER), { thumbPath: "a.jpg", nickname: "書き換え" }),
-    );
-    await assertSucceeds(
-      updateDoc(clearRef(MEMBER), { thumbPath: `rooms/${ROOM}/thumbs/${SPOT_PLACE}/${MEMBER}.jpg` }),
-    );
     await assertFails(updateDoc(clearRef(MEMBER), { thumbPath: "other.jpg" }));
   });
 });
@@ -325,7 +324,7 @@ describe("遊べる期限", () => {
         clearedBy: MEMBER,
         nickname: MEMBER,
         clearedAt: Timestamp.now(),
-        thumbPath: null,
+        thumbPath: `rooms/${ROOM}/thumbs/${SPOT_PLACE}/${MEMBER}.jpg`,
         deleteAt: Timestamp.now(),
       });
     });

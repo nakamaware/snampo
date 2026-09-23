@@ -14,15 +14,14 @@ void main() {
   final deleteAt = fx.createdAt.add(Room.retentionDuration);
   late FakeRoomRepository rooms;
   late FakeHistoryRepository histories;
+  late FakeCoopStorage storage;
   late SyncCoopClearsUseCase syncClears;
 
   setUp(() async {
     rooms = FakeRoomRepository();
     histories = FakeHistoryRepository();
-    syncClears = SyncCoopClearsUseCase(
-      storage: FakeCoopStorage(),
-      histories: histories,
-    );
+    storage = FakeCoopStorage();
+    syncClears = SyncCoopClearsUseCase(storage: storage, histories: histories);
     await seedCoopHistory(histories);
   });
 
@@ -75,23 +74,17 @@ void main() {
     expect(syncState(), CoopSyncState.finalized);
   });
 
-  test('ルームが finished でも、サムネが届くまでは確定せず、届いたら取り込んで確定する', () async {
+  test('ルームが finished でも、サムネを取得できるまでは確定せず、取得できたら確定する', () async {
     rooms.rooms[fx.code] = fx.room(status: RoomStatus.finished);
     rooms.clears[fx.code] = {fx.spot('a'): fx.clear('a', 'x')};
     final sync = useCase(fx.createdAt.add(const Duration(hours: 1)));
+    storage.thumbDownloadError = Exception('network');
 
     await sync();
 
     expect(syncState(), CoopSyncState.inProgress);
 
-    // 発見者の再送で thumbPath が後から埋まる
-    rooms.clears[fx.code] = {
-      fx.spot('a'): fx.clear(
-        'a',
-        'x',
-        thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg',
-      ),
-    };
+    storage.thumbDownloadError = null;
     await sync();
 
     expect(

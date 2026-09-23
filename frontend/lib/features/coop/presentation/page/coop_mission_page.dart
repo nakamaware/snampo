@@ -71,7 +71,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
   bool canCapture(CheckpointProgress? checkpoint) =>
       checkpoint?.discovererUid == null;
 
-  /// 発見の共有は裏で進める (オフラインなら SDK が溜めておき、復帰したら送信する)
+  /// 発見の共有は裏で進める (共有中は「発見を共有中…」を表示する)
   @override
   void onCheckpointCompleted(
     WidgetRef ref, {

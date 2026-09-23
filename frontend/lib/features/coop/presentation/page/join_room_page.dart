@@ -44,7 +44,7 @@ class JoinRoomPage extends HookConsumerWidget {
         );
         switch (result) {
           case JoinRoomJoined():
-            await ref
+            ref
                 .read(coopSessionStoreProvider.notifier)
                 .enter(CoopSession(roomCode: code, uid: uid));
             if (context.mounted) context.go('/coop/lobby');

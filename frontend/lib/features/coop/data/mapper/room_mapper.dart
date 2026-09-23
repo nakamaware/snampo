@@ -108,6 +108,6 @@ class RoomMapper {
     clearedBy: data['clearedBy'] as String,
     nickname: data['nickname'] as String,
     clearedAt: _time(data['clearedAt']),
-    thumbPath: data['thumbPath'] as String?,
+    thumbPath: data['thumbPath'] as String,
   );
 }

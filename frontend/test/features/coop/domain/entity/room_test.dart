@@ -100,7 +100,7 @@ void main() {
       );
     });
 
-    test('ルームが finished でも、サムネがそろうまでは確定しない (遊べる期限までは再送で届く)', () {
+    test('ルームが finished でも、サムネを取得できるまでは確定しない', () {
       expect(
         shouldFinalizeHistory(
           room: room(status: RoomStatus.finished),

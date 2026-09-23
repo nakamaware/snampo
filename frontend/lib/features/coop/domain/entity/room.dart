@@ -147,10 +147,10 @@ bool isAllCleared(Room room, Iterable<SpotClear> clears) {
 ///
 /// 次のどれかなら確定する。確定したら以後は同期しない。
 /// - ルームが finished で、発見者のサムネが全部端末にそろった ([hasAllThumbs])
-/// - 遊べる期限を過ぎた (サムネの再送は遊べる期限までなので、これ以上は届かない)
+/// - 遊べる期限を過ぎた
 /// - ルームが消えていた
 ///
-/// finished になったあとも、サムネは遊べる期限までは再送で届くため、そろうまでは確定しない。
+/// finished になったあとも、サムネの取得に失敗していれば、次の同期で取り直すため確定しない。
 bool shouldFinalizeHistory({
   required Room? room,
   required DateTime expiresAt,

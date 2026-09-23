@@ -37,7 +37,7 @@ class CoopEntryPage extends HookConsumerWidget {
           nickname: name,
           settings: RoomSettings.random(radius: Radius(meters: 1000)),
         );
-        await ref
+        ref
             .read(coopSessionStoreProvider.notifier)
             .enter(CoopSession(roomCode: room.code, uid: uid));
         if (context.mounted) {

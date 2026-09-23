@@ -38,7 +38,7 @@ final class CoopSessionStoreProvider
   CoopSessionStore create() => CoopSessionStore();
 }
 
-String _$coopSessionStoreHash() => r'd6ca71e4e2605d5c5a2b87c22e0c51c0b80fbfa3';
+String _$coopSessionStoreHash() => r'e6bfc786919e46560fada4963382bf3bd5a574fa';
 
 /// 端末で進行中の協力プレイ (アプリのキルや電波断のあとに「ルームに戻る」ため保存する)
 

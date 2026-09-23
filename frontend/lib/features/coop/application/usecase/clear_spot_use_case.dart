@@ -2,11 +2,10 @@ import 'dart:developer';
 
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/spot_id.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
+import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
-import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
-import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
+import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
@@ -32,51 +31,58 @@ final class ClearSpotAlreadyCleared extends ClearSpotResult {
   final SpotClear existing;
 }
 
-/// Rules に拒否された (ルームが終わったあと、遊べる期限を過ぎたなど)。送り直しても通らない
+/// Rules に拒否された (ルームが終わったあと、遊べる期限を過ぎたなど)。撮り直しても通らない
 final class ClearSpotRejected extends ClearSpotResult {
   /// [ClearSpotRejected] を作成する
   const ClearSpotRejected();
 }
 
+/// 通信に失敗した、または時間内に終わらなかった (電波の良い場所で撮り直してもらう)
+final class ClearSpotFailed extends ClearSpotResult {
+  /// [ClearSpotFailed] を作成する
+  const ClearSpotFailed();
+}
+
 /// 撮影して採点したスポットをクリアにする (1 人のクリアで全員のクリアになる)
 ///
-/// 1. 自分の写真と採点を履歴に残す (先に他の人が発見していても手元に残す)
-/// 2. サムネを作り、発見をキューに積む (途中でキルされても、次の起動で作り直せるように)
-/// 3. サムネを上げてクリアを作成する ([SubmitClearUseCase]。サムネは 15 秒で打ち切る)
-/// 4. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
+/// 1. 自分の写真と採点を履歴に残す (先に他の人が発見していても、共有に失敗しても手元に残す)
+/// 2. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
+///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)
+/// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映し、最後のクリアなら finished にする
 class ClearSpotUseCase {
   /// [ClearSpotUseCase] を作成する
   ClearSpotUseCase({
     required IThumbnailService thumbnails,
-    required IPendingClearRepository queue,
+    required ICoopStorage storage,
+    required IRoomRepository rooms,
     required IHistoryRepository histories,
-    required SubmitClearUseCase submitClear,
+    required FinishIfAllClearedUseCase finishIfAllCleared,
     DateTime Function()? now,
+    this.shareTimeout = const Duration(seconds: 30),
   }) : _thumbnails = thumbnails,
-       _queue = queue,
+       _storage = storage,
+       _rooms = rooms,
        _histories = histories,
-       _submitClear = submitClear,
+       _finishIfAllCleared = finishIfAllCleared,
        _now = now ?? DateTime.now;
 
   final IThumbnailService _thumbnails;
-  final IPendingClearRepository _queue;
+  final ICoopStorage _storage;
+  final IRoomRepository _rooms;
   final IHistoryRepository _histories;
-  final SubmitClearUseCase _submitClear;
+  final FinishIfAllClearedUseCase _finishIfAllCleared;
   final DateTime Function() _now;
 
+  /// サムネのアップロードとクリアの作成を待つ時間
+  final Duration shareTimeout;
+
   /// クリアにする
-  ///
-  /// [onSharing] はサムネの共有を始めたとき、[onSharingDone] はサムネのアップロードが
-  /// 終わるかタイムアウトしたときに呼ぶ (「発見を共有中…」の表示用)。クリアの送信は
-  /// オフラインなら復帰まで完了しないため、表示はそれを待たずに終える。
   Future<ClearSpotResult> call({
     required Room room,
     required String uid,
     required Nickname nickname,
     required SpotId spotId,
     required CheckpointProgress checkpoint,
-    void Function()? onSharing,
-    void Function()? onSharingDone,
   }) async {
     final photoPath =
         checkpoint.userPhotoPath ?? (throw ArgumentError('写真がありません'));
@@ -91,30 +97,24 @@ class ClearSpotUseCase {
     }
 
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
-    final task = PendingClearTask(
-      roomCode: room.code,
-      spotId: spotId,
-      nickname: nickname,
-      localThumbPath: localThumbPath,
-      expiresAt: room.expiresAt,
-    );
-    await _queue.update((queue) => queue.enqueue(task));
-    onSharing?.call();
-
-    final SubmitClearResult result;
+    final CreateClearResult result;
     try {
-      result = await _submitClear(
+      result = await _share(
         room,
-        task,
         uid: uid,
-        onThumbDone: onSharingDone,
-      );
+        nickname: nickname,
+        spotId: spotId,
+        localThumbPath: localThumbPath,
+      ).timeout(shareTimeout);
     } on CoopPermissionDeniedException {
-      await _queue.update((queue) => queue.remove(task));
       return const ClearSpotRejected();
+    } on Object catch (e) {
+      log('発見を共有できなかった: $e', name: 'ClearSpot');
+      return const ClearSpotFailed();
     }
+
     switch (result) {
-      case SubmitClearCreated():
+      case ClearCreated():
         await _histories.applyCoopDiscoverer(
           roomCode: room.code,
           spotId: spotId,
@@ -127,9 +127,37 @@ class ClearSpotUseCase {
           spotId: spotId,
           sourcePath: localThumbPath,
         );
+        try {
+          // 画面でルームを監視していなくても、最後のクリアを書いた端末が finished にする
+          await _finishIfAllCleared(room, await _rooms.fetchClears(room.code));
+        } on Object catch (e) {
+          log('finished への更新に失敗した: $e', name: 'ClearSpot');
+        }
         return const ClearSpotCleared();
-      case SubmitClearAlreadyExists(:final existing):
+      case ClearAlreadyExists(:final existing):
         return ClearSpotAlreadyCleared(existing);
     }
+  }
+
+  Future<CreateClearResult> _share(
+    Room room, {
+    required String uid,
+    required Nickname nickname,
+    required SpotId spotId,
+    required String localThumbPath,
+  }) async {
+    final thumbPath = await _storage.uploadThumb(
+      code: room.code,
+      spotId: spotId,
+      uid: uid,
+      localPath: localThumbPath,
+    );
+    return _rooms.createClear(
+      room,
+      spotId: spotId,
+      uid: uid,
+      nickname: nickname,
+      thumbPath: thumbPath,
+    );
   }
 }

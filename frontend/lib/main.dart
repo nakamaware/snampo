@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/core/app_scaffold_messenger.dart';
 import 'package:snampo/core/router.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/presentation/hook/use_coop_background_sync.dart';
@@ -50,7 +49,6 @@ class MyApp extends HookConsumerWidget {
         ),
       ),
       routerConfig: appRouter,
-      scaffoldMessengerKey: rootScaffoldMessengerKey,
     );
   }
 }

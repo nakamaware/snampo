@@ -54,7 +54,7 @@ class SyncCoopClearsUseCase {
     }
     for (final clear in plan.thumbsToFetch) {
       try {
-        final downloaded = await _storage.downloadThumb(clear.thumbPath!);
+        final downloaded = await _storage.downloadThumb(clear.thumbPath);
         await _histories.saveCoopThumb(
           roomCode: roomCode,
           spotId: clear.spotId,

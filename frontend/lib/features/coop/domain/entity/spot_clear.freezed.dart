@@ -16,8 +16,8 @@ mixin _$SpotClear {
 
  SpotId get spotId;/// 発見者の Auth uid
  String get clearedBy;/// 発見時点の発見者のニックネーム
- String get nickname; DateTime get clearedAt;/// サムネの Storage パス。アップロード失敗時は null で、後から埋める
- String? get thumbPath;
+ String get nickname; DateTime get clearedAt;/// サムネの Storage パス (サムネを上げてからクリアを作成するので必ずある)
+ String get thumbPath;
 /// Create a copy of SpotClear
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $SpotClearCopyWith<$Res>  {
   factory $SpotClearCopyWith(SpotClear value, $Res Function(SpotClear) _then) = _$SpotClearCopyWithImpl;
 @useResult
 $Res call({
- SpotId spotId, String clearedBy, String nickname, DateTime clearedAt, String? thumbPath
+ SpotId spotId, String clearedBy, String nickname, DateTime clearedAt, String thumbPath
 });
 
 
@@ -65,14 +65,14 @@ class _$SpotClearCopyWithImpl<$Res>
 
 /// Create a copy of SpotClear
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? spotId = null,Object? clearedBy = null,Object? nickname = null,Object? clearedAt = null,Object? thumbPath = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? spotId = null,Object? clearedBy = null,Object? nickname = null,Object? clearedAt = null,Object? thumbPath = null,}) {
   return _then(_self.copyWith(
 spotId: null == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as SpotId,clearedBy: null == clearedBy ? _self.clearedBy : clearedBy // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,clearedAt: null == clearedAt ? _self.clearedAt : clearedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,thumbPath: freezed == thumbPath ? _self.thumbPath : thumbPath // ignore: cast_nullable_to_non_nullable
-as String?,
+as DateTime,thumbPath: null == thumbPath ? _self.thumbPath : thumbPath // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String? thumbPath)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String thumbPath)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SpotClear() when $default != null:
 return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_that.thumbPath);case _:
@@ -178,7 +178,7 @@ return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String? thumbPath)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String thumbPath)  $default,) {final _that = this;
 switch (_that) {
 case _SpotClear():
 return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_that.thumbPath);case _:
@@ -198,7 +198,7 @@ return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String? thumbPath)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SpotId spotId,  String clearedBy,  String nickname,  DateTime clearedAt,  String thumbPath)?  $default,) {final _that = this;
 switch (_that) {
 case _SpotClear() when $default != null:
 return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_that.thumbPath);case _:
@@ -213,7 +213,7 @@ return $default(_that.spotId,_that.clearedBy,_that.nickname,_that.clearedAt,_tha
 
 
 class _SpotClear implements SpotClear {
-  const _SpotClear({required this.spotId, required this.clearedBy, required this.nickname, required this.clearedAt, this.thumbPath});
+  const _SpotClear({required this.spotId, required this.clearedBy, required this.nickname, required this.clearedAt, required this.thumbPath});
 
 
 @override final  SpotId spotId;
@@ -222,8 +222,8 @@ class _SpotClear implements SpotClear {
 /// 発見時点の発見者のニックネーム
 @override final  String nickname;
 @override final  DateTime clearedAt;
-/// サムネの Storage パス。アップロード失敗時は null で、後から埋める
-@override final  String? thumbPath;
+/// サムネの Storage パス (サムネを上げてからクリアを作成するので必ずある)
+@override final  String thumbPath;
 
 /// Create a copy of SpotClear
 /// with the given fields replaced by the non-null parameter values.
@@ -255,7 +255,7 @@ abstract mixin class _$SpotClearCopyWith<$Res> implements $SpotClearCopyWith<$Re
   factory _$SpotClearCopyWith(_SpotClear value, $Res Function(_SpotClear) _then) = __$SpotClearCopyWithImpl;
 @override @useResult
 $Res call({
- SpotId spotId, String clearedBy, String nickname, DateTime clearedAt, String? thumbPath
+ SpotId spotId, String clearedBy, String nickname, DateTime clearedAt, String thumbPath
 });
 
 
@@ -272,14 +272,14 @@ class __$SpotClearCopyWithImpl<$Res>
 
 /// Create a copy of SpotClear
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? spotId = null,Object? clearedBy = null,Object? nickname = null,Object? clearedAt = null,Object? thumbPath = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? spotId = null,Object? clearedBy = null,Object? nickname = null,Object? clearedAt = null,Object? thumbPath = null,}) {
   return _then(_SpotClear(
 spotId: null == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as SpotId,clearedBy: null == clearedBy ? _self.clearedBy : clearedBy // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,clearedAt: null == clearedAt ? _self.clearedAt : clearedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,thumbPath: freezed == thumbPath ? _self.thumbPath : thumbPath // ignore: cast_nullable_to_non_nullable
-as String?,
+as DateTime,thumbPath: null == thumbPath ? _self.thumbPath : thumbPath // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

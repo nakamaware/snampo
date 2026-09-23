@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -24,10 +22,10 @@ class CoopSessionStore extends _$CoopSessionStore {
   ///
   /// 別のルームに参加中なら、そのルームを抜けてから記録する (入室に成功したあとに呼ぶ。
   /// 失敗したときに前のルームを抜けてしまわないように)。
-  Future<void> enter(CoopSession session) async {
+  void enter(CoopSession session) {
     final current = state.value;
     if (current != null && current.roomCode != session.roomCode) {
-      await leave();
+      leave();
     }
     state = AsyncValue.data(session);
   }
@@ -35,16 +33,12 @@ class CoopSessionStore extends _$CoopSessionStore {
   /// ルームを抜ける (`leftAt` を記録し、端末の「ルームに戻る」を消す)
   ///
   /// 通信の結果を待たずに端末の記録を消す (抜けたルームの履歴の同期は続く)。
-  Future<void> leave() async {
+  void leave() {
     final session = state.value;
     if (session == null) {
       return;
     }
-    try {
-      await ref.read(leaveRoomUseCaseProvider)(session.roomCode, session.uid);
-    } on Object catch (e) {
-      log('ルームを抜ける処理に失敗した: $e', name: 'CoopSession');
-    }
+    ref.read(leaveRoomUseCaseProvider)(session.roomCode, session.uid);
     close();
   }
 

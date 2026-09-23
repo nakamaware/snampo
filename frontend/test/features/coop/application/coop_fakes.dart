@@ -5,10 +5,8 @@ import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
-import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
-import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
@@ -38,9 +36,6 @@ class FakeRoomRepository implements IRoomRepository {
 
   /// true なら createClear を Rules の拒否として失敗させる (ルームが終わったあとなど)
   bool rejectClears = false;
-
-  /// 指定したユーザーだけが thumbPath を埋められる (Rules の再現)
-  String? currentUid;
 
   DateTime now = DateTime.utc(2026, 9, 23, 10);
 
@@ -161,7 +156,7 @@ class FakeRoomRepository implements IRoomRepository {
     required SpotId spotId,
     required String uid,
     required Nickname nickname,
-    required String? thumbPath,
+    required String thumbPath,
   }) async {
     await createClearGate?.future;
     if (rejectClears) {
@@ -170,10 +165,7 @@ class FakeRoomRepository implements IRoomRepository {
     final map = clears.putIfAbsent(room.code, () => {});
     final existing = map[spotId];
     if (existing != null) {
-      // 自分の送信待ちのクリアが先に届いていた場合は、作成できたものとして扱う
-      return existing.clearedBy == uid
-          ? ClearCreated(thumbPathSaved: existing.thumbPath != null)
-          : ClearAlreadyExists(existing);
+      return ClearAlreadyExists(existing);
     }
     map[spotId] = SpotClear(
       spotId: spotId,
@@ -182,26 +174,7 @@ class FakeRoomRepository implements IRoomRepository {
       clearedAt: now,
       thumbPath: thumbPath,
     );
-    return ClearCreated(thumbPathSaved: thumbPath != null);
-  }
-
-  @override
-  Future<void> fillThumbPath(
-    RoomCode code,
-    SpotId spotId,
-    String thumbPath,
-  ) async {
-    if (offline) {
-      throw StateError('offline');
-    }
-    final clear = clears[code]?[spotId];
-    if (clear == null ||
-        clear.thumbPath != null ||
-        (currentUid != null && clear.clearedBy != currentUid)) {
-      throw const CoopPermissionDeniedException();
-    }
-    clears[code]![spotId] = clear.copyWith(thumbPath: thumbPath);
-    thumbPathFills.add(thumbPath);
+    return const ClearCreated();
   }
 
   @override
@@ -225,6 +198,7 @@ class FakeCoopStorage implements ICoopStorage {
   /// null 以外なら uploadThumb はこの Future を待つ
   Completer<void>? thumbUploadGate;
   Exception? thumbUploadError;
+  Exception? thumbDownloadError;
   Exception? bundleUploadError;
   Exception? bundleDownloadError;
   MissionEntity? uploadedMission;
@@ -267,6 +241,9 @@ class FakeCoopStorage implements ICoopStorage {
 
   @override
   Future<String> downloadThumb(String thumbPath) async {
+    if (thumbDownloadError != null) {
+      throw thumbDownloadError!;
+    }
     downloadedThumbs.add(thumbPath);
     return '/tmp/download/${downloadedThumbs.length}.jpg';
   }
@@ -276,19 +253,6 @@ class FakeCoopStorage implements ICoopStorage {
 class FakeThumbnailService implements IThumbnailService {
   @override
   Future<String> createThumbnail(String photoPath) async => '$photoPath.thumb';
-}
-
-/// メモリ上の再送キュー
-class InMemoryPendingClearRepository implements IPendingClearRepository {
-  PendingClearQueue queue = const PendingClearQueue();
-
-  @override
-  Future<PendingClearQueue> load() async => queue;
-
-  @override
-  Future<PendingClearQueue> update(
-    PendingClearQueue Function(PendingClearQueue queue) change,
-  ) async => queue = change(queue);
 }
 
 /// 協力プレイの履歴だけを扱うメモリ上の履歴リポジトリ

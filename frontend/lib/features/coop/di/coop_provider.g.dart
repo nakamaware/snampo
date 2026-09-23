@@ -204,59 +204,6 @@ final class ThumbnailServiceProvider
 
 String _$thumbnailServiceHash() => r'5859cc04befbd2d2a5f0d02a04a1ec649db10e4d';
 
-/// 共有しきれていない発見のキュー
-
-@ProviderFor(pendingClearRepository)
-final pendingClearRepositoryProvider = PendingClearRepositoryProvider._();
-
-/// 共有しきれていない発見のキュー
-
-final class PendingClearRepositoryProvider
-    extends
-        $FunctionalProvider<
-          IPendingClearRepository,
-          IPendingClearRepository,
-          IPendingClearRepository
-        >
-    with $Provider<IPendingClearRepository> {
-  /// 共有しきれていない発見のキュー
-  PendingClearRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'pendingClearRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$pendingClearRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<IPendingClearRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  IPendingClearRepository create(Ref ref) {
-    return pendingClearRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(IPendingClearRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<IPendingClearRepository>(value),
-    );
-  }
-}
-
-String _$pendingClearRepositoryHash() =>
-    r'449c9843415223022d47af050dce97c60a0a821e';
-
 /// 協力プレイのサインインを済ませるユースケース
 
 @ProviderFor(ensureCoopSignInUseCase)
@@ -562,7 +509,7 @@ final class LeaveRoomUseCaseProvider
   }
 }
 
-String _$leaveRoomUseCaseHash() => r'7e1a35ae929f6a02c358cfe8110bdc1767ad42b9';
+String _$leaveRoomUseCaseHash() => r'b251999b441111a87626dcbe84a29fdd85fe8637';
 
 /// ロビーでミッションの設定を変更するユースケース
 
@@ -776,112 +723,6 @@ final class PrepareCoopMissionUseCaseProvider
 String _$prepareCoopMissionUseCaseHash() =>
     r'4d063e985ff9bc4469f8f56542e22fd359b5c0e5';
 
-/// クリアを作成できたあとにキューを片付けるユースケース
-
-@ProviderFor(completeClearTaskUseCase)
-final completeClearTaskUseCaseProvider = CompleteClearTaskUseCaseProvider._();
-
-/// クリアを作成できたあとにキューを片付けるユースケース
-
-final class CompleteClearTaskUseCaseProvider
-    extends
-        $FunctionalProvider<
-          CompleteClearTaskUseCase,
-          CompleteClearTaskUseCase,
-          CompleteClearTaskUseCase
-        >
-    with $Provider<CompleteClearTaskUseCase> {
-  /// クリアを作成できたあとにキューを片付けるユースケース
-  CompleteClearTaskUseCaseProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'completeClearTaskUseCaseProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$completeClearTaskUseCaseHash();
-
-  @$internal
-  @override
-  $ProviderElement<CompleteClearTaskUseCase> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  CompleteClearTaskUseCase create(Ref ref) {
-    return completeClearTaskUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(CompleteClearTaskUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<CompleteClearTaskUseCase>(value),
-    );
-  }
-}
-
-String _$completeClearTaskUseCaseHash() =>
-    r'0259ebe936fc0a7421646259c43803bfdb917cec';
-
-/// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
-
-@ProviderFor(submitClearUseCase)
-final submitClearUseCaseProvider = SubmitClearUseCaseProvider._();
-
-/// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
-
-final class SubmitClearUseCaseProvider
-    extends
-        $FunctionalProvider<
-          SubmitClearUseCase,
-          SubmitClearUseCase,
-          SubmitClearUseCase
-        >
-    with $Provider<SubmitClearUseCase> {
-  /// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
-  SubmitClearUseCaseProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'submitClearUseCaseProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$submitClearUseCaseHash();
-
-  @$internal
-  @override
-  $ProviderElement<SubmitClearUseCase> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  SubmitClearUseCase create(Ref ref) {
-    return submitClearUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SubmitClearUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SubmitClearUseCase>(value),
-    );
-  }
-}
-
-String _$submitClearUseCaseHash() =>
-    r'4885e5ec887a187f6a22bbf752810474821c7b05';
-
 /// スポットをクリアにするユースケース
 
 @ProviderFor(clearSpotUseCase)
@@ -931,60 +772,7 @@ final class ClearSpotUseCaseProvider
   }
 }
 
-String _$clearSpotUseCaseHash() => r'b83dee8fc6ad65fc7f35d34766871418551cff53';
-
-/// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
-
-@ProviderFor(retryPendingClearsUseCase)
-final retryPendingClearsUseCaseProvider = RetryPendingClearsUseCaseProvider._();
-
-/// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
-
-final class RetryPendingClearsUseCaseProvider
-    extends
-        $FunctionalProvider<
-          RetryPendingClearsUseCase,
-          RetryPendingClearsUseCase,
-          RetryPendingClearsUseCase
-        >
-    with $Provider<RetryPendingClearsUseCase> {
-  /// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
-  RetryPendingClearsUseCaseProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'retryPendingClearsUseCaseProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$retryPendingClearsUseCaseHash();
-
-  @$internal
-  @override
-  $ProviderElement<RetryPendingClearsUseCase> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  RetryPendingClearsUseCase create(Ref ref) {
-    return retryPendingClearsUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RetryPendingClearsUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<RetryPendingClearsUseCase>(value),
-    );
-  }
-}
-
-String _$retryPendingClearsUseCaseHash() =>
-    r'96e3af0e6cade202befbef46f54329b77642cd8d';
+String _$clearSpotUseCaseHash() => r'88b0daeed949c948f0a791343fbc5464b1accd65';
 
 /// 全スポットがクリアされていれば finished にするユースケース
 

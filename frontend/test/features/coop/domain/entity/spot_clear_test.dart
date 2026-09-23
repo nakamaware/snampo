@@ -19,7 +19,7 @@ void main() {
       );
 
       expect(plan.discoverersToApply.map((c) => c.spotId.value), ['b']);
-      expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['c']);
+      expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['b', 'c']);
     });
 
     test('新しく知ったクリアのサムネも取得する', () {
@@ -30,12 +30,6 @@ void main() {
 
       expect(plan.discoverersToApply.map((c) => c.spotId.value), ['a']);
       expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['a']);
-    });
-
-    test('thumbPath がないクリアのサムネは取得しない (プレースホルダを表示する)', () {
-      final plan = planClearSync(clears: [clear('a', 'x')], local: const {});
-
-      expect(plan.thumbsToFetch, isEmpty);
     });
 
     test('全部そろっていれば何もしない', () {
@@ -76,7 +70,6 @@ void main() {
               discovererUid: 'x',
               hasThumb: true,
             ),
-            // 自分の発見は、thumbPath がまだなくても端末にサムネがある
             spot('b'): const LocalClearState(
               discovererUid: 'me',
               hasThumb: true,

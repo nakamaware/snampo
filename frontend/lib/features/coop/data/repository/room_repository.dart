@@ -179,44 +179,28 @@ class RoomRepository implements IRoomRepository {
     required SpotId spotId,
     required String uid,
     required Nickname nickname,
-    required String? thumbPath,
-  }) async {
-    final ref = _clears(room.code).doc(spotId.value);
-    try {
-      // オフラインの間は SDK が端末に溜めておき、復帰したら送信する
-      await ref.set({
+    required String thumbPath,
+  }) => _mapDenied(
+    () => _firestore.runTransaction<CreateClearResult>((transaction) async {
+      final ref = _clears(room.code).doc(spotId.value);
+      final snapshot = await transaction.get(ref);
+      final existing = snapshot.data();
+      // 先着勝ち: 既にあれば、その発見者を返す
+      if (existing != null) {
+        return ClearAlreadyExists(
+          RoomMapper.clearFromFirestore(spotId.value, existing),
+        );
+      }
+      transaction.set(ref, {
         'clearedBy': uid,
         'nickname': nickname.value,
         'clearedAt': FieldValue.serverTimestamp(),
         'thumbPath': thumbPath,
         'deleteAt': Timestamp.fromDate(room.deleteAt),
       });
-      return ClearCreated(thumbPathSaved: thumbPath != null);
-    } on FirebaseException catch (e) {
-      if (!_isPermissionDenied(e)) {
-        rethrow;
-      }
-      // 先着勝ち: 既にあれば作成は拒否される
-      final existing = await ref.get(const GetOptions(source: Source.server));
-      final data = existing.data();
-      if (data == null) {
-        throw CoopPermissionDeniedException(e.message);
-      }
-      // 自分の送信待ちのクリア (キルされる前の書き込み) が先に届いていた場合
-      if (data['clearedBy'] == uid) {
-        return ClearCreated(thumbPathSaved: data['thumbPath'] != null);
-      }
-      return ClearAlreadyExists(
-        RoomMapper.clearFromFirestore(spotId.value, data),
-      );
-    }
-  }
-
-  @override
-  Future<void> fillThumbPath(RoomCode code, SpotId spotId, String thumbPath) =>
-      _mapDenied(
-        () => _clears(code).doc(spotId.value).update({'thumbPath': thumbPath}),
-      );
+      return const ClearCreated();
+    }),
+  );
 
   @override
   Future<List<SpotClear>> fetchClears(RoomCode code) async {

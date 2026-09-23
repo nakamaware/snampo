@@ -19,31 +19,37 @@ void main() {
   });
 
   test('発見者を反映し、不足しているサムネを取得する', () async {
-    await syncClears(fx.code, [
-      fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),
-      fx.clear('b', 'y'),
-    ]);
+    await syncClears(fx.code, [fx.clear('a', 'x'), fx.clear('b', 'y')]);
 
     final spots = histories.histories[fx.code]!.spots;
     expect(spots[0].discovererUid, 'x');
     expect(spots[0].discovererThumbPath, 'history:/tmp/download/1.jpg');
     expect(spots[1].discovererUid, 'y');
-    expect(spots[1].discovererThumbPath, isNull);
+    expect(spots[1].discovererThumbPath, 'history:/tmp/download/2.jpg');
     expect(spots[2].isCleared, isFalse);
   });
 
   test('反映済みの発見と、サムネがそろったかを返す', () async {
     final result = await syncClears(fx.code, [
-      fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),
+      fx.clear('a', 'x'),
       fx.clear('b', 'y'),
     ]);
 
-    expect(result.hasAllThumbs, isFalse);
+    expect(result.hasAllThumbs, isTrue);
     expect(result.discoveries.keys, [fx.spot('a'), fx.spot('b')]);
     expect(
       result.discoveries[fx.spot('a')]!.thumbPath,
       'history:/tmp/download/1.jpg',
     );
+  });
+
+  test('サムネを取得できなければ、発見者だけ反映してそろっていないと返す', () async {
+    storage.thumbDownloadError = Exception('network');
+
+    final result = await syncClears(fx.code, [fx.clear('a', 'x')]);
+
+    expect(histories.histories[fx.code]!.spots[0].discovererUid, 'x');
+    expect(result.hasAllThumbs, isFalse);
   });
 
   test('取得済みのサムネは取り直さない', () async {

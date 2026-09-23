@@ -60,7 +60,7 @@ abstract class CoopMissionState with _$CoopMissionState {
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
-///   (finished のあとも、サムネが再送で届くまでは確定しない)
+///   (finished のあとも、サムネを取得するまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 @Riverpod(keepAlive: true)
@@ -98,8 +98,7 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// 自分の Auth uid
   ///
-  /// 通信しない (端末に残っているサインイン状態から読む)。App Check のトークンを取り直すと、
-  /// オフラインのときに撮影した発見をキューに積む前に失敗してしまうため。
+  /// 通信しない (端末に残っているサインイン状態から読む)。
   Future<String> _uid() async {
     final uid = await ref.read(getCoopSignedInUidUseCaseProvider)();
     return uid ?? (throw StateError('協力プレイにサインインしていません'));
@@ -288,9 +287,12 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
+  static const _shareFailedMessage = '発見を共有できませんでした。電波の良い場所で撮り直してください';
+
   /// 撮影して採点したスポットをクリアにする
   ///
-  /// 自分の写真と採点は、先に他の人が発見していても手元 (進捗と履歴) に残す。
+  /// 自分の写真と採点は、先に他の人が発見していても、共有に失敗しても手元 (進捗と履歴) に残す。
+  /// 共有に失敗したスポットは発見者が付かないので、撮り直せる。
   Future<void> clearSpot({
     required int spotIndex,
     required CheckpointProgress checkpoint,
@@ -310,6 +312,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       state = state.copyWith(sharingSpotIds: ids);
     }
 
+    setSharing(sharing: true);
     try {
       final uid = await _uid();
       final result = await ref.read(clearSpotUseCaseProvider)(
@@ -318,8 +321,6 @@ class CoopMissionStore extends _$CoopMissionStore {
         nickname: _myNickname(uid),
         spotId: spotId,
         checkpoint: checkpoint,
-        onSharing: () => setSharing(sharing: true),
-        onSharingDone: () => setSharing(sharing: false),
       );
       switch (result) {
         case ClearSpotCleared():
@@ -331,11 +332,13 @@ class CoopMissionStore extends _$CoopMissionStore {
           );
         case ClearSpotRejected():
           _notify('ルームが終了していたため、発見を共有できませんでした');
+        case ClearSpotFailed():
+          _notify(_shareFailedMessage);
       }
       _syncClears();
     } on Object catch (e, st) {
       log('クリアの共有に失敗した', error: e, stackTrace: st, name: 'CoopMission');
-      _notify('発見を共有できませんでした。電波の良い場所で再度お試しください');
+      _notify(_shareFailedMessage);
     } finally {
       setSharing(sharing: false);
     }
