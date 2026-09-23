@@ -47,14 +47,21 @@ void main() {
       expect(queue.remove(task('a')).tasks.map((t) => t.spotId.value), ['b']);
     });
 
-    test('抜けたルームのタスクをすべて破棄する', () {
+    test('抜けたルームの、クリアを作成していないタスクを破棄する (サムネの再送は残す)', () {
       final queue = PendingClearQueue(
-        tasks: [task('a'), task('b'), task('a', roomCode: 'WXYZ89')],
+        tasks: [
+          task('a'),
+          task('b').copyWith(clearCreated: true),
+          task('a', roomCode: 'WXYZ89'),
+        ],
       );
 
-      final updated = queue.removeRoom(RoomCode.tryParse('ABCD23')!);
+      final updated = queue.removeUncreatedClears(RoomCode.tryParse('ABCD23')!);
 
-      expect(updated.tasks.single.roomCode.value, 'WXYZ89');
+      expect(
+        updated.tasks.map((t) => '${t.roomCode.value}/${t.spotId.value}'),
+        ['ABCD23/b', 'WXYZ89/a'],
+      );
     });
 
     test('クリアを作成済みにする (サムネの再送だけが残る)', () {

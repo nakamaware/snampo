@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -108,14 +107,13 @@ class SubmitClearUseCase {
   ///
   /// [timeout] を指定すると、その時間で打ち切る。
   Future<String?> uploadThumb(
-    RoomCode code,
     PendingClearTask task, {
     required String uid,
     Duration? timeout,
   }) async {
     try {
       final upload = _storage.uploadThumb(
-        code: code,
+        code: task.roomCode,
         spotId: task.spotId,
         uid: uid,
         localPath: task.localThumbPath,
@@ -134,12 +132,7 @@ class SubmitClearUseCase {
     void Function()? onThumbDone,
   ) async {
     try {
-      return await uploadThumb(
-        room.code,
-        task,
-        uid: uid,
-        timeout: thumbUploadTimeout,
-      );
+      return await uploadThumb(task, uid: uid, timeout: thumbUploadTimeout);
     } finally {
       onThumbDone?.call();
     }

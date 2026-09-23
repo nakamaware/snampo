@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
@@ -84,12 +83,11 @@ class RetryPendingClearsUseCase {
       return (failures: failures);
     }
     for (final task in queue.tasks) {
-      final code = task.roomCode;
       try {
         final failure =
             task.clearCreated
-                ? await _retryThumb(code, task, uid)
-                : await _retryClear(code, task, uid);
+                ? await _retryThumb(task, uid)
+                : await _retryClear(task, uid);
         if (failure != null) {
           failures.add(failure);
         }
@@ -104,18 +102,11 @@ class RetryPendingClearsUseCase {
     return (failures: failures);
   }
 
-  Future<String?> _uploadThumb(
-    RoomCode code,
-    PendingClearTask task,
-    String uid,
-  ) => _submitClear.uploadThumb(code, task, uid: uid);
-
   Future<PendingClearFailure?> _retryClear(
-    RoomCode code,
     PendingClearTask task,
     String uid,
   ) async {
-    final room = await _rooms.fetchRoom(code);
+    final room = await _rooms.fetchRoom(task.roomCode);
     if (room == null) {
       await _remove(task);
       return (
@@ -125,7 +116,7 @@ class RetryPendingClearsUseCase {
       );
     }
     if (room.status != RoomStatus.playing || !room.isPlayable(_now())) {
-      return _settleClosedRoom(code, task, uid);
+      return _settleClosedRoom(task, uid);
     }
     final result = await _submitClear.withTimeout(
       room,
@@ -149,16 +140,15 @@ class RetryPendingClearsUseCase {
   /// キルされる前の自分の書き込みが届いていた (最後のクリアとして届いて finished になった
   /// 場合を含む) なら、成功として扱い thumbPath を埋める。
   Future<PendingClearFailure?> _settleClosedRoom(
-    RoomCode code,
     PendingClearTask task,
     String uid,
   ) async {
-    final clears = await _rooms.fetchClears(code);
+    final clears = await _rooms.fetchClears(task.roomCode);
     final existing = clears.where((c) => c.spotId == task.spotId).firstOrNull;
     if (existing != null && existing.clearedBy == uid) {
       final thumbPath =
           existing.thumbPath == null
-              ? await _uploadThumb(code, task, uid)
+              ? await _submitClear.uploadThumb(task, uid: uid)
               : null;
       await _completeClearTask(
         task,
@@ -179,15 +169,14 @@ class RetryPendingClearsUseCase {
   }
 
   Future<PendingClearFailure?> _retryThumb(
-    RoomCode code,
     PendingClearTask task,
     String uid,
   ) async {
-    final thumbPath = await _uploadThumb(code, task, uid);
+    final thumbPath = await _submitClear.uploadThumb(task, uid: uid);
     if (thumbPath == null) {
       return null;
     }
-    await _rooms.fillThumbPath(code, task.spotId, thumbPath);
+    await _rooms.fillThumbPath(task.roomCode, task.spotId, thumbPath);
     await _remove(task);
     return null;
   }

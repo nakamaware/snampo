@@ -28,21 +28,20 @@ void main() {
     expect(member.hasLeft, isTrue);
   });
 
-  test('抜けたルームの送り直しを破棄する (抜けたあとは発見を共有できないため)', () async {
+  test('抜けたルームのクリアの送り直しを破棄し、サムネの再送は残す', () async {
+    PendingClearTask task(String spotId) => PendingClearTask(
+      roomCode: fx.code,
+      spotId: fx.spot(spotId),
+      nickname: Nickname.parse('たろう'),
+      localThumbPath: '/thumbs/$spotId.jpg',
+      expiresAt: fx.createdAt.add(Room.playableDuration),
+    );
     queue.queue = PendingClearQueue(
-      tasks: [
-        PendingClearTask(
-          roomCode: fx.code,
-          spotId: fx.spot('a'),
-          nickname: Nickname.parse('たろう'),
-          localThumbPath: '/thumbs/a.jpg',
-          expiresAt: fx.createdAt.add(Room.playableDuration),
-        ),
-      ],
+      tasks: [task('a'), task('b').copyWith(clearCreated: true)],
     );
 
     await LeaveRoomUseCase(rooms, queue)(fx.code, 'me');
 
-    expect(queue.queue.tasks, isEmpty);
+    expect(queue.queue.tasks.single.spotId, fx.spot('b'));
   });
 }
