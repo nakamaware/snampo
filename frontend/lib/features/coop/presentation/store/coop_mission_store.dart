@@ -96,7 +96,14 @@ class CoopMissionStore extends _$CoopMissionStore {
     return const CoopMissionState();
   }
 
-  Future<String> _uid() => ref.read(ensureCoopSignInUseCaseProvider)();
+  /// 自分の Auth uid
+  ///
+  /// 通信しない (端末に残っているサインイン状態から読む)。App Check のトークンを取り直すと、
+  /// オフラインのときに撮影した発見をキューに積む前に失敗してしまうため。
+  Future<String> _uid() async {
+    final uid = await ref.read(getCoopSignedInUidUseCaseProvider)();
+    return uid ?? (throw StateError('協力プレイにサインインしていません'));
+  }
 
   MissionProgressStoreNotifier get _progress =>
       ref.read(missionProgressStoreProvider(MissionSessionKind.coop).notifier);

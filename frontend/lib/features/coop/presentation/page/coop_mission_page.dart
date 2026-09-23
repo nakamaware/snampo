@@ -11,6 +11,8 @@ import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
@@ -166,30 +168,6 @@ class _CoopMissionEffects extends HookConsumerWidget {
 class _CoopMissionMenu extends ConsumerWidget {
   const _CoopMissionMenu();
 
-  Future<void> _leave(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('ルームを抜けますか?'),
-            content: const Text('抜けた時点までの進捗は履歴に残ります。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('抜ける'),
-              ),
-            ],
-          ),
-    );
-    if (confirmed != true) return;
-    await ref.read(coopSessionStoreProvider.notifier).leave();
-    if (context.mounted) context.go('/');
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<void>(
@@ -197,7 +175,7 @@ class _CoopMissionMenu extends ConsumerWidget {
       itemBuilder:
           (context) => [
             PopupMenuItem(
-              onTap: () => _leave(context, ref),
+              onTap: () => leaveRoomWithConfirm(context, ref),
               child: const Text('ルームを抜ける'),
             ),
           ],
@@ -256,25 +234,13 @@ class _CoopHostEndButton extends ConsumerWidget {
     return TextButton(
       style: TextButton.styleFrom(foregroundColor: theme.colorScheme.onPrimary),
       onPressed: () async {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('ミッションを終了しますか?'),
-                content: const Text('全員のミッションが終了し、結果画面に移ります。'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('キャンセル'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('終了する'),
-                  ),
-                ],
-              ),
+        final confirmed = await showConfirmDialog(
+          context,
+          title: 'ミッションを終了しますか?',
+          content: '全員のミッションが終了し、結果画面に移ります。',
+          confirmLabel: '終了する',
         );
-        if (confirmed != true) return;
+        if (!confirmed) return;
         try {
           await ref
               .read(coopMissionStoreProvider(roomCode).notifier)

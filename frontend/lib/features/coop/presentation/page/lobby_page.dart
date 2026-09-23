@@ -10,6 +10,8 @@ import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
+import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/lobby_settings_card.dart';
 import 'package:snampo/features/coop/presentation/component/mission_generating_overlay.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
@@ -106,7 +108,7 @@ class _Lobby extends HookConsumerWidget {
         title: const Text('ロビー'),
         actions: [
           TextButton(
-            onPressed: () => _leave(context, ref),
+            onPressed: () => leaveRoomWithConfirm(context, ref),
             child: const Text('ルームを抜ける'),
           ),
         ],
@@ -175,28 +177,15 @@ class _Lobby extends HookConsumerWidget {
   }
 
   Future<bool> _confirmRestart(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('ミッションの生成をやり直しますか?'),
-            content: const Text(
-              '前回の生成が途中で止まった可能性があります。'
-              '生成中の場合は、しばらく待ってからやり直してください。',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('やり直す'),
-              ),
-            ],
-          ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'ミッションの生成をやり直しますか?',
+      content:
+          '前回の生成が途中で止まった可能性があります。'
+          '生成中の場合は、しばらく待ってからやり直してください。',
+      confirmLabel: 'やり直す',
     );
-    return confirmed ?? false;
+    return confirmed;
   }
 
   Future<void> _start(BuildContext context, WidgetRef ref, Room room) async {
@@ -209,30 +198,6 @@ class _Lobby extends HookConsumerWidget {
         ).showSnackBar(const SnackBar(content: Text('ミッションの生成に失敗しました')));
       }
     }
-  }
-
-  Future<void> _leave(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('ルームを抜けますか?'),
-            content: const Text('抜けた時点までの進捗は履歴に残ります。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('抜ける'),
-              ),
-            ],
-          ),
-    );
-    if (confirmed != true) return;
-    await ref.read(coopSessionStoreProvider.notifier).leave();
-    if (context.mounted) context.go('/');
   }
 }
 

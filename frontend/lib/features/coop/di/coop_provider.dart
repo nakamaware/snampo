@@ -22,6 +22,7 @@ import 'package:snampo/features/coop/application/usecase/leave_room_use_case.dar
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_history_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/update_room_settings_use_case.dart';
@@ -136,15 +137,23 @@ CompleteClearTaskUseCase completeClearTaskUseCase(Ref ref) =>
       queue: ref.read(pendingClearRepositoryProvider),
     );
 
+/// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
+@riverpod
+SubmitClearUseCase submitClearUseCase(Ref ref) => SubmitClearUseCase(
+  rooms: ref.read(roomRepositoryProvider),
+  storage: ref.read(coopStorageProvider),
+  queue: ref.read(pendingClearRepositoryProvider),
+  completeClearTask: ref.read(completeClearTaskUseCaseProvider),
+  finishIfAllCleared: ref.read(finishIfAllClearedUseCaseProvider),
+);
+
 /// スポットをクリアにするユースケース
 @riverpod
 ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
-  rooms: ref.read(roomRepositoryProvider),
-  storage: ref.read(coopStorageProvider),
   thumbnails: ref.read(thumbnailServiceProvider),
   queue: ref.read(pendingClearRepositoryProvider),
   histories: ref.read(historyRepositoryProvider),
-  completeClearTask: ref.read(completeClearTaskUseCaseProvider),
+  submitClear: ref.read(submitClearUseCaseProvider),
 );
 
 /// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
@@ -155,7 +164,7 @@ RetryPendingClearsUseCase retryPendingClearsUseCase(Ref ref) =>
       storage: ref.read(coopStorageProvider),
       queue: ref.read(pendingClearRepositoryProvider),
       completeClearTask: ref.read(completeClearTaskUseCaseProvider),
-      finishIfAllCleared: ref.read(finishIfAllClearedUseCaseProvider),
+      submitClear: ref.read(submitClearUseCaseProvider),
       uid: () => ref.read(getCoopSignedInUidUseCaseProvider)(),
     );
 

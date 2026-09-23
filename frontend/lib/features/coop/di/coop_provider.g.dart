@@ -829,6 +829,59 @@ final class CompleteClearTaskUseCaseProvider
 String _$completeClearTaskUseCaseHash() =>
     r'0259ebe936fc0a7421646259c43803bfdb917cec';
 
+/// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
+
+@ProviderFor(submitClearUseCase)
+final submitClearUseCaseProvider = SubmitClearUseCaseProvider._();
+
+/// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
+
+final class SubmitClearUseCaseProvider
+    extends
+        $FunctionalProvider<
+          SubmitClearUseCase,
+          SubmitClearUseCase,
+          SubmitClearUseCase
+        >
+    with $Provider<SubmitClearUseCase> {
+  /// キューに積んだ発見について、サムネを上げてクリアを作るユースケース
+  SubmitClearUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'submitClearUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$submitClearUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SubmitClearUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SubmitClearUseCase create(Ref ref) {
+    return submitClearUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SubmitClearUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SubmitClearUseCase>(value),
+    );
+  }
+}
+
+String _$submitClearUseCaseHash() =>
+    r'4885e5ec887a187f6a22bbf752810474821c7b05';
+
 /// スポットをクリアにするユースケース
 
 @ProviderFor(clearSpotUseCase)
@@ -878,7 +931,7 @@ final class ClearSpotUseCaseProvider
   }
 }
 
-String _$clearSpotUseCaseHash() => r'5bf8935ca3be8f28dcd6210c38cc0b722d2faf79';
+String _$clearSpotUseCaseHash() => r'b83dee8fc6ad65fc7f35d34766871418551cff53';
 
 /// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
 
@@ -931,7 +984,7 @@ final class RetryPendingClearsUseCaseProvider
 }
 
 String _$retryPendingClearsUseCaseHash() =>
-    r'3564be909c4bfa1234a13e458d234e261429ef18';
+    r'b5161e90cc7612a5306a7212b773e7db06bf5257';
 
 /// 全スポットがクリアされていれば finished にするユースケース
 

@@ -5,6 +5,7 @@ import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
@@ -47,11 +48,20 @@ void main() {
         storage: storage,
         queue: queue,
         completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
-        finishIfAllCleared: FinishIfAllClearedUseCase(rooms, now: () => now),
+        submitClear: SubmitClearUseCase(
+          rooms: rooms,
+          storage: storage,
+          queue: queue,
+          completeClearTask: CompleteClearTaskUseCase(
+            rooms: rooms,
+            queue: queue,
+          ),
+          finishIfAllCleared: FinishIfAllClearedUseCase(rooms, now: () => now),
+          thumbUploadTimeout: const Duration(milliseconds: 50),
+        ),
         uid: uid ?? () async => 'me',
         now: () => now,
         createClearTimeout: const Duration(milliseconds: 50),
-        thumbUploadTimeout: const Duration(milliseconds: 50),
       );
 
   setUp(() {

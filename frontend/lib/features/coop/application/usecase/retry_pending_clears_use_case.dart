@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:snampo/core/domain/room_code.dart';
@@ -6,7 +5,7 @@ import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
-import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
@@ -47,16 +46,15 @@ class RetryPendingClearsUseCase {
     required ICoopStorage storage,
     required IPendingClearRepository queue,
     required CompleteClearTaskUseCase completeClearTask,
-    required FinishIfAllClearedUseCase finishIfAllCleared,
+    required SubmitClearUseCase submitClear,
     required Future<String?> Function() uid,
     DateTime Function()? now,
     this.createClearTimeout = const Duration(seconds: 30),
-    this.thumbUploadTimeout = const Duration(seconds: 15),
   }) : _rooms = rooms,
        _storage = storage,
        _queue = queue,
        _completeClearTask = completeClearTask,
-       _finishIfAllCleared = finishIfAllCleared,
+       _submitClear = submitClear,
        _uid = uid,
        _now = now ?? DateTime.now;
 
@@ -64,7 +62,7 @@ class RetryPendingClearsUseCase {
   final ICoopStorage _storage;
   final IPendingClearRepository _queue;
   final CompleteClearTaskUseCase _completeClearTask;
-  final FinishIfAllClearedUseCase _finishIfAllCleared;
+  final SubmitClearUseCase _submitClear;
 
   /// サインイン済みならその uid (未サインインなら null。ここではサインインを試さない)
   final Future<String?> Function() _uid;
@@ -72,9 +70,6 @@ class RetryPendingClearsUseCase {
 
   /// クリアの送信を待つ時間 (オフラインなら SDK が溜めておき、次の機会にまた送る)
   final Duration createClearTimeout;
-
-  /// クリアを作り直す前に、サムネのアップロードを待つ時間 (発見の同期を優先する)
-  final Duration thumbUploadTimeout;
 
   Future<RetryPendingClearsResult>? _running;
 
@@ -116,17 +111,15 @@ class RetryPendingClearsUseCase {
   Future<String?> _uploadThumb(
     RoomCode code,
     PendingClearTask task,
-    String uid, {
-    Duration? timeout,
-  }) async {
+    String uid,
+  ) async {
     try {
-      final upload = _storage.uploadThumb(
+      return await _storage.uploadThumb(
         code: code,
         spotId: task.spotId,
         uid: uid,
         localPath: task.localThumbPath,
       );
-      return await (timeout == null ? upload : upload.timeout(timeout));
     } on Object catch (e) {
       log('サムネの再送に失敗した: $e', name: 'RetryPendingClears');
       return null;
@@ -150,41 +143,21 @@ class RetryPendingClearsUseCase {
     if (room.status != RoomStatus.playing || !room.isPlayable(_now())) {
       return _settleClosedRoom(code, task, uid);
     }
-    final thumbPath = await _uploadThumb(
-      code,
+    final result = await _submitClear(
+      room,
       task,
-      uid,
-      timeout: thumbUploadTimeout,
+      uid: uid,
+      createClearTimeout: createClearTimeout,
     );
-    final CreateClearResult result;
-    try {
-      result = await _rooms
-          .createClear(
-            room,
-            spotId: task.spotId,
-            uid: uid,
-            nickname: task.nickname,
-            thumbPath: thumbPath,
-          )
-          .timeout(createClearTimeout);
-    } on TimeoutException {
+    return switch (result) {
       // オフラインなど。キューに残して次の機会に送り直す
-      return null;
-    }
-    switch (result) {
-      case ClearCreated():
-        await _completeClearTask(task, result: result, thumbPath: thumbPath);
-        // 画面でルームを監視していなくても、最後のクリアを書いた端末が finished にする
-        await _finishIfAllCleared(room, await _rooms.fetchClears(code));
-        return null;
-      case ClearAlreadyExists(:final existing):
-        await _remove(task);
-        return (
-          task: task,
-          reason: PendingClearFailureReason.alreadyCleared,
-          existing: existing,
-        );
-    }
+      SubmitClearCreated() || SubmitClearTimedOut() => null,
+      SubmitClearAlreadyExists(:final existing) => (
+        task: task,
+        reason: PendingClearFailureReason.alreadyCleared,
+        existing: existing,
+      ),
+    };
   }
 
   /// ルームが終わっていて、もうクリアを作れない場合の片付け

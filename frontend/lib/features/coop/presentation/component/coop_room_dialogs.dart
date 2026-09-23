@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
@@ -76,23 +78,26 @@ Future<bool> confirmLeaveCurrentRoom(
   if (!context.mounted) {
     return false;
   }
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder:
-        (context) => AlertDialog(
-          title: const Text('今のルームを抜けて参加しますか?'),
-          content: Text('ルーム ${current.roomCode} を抜けます。そのルームの履歴は残ります。'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('キャンセル'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('抜けて参加する'),
-            ),
-          ],
-        ),
+  final confirmed = await showConfirmDialog(
+    context,
+    title: '今のルームを抜けて参加しますか?',
+    content: 'ルーム ${current.roomCode} を抜けます。そのルームの履歴は残ります。',
+    confirmLabel: '抜けて参加する',
   );
-  return confirmed ?? false;
+  return confirmed;
+}
+
+/// 確認してからルームを抜け、ホームへ戻る (ロビーと Mission 画面で使う)
+///
+/// 抜けた時点までの進捗は履歴に残り、履歴の同期も続く。
+Future<void> leaveRoomWithConfirm(BuildContext context, WidgetRef ref) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    title: 'ルームを抜けますか?',
+    content: '抜けた時点までの進捗は履歴に残ります。',
+    confirmLabel: '抜ける',
+  );
+  if (!confirmed) return;
+  await ref.read(coopSessionStoreProvider.notifier).leave();
+  if (context.mounted) context.go('/');
 }

@@ -1,13 +1,11 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/spot_id.dart';
-import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
-import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
@@ -44,40 +42,27 @@ final class ClearSpotRejected extends ClearSpotResult {
 ///
 /// 1. 自分の写真と採点を履歴に残す (先に他の人が発見していても手元に残す)
 /// 2. サムネを作り、発見をキューに積む (途中でキルされても、次の起動で作り直せるように)
-/// 3. サムネをアップロードする
-/// 4. 終わったら thumbPath を入れてクリアを作成し、キューを片付ける
-/// 5. [thumbUploadTimeout] 以内に終わらなければ、thumbPath なしでクリアを先に作成する
-///    (発見の同期を優先する)。キューにはサムネの再送だけを残す
-/// 6. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
+/// 3. サムネを上げてクリアを作成する ([SubmitClearUseCase]。サムネは 15 秒で打ち切る)
+/// 4. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
 class ClearSpotUseCase {
   /// [ClearSpotUseCase] を作成する
   ClearSpotUseCase({
-    required IRoomRepository rooms,
-    required ICoopStorage storage,
     required IThumbnailService thumbnails,
     required IPendingClearRepository queue,
     required IHistoryRepository histories,
-    required CompleteClearTaskUseCase completeClearTask,
-    this.thumbUploadTimeout = const Duration(seconds: 15),
+    required SubmitClearUseCase submitClear,
     DateTime Function()? now,
-  }) : _rooms = rooms,
-       _storage = storage,
-       _thumbnails = thumbnails,
+  }) : _thumbnails = thumbnails,
        _queue = queue,
        _histories = histories,
-       _completeClearTask = completeClearTask,
+       _submitClear = submitClear,
        _now = now ?? DateTime.now;
 
-  final IRoomRepository _rooms;
-  final ICoopStorage _storage;
   final IThumbnailService _thumbnails;
   final IPendingClearRepository _queue;
   final IHistoryRepository _histories;
-  final CompleteClearTaskUseCase _completeClearTask;
+  final SubmitClearUseCase _submitClear;
   final DateTime Function() _now;
-
-  /// サムネのアップロードを待つ時間
-  final Duration thumbUploadTimeout;
 
   /// クリアにする
   ///
@@ -116,38 +101,20 @@ class ClearSpotUseCase {
     await _queue.update((queue) => queue.enqueue(task));
     onSharing?.call();
 
-    String? thumbPath;
+    final SubmitClearResult result;
     try {
-      thumbPath = await _storage
-          .uploadThumb(
-            code: room.code,
-            spotId: spotId,
-            uid: uid,
-            localPath: localThumbPath,
-          )
-          .timeout(thumbUploadTimeout);
-    } on Object catch (e) {
-      log('サムネのアップロードが間に合わなかった: $e', name: 'ClearSpotUseCase');
-    } finally {
-      onSharingDone?.call();
-    }
-
-    final CreateClearResult result;
-    try {
-      result = await _rooms.createClear(
+      result = await _submitClear(
         room,
-        spotId: spotId,
+        task,
         uid: uid,
-        nickname: nickname,
-        thumbPath: thumbPath,
+        onThumbDone: onSharingDone,
       );
     } on CoopPermissionDeniedException {
       await _queue.update((queue) => queue.remove(task));
       return const ClearSpotRejected();
     }
     switch (result) {
-      case ClearCreated():
-        await _completeClearTask(task, result: result, thumbPath: thumbPath);
+      case SubmitClearCreated():
         await _histories.applyCoopDiscoverer(
           roomCode: room.code,
           spotId: spotId,
@@ -161,9 +128,11 @@ class ClearSpotUseCase {
           sourcePath: localThumbPath,
         );
         return const ClearSpotCleared();
-      case ClearAlreadyExists(:final existing):
-        await _queue.update((queue) => queue.remove(task));
+      case SubmitClearAlreadyExists(:final existing):
         return ClearSpotAlreadyCleared(existing);
+      case SubmitClearTimedOut():
+        // 打ち切りを指定していないので起きない
+        throw StateError('クリアの送信が打ち切られました');
     }
   }
 }

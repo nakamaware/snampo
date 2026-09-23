@@ -6,6 +6,8 @@ import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/submit_clear_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
@@ -55,13 +57,20 @@ void main() {
       ),
     );
     useCase = ClearSpotUseCase(
-      rooms: rooms,
-      storage: storage,
       thumbnails: FakeThumbnailService(),
       queue: queue,
       histories: histories,
-      completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
-      thumbUploadTimeout: const Duration(milliseconds: 50),
+      submitClear: SubmitClearUseCase(
+        rooms: rooms,
+        storage: storage,
+        queue: queue,
+        completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
+        finishIfAllCleared: FinishIfAllClearedUseCase(
+          rooms,
+          now: () => fx.createdAt,
+        ),
+        thumbUploadTimeout: const Duration(milliseconds: 50),
+      ),
     );
   });
 
