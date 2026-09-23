@@ -7,8 +7,8 @@ import 'package:snampo/features/coop/application/interface/coop_auth_service.dar
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/hook/use_coop_sign_in.dart';
-import 'package:snampo/features/coop/presentation/page/coop_dialogs_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';

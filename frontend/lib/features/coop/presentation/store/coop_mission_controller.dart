@@ -58,7 +58,8 @@ abstract class CoopMissionState with _$CoopMissionState {
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
-/// - finished になったら履歴を確定する
+/// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
+///   (finished のあとも、サムネが再送で届くまでは確定しない)
 @Riverpod(keepAlive: true)
 class CoopMissionController extends _$CoopMissionController {
   late RoomCode _code;
@@ -108,14 +109,8 @@ class CoopMissionController extends _$CoopMissionController {
       await _prepare(room);
     }
     if (room.status == RoomStatus.finished && state.isReady) {
-      await _clearSync;
-      await _onClears(_latestClears);
-      await ref
-          .read(historyRepositoryProvider)
-          .finalizeCoopHistory(
-            room.code.value,
-            completedAt: room.finishedAt ?? DateTime.now(),
-          );
+      // 最後の同期で、サムネがそろっていれば履歴を確定する
+      _clearSync = _clearSync.then((_) => _onClears(_latestClears));
     }
   }
 
@@ -213,10 +208,14 @@ class CoopMissionController extends _$CoopMissionController {
       return;
     }
     try {
-      await ref.read(syncCoopClearsUseCaseProvider)(_code.value, clears);
+      final hasAllThumbs = await ref.read(syncCoopClearsUseCaseProvider)(
+        _code.value,
+        clears,
+      );
       await _applyHistoryToProgress();
       await _announceNewDiscoveries(clears);
       await _finishIfAllCleared(clears);
+      await _finalizeHistoryIfDone(hasAllThumbs: hasAllThumbs);
     } on Object catch (e, st) {
       log('クリアの反映に失敗した', error: e, stackTrace: st, name: 'CoopMission');
     }
@@ -286,6 +285,25 @@ class CoopMissionController extends _$CoopMissionController {
     } on Object catch (e) {
       log('finished への更新に失敗した: $e', name: 'CoopMission');
     }
+  }
+
+  Future<void> _finalizeHistoryIfDone({required bool hasAllThumbs}) async {
+    final room = ref.read(coopRoomProvider(_code.value)).value;
+    if (room == null ||
+        !shouldFinalizeHistory(
+          room: room,
+          expiresAt: room.expiresAt,
+          now: DateTime.now(),
+          hasAllThumbs: hasAllThumbs,
+        )) {
+      return;
+    }
+    await ref
+        .read(historyRepositoryProvider)
+        .finalizeCoopHistory(
+          room.code.value,
+          completedAt: room.finishedAt ?? DateTime.now(),
+        );
   }
 
   /// 撮影して採点したスポットをクリアにする

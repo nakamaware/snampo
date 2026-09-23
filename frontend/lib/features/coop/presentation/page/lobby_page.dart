@@ -16,7 +16,7 @@ import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/value_object/nickname.dart';
-import 'package:snampo/features/coop/presentation/page/coop_dialogs_page.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';

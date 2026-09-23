@@ -6,7 +6,7 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/presentation/widget/spot_result_map.dart';
+import 'package:snampo/features/mission/presentation/component/spot_result_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// SpotResultPage の引数

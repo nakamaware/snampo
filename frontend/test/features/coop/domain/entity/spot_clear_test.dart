@@ -68,4 +68,44 @@ void main() {
       ]);
     });
   });
+
+  group('hasAllClearThumbs', () {
+    test('すべてのクリアの発見者のサムネが端末にあれば true', () {
+      expect(
+        hasAllClearThumbs(
+          clears: [clear('a', 'x', thumbPath: 'p'), clear('b', 'me')],
+          local: {
+            'a': const LocalClearState(discovererUid: 'x', hasThumb: true),
+            // 自分の発見は、thumbPath がまだなくても端末にサムネがある
+            'b': const LocalClearState(discovererUid: 'me', hasThumb: true),
+          },
+        ),
+        isTrue,
+      );
+    });
+
+    test('サムネがまだ届いていないクリアがあれば false', () {
+      expect(
+        hasAllClearThumbs(
+          clears: [clear('a', 'x')],
+          local: {
+            'a': const LocalClearState(discovererUid: 'x', hasThumb: false),
+          },
+        ),
+        isFalse,
+      );
+    });
+
+    test('端末の発見者がサーバと違えば false', () {
+      expect(
+        hasAllClearThumbs(
+          clears: [clear('a', 'x', thumbPath: 'p')],
+          local: {
+            'a': const LocalClearState(discovererUid: 'me', hasThumb: true),
+          },
+        ),
+        isFalse,
+      );
+    });
+  });
 }

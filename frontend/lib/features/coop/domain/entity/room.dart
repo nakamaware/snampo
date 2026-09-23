@@ -144,15 +144,20 @@ bool isAllCleared(Room room, Iterable<SpotClear> clears) {
 
 /// 協力プレイの履歴を「確定」にしてよいか
 ///
-/// ルームが finished か、遊べる期限を過ぎたか、ルームが消えていれば確定する。
-/// 確定したら以後は同期しない。
+/// 次のどれかなら確定する。確定したら以後は同期しない。
+/// - ルームが finished で、発見者のサムネが全部端末にそろった ([hasAllThumbs])
+/// - 遊べる期限を過ぎた (サムネの再送は遊べる期限までなので、これ以上は届かない)
+/// - ルームが消えていた
+///
+/// finished になったあとも、サムネは遊べる期限までは再送で届くため、そろうまでは確定しない。
 bool shouldFinalizeHistory({
   required Room? room,
   required DateTime expiresAt,
   required DateTime now,
+  required bool hasAllThumbs,
 }) {
-  if (room == null || room.status == RoomStatus.finished) {
+  if (room == null || !now.isBefore(expiresAt)) {
     return true;
   }
-  return !now.isBefore(expiresAt);
+  return room.status == RoomStatus.finished && hasAllThumbs;
 }

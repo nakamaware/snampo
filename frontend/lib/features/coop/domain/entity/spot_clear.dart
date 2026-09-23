@@ -76,6 +76,19 @@ ClearSyncPlan planClearSync({
   return ClearSyncPlan(discoverersToApply: discoverers, thumbsToFetch: thumbs);
 }
 
+/// すべてのクリアについて、発見者のサムネが端末にそろったか
+///
+/// 自分の発見は、thumbPath がまだ埋まっていなくても端末にサムネがある。
+bool hasAllClearThumbs({
+  required List<SpotClear> clears,
+  required Map<String, LocalClearState> local,
+}) => clears.every((clear) {
+  final state = local[clear.spotId];
+  return state != null &&
+      state.discovererUid == clear.clearedBy &&
+      state.hasThumb;
+});
+
 /// 発見数ランキングの 1 行
 typedef DiscovererRank = ({String uid, int count});
 

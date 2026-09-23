@@ -8,7 +8,7 @@ import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/value_object/room_code.dart';
-import 'package:snampo/features/coop/presentation/page/coop_dialogs_page.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 
 /// 「ルームに入る」: コード入力と QR スキャン

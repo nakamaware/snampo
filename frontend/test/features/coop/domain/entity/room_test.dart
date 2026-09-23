@@ -88,23 +88,37 @@ void main() {
   group('shouldFinalizeHistory', () {
     final expiresAt = createdAt.add(Room.playableDuration);
 
-    test('ルームが finished なら確定する', () {
+    test('ルームが finished で、サムネが全部そろったら確定する', () {
       expect(
         shouldFinalizeHistory(
           room: room(status: RoomStatus.finished),
           expiresAt: expiresAt,
           now: createdAt,
+          hasAllThumbs: true,
         ),
         isTrue,
       );
     });
 
-    test('遊べる期限を過ぎたら確定する', () {
+    test('ルームが finished でも、サムネがそろうまでは確定しない (遊べる期限までは再送で届く)', () {
       expect(
         shouldFinalizeHistory(
-          room: room(),
+          room: room(status: RoomStatus.finished),
+          expiresAt: expiresAt,
+          now: createdAt,
+          hasAllThumbs: false,
+        ),
+        isFalse,
+      );
+    });
+
+    test('遊べる期限を過ぎたら、サムネがそろわなくても確定する', () {
+      expect(
+        shouldFinalizeHistory(
+          room: room(status: RoomStatus.finished),
           expiresAt: expiresAt,
           now: expiresAt,
+          hasAllThumbs: false,
         ),
         isTrue,
       );
@@ -112,7 +126,12 @@ void main() {
 
     test('ルームが消えていたら確定する', () {
       expect(
-        shouldFinalizeHistory(room: null, expiresAt: expiresAt, now: createdAt),
+        shouldFinalizeHistory(
+          room: null,
+          expiresAt: expiresAt,
+          now: createdAt,
+          hasAllThumbs: false,
+        ),
         isTrue,
       );
     });
@@ -123,6 +142,7 @@ void main() {
           room: room(),
           expiresAt: expiresAt,
           now: createdAt,
+          hasAllThumbs: true,
         ),
         isFalse,
       );

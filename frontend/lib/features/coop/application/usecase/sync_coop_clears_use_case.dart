@@ -6,6 +6,7 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
+import 'package:snampo/features/history/domain/entity/mission_history.dart';
 
 /// サーバの `clears` と履歴 (端末のキャッシュ) を比べ、不足分を取得して履歴に反映する
 ///
@@ -22,23 +23,13 @@ class SyncCoopClearsUseCase {
   final ICoopStorage _storage;
   final IHistoryRepository _histories;
 
-  /// 反映する
-  Future<void> call(String roomCode, List<SpotClear> clears) async {
+  /// 反映し、発見者のサムネが全部端末にそろったかを返す (履歴がなければ false)
+  Future<bool> call(String roomCode, List<SpotClear> clears) async {
     final history = await _histories.getCoopHistory(roomCode);
     if (history == null) {
-      return;
+      return false;
     }
-    final plan = planClearSync(
-      clears: clears,
-      local: {
-        for (final spot in history.spots)
-          if (spot.spotId != null)
-            spot.spotId!: LocalClearState(
-              discovererUid: spot.discovererUid,
-              hasThumb: spot.discovererThumbPath != null,
-            ),
-      },
-    );
+    final plan = planClearSync(clears: clears, local: _localStates(history));
     for (final clear in plan.discoverersToApply) {
       await _histories.applyCoopDiscoverer(
         roomCode: roomCode,
@@ -61,13 +52,25 @@ class SyncCoopClearsUseCase {
         log('サムネの取得に失敗した: $e', name: 'SyncCoopClears');
       }
     }
+    final synced = await _histories.getCoopHistory(roomCode);
+    return synced != null &&
+        hasAllClearThumbs(clears: clears, local: _localStates(synced));
   }
+
+  static Map<String, LocalClearState> _localStates(MissionHistory history) => {
+    for (final spot in history.spots)
+      if (spot.spotId != null)
+        spot.spotId!: LocalClearState(
+          discovererUid: spot.discovererUid,
+          hasThumb: spot.discovererThumbPath != null,
+        ),
+  };
 }
 
 /// 未確定の協力プレイ履歴について、`clears` と `rooms` を 1 回だけ取得して反映する (監視はしない)
 ///
-/// アプリの起動時と履歴画面を開いたときに呼ぶ。ルームが finished か、遊べる期限を過ぎていれば
-/// 「確定」にして、以後は取りにいかない。保持期限を過ぎていればサーバのデータは消えているので、
+/// アプリの起動時と履歴画面を開いたときに呼ぶ。確定の条件は [shouldFinalizeHistory] のとおりで、
+/// 確定したら以後は取りにいかない。保持期限を過ぎていればサーバのデータは消えているので、
 /// 取りにいかずに確定する (取得できなかった分はプレースホルダを表示する)。
 class SyncCoopHistoryUseCase {
   /// [SyncCoopHistoryUseCase] を作成する
@@ -104,13 +107,14 @@ class SyncCoopHistoryUseCase {
       }
       try {
         final room = await _rooms.fetchRoom(code);
-        if (room != null) {
-          await _syncClears(coop.roomCode, await _rooms.fetchClears(code));
-        }
+        final hasAllThumbs =
+            room != null &&
+            await _syncClears(coop.roomCode, await _rooms.fetchClears(code));
         if (shouldFinalizeHistory(
           room: room,
           expiresAt: coop.expiresAt,
           now: now,
+          hasAllThumbs: hasAllThumbs,
         )) {
           await _histories.finalizeCoopHistory(
             coop.roomCode,

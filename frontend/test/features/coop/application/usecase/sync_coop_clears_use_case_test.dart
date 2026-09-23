@@ -101,8 +101,11 @@ void main() {
       expect(history.coop!.syncState, CoopSyncState.inProgress);
     });
 
-    test('ルームが finished なら確定する', () async {
+    test('ルームが finished で、サムネが全部そろったら確定する', () async {
       rooms.rooms[code] = fx.room(status: RoomStatus.finished);
+      rooms.clears[code] = {
+        'a': fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),
+      };
 
       await useCase(fx.createdAt.add(const Duration(hours: 1)))();
 
@@ -110,6 +113,29 @@ void main() {
         histories.histories[code]!.coop!.syncState,
         CoopSyncState.finalized,
       );
+    });
+
+    test('ルームが finished でも、サムネが届くまでは確定せず、届いたら取り込んで確定する', () async {
+      rooms.rooms[code] = fx.room(status: RoomStatus.finished);
+      rooms.clears[code] = {'a': fx.clear('a', 'x')};
+      final sync = useCase(fx.createdAt.add(const Duration(hours: 1)));
+
+      await sync();
+
+      expect(
+        histories.histories[code]!.coop!.syncState,
+        CoopSyncState.inProgress,
+      );
+
+      // 発見者の再送で thumbPath が後から埋まる
+      rooms.clears[code] = {
+        'a': fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),
+      };
+      await sync();
+
+      final history = histories.histories[code]!;
+      expect(history.spots[0].discovererThumbPath, isNotNull);
+      expect(history.coop!.syncState, CoopSyncState.finalized);
     });
 
     test('遊べる期限を過ぎていれば確定する', () async {

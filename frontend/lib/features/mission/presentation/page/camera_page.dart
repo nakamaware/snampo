@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:snampo/features/mission/presentation/dialog/photo_confirm_dialog.dart';
+import 'package:snampo/features/mission/presentation/component/photo_confirm_dialog.dart';
 
 /// カメラページの引数
 class CameraPageArgs {
