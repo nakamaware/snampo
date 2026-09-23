@@ -204,58 +204,58 @@ final class ThumbnailServiceProvider
 
 String _$thumbnailServiceHash() => r'5859cc04befbd2d2a5f0d02a04a1ec649db10e4d';
 
-/// サムネの再送キュー
+/// 共有しきれていない発見のキュー
 
-@ProviderFor(thumbUploadQueueStore)
-final thumbUploadQueueStoreProvider = ThumbUploadQueueStoreProvider._();
+@ProviderFor(pendingClearQueueStore)
+final pendingClearQueueStoreProvider = PendingClearQueueStoreProvider._();
 
-/// サムネの再送キュー
+/// 共有しきれていない発見のキュー
 
-final class ThumbUploadQueueStoreProvider
+final class PendingClearQueueStoreProvider
     extends
         $FunctionalProvider<
-          IThumbUploadQueueStore,
-          IThumbUploadQueueStore,
-          IThumbUploadQueueStore
+          IPendingClearQueueStore,
+          IPendingClearQueueStore,
+          IPendingClearQueueStore
         >
-    with $Provider<IThumbUploadQueueStore> {
-  /// サムネの再送キュー
-  ThumbUploadQueueStoreProvider._()
+    with $Provider<IPendingClearQueueStore> {
+  /// 共有しきれていない発見のキュー
+  PendingClearQueueStoreProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'thumbUploadQueueStoreProvider',
+        name: r'pendingClearQueueStoreProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$thumbUploadQueueStoreHash();
+  String debugGetCreateSourceHash() => _$pendingClearQueueStoreHash();
 
   @$internal
   @override
-  $ProviderElement<IThumbUploadQueueStore> $createElement(
+  $ProviderElement<IPendingClearQueueStore> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  IThumbUploadQueueStore create(Ref ref) {
-    return thumbUploadQueueStore(ref);
+  IPendingClearQueueStore create(Ref ref) {
+    return pendingClearQueueStore(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(IThumbUploadQueueStore value) {
+  Override overrideWithValue(IPendingClearQueueStore value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<IThumbUploadQueueStore>(value),
+      providerOverride: $SyncValueProvider<IPendingClearQueueStore>(value),
     );
   }
 }
 
-String _$thumbUploadQueueStoreHash() =>
-    r'447668a849ce46b292a72aefdbe4e4f5e50e1ebd';
+String _$pendingClearQueueStoreHash() =>
+    r'1af4ba8d37be7a6e4d9aeeb9e2f0d079a24ec10a';
 
 /// ルームを作成するユースケース
 
@@ -458,60 +458,60 @@ final class ClearSpotUseCaseProvider
   }
 }
 
-String _$clearSpotUseCaseHash() => r'1b36e2fbc8d17d9ec48c42e2a0d27fc624c188b8';
+String _$clearSpotUseCaseHash() => r'f59dc8eb46369a4b33e09f10e0a8ee69628e59d7';
 
-/// サムネを再送するユースケース (実行中の二重起動を防ぐため keepAlive)
+/// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
 
-@ProviderFor(retryThumbUploadsUseCase)
-final retryThumbUploadsUseCaseProvider = RetryThumbUploadsUseCaseProvider._();
+@ProviderFor(retryPendingClearsUseCase)
+final retryPendingClearsUseCaseProvider = RetryPendingClearsUseCaseProvider._();
 
-/// サムネを再送するユースケース (実行中の二重起動を防ぐため keepAlive)
+/// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
 
-final class RetryThumbUploadsUseCaseProvider
+final class RetryPendingClearsUseCaseProvider
     extends
         $FunctionalProvider<
-          RetryThumbUploadsUseCase,
-          RetryThumbUploadsUseCase,
-          RetryThumbUploadsUseCase
+          RetryPendingClearsUseCase,
+          RetryPendingClearsUseCase,
+          RetryPendingClearsUseCase
         >
-    with $Provider<RetryThumbUploadsUseCase> {
-  /// サムネを再送するユースケース (実行中の二重起動を防ぐため keepAlive)
-  RetryThumbUploadsUseCaseProvider._()
+    with $Provider<RetryPendingClearsUseCase> {
+  /// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
+  RetryPendingClearsUseCaseProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'retryThumbUploadsUseCaseProvider',
+        name: r'retryPendingClearsUseCaseProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$retryThumbUploadsUseCaseHash();
+  String debugGetCreateSourceHash() => _$retryPendingClearsUseCaseHash();
 
   @$internal
   @override
-  $ProviderElement<RetryThumbUploadsUseCase> $createElement(
+  $ProviderElement<RetryPendingClearsUseCase> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  RetryThumbUploadsUseCase create(Ref ref) {
-    return retryThumbUploadsUseCase(ref);
+  RetryPendingClearsUseCase create(Ref ref) {
+    return retryPendingClearsUseCase(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RetryThumbUploadsUseCase value) {
+  Override overrideWithValue(RetryPendingClearsUseCase value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<RetryThumbUploadsUseCase>(value),
+      providerOverride: $SyncValueProvider<RetryPendingClearsUseCase>(value),
     );
   }
 }
 
-String _$retryThumbUploadsUseCaseHash() =>
-    r'0188a9bd76fe20de901f9e9983de0b9821f1cd22';
+String _$retryPendingClearsUseCaseHash() =>
+    r'aab20e8a0be35355f8fd97245a2c8a67b4baee9f';
 
 /// `clears` を履歴に反映するユースケース
 

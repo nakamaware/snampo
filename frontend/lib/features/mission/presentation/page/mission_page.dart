@@ -9,8 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:snampo/features/coop/presentation/page/coop_mission_overlay_page.dart';
-import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
@@ -39,14 +37,19 @@ import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 /// - **半径指定（ランダム）**: コンストラクタ … API が半径内で目的地を決める
 /// - **目的地指定**: `MissionPage.withDestination` … 地図で選んだ座標でルート生成
 /// - **再開**: `MissionPage.resume` … 永続ストアのミッションを復元（API 呼び出しなし）
-/// - **協力プレイ**: `MissionPage.coop` … ルームで配られたミッションを端末に用意したもの
+///
+/// 協力プレイなどのモードは、[MissionPageExtension] で部品を差し込む
+/// (このページはモードの機能を知らない)。
 class MissionPage extends HookConsumerWidget {
   /// 半径指定（ランダム）モード。
   ///
   /// [radius] は検索半径（メートル）。`/mission/random/:radius` から遷移する想定。
   MissionPage({required int radius, super.key})
-    : _params = MissionStoreParams.random(radius: Radius(meters: radius)),
-      coopRoomCode = null;
+    : _initialParams = MissionStoreParams.random(
+        radius: Radius(meters: radius),
+      ),
+      kind = MissionSessionKind.solo,
+      extension = null;
 
   /// 目的地指定モード。
   ///
@@ -55,31 +58,36 @@ class MissionPage extends HookConsumerWidget {
     required double destinationLat,
     required double destinationLng,
     super.key,
-  }) : _params = MissionStoreParams.destination(
+  }) : _initialParams = MissionStoreParams.destination(
          destination: Coordinate(
            latitude: destinationLat,
            longitude: destinationLng,
          ),
        ),
-       coopRoomCode = null;
+       kind = MissionSessionKind.solo,
+       extension = null;
 
   /// ゲーム再開モード（永続化済みミッションの復元）。
-  const MissionPage.resume({super.key})
-    : _params = const MissionStoreParams.resume(),
-      coopRoomCode = null;
-
-  /// 協力プレイモード。
   ///
-  /// [roomCode] のルームで配られ、端末に用意したミッションを表示する。
-  const MissionPage.coop({required String roomCode, super.key})
-    : _params = const MissionStoreParams.resume(kind: MissionSessionKind.coop),
-      coopRoomCode = roomCode;
+  /// [kind] の保存枠からミッションと進捗を読む。[extension] はモード固有の部品。
+  const MissionPage.resume({
+    this.kind = MissionSessionKind.solo,
+    this.extension,
+    super.key,
+  }) : _initialParams = null;
+
+  /// API から新規に取得するときのパラメータ (再開では null)
+  final MissionStoreParams? _initialParams;
+
+  /// ミッションと進捗の保存枠
+  final MissionSessionKind kind;
+
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   /// ミッションストアのパラメータ
-  final MissionStoreParams _params;
-
-  /// 協力プレイのルームコード (ソロでは null)
-  final String? coopRoomCode;
+  MissionStoreParams get _params =>
+      _initialParams ?? MissionStoreParams.resume(kind: kind);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,12 +132,7 @@ class MissionPage extends HookConsumerWidget {
       });
     });
 
-    final roomCode = coopRoomCode;
-    if (roomCode != null) {
-      // ミッションの用意とクリアの同期は、協力プレイ中ずっと動かす
-      ref.watch(coopMissionControllerProvider(roomCode).select((_) => null));
-    }
-
+    final extension = this.extension;
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
     return missionAsyncValue.when(
@@ -137,7 +140,7 @@ class MissionPage extends HookConsumerWidget {
         final body = Stack(
           children: [
             MapView(currentLocation: missionInfo.departure, params: _params),
-            SnapView(params: _params, coopRoomCode: roomCode),
+            SnapView(params: _params, extension: extension),
           ],
         );
         return Scaffold(
@@ -145,14 +148,9 @@ class MissionPage extends HookConsumerWidget {
             title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
-            actions: [
-              if (roomCode != null) CoopHostEndButton(roomCode: roomCode),
-            ],
+            actions: extension?.appBarActions(context) ?? const [],
           ),
-          body:
-              roomCode == null
-                  ? body
-                  : CoopMissionEffects(roomCode: roomCode, child: body),
+          body: extension?.wrapBody(context, body) ?? body,
         );
       },
       loading:
@@ -318,13 +316,13 @@ class _MapViewState extends ConsumerState<MapView> {
 /// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.params, this.coopRoomCode, super.key});
+  const SnapView({required this.params, this.extension, super.key});
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
 
-  /// 協力プレイのルームコード (ソロでは null)
-  final String? coopRoomCode;
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   @override
   Widget build(BuildContext context) {
@@ -350,7 +348,7 @@ class SnapView extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 50),
-                      SnapViewState(params: params, coopRoomCode: coopRoomCode),
+                      SnapViewState(params: params, extension: extension),
                     ],
                   ),
                 ),
@@ -385,13 +383,13 @@ class SnapView extends StatelessWidget {
 /// SnapView内でミッション情報を表示するウィジェット
 class SnapViewState extends HookConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({required this.params, this.coopRoomCode, super.key});
+  const SnapViewState({required this.params, this.extension, super.key});
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
 
-  /// 協力プレイのルームコード (ソロでは null)
-  final String? coopRoomCode;
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -445,11 +443,10 @@ class SnapViewState extends HookConsumerWidget {
                 totalCheckpointCount: missionSpots.length,
                 isDestinationMode: isDestinationMode,
                 kind: params.kind,
-                coopRoomCode: coopRoomCode,
+                extension: extension,
               ),
             const SizedBox(height: 20),
-            // 協力プレイは全スポットのクリアかホストの途中終了で、全員が結果画面へ自動で遷移する
-            if (coopRoomCode == null)
+            if (extension?.showsResultButton ?? true)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary, // ボタンの背景色
@@ -526,7 +523,7 @@ class _MissionSpotRow extends StatelessWidget {
     required this.totalCheckpointCount,
     required this.isDestinationMode,
     required this.kind,
-    required this.coopRoomCode,
+    required this.extension,
   });
 
   final int index;
@@ -535,10 +532,15 @@ class _MissionSpotRow extends StatelessWidget {
   final int totalCheckpointCount;
   final bool isDestinationMode;
   final MissionSessionKind kind;
-  final String? coopRoomCode;
+  final MissionPageExtension? extension;
 
   @override
   Widget build(BuildContext context) {
+    final extra = extension?.buildSpotExtra(
+      context,
+      spot: missionPoint,
+      checkpoint: checkpoint,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -555,16 +557,9 @@ class _MissionSpotRow extends StatelessWidget {
                 missionPoint: missionPoint,
                 isDestinationMode: isDestinationMode,
                 kind: kind,
-                coopRoomCode: coopRoomCode,
+                extension: extension,
               ),
-              if (coopRoomCode != null) ...[
-                const SizedBox(height: 8),
-                CoopDiscovererView(
-                  roomCode: coopRoomCode!,
-                  spotId: missionPoint.spotId,
-                  checkpoint: checkpoint,
-                ),
-              ],
+              if (extra != null) ...[const SizedBox(height: 8), extra],
               if (checkpoint?.userPhotoPath != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(
@@ -633,15 +628,15 @@ class TakeSnap extends HookConsumerWidget {
     required this.missionPoint,
     required this.isDestinationMode,
     this.kind = MissionSessionKind.solo,
-    this.coopRoomCode,
+    this.extension,
     super.key,
   });
 
   /// ミッションと進捗の保存枠
   final MissionSessionKind kind;
 
-  /// 協力プレイのルームコード (ソロでは null)
-  final String? coopRoomCode;
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   /// 撮影するスポットのインデックス
   final int spotIndex;
@@ -675,14 +670,13 @@ class TakeSnap extends HookConsumerWidget {
     final progressPath = checkpoint?.userPhotoPath;
 
     final displayPath = progressPath ?? cameraPath;
-    // 協力プレイでは 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない
-    final clearedByOthers = checkpoint?.discovererUid != null;
+    final canCapture = extension?.canCapture(checkpoint) ?? true;
 
     if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
         onPressed:
-            isCapturing.value || clearedByOthers
+            isCapturing.value || !canCapture
                 ? null
                 : () async {
                   isCapturing.value = true;
@@ -739,15 +733,11 @@ class TakeSnap extends HookConsumerWidget {
           if (checkpoint == null) {
             return false;
           }
-          final roomCode = coopRoomCode;
-          if (roomCode != null) {
-            // 発見の共有は裏で進める (オフラインなら SDK が溜めておき、復帰したら送信する)
-            unawaited(
-              ref
-                  .read(coopMissionControllerProvider(roomCode).notifier)
-                  .clearSpot(spotIndex: spotIndex, checkpoint: checkpoint),
-            );
-          }
+          extension?.onCheckpointCompleted(
+            ref,
+            index: spotIndex,
+            checkpoint: checkpoint,
+          );
 
           ref
               .read(cameraStoreProvider.notifier)
@@ -863,4 +853,38 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
     };
   }
   return progress;
+}
+
+/// Mission 画面にモード (協力プレイなど) ごとの部品を差し込むための口
+///
+/// Mission 画面はモードの機能を知らず、モードの側がこれを実装して渡す。
+abstract class MissionPageExtension {
+  /// [MissionPageExtension] を作成する
+  const MissionPageExtension();
+
+  /// 画面の中身を包む (モード固有のお知らせや画面遷移など)
+  Widget wrapBody(BuildContext context, Widget body) => body;
+
+  /// AppBar に並べるボタン
+  List<Widget> appBarActions(BuildContext context) => const [];
+
+  /// スポットごとに追加で表示する部品 (なければ null)
+  Widget? buildSpotExtra(
+    BuildContext context, {
+    required ImageCoordinate spot,
+    required CheckpointProgress? checkpoint,
+  }) => null;
+
+  /// スポットを撮影できるか
+  bool canCapture(CheckpointProgress? checkpoint) => true;
+
+  /// 撮影と採点が確定したとき
+  void onCheckpointCompleted(
+    WidgetRef ref, {
+    required int index,
+    required CheckpointProgress checkpoint,
+  }) {}
+
+  /// 「プレイ結果」ボタンを表示するか
+  bool get showsResultButton => true;
 }

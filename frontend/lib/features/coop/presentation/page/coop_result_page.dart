@@ -3,16 +3,53 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/domain/value_object/nickname.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
+import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
+import 'package:snampo/features/mission/presentation/page/result_page.dart';
+
+/// 協力プレイの結果画面
+///
+/// 既存の結果画面に、スポットごとの発見者と未クリアの表示、発見数ランキングを
+/// [ResultPageExtension] で差し込む。
+class CoopResultPage extends StatelessWidget {
+  /// [CoopResultPage] を作成する
+  const CoopResultPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const ResultPage(
+    kind: MissionSessionKind.coop,
+    extension: _CoopResultPageExtension(),
+  );
+}
+
+class _CoopResultPageExtension extends ResultPageExtension {
+  const _CoopResultPageExtension();
+
+  @override
+  Widget? buildHeader(BuildContext context, MissionProgressEntity progress) {
+    final roomCode = progress.roomCode;
+    return roomCode == null
+        ? null
+        : _CoopResultRanking(roomCode: roomCode, progress: progress);
+  }
+
+  @override
+  String? spotStatusLabel(CheckpointProgress? checkpoint) {
+    final discoverer = checkpoint?.discovererNickname;
+    return discoverer == null ? '未クリア' : '発見: $discoverer';
+  }
+
+  /// 端末の「ルームに戻る」を消す (履歴の同期は続く)
+  @override
+  Future<void> onFinish(WidgetRef ref) async {
+    ref.read(coopSessionStoreProvider.notifier).clear();
+  }
+}
 
 /// 結果画面に表示する発見数ランキング (誰が何個見つけたか)
-class CoopResultRanking extends ConsumerWidget {
-  /// [CoopResultRanking] を作成する
-  const CoopResultRanking({
-    required this.roomCode,
-    required this.progress,
-    super.key,
-  });
+class _CoopResultRanking extends ConsumerWidget {
+  const _CoopResultRanking({required this.roomCode, required this.progress});
 
   /// ルームコード
   final String roomCode;

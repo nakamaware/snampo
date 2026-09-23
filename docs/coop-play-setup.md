@@ -1,11 +1,15 @@
 # 協力プレイの手作業の手順
 
-協力プレイ (みんなで) のインフラは `terraform/modules/common/firebase.tf` で dev と prod の両方に構成する。
+協力プレイ (みんなで) のインフラは dev と prod の両方に構成する。
+
+- Firebase: `terraform/modules/gcp/firebase` (サブモジュール) を `terraform/modules/common/main.tf` から呼び出す
+- Cloud Storage のバケット: `terraform/modules/common/main.tf` の `coop_bucket` (公開モジュール `terraform-google-modules/cloud-storage`)
+
 Terraform で管理できないものと、Terraform の結果をアプリに反映する作業をここにまとめる。
 
 ## 1. Terraform の apply
 
-`terraform/modules/common` を変更すると、main へのマージ後に CD (`terraform-cd.yml`) が dev と prod の両方に apply する。
+`terraform/modules` 配下を変更すると、main へのマージ後に CD (`terraform-cd.yml`) が dev と prod の両方に apply する。
 
 dev の CD が #257 (budget のエラー) で失敗している間も、Firebase のリソースは budget 以外として apply される。
 それでも失敗した場合は、ローカルから apply する (Owner 権限が必要)。

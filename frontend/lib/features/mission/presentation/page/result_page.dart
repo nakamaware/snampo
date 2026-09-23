@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/features/coop/presentation/page/coop_result_ranking_page.dart';
-import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
@@ -17,15 +15,20 @@ import 'package:snampo/features/mission/presentation/store/persisted_mission_pro
 
 /// プレイ全体の結果を表示するページ
 ///
-/// 協力プレイでは、スポットごとの発見者とサムネ、未クリアのスポット、発見数ランキングも表示する。
+/// 協力プレイなどのモードは、[ResultPageExtension] で部品を差し込む。
 class ResultPage extends ConsumerWidget {
   /// ResultPageのコンストラクタ
-  const ResultPage({this.kind = MissionSessionKind.solo, super.key});
+  const ResultPage({
+    this.kind = MissionSessionKind.solo,
+    this.extension,
+    super.key,
+  });
 
   /// ミッションと進捗の保存枠
   final MissionSessionKind kind;
 
-  bool get _isCoop => kind == MissionSessionKind.coop;
+  /// モード固有の部品 (ソロでは null)
+  final ResultPageExtension? extension;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,11 +70,9 @@ class ResultPage extends ConsumerWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
-                      if (_isCoop && progress.roomCode != null) ...[
-                        CoopResultRanking(
-                          roomCode: progress.roomCode!,
-                          progress: progress,
-                        ),
+                      if (extension?.buildHeader(context, progress)
+                          case final header?) ...[
+                        header,
                         const SizedBox(height: 16),
                       ],
                       Expanded(
@@ -94,7 +95,9 @@ class ResultPage extends ConsumerWidget {
                               isSelectedDestinationGoal:
                                   isDestinationMode &&
                                   index == points.length - 1,
-                              isCoop: _isCoop,
+                              statusLabel: extension?.spotStatusLabel(
+                                checkpoint,
+                              ),
                               onTap:
                                   !hasResultPhoto
                                       ? null
@@ -164,9 +167,7 @@ class ResultPage extends ConsumerWidget {
       await progressStore.clearProgress();
     } finally {
       persistedMission.clearMission();
-      if (_isCoop) {
-        ref.read(coopSessionStoreProvider.notifier).clear();
-      }
+      await extension?.onFinish(ref);
     }
 
     if (context.mounted) {
@@ -182,7 +183,7 @@ class _ResultCard extends StatelessWidget {
     required this.checkpoint,
     required this.isSelectedDestinationGoal,
     required this.onTap,
-    this.isCoop = false,
+    this.statusLabel,
   });
 
   final String title;
@@ -190,7 +191,9 @@ class _ResultCard extends StatelessWidget {
   final CheckpointProgress? checkpoint;
   final bool isSelectedDestinationGoal;
   final VoidCallback? onTap;
-  final bool isCoop;
+
+  /// モード固有の状態 (協力プレイの発見者など)
+  final String? statusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -232,16 +235,11 @@ class _ResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
-                    if (isCoop)
+                    if (statusLabel != null)
                       Text(
-                        checkpoint?.discovererNickname == null
-                            ? '未クリア'
-                            : '発見: ${checkpoint!.discovererNickname}',
+                        statusLabel!,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color:
-                              checkpoint?.discovererNickname == null
-                                  ? theme.colorScheme.outline
-                                  : theme.colorScheme.primary,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     const SizedBox(height: 4),
@@ -282,4 +280,20 @@ class _ResultErrorScaffold extends StatelessWidget {
       body: Center(child: Text(message)),
     );
   }
+}
+
+/// 結果画面にモード (協力プレイなど) ごとの部品を差し込むための口
+abstract class ResultPageExtension {
+  /// [ResultPageExtension] を作成する
+  const ResultPageExtension();
+
+  /// スポット一覧の上に表示する部品 (なければ null)
+  Widget? buildHeader(BuildContext context, MissionProgressEntity progress) =>
+      null;
+
+  /// スポットのカードに表示する状態 (なければ null)
+  String? spotStatusLabel(CheckpointProgress? checkpoint) => null;
+
+  /// 「ホームへ戻る」で、その種別の枠を片付けたあとに呼ぶ
+  Future<void> onFinish(WidgetRef ref) async {}
 }

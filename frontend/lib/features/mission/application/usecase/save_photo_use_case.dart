@@ -1,3 +1,4 @@
+import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
@@ -14,11 +15,11 @@ class SavePhotoUseCase {
   ///
   /// [tempPhotoPath] は一時ディレクトリの写真パス
   /// [checkpointIndex] はチェックポイントのインデックス
-  /// [photoSubdirectory] は保存先のサブディレクトリ (ソロは `solo`、協力プレイは `coop/{roomCode}`)
+  /// [photoDirectory] は保存先 (ソロと協力プレイで分ける)
   Future<CheckpointProgress> call({
     required String tempPhotoPath,
     required int checkpointIndex,
-    required String photoSubdirectory,
+    required MissionPhotoDirectory photoDirectory,
     required Coordinate? guessPosition,
     required double? capturedHeading,
     required PhotoJudgeRank judgeRank,
@@ -28,7 +29,7 @@ class SavePhotoUseCase {
     final savedPath = await _photoStorage.savePhoto(
       tempPhotoPath,
       checkpointIndex,
-      subdirectory: photoSubdirectory,
+      directory: photoDirectory,
     );
     return CheckpointProgress(
       guessPosition: guessPosition,

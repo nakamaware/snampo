@@ -187,8 +187,12 @@ class RoomRepository implements IRoomRepository {
       // 先着勝ち: 既にあれば作成は拒否される
       final existing = await ref.get(const GetOptions(source: Source.server));
       final data = existing.data();
-      if (data == null || data['clearedBy'] == uid) {
+      if (data == null) {
         throw CoopPermissionDeniedException(e.message);
+      }
+      // 自分の送信待ちのクリア (キルされる前の書き込み) が先に届いていた場合
+      if (data['clearedBy'] == uid) {
+        return const ClearCreated();
       }
       return ClearAlreadyExists(RoomMapper.clearFromFirestore(spotId, data));
     }

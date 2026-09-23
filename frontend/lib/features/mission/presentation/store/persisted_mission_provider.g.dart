@@ -61,7 +61,7 @@ final class PersistedMissionProvider
   }
 }
 
-String _$persistedMissionHash() => r'8e82f9f45dcd7ac817536dfd102e59e9a7b721a5';
+String _$persistedMissionHash() => r'757b0e891e5886e6e884dad31297b93cd97f79d7';
 
 /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
 ///

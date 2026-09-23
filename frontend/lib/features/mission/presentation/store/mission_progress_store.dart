@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
@@ -25,12 +26,8 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     return state.value;
   }
 
-  /// ソロの既存データをそのまま読めるように、ソロは以前と同じキーを使う
   @override
-  String get key => switch (kind) {
-    MissionSessionKind.solo => 'MissionProgressStoreNotifier',
-    MissionSessionKind.coop => 'MissionProgressStoreNotifier.coop',
-  };
+  String get key => kind.persistKey('MissionProgressStoreNotifier');
 
   /// ミッション進捗を開始する
   ///
@@ -44,12 +41,6 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
         checkpoints: List.filled(checkpointCount, null),
       ),
     );
-  }
-
-  /// 撮影した写真の保存先のサブディレクトリ
-  String _photoSubdirectory(MissionProgressEntity progress) {
-    final roomCode = progress.roomCode;
-    return roomCode == null ? 'solo' : 'coop/$roomCode';
   }
 
   /// チェックポイントの撮影結果と採点結果を確定する
@@ -73,7 +64,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     final checkpoint = await useCase.call(
       tempPhotoPath: tempPhotoPath,
       checkpointIndex: index,
-      photoSubdirectory: _photoSubdirectory(current),
+      photoDirectory: MissionPhotoDirectory.of(roomCode: current.roomCode),
       guessPosition: guessPosition,
       capturedHeading: capturedHeading,
       judgeRank: judgeRank,

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/core/storage/photo_storage.dart';
 
 /// 写真ストレージの実装
@@ -32,14 +33,10 @@ class PhotoStorageImpl implements IPhotoStorage {
   Future<String> savePhoto(
     String sourcePath,
     int checkpointIndex, {
-    required String subdirectory,
+    required MissionPhotoDirectory directory,
   }) async {
     final root = await _photoDirectory();
-    final dir = Directory(normalize(join(root.path, subdirectory)));
-    // サブディレクトリが保存用ディレクトリの外を指さないようにする
-    if (!isWithin(root.path, dir.path)) {
-      throw ArgumentError.value(subdirectory, 'subdirectory', '不正な保存先です');
-    }
+    final dir = Directory(joinAll([root.path, ...directory.segments]));
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
     }

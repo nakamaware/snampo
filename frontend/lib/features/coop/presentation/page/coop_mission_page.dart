@@ -1,22 +1,91 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
+import 'package:snampo/features/mission/presentation/page/mission_page.dart';
+
+/// 協力プレイの Mission 画面 (端末で進行中のルーム)
+///
+/// 既存の Mission 画面に、協力プレイの部品を [MissionPageExtension] で差し込む。
+class CoopMissionPage extends ConsumerWidget {
+  /// [CoopMissionPage] を作成する
+  const CoopMissionPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(coopSessionStoreProvider).value;
+    if (session == null) {
+      return const LobbyPage();
+    }
+    return MissionPage.resume(
+      kind: MissionSessionKind.coop,
+      extension: _CoopMissionPageExtension(session.roomCode),
+    );
+  }
+}
+
+class _CoopMissionPageExtension extends MissionPageExtension {
+  const _CoopMissionPageExtension(this.roomCode);
+
+  final String roomCode;
+
+  @override
+  Widget wrapBody(BuildContext context, Widget body) =>
+      _CoopMissionEffects(roomCode: roomCode, child: body);
+
+  @override
+  List<Widget> appBarActions(BuildContext context) => [
+    _CoopHostEndButton(roomCode: roomCode),
+  ];
+
+  @override
+  Widget? buildSpotExtra(
+    BuildContext context, {
+    required ImageCoordinate spot,
+    required CheckpointProgress? checkpoint,
+  }) => _CoopDiscovererView(
+    roomCode: roomCode,
+    spotId: spot.spotId,
+    checkpoint: checkpoint,
+  );
+
+  /// 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない
+  @override
+  bool canCapture(CheckpointProgress? checkpoint) =>
+      checkpoint?.discovererUid == null;
+
+  /// 発見の共有は裏で進める (オフラインなら SDK が溜めておき、復帰したら送信する)
+  @override
+  void onCheckpointCompleted(
+    WidgetRef ref, {
+    required int index,
+    required CheckpointProgress checkpoint,
+  }) {
+    unawaited(
+      ref
+          .read(coopMissionControllerProvider(roomCode).notifier)
+          .clearSpot(spotIndex: index, checkpoint: checkpoint),
+    );
+  }
+
+  /// 全スポットのクリアかホストの途中終了で、全員が結果画面へ自動で遷移する
+  @override
+  bool get showsResultButton => false;
+}
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
-class CoopMissionEffects extends ConsumerWidget {
-  /// [CoopMissionEffects] を作成する
-  const CoopMissionEffects({
-    required this.roomCode,
-    required this.child,
-    super.key,
-  });
+class _CoopMissionEffects extends ConsumerWidget {
+  const _CoopMissionEffects({required this.roomCode, required this.child});
 
   /// ルームコード
   final String roomCode;
@@ -26,8 +95,10 @@ class CoopMissionEffects extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 「○○さんがスポット N を発見!」などのお知らせ
+    // ミッションの用意とクリアの同期は、協力プレイ中ずっと動かす
     ref
+      ..watch(coopMissionControllerProvider(roomCode).select((_) => null))
+      // 「○○さんがスポット N を発見!」などのお知らせ
       ..listen(
         coopMissionControllerProvider(roomCode).select((s) => s.notice),
         (_, notice) {
@@ -86,9 +157,8 @@ class _PrepareErrorView extends ConsumerWidget {
 }
 
 /// ホストだけに表示する「途中終了」ボタン (確認ダイアログあり)
-class CoopHostEndButton extends ConsumerWidget {
-  /// [CoopHostEndButton] を作成する
-  const CoopHostEndButton({required this.roomCode, super.key});
+class _CoopHostEndButton extends ConsumerWidget {
+  const _CoopHostEndButton({required this.roomCode});
 
   /// ルームコード
   final String roomCode;
@@ -144,13 +214,11 @@ class CoopHostEndButton extends ConsumerWidget {
 }
 
 /// スポットカードに表示する発見者とサムネ
-class CoopDiscovererView extends ConsumerWidget {
-  /// [CoopDiscovererView] を作成する
-  const CoopDiscovererView({
+class _CoopDiscovererView extends ConsumerWidget {
+  const _CoopDiscovererView({
     required this.roomCode,
     required this.spotId,
     required this.checkpoint,
-    super.key,
   });
 
   /// ルームコード

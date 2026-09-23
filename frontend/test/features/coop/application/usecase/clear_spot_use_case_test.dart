@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
+import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/coop/domain/entity/thumb_upload_task.dart';
 import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;
@@ -13,14 +13,14 @@ void main() {
   final spotId = SpotId.parse('a');
   late FakeRoomRepository rooms;
   late FakeCoopStorage storage;
-  late InMemoryThumbUploadQueueStore queue;
+  late InMemoryPendingClearQueueStore queue;
   late Room room;
   late ClearSpotUseCase useCase;
 
   setUp(() {
     rooms = FakeRoomRepository();
     storage = FakeCoopStorage();
-    queue = InMemoryThumbUploadQueueStore();
+    queue = InMemoryPendingClearQueueStore();
     room = fx.room();
     useCase = ClearSpotUseCase(
       rooms: rooms,
@@ -50,7 +50,22 @@ void main() {
     expect(queue.queue.tasks, isEmpty);
   });
 
-  test('サムネが時間内に終わらなければ thumbPath なしで先にクリアを作成し、再送キューに積む', () async {
+  test('クリアを作成する前にキューへ積む (途中でキルされても次の起動で作り直せる)', () async {
+    final gate = Completer<void>();
+    rooms.createClearGate = gate;
+
+    final future = clear();
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    final task = queue.queue.tasks.single;
+    expect(task.clearCreated, isFalse);
+    expect(task.nickname, 'me');
+    expect(task.expiresAt, room.expiresAt);
+    gate.complete();
+    await future;
+  });
+
+  test('サムネが時間内に終わらなければ thumbPath なしで先にクリアを作成し、サムネの再送だけを残す', () async {
     storage.thumbUploadGate = Completer<void>();
 
     final result = await clear();
@@ -58,46 +73,28 @@ void main() {
     expect(result, isA<ClearSpotCleared>());
     expect(rooms.clears[room.code.value]!['a']!.thumbPath, isNull);
     final task = queue.queue.tasks.single;
-    expect(task.spotId, 'a');
-    expect(task.localPath, '/photos/a.jpg.thumb');
-    expect(task.expiresAt, room.expiresAt);
+    expect(task.clearCreated, isTrue);
+    expect(task.localThumbPath, '/photos/a.jpg.thumb');
   });
 
-  test('サムネのアップロードに失敗しても、クリアを作成して再送キューに積む', () async {
+  test('サムネのアップロードに失敗しても、クリアを作成してサムネの再送を残す', () async {
     storage.thumbUploadError = Exception('network');
 
     await clear();
 
     expect(rooms.clears[room.code.value]!['a'], isNotNull);
-    expect(queue.queue.tasks, hasLength(1));
+    expect(queue.queue.tasks.single.clearCreated, isTrue);
   });
 
-  test('先に他の人がクリアしていたら、その発見者を返し再送しない', () async {
-    storage.thumbUploadGate = Completer<void>();
+  test('先に他の人がクリアしていたら、その発見者を返しキューから取り除く', () async {
     await clear(uid: 'other');
-    storage.thumbUploadGate = null;
-    queue.queue = const ThumbUploadQueue();
+    queue.queue = const PendingClearQueue();
 
     final result = await clear();
 
     expect(result, isA<ClearSpotAlreadyCleared>());
     expect((result as ClearSpotAlreadyCleared).existing.clearedBy, 'other');
     expect(queue.queue.tasks, isEmpty);
-  });
-
-  test('サムネの共有を始めたことを通知する', () async {
-    var notified = false;
-
-    await useCase(
-      room: room,
-      uid: 'me',
-      nickname: 'me',
-      spotId: spotId,
-      photoPath: '/photos/a.jpg',
-      onSharing: () => notified = true,
-    );
-
-    expect(notified, isTrue);
   });
 
   test('「発見を共有中…」はクリアの送信 (オフラインなら送信待ち) を待たずに終える', () async {

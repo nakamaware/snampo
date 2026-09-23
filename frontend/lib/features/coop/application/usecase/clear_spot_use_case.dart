@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
-import 'package:snampo/features/coop/application/interface/thumb_upload_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
+import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/entity/thumb_upload_task.dart';
 import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// スポットのクリアの結果
@@ -35,17 +35,18 @@ final class ClearSpotAlreadyCleared extends ClearSpotResult {
 
 /// 撮影して採点したスポットをクリアにする (1 人のクリアで全員のクリアになる)
 ///
-/// 1. サムネを作ってアップロードする
-/// 2. 終わったら thumbPath を入れてクリアを作成する
-/// 3. [thumbUploadTimeout] 以内に終わらなければ、thumbPath なしでクリアを先に作成する
-///    (発見の同期を優先する)。アップロードは再送キューに積む
+/// 1. サムネを作り、発見をキューに積む (途中でキルされても、次の起動で作り直せるように)
+/// 2. サムネをアップロードする
+/// 3. 終わったら thumbPath を入れてクリアを作成し、キューから取り除く
+/// 4. [thumbUploadTimeout] 以内に終わらなければ、thumbPath なしでクリアを先に作成する
+///    (発見の同期を優先する)。キューにはサムネの再送だけを残す
 class ClearSpotUseCase {
   /// [ClearSpotUseCase] を作成する
   ClearSpotUseCase({
     required IRoomRepository rooms,
     required ICoopStorage storage,
     required IThumbnailService thumbnails,
-    required IThumbUploadQueueStore queue,
+    required IPendingClearQueueStore queue,
     this.thumbUploadTimeout = const Duration(seconds: 15),
   }) : _rooms = rooms,
        _storage = storage,
@@ -55,7 +56,7 @@ class ClearSpotUseCase {
   final IRoomRepository _rooms;
   final ICoopStorage _storage;
   final IThumbnailService _thumbnails;
-  final IThumbUploadQueueStore _queue;
+  final IPendingClearQueueStore _queue;
 
   /// サムネのアップロードを待つ時間
   final Duration thumbUploadTimeout;
@@ -75,6 +76,14 @@ class ClearSpotUseCase {
     void Function()? onSharingDone,
   }) async {
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
+    final task = PendingClearTask(
+      roomCode: room.code.value,
+      spotId: spotId.value,
+      nickname: nickname,
+      localThumbPath: localThumbPath,
+      expiresAt: room.expiresAt,
+    );
+    await _queue.save((await _queue.load()).enqueue(task));
     onSharing?.call();
 
     String? thumbPath;
@@ -93,17 +102,6 @@ class ClearSpotUseCase {
       onSharingDone?.call();
     }
 
-    final task = ThumbUploadTask(
-      roomCode: room.code.value,
-      spotId: spotId.value,
-      localPath: localThumbPath,
-      expiresAt: room.expiresAt,
-    );
-    if (thumbPath == null) {
-      // クリアの作成より先に積み、作成の途中でキルされても再送できるようにする
-      await _queue.save((await _queue.load()).enqueue(task));
-    }
-
     final result = await _rooms.createClear(
       room,
       spotId: spotId.value,
@@ -113,11 +111,13 @@ class ClearSpotUseCase {
     );
     switch (result) {
       case ClearCreated():
+        final queue = await _queue.load();
+        await _queue.save(
+          thumbPath == null ? queue.markClearCreated(task) : queue.remove(task),
+        );
         return ClearSpotCleared(localThumbPath: localThumbPath);
       case ClearAlreadyExists(:final existing):
-        if (thumbPath == null) {
-          await _queue.save((await _queue.load()).remove(task));
-        }
+        await _queue.save((await _queue.load()).remove(task));
         return ClearSpotAlreadyCleared(existing);
     }
   }

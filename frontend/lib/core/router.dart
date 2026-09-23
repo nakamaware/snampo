@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/coop/presentation/page/coop_entry_page.dart';
+import 'package:snampo/features/coop/presentation/page/coop_mission_page.dart';
+import 'package:snampo/features/coop/presentation/page/coop_result_page.dart';
 import 'package:snampo/features/coop/presentation/page/join_room_page.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/page/qr_scan_page.dart';
-import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
 import 'package:snampo/features/history/presentation/page/history_page.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
@@ -88,13 +85,11 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: 'lobby', builder: (context, state) => const LobbyPage()),
         GoRoute(
           path: 'mission',
-          builder: (context, state) => const _CoopMissionRoute(),
+          builder: (context, state) => const CoopMissionPage(),
         ),
         GoRoute(
           path: 'result',
-          builder:
-              (context, state) =>
-                  const ResultPage(kind: MissionSessionKind.coop),
+          builder: (context, state) => const CoopResultPage(),
         ),
       ],
     ),
@@ -113,18 +108,3 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
-
-/// 端末で進行中のルームの Mission 画面
-class _CoopMissionRoute extends ConsumerWidget {
-  const _CoopMissionRoute();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(coopSessionStoreProvider).value;
-    final code = session == null ? null : RoomCode.tryParse(session.roomCode);
-    if (code == null) {
-      return const LobbyPage();
-    }
-    return MissionPage.coop(roomCode: code.value);
-  }
-}

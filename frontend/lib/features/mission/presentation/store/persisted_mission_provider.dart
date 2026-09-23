@@ -19,12 +19,8 @@ class PersistedMission extends _$PersistedMission {
     return state.value;
   }
 
-  /// ソロの既存データをそのまま読めるように、ソロは以前と同じキーを使う
   @override
-  String get key => switch (kind) {
-    MissionSessionKind.solo => 'PersistedMission',
-    MissionSessionKind.coop => 'PersistedMission.coop',
-  };
+  String get key => kind.persistKey('PersistedMission');
 
   /// 現在のミッションを保存する（API 取得成功時など）
   void setMission(MissionEntity mission) {

@@ -4,19 +4,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/core/di/firebase_provider.dart';
 import 'package:snampo/features/coop/application/interface/coop_auth_service.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
-import 'package:snampo/features/coop/application/interface/thumb_upload_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/create_room_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
-import 'package:snampo/features/coop/application/usecase/retry_thumb_uploads_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/data/coop_auth_service.dart';
 import 'package:snampo/features/coop/data/firebase_coop_storage.dart';
+import 'package:snampo/features/coop/data/pending_clear_queue_storage.dart';
 import 'package:snampo/features/coop/data/repository/room_repository.dart';
-import 'package:snampo/features/coop/data/thumb_upload_queue_storage.dart';
 import 'package:snampo/features/coop/data/thumbnail_service.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
@@ -43,10 +43,10 @@ ICoopStorage coopStorage(Ref ref) =>
 @riverpod
 IThumbnailService thumbnailService(Ref ref) => ThumbnailService();
 
-/// サムネの再送キュー
+/// 共有しきれていない発見のキュー
 @Riverpod(keepAlive: true)
-IThumbUploadQueueStore thumbUploadQueueStore(Ref ref) =>
-    ThumbUploadQueueStorage();
+IPendingClearQueueStore pendingClearQueueStore(Ref ref) =>
+    PendingClearQueueStorage();
 
 /// ルームを作成するユースケース
 @riverpod
@@ -81,16 +81,16 @@ ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
   rooms: ref.read(roomRepositoryProvider),
   storage: ref.read(coopStorageProvider),
   thumbnails: ref.read(thumbnailServiceProvider),
-  queue: ref.read(thumbUploadQueueStoreProvider),
+  queue: ref.read(pendingClearQueueStoreProvider),
 );
 
-/// サムネを再送するユースケース (実行中の二重起動を防ぐため keepAlive)
+/// 共有しきれていない発見を送り直すユースケース (実行中の二重起動を防ぐため keepAlive)
 @Riverpod(keepAlive: true)
-RetryThumbUploadsUseCase retryThumbUploadsUseCase(Ref ref) =>
-    RetryThumbUploadsUseCase(
+RetryPendingClearsUseCase retryPendingClearsUseCase(Ref ref) =>
+    RetryPendingClearsUseCase(
       rooms: ref.read(roomRepositoryProvider),
       storage: ref.read(coopStorageProvider),
-      queue: ref.read(thumbUploadQueueStoreProvider),
+      queue: ref.read(pendingClearQueueStoreProvider),
       uid: () => ref.read(coopAuthServiceProvider).signedInUid(),
     );
 

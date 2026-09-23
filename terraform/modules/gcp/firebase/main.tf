@@ -1,53 +1,30 @@
-# Firebase (協力プレイモード)
+# Firebase (Auth 匿名・Firestore・Cloud Storage の紐付け・Security Rules・App Check)
 #
-# 協力プレイで使う Firebase Auth (匿名)・Firestore・Cloud Storage・App Check・Security Rules を構成する。
+# 推奨設定はハードコーディングし、プロジェクトによって変わる設定は変数で受け取る。
 # Terraform で管理できないもの (App Check のデバッグトークンの登録など) は docs/coop-play-setup.md を参照。
-
-locals {
-  firebase_api_list = [
-    "firebase.googleapis.com",
-    "identitytoolkit.googleapis.com",
-    "firestore.googleapis.com",
-    "firebasestorage.googleapis.com",
-    "firebaseappcheck.googleapis.com",
-    "firebaserules.googleapis.com",
-    "firebaseinstallations.googleapis.com",
-  ]
-
-  # 協力プレイのデータの保持期限 (ルーム作成から 7 日)
-  coop_data_retention_days = 7
-
-  # アプリの識別子 (Android の applicationId / iOS の bundle id)
-  app_package_name = "com.nakamaware.snampo"
-  apple_team_id    = "B263XJUHQS"
-
-  # Rules のソース (リポジトリルートの firebase/ 配下)
-  firebase_rules_dir = "${path.module}/../../../firebase"
-}
 
 # Firebase をプロジェクトに追加する
 resource "google_firebase_project" "default" {
-  provider   = google-beta
-  project    = var.project_id
-  depends_on = [module.project_services]
+  provider = google-beta
+  project  = var.project_id
 }
 
 # アプリの登録
-resource "google_firebase_android_app" "snampo" {
+resource "google_firebase_android_app" "default" {
   provider      = google-beta
   project       = var.project_id
-  display_name  = "snampo (Android)"
-  package_name  = local.app_package_name
-  sha256_hashes = var.firebase_android_sha256_hashes
+  display_name  = "${var.app_display_name} (Android)"
+  package_name  = var.android_package_name
+  sha256_hashes = var.android_sha256_hashes
   depends_on    = [google_firebase_project.default]
 }
 
-resource "google_firebase_apple_app" "snampo" {
+resource "google_firebase_apple_app" "default" {
   provider     = google-beta
   project      = var.project_id
-  display_name = "snampo (iOS)"
-  bundle_id    = local.app_package_name
-  team_id      = local.apple_team_id
+  display_name = "${var.app_display_name} (iOS)"
+  bundle_id    = var.apple_bundle_id
+  team_id      = var.apple_team_id
   depends_on   = [google_firebase_project.default]
 }
 
@@ -70,60 +47,42 @@ resource "google_identity_platform_config" "default" {
 resource "google_firestore_database" "default" {
   project     = var.project_id
   name        = "(default)"
-  location_id = var.location
+  location_id = var.firestore_location
   type        = "FIRESTORE_NATIVE"
   depends_on  = [google_firebase_project.default]
 }
 
-# TTL ポリシー (deleteAt を過ぎたドキュメントを自動で削除する)
-# TTL はサブコレクションを自動では消さないため、members と clears の collection group にも設定する
-resource "google_firestore_field" "coop_ttl" {
-  for_each = toset(["rooms", "members", "clears"])
+# TTL ポリシー (指定したフィールドの時刻を過ぎたドキュメントを自動で削除する)
+# TTL はサブコレクションを自動では消さないため、collection group ごとに設定する
+resource "google_firestore_field" "ttl" {
+  for_each = {
+    for t in var.firestore_ttl_fields : "${t.collection_group}.${t.field}" => t
+  }
 
   project    = var.project_id
   database   = google_firestore_database.default.name
-  collection = each.key
-  field      = "deleteAt"
+  collection = each.value.collection_group
+  field      = each.value.field
 
   ttl_config {}
   # TTL 用のフィールドは検索に使わないので、単一フィールドインデックスを作らない
   index_config {}
 }
 
-# Cloud Storage (Always Free の対象リージョンに作る)
-resource "google_storage_bucket" "coop" {
-  project                     = var.project_id
-  name                        = "${var.project_name}-coop"
-  location                    = "us-central1"
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-
-  lifecycle_rule {
-    condition {
-      age = local.coop_data_retention_days
-    }
-    action {
-      type = "Delete"
-    }
-  }
-
-  depends_on = [module.project_services]
-}
-
-resource "google_firebase_storage_bucket" "coop" {
+# Cloud Storage のバケットを Firebase に紐付ける
+resource "google_firebase_storage_bucket" "default" {
   provider   = google-beta
   project    = var.project_id
-  bucket_id  = google_storage_bucket.coop.name
+  bucket_id  = var.storage_bucket
   depends_on = [google_firebase_project.default]
 }
 
-# Storage の Rules から firestore.get で members を参照するため、
+# Storage の Rules から firestore.get / exists を使うため、
 # Firebase Storage のサービスエージェントに Firestore を読む権限を付与する
 resource "google_project_service_identity" "firebase_storage" {
-  provider   = google-beta
-  project    = var.project_id
-  service    = "firebasestorage.googleapis.com"
-  depends_on = [module.project_services]
+  provider = google-beta
+  project  = var.project_id
+  service  = "firebasestorage.googleapis.com"
 }
 
 resource "google_project_iam_member" "firebase_storage_rules_firestore" {
@@ -138,7 +97,7 @@ resource "google_firebaserules_ruleset" "firestore" {
   source {
     files {
       name    = "firestore.rules"
-      content = file("${local.firebase_rules_dir}/firestore.rules")
+      content = var.firestore_rules
     }
   }
   depends_on = [google_firestore_database.default]
@@ -163,10 +122,10 @@ resource "google_firebaserules_ruleset" "storage" {
   source {
     files {
       name    = "storage.rules"
-      content = file("${local.firebase_rules_dir}/storage.rules")
+      content = var.storage_rules
     }
   }
-  depends_on = [google_firebase_storage_bucket.coop]
+  depends_on = [google_firebase_storage_bucket.default]
 
   lifecycle {
     create_before_destroy = true
@@ -175,7 +134,7 @@ resource "google_firebaserules_ruleset" "storage" {
 
 resource "google_firebaserules_release" "storage" {
   project      = var.project_id
-  name         = "firebase.storage/${google_storage_bucket.coop.name}"
+  name         = "firebase.storage/${var.storage_bucket}"
   ruleset_name = google_firebaserules_ruleset.storage.name
 
   lifecycle {
@@ -183,23 +142,20 @@ resource "google_firebaserules_release" "storage" {
   }
 }
 
-# App Check
+# App Check (Android は Play Integrity、iOS は App Attest)
 resource "google_firebase_app_check_play_integrity_config" "android" {
   project = var.project_id
-  app_id  = google_firebase_android_app.snampo.app_id
+  app_id  = google_firebase_android_app.default.app_id
 }
 
 resource "google_firebase_app_check_app_attest_config" "ios" {
   project = var.project_id
-  app_id  = google_firebase_apple_app.snampo.app_id
+  app_id  = google_firebase_apple_app.default.app_id
 }
 
-# Firestore と Storage への App Check の強制を最初から有効にする
+# App Check の強制を最初から有効にする
 resource "google_firebase_app_check_service_config" "enforced" {
-  for_each = toset([
-    "firestore.googleapis.com",
-    "firebasestorage.googleapis.com",
-  ])
+  for_each = toset(var.app_check_enforced_services)
 
   project          = var.project_id
   service_id       = each.key
@@ -211,15 +167,15 @@ resource "google_firebase_app_check_service_config" "enforced" {
   ]
 }
 
-# firebase_options_*.dart の更新に使う設定 (いずれも公開値)
-data "google_firebase_android_app_config" "snampo" {
+# アプリの設定 (公開値)
+data "google_firebase_android_app_config" "default" {
   provider = google-beta
   project  = var.project_id
-  app_id   = google_firebase_android_app.snampo.app_id
+  app_id   = google_firebase_android_app.default.app_id
 }
 
-data "google_firebase_apple_app_config" "snampo" {
+data "google_firebase_apple_app_config" "default" {
   provider = google-beta
   project  = var.project_id
-  app_id   = google_firebase_apple_app.snampo.app_id
+  app_id   = google_firebase_apple_app.default.app_id
 }

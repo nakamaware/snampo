@@ -80,7 +80,7 @@ final class CoopMissionControllerProvider
 }
 
 String _$coopMissionControllerHash() =>
-    r'f5448f6819d1cd6cb7c97011dd9f0df385983b10';
+    r'6be93d6ac7af432723e5aa62bd3e2bc3cc715e41';
 
 /// 協力プレイのミッションを進める
 ///

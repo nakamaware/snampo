@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
+import 'package:snampo/features/coop/application/interface/pending_clear_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
-import 'package:snampo/features/coop/application/interface/thumb_upload_queue_store.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
+import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/coop/domain/entity/thumb_upload_task.dart';
 import 'package:snampo/features/coop/domain/value_object/room_code.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
@@ -148,7 +148,10 @@ class FakeRoomRepository implements IRoomRepository {
     final map = clears.putIfAbsent(room.code.value, () => {});
     final existing = map[spotId];
     if (existing != null) {
-      return ClearAlreadyExists(existing);
+      // 自分の送信待ちのクリアが先に届いていた場合は、作成できたものとして扱う
+      return existing.clearedBy == uid
+          ? const ClearCreated()
+          : ClearAlreadyExists(existing);
     }
     map[spotId] = SpotClear(
       spotId: spotId,
@@ -252,14 +255,14 @@ class FakeThumbnailService implements IThumbnailService {
 }
 
 /// メモリ上の再送キュー
-class InMemoryThumbUploadQueueStore implements IThumbUploadQueueStore {
-  ThumbUploadQueue queue = const ThumbUploadQueue();
+class InMemoryPendingClearQueueStore implements IPendingClearQueueStore {
+  PendingClearQueue queue = const PendingClearQueue();
 
   @override
-  Future<ThumbUploadQueue> load() async => queue;
+  Future<PendingClearQueue> load() async => queue;
 
   @override
-  Future<void> save(ThumbUploadQueue queue) async => this.queue = queue;
+  Future<void> save(PendingClearQueue queue) async => this.queue = queue;
 }
 
 /// 協力プレイの履歴だけを扱うメモリ上の履歴リポジトリ

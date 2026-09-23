@@ -353,7 +353,8 @@ stateDiagram-v2
   - Firebase Emulator Suite と `@firebase/rules-unit-testing` を使う
   - プロジェクト ID は `demo-snampo`
 - 最低限、次の観点を確認する
-  - メンバーでない人は、ルーム、クリア、画像を読めない
+  - メンバーでない人は、クリア、メンバー、画像を読めない
+    - ルーム本体は 7.1 のとおり、入室前の存在確認のため認証済みなら `get` できる (一覧の取得はできない)
   - `clears` は 2 回目の作成 (上書き) ができない (先着勝ち)
   - 他人の `uid` を `clearedBy` にして書けない
   - `thumbPath` は本人が 1 回だけ埋められ、他のフィールドは変更できない
