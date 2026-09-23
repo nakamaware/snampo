@@ -74,7 +74,7 @@ class SubmitClearUseCase {
     required String uid,
     void Function()? onThumbDone,
   }) async {
-    final thumbPath = await _uploadThumbWithin(room, task, uid, onThumbDone);
+    final thumbPath = await _uploadThumbWithin(task, uid, onThumbDone);
     final result = await _createClear(room, task, uid, thumbPath);
     return _settle(room, task, result, thumbPath);
   }
@@ -88,7 +88,7 @@ class SubmitClearUseCase {
     required String uid,
     required Duration createClearTimeout,
   }) async {
-    final thumbPath = await _uploadThumbWithin(room, task, uid, null);
+    final thumbPath = await _uploadThumbWithin(task, uid, null);
     final CreateClearResult result;
     try {
       result = await _createClear(
@@ -126,7 +126,6 @@ class SubmitClearUseCase {
   }
 
   Future<String?> _uploadThumbWithin(
-    Room room,
     PendingClearTask task,
     String uid,
     void Function()? onThumbDone,
