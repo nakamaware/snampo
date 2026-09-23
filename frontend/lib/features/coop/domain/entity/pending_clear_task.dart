@@ -54,6 +54,10 @@ abstract class PendingClearQueue with _$PendingClearQueue {
   PendingClearQueue remove(PendingClearTask task) =>
       copyWith(tasks: tasks.where((t) => !_sameTarget(t, task)).toList());
 
+  /// 抜けたルームのタスクをすべて破棄する (抜けたあとは発見を共有できないため)
+  PendingClearQueue removeRoom(RoomCode code) =>
+      copyWith(tasks: tasks.where((t) => t.roomCode != code).toList());
+
   /// クリアを作成済みにする (サムネの再送だけを残す)。タスクがなければ何もしない
   PendingClearQueue markClearCreated(PendingClearTask task) => copyWith(
     tasks: [

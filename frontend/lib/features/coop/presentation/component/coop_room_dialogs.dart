@@ -78,13 +78,12 @@ Future<bool> confirmLeaveCurrentRoom(
   if (!context.mounted) {
     return false;
   }
-  final confirmed = await showConfirmDialog(
+  return showConfirmDialog(
     context,
     title: '今のルームを抜けて参加しますか?',
     content: 'ルーム ${current.roomCode} を抜けます。そのルームの履歴は残ります。',
     confirmLabel: '抜けて参加する',
   );
-  return confirmed;
 }
 
 /// 確認してからルームを抜け、ホームへ戻る (ロビーと Mission 画面で使う)

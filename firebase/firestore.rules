@@ -26,6 +26,12 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/rooms/$(code)/members/$(request.auth.uid));
     }
 
+    // 抜けていないメンバーか (抜けた人は、クリアの作成と finished への更新ができない)
+    function isActiveMember(code) {
+      return isMember(code)
+        && get(/databases/$(database)/documents/rooms/$(code)/members/$(request.auth.uid)).data.get('leftAt', null) == null;
+    }
+
     // 遊べる期限内か
     function isPlayable(room) {
       return request.time < room.expiresAt;
@@ -109,11 +115,11 @@ service cloud.firestore {
             || after.finishReason == 'allCleared' || after.finishReason == 'hostEnded');
       }
 
-      // 全スポットがクリアされたときは、メンバーも playing → finished (allCleared) に更新できる。
+      // 全スポットがクリアされたときは、(抜けていない) メンバーも playing → finished (allCleared) に更新できる。
       // 全スポットがクリアされたこと自体は Rules では検証しない (スポットは最大 26 件あり、
       // Rules で参照できるドキュメント数の上限を超えるため)。
       function allClearedFinish() {
-        return isMember(code)
+        return isActiveMember(code)
           && resource.data.status == 'playing'
           && request.resource.data.status == 'finished'
           && request.resource.data.finishReason == 'allCleared'
@@ -188,11 +194,11 @@ service cloud.firestore {
       }
 
       match /clears/{spotId} {
-        // 先着勝ち: 作成のみ (既に存在する場合は update 扱いになり拒否される)
+        // 先着勝ち: 作成のみ (既に存在する場合は update 扱いになり拒否される)。抜けたメンバーは作成できない
         function validClearCreate() {
           let room = roomData(code);
           let data = request.resource.data;
-          return isMember(code)
+          return isActiveMember(code)
             && room.status == 'playing'
             && isPlayable(room)
             && spotId in room.spotIds

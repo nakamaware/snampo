@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:snampo/core/domain/room_code.dart';
-import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
@@ -43,7 +42,6 @@ class RetryPendingClearsUseCase {
   /// [RetryPendingClearsUseCase] を作成する
   RetryPendingClearsUseCase({
     required IRoomRepository rooms,
-    required ICoopStorage storage,
     required IPendingClearRepository queue,
     required CompleteClearTaskUseCase completeClearTask,
     required SubmitClearUseCase submitClear,
@@ -51,7 +49,6 @@ class RetryPendingClearsUseCase {
     DateTime Function()? now,
     this.createClearTimeout = const Duration(seconds: 30),
   }) : _rooms = rooms,
-       _storage = storage,
        _queue = queue,
        _completeClearTask = completeClearTask,
        _submitClear = submitClear,
@@ -59,7 +56,6 @@ class RetryPendingClearsUseCase {
        _now = now ?? DateTime.now;
 
   final IRoomRepository _rooms;
-  final ICoopStorage _storage;
   final IPendingClearRepository _queue;
   final CompleteClearTaskUseCase _completeClearTask;
   final SubmitClearUseCase _submitClear;
@@ -112,19 +108,7 @@ class RetryPendingClearsUseCase {
     RoomCode code,
     PendingClearTask task,
     String uid,
-  ) async {
-    try {
-      return await _storage.uploadThumb(
-        code: code,
-        spotId: task.spotId,
-        uid: uid,
-        localPath: task.localThumbPath,
-      );
-    } on Object catch (e) {
-      log('サムネの再送に失敗した: $e', name: 'RetryPendingClears');
-      return null;
-    }
-  }
+  ) => _submitClear.uploadThumb(code, task, uid: uid);
 
   Future<PendingClearFailure?> _retryClear(
     RoomCode code,
@@ -143,15 +127,15 @@ class RetryPendingClearsUseCase {
     if (room.status != RoomStatus.playing || !room.isPlayable(_now())) {
       return _settleClosedRoom(code, task, uid);
     }
-    final result = await _submitClear(
+    final result = await _submitClear.withTimeout(
       room,
       task,
       uid: uid,
       createClearTimeout: createClearTimeout,
     );
     return switch (result) {
-      // オフラインなど。キューに残して次の機会に送り直す
-      SubmitClearCreated() || SubmitClearTimedOut() => null,
+      // null は時間内に送れなかった (オフラインなど)。キューに残して次の機会に送り直す
+      null || SubmitClearCreated() => null,
       SubmitClearAlreadyExists(:final existing) => (
         task: task,
         reason: PendingClearFailureReason.alreadyCleared,

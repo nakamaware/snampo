@@ -45,7 +45,6 @@ void main() {
   RetryPendingClearsUseCase build({Future<String?> Function()? uid}) =>
       RetryPendingClearsUseCase(
         rooms: rooms,
-        storage: storage,
         queue: queue,
         completeClearTask: CompleteClearTaskUseCase(rooms: rooms, queue: queue),
         submitClear: SubmitClearUseCase(

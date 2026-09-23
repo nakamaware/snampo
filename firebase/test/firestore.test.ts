@@ -271,6 +271,14 @@ describe("clears", () => {
     await assertFails(setDoc(clearRef(MEMBER, "unknown-spot"), newClear(MEMBER, deleteAt)));
   });
 
+  test("抜けたメンバーはクリアを作成できない", async () => {
+    const { deleteAt } = await seedRoom(env);
+    await assertSucceeds(
+      updateDoc(doc(db(MEMBER), "rooms", ROOM, "members", MEMBER), { leftAt: serverTimestamp() }),
+    );
+    await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt)));
+  });
+
   test("playing でなければクリアできない", async () => {
     const { deleteAt } = await seedRoom(env, { status: "finished" });
     await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt)));
@@ -375,6 +383,20 @@ describe("status と settings の変更", () => {
       }),
     );
     await assertSucceeds(
+      updateDoc(roomRef(MEMBER), {
+        status: "finished",
+        finishReason: "allCleared",
+        finishedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("抜けたメンバーは finished にできない", async () => {
+    await seedRoom(env);
+    await assertSucceeds(
+      updateDoc(doc(db(MEMBER), "rooms", ROOM, "members", MEMBER), { leftAt: serverTimestamp() }),
+    );
+    await assertFails(
       updateDoc(roomRef(MEMBER), {
         status: "finished",
         finishReason: "allCleared",

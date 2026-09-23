@@ -90,8 +90,10 @@ JoinRoomUseCase joinRoomUseCase(Ref ref) =>
 
 /// ルームを抜けるユースケース
 @riverpod
-LeaveRoomUseCase leaveRoomUseCase(Ref ref) =>
-    LeaveRoomUseCase(ref.read(roomRepositoryProvider));
+LeaveRoomUseCase leaveRoomUseCase(Ref ref) => LeaveRoomUseCase(
+  ref.read(roomRepositoryProvider),
+  ref.read(pendingClearRepositoryProvider),
+);
 
 /// ロビーでミッションの設定を変更するユースケース
 @riverpod
@@ -161,7 +163,6 @@ ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
 RetryPendingClearsUseCase retryPendingClearsUseCase(Ref ref) =>
     RetryPendingClearsUseCase(
       rooms: ref.read(roomRepositoryProvider),
-      storage: ref.read(coopStorageProvider),
       queue: ref.read(pendingClearRepositoryProvider),
       completeClearTask: ref.read(completeClearTaskUseCaseProvider),
       submitClear: ref.read(submitClearUseCaseProvider),

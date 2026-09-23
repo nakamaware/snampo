@@ -87,7 +87,7 @@ class ClearSpotUseCase {
         checkpoint: checkpoint,
       );
     } on Object catch (e) {
-      log('履歴への写真の保存に失敗した: $e', name: 'ClearSpotUseCase');
+      log('履歴への写真の保存に失敗した: $e', name: 'ClearSpot');
     }
 
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
@@ -130,9 +130,6 @@ class ClearSpotUseCase {
         return const ClearSpotCleared();
       case SubmitClearAlreadyExists(:final existing):
         return ClearSpotAlreadyCleared(existing);
-      case SubmitClearTimedOut():
-        // 打ち切りを指定していないので起きない
-        throw StateError('クリアの送信が打ち切られました');
     }
   }
 }

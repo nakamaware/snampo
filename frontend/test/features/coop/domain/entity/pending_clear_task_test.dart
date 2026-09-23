@@ -10,8 +10,9 @@ void main() {
   PendingClearTask task(
     String spotId, {
     Duration left = const Duration(hours: 1),
+    String roomCode = 'ABCD23',
   }) => PendingClearTask(
-    roomCode: RoomCode.tryParse('ABCD23')!,
+    roomCode: RoomCode.tryParse(roomCode)!,
     spotId: SpotId.parse(spotId),
     nickname: Nickname.parse('たろう'),
     localThumbPath: '/tmp/$spotId.jpg',
@@ -44,6 +45,16 @@ void main() {
       final queue = PendingClearQueue(tasks: [task('a'), task('b')]);
 
       expect(queue.remove(task('a')).tasks.map((t) => t.spotId.value), ['b']);
+    });
+
+    test('抜けたルームのタスクをすべて破棄する', () {
+      final queue = PendingClearQueue(
+        tasks: [task('a'), task('b'), task('a', roomCode: 'WXYZ89')],
+      );
+
+      final updated = queue.removeRoom(RoomCode.tryParse('ABCD23')!);
+
+      expect(updated.tasks.single.roomCode.value, 'WXYZ89');
     });
 
     test('クリアを作成済みにする (サムネの再送だけが残る)', () {

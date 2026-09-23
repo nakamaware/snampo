@@ -34,7 +34,7 @@ class CoopSessionStore extends _$CoopSessionStore {
 
   /// ルームを抜ける (`leftAt` を記録し、端末の「ルームに戻る」を消す)
   ///
-  /// 通信に失敗しても端末の記録は消す (抜けたルームの履歴の同期は続く)。
+  /// 通信の結果を待たずに端末の記録を消す (抜けたルームの履歴の同期は続く)。
   Future<void> leave() async {
     final session = state.value;
     if (session == null) {
@@ -43,7 +43,7 @@ class CoopSessionStore extends _$CoopSessionStore {
     try {
       await ref.read(leaveRoomUseCaseProvider)(session.roomCode, session.uid);
     } on Object catch (e) {
-      log('ルームを抜ける記録に失敗した: $e', name: 'CoopSession');
+      log('ルームを抜ける処理に失敗した: $e', name: 'CoopSession');
     }
     close();
   }

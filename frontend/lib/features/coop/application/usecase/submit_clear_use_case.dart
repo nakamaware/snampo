@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -28,12 +29,6 @@ final class SubmitClearAlreadyExists extends SubmitClearResult {
 
   /// 先に作成されていたクリア
   final SpotClear existing;
-}
-
-/// クリアの送信が時間内に終わらなかった (オフラインなど。キューに残す)
-final class SubmitClearTimedOut extends SubmitClearResult {
-  /// [SubmitClearTimedOut] を作成する
-  const SubmitClearTimedOut();
 }
 
 /// キューに積んだ発見について、サムネを上げてクリアを作成する
@@ -73,48 +68,102 @@ class SubmitClearUseCase {
   /// 送信する
   ///
   /// [onThumbDone] はサムネのアップロードが終わるか打ち切ったときに呼ぶ。
-  /// [createClearTimeout] を指定すると、クリアの送信をその時間で打ち切る (指定しなければ、
-  /// オフラインの間は SDK が溜めておき、復帰して送信できるまで待つ)。
+  /// オフラインの間は SDK がクリアの書き込みを溜めておき、復帰して送信できるまで待つ。
   Future<SubmitClearResult> call(
     Room room,
     PendingClearTask task, {
     required String uid,
     void Function()? onThumbDone,
-    Duration? createClearTimeout,
   }) async {
-    String? thumbPath;
+    final thumbPath = await _uploadThumbWithin(room, task, uid, onThumbDone);
+    final result = await _createClear(room, task, uid, thumbPath);
+    return _settle(room, task, result, thumbPath);
+  }
+
+  /// クリアの送信を [createClearTimeout] で打ち切って送信する (送り直し用)
+  ///
+  /// 時間内に終わらなければ null を返す (オフラインなど。タスクはキューに残る)。
+  Future<SubmitClearResult?> withTimeout(
+    Room room,
+    PendingClearTask task, {
+    required String uid,
+    required Duration createClearTimeout,
+  }) async {
+    final thumbPath = await _uploadThumbWithin(room, task, uid, null);
+    final CreateClearResult result;
     try {
-      thumbPath = await _storage
-          .uploadThumb(
-            code: room.code,
-            spotId: task.spotId,
-            uid: uid,
-            localPath: task.localThumbPath,
-          )
-          .timeout(thumbUploadTimeout);
+      result = await _createClear(
+        room,
+        task,
+        uid,
+        thumbPath,
+      ).timeout(createClearTimeout);
+    } on TimeoutException {
+      return null;
+    }
+    return _settle(room, task, result, thumbPath);
+  }
+
+  /// サムネをアップロードする。失敗したら null を返す
+  ///
+  /// [timeout] を指定すると、その時間で打ち切る。
+  Future<String?> uploadThumb(
+    RoomCode code,
+    PendingClearTask task, {
+    required String uid,
+    Duration? timeout,
+  }) async {
+    try {
+      final upload = _storage.uploadThumb(
+        code: code,
+        spotId: task.spotId,
+        uid: uid,
+        localPath: task.localThumbPath,
+      );
+      return await (timeout == null ? upload : upload.timeout(timeout));
     } on Object catch (e) {
-      log('サムネのアップロードが間に合わなかった: $e', name: 'SubmitClear');
+      log('サムネをアップロードできなかった: $e', name: 'SubmitClear');
+      return null;
+    }
+  }
+
+  Future<String?> _uploadThumbWithin(
+    Room room,
+    PendingClearTask task,
+    String uid,
+    void Function()? onThumbDone,
+  ) async {
+    try {
+      return await uploadThumb(
+        room.code,
+        task,
+        uid: uid,
+        timeout: thumbUploadTimeout,
+      );
     } finally {
       onThumbDone?.call();
     }
+  }
 
-    final CreateClearResult result;
-    try {
-      final create = _rooms.createClear(
-        room,
-        spotId: task.spotId,
-        uid: uid,
-        nickname: task.nickname,
-        thumbPath: thumbPath,
-      );
-      result =
-          await (createClearTimeout == null
-              ? create
-              : create.timeout(createClearTimeout));
-    } on TimeoutException {
-      return const SubmitClearTimedOut();
-    }
+  Future<CreateClearResult> _createClear(
+    Room room,
+    PendingClearTask task,
+    String uid,
+    String? thumbPath,
+  ) => _rooms.createClear(
+    room,
+    spotId: task.spotId,
+    uid: uid,
+    nickname: task.nickname,
+    thumbPath: thumbPath,
+  );
 
+  Future<SubmitClearResult> _settle(
+    Room room,
+    PendingClearTask task,
+    CreateClearResult result,
+    String? thumbPath,
+  ) async {
     switch (result) {
       case ClearCreated():
         await _completeClearTask(task, result: result, thumbPath: thumbPath);

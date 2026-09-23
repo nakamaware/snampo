@@ -88,14 +88,14 @@ void main() {
   test('クリアの送信が時間内に終わらなければ、キューに残す', () async {
     rooms.createClearGate = Completer<void>();
 
-    final result = await useCase(
+    final result = await useCase.withTimeout(
       room,
       task,
       uid: 'me',
       createClearTimeout: const Duration(milliseconds: 50),
     );
 
-    expect(result, isA<SubmitClearTimedOut>());
+    expect(result, isNull);
     expect(queue.queue.tasks.single.clearCreated, isFalse);
   });
 }
