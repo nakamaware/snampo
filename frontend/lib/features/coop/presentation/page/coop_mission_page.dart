@@ -66,10 +66,24 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     checkpoint: checkpoint,
   );
 
-  /// 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない
+  /// 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない。
+  /// 共有中のスポットも撮影できない (同じ発見を並行して送らないため)
   @override
-  bool canCapture(CheckpointProgress? checkpoint) =>
-      checkpoint?.discovererUid == null;
+  bool canCapture(
+    WidgetRef ref, {
+    required ImageCoordinate spot,
+    required CheckpointProgress? checkpoint,
+  }) =>
+      checkpoint?.discovererUid == null &&
+      !ref.watch(
+        coopMissionStoreProvider(
+          roomCode,
+        ).select((s) => s.sharingSpotIds.contains(spot.spotId)),
+      );
+
+  /// 共有に失敗したスポットは、発見者が付かないので撮り直せる
+  @override
+  bool get allowsRetake => true;
 
   /// 発見の共有は裏で進める (共有中は「発見を共有中…」を表示する)
   @override

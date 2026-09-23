@@ -23,7 +23,6 @@ class FakeRoomRepository implements IRoomRepository {
   final rooms = <RoomCode, Room>{};
   final members = <RoomCode, List<RoomMember>>{};
   final clears = <RoomCode, Map<SpotId, SpotClear>>{};
-  final thumbPathFills = <String>[];
 
   /// 次に createRoom で衝突させる回数
   int collisions = 0;

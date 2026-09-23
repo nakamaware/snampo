@@ -287,8 +287,6 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
-  static const _shareFailedMessage = '発見を共有できませんでした。電波の良い場所で撮り直してください';
-
   /// 撮影して採点したスポットをクリアにする
   ///
   /// 自分の写真と採点は、先に他の人が発見していても、共有に失敗しても手元 (進捗と履歴) に残す。
@@ -333,12 +331,13 @@ class CoopMissionStore extends _$CoopMissionStore {
         case ClearSpotRejected():
           _notify('ルームが終了していたため、発見を共有できませんでした');
         case ClearSpotFailed():
-          _notify(_shareFailedMessage);
+          _notify('発見を共有できませんでした。電波の良い場所で撮り直してください');
       }
       _syncClears();
     } on Object catch (e, st) {
+      // 通信の失敗は ClearSpotFailed で返るので、ここに来るのは端末の中の失敗 (サムネの作成など)
       log('クリアの共有に失敗した', error: e, stackTrace: st, name: 'CoopMission');
-      _notify(_shareFailedMessage);
+      _notify('発見を共有できませんでした。もう一度撮影してください');
     } finally {
       setSharing(sharing: false);
     }
