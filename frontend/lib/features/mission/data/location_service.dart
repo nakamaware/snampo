@@ -1,6 +1,6 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 位置情報サービス
 ///

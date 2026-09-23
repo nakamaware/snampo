@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_history.freezed.dart';
 

@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:snampo/core/domain/nickname.dart';
@@ -13,11 +10,11 @@ import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
-import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
+import 'package:snampo/features/coop/presentation/component/lobby_settings_card.dart';
+import 'package:snampo/features/coop/presentation/component/mission_generating_overlay.dart';
+import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/presentation/component/mission_settings_inputs.dart';
 
 /// ロビー: メンバーを集め、ホストが設定を決めて開始する画面
 ///
@@ -55,10 +52,10 @@ class _Lobby extends HookConsumerWidget {
     final roomAsync = ref.watch(coopRoomProvider(code));
     final members = ref.watch(coopMembersProvider(code)).value ?? const [];
     final isReady = ref.watch(
-      coopMissionControllerProvider(code).select((s) => s.isReady),
+      coopMissionStoreProvider(code).select((s) => s.isReady),
     );
     final prepareError = ref.watch(
-      coopMissionControllerProvider(code).select((s) => s.prepareError),
+      coopMissionStoreProvider(code).select((s) => s.prepareError),
     );
     final room = roomAsync.value;
     // ホストのこの端末で生成中か。generating のままホストがキルされた場合は、再度開始できる
@@ -124,7 +121,7 @@ class _Lobby extends HookConsumerWidget {
                 myUid: session.uid,
               ),
               const SizedBox(height: 16),
-              _SettingsCard(room: room, editable: isHost && !isGenerating),
+              LobbySettingsCard(room: room, editable: isHost && !isGenerating),
               const SizedBox(height: 16),
               if (room.generationError != null &&
                   room.status == RoomStatus.waiting)
@@ -134,9 +131,7 @@ class _Lobby extends HookConsumerWidget {
                   onRetry:
                       () =>
                           ref
-                              .read(
-                                coopMissionControllerProvider(code).notifier,
-                              )
+                              .read(coopMissionStoreProvider(code).notifier)
                               .retryPrepare(),
                 ),
               if (isHost && !isStarted)
@@ -168,7 +163,7 @@ class _Lobby extends HookConsumerWidget {
           ),
           if ((isGenerating && (!isHost || isStartingHere.value)) ||
               (isStarted && !isReady && prepareError == null))
-            _GeneratingOverlay(
+            MissionGeneratingOverlay(
               message: isGenerating ? 'ミッション生成中' : 'ミッションを受け取っています',
             ),
         ],
@@ -352,139 +347,6 @@ class _MembersCard extends StatelessWidget {
   }
 }
 
-/// ミッションの設定。ホストは編集でき、メンバーはリアルタイムで閲覧のみ
-///
-/// 入力部品は Setup 画面と同じもの ([RadiusSlider] / [DestinationMap]) を使う。
-class _SettingsCard extends HookConsumerWidget {
-  const _SettingsCard({required this.room, required this.editable});
-
-  final Room room;
-  final bool editable;
-
-  Future<void> _update(
-    BuildContext context,
-    WidgetRef ref,
-    RoomSettings settings,
-  ) async {
-    try {
-      await ref.read(updateRoomSettingsUseCaseProvider)(room.code, settings);
-    } on Object {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('設定を変更できませんでした')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final settings = room.settings;
-    // スライダー操作中の値 (離したときに保存する)
-    final draftRadius = useState<Radius?>(null);
-    // 目的地指定に切り替えたが、まだ目的地を選んでいない
-    final choosingDestination = useState(false);
-    final isDestination =
-        settings is RoomSettingsDestination || choosingDestination.value;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('ミッションの設定', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('ランダム')),
-                ButtonSegment(value: true, label: Text('目的地指定')),
-              ],
-              selected: {isDestination},
-              onSelectionChanged:
-                  !editable
-                      ? null
-                      : (selection) async {
-                        final toDestination = selection.first;
-                        choosingDestination.value =
-                            toDestination &&
-                            settings is! RoomSettingsDestination;
-                        if (!toDestination &&
-                            settings is RoomSettingsDestination) {
-                          await _update(
-                            context,
-                            ref,
-                            RoomSettings.random(radius: Radius(meters: 1000)),
-                          );
-                        }
-                      },
-            ),
-            const SizedBox(height: 16),
-            switch (settings) {
-              RoomSettingsRandom(:final radius) when !isDestination =>
-                RadiusSlider(
-                  radius: draftRadius.value ?? radius,
-                  textStyle: theme.textTheme.headlineMedium,
-                  onChanged:
-                      editable ? (radius) => draftRadius.value = radius : null,
-                  onChangeEnd:
-                      editable
-                          ? (radius) async {
-                            await _update(
-                              context,
-                              ref,
-                              RoomSettings.random(radius: radius),
-                            );
-                            draftRadius.value = null;
-                          }
-                          : null,
-                ),
-              _ => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (settings is! RoomSettingsDestination)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Text('地図をタップして目的地を選んでください'),
-                    ),
-                  SizedBox(
-                    height: 240,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: DestinationMap(
-                        destination: switch (settings) {
-                          RoomSettingsDestination(:final destination) =>
-                            destination,
-                          RoomSettingsRandom() => null,
-                        },
-                        insideScrollable: true,
-                        onPick:
-                            editable
-                                ? (coordinate) async {
-                                  await _update(
-                                    context,
-                                    ref,
-                                    RoomSettings.destination(
-                                      destination: coordinate,
-                                    ),
-                                  );
-                                  choosingDestination.value = false;
-                                }
-                                : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            },
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// 開始後にミッションを受け取れなかったときの表示 (再試行できる)
 class _PrepareErrorCard extends StatelessWidget {
   const _PrepareErrorCard({required this.onRetry});
@@ -535,62 +397,6 @@ class _GenerationErrorCard extends StatelessWidget {
                   '(${room.generationError})'
               : 'ミッションの生成に失敗しました。ホストが再試行します。',
           style: TextStyle(color: theme.colorScheme.onErrorContainer),
-        ),
-      ),
-    );
-  }
-}
-
-/// ミッション生成中のローディング演出 (Tips で待ち時間を補う)
-class _GeneratingOverlay extends HookWidget {
-  const _GeneratingOverlay({required this.message});
-
-  static const _tips = [
-    'スポットの写真と同じ場所・同じ向きで撮ると高評価!',
-    '誰かがスポットを見つけると、全員の画面でクリアになります',
-    '手分けして探すと早く見つかるかも',
-    '電波が途切れても、復帰したら発見を送信します',
-    '途中で抜けても、見つけたスポットは履歴に残ります',
-  ];
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final tipIndex = useState(0);
-    useEffect(() {
-      final timer = Timer.periodic(
-        const Duration(seconds: 4),
-        (_) => tipIndex.value = (tipIndex.value + 1) % _tips.length,
-      );
-      return timer.cancel;
-    }, const []);
-    final theme = Theme.of(context);
-    return ColoredBox(
-      color: theme.colorScheme.surface.withValues(alpha: 0.92),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              LoadingAnimationWidget.staggeredDotsWave(
-                color: theme.colorScheme.primary,
-                size: 80,
-              ),
-              const SizedBox(height: 16),
-              Text(message, style: theme.textTheme.titleLarge),
-              const SizedBox(height: 24),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                child: Text(
-                  'Tips: ${_tips[tipIndex.value]}',
-                  key: ValueKey(tipIndex.value),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

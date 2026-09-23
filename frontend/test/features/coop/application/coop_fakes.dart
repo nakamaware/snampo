@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -17,7 +18,6 @@ import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// メモリ上のルームリポジトリ
 class FakeRoomRepository implements IRoomRepository {
@@ -73,7 +73,15 @@ class FakeRoomRepository implements IRoomRepository {
     final list = members.putIfAbsent(room.code, () => []);
     final index = list.indexWhere((m) => m.uid == uid);
     if (index >= 0) {
-      list[index] = list[index].copyWith(nickname: nickname, leftAt: null);
+      final hasLeft = list[index].hasLeft;
+      list[index] = list[index].copyWith(
+        nickname: nickname,
+        leftAt: null,
+        joinedAt: hasLeft ? now : list[index].joinedAt,
+      );
+      if (hasLeft) {
+        now = now.add(const Duration(seconds: 1));
+      }
     } else {
       list.add(RoomMember(uid: uid, nickname: nickname, joinedAt: now));
       now = now.add(const Duration(seconds: 1));

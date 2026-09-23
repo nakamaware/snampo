@@ -1,10 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 part 'room.freezed.dart';
 

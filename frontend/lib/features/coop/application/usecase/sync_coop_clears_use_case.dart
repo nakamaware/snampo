@@ -1,11 +1,11 @@
 import 'dart:developer';
 
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// 端末に反映済みの、あるスポットの発見
 typedef CoopSpotDiscovery =

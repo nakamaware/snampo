@@ -69,4 +69,18 @@ void main() {
     expect(result, JoinRoomJoined(room));
     expect(rooms.members[code]!.single.hasLeft, isFalse);
   });
+
+  test('入室が早かった人が抜けて入り直しても、満員なら入れない', () async {
+    final room = fx.room(status: RoomStatus.waiting);
+    rooms.rooms[code] = room;
+    await useCase(code: code, uid: 'early', nickname: 'はやい');
+    await rooms.leaveRoom(code, 'early');
+    for (var i = 0; i < 8; i++) {
+      await rooms.joinRoom(room, uid: 'u$i', nickname: 'p$i');
+    }
+
+    final result = await useCase(code: code, uid: 'early', nickname: 'はやい');
+
+    expect(result, const JoinRoomFailed(JoinRoomError.full));
+  });
 }

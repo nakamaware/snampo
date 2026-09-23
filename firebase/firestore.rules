@@ -92,6 +92,9 @@ service cloud.firestore {
             'finishReason', 'startedAt', 'finishedAt',
           ])
           && validTransition(before.status, after.status)
+          // ミッション (missionRef / spotIds / startedAt) を設定できるのは generating → playing のときだけ
+          && (!changedKeys().hasAny(['missionRef', 'spotIds', 'startedAt'])
+            || (before.status == 'generating' && after.status == 'playing'))
           // 設定を変更できるのは waiting のときだけ
           && (!changedKeys().hasAny(['settings'])
             || (before.status == 'waiting' && validSettings(after.settings)))
@@ -138,16 +141,38 @@ service cloud.firestore {
             && data.deleteAt == room.deleteAt;
         }
 
+        // 抜けた人が入り直す: leftAt を null に戻し、入室時刻を更新する
+        // (人数の上限を入室順で数えるため)。入室できるのは waiting / generating / playing のとき
+        function isRejoin(room) {
+          let before = resource.data;
+          let after = request.resource.data;
+          return before.get('leftAt', null) != null
+            && after.get('leftAt', null) == null
+            && after.joinedAt == request.time
+            && room.status in ['waiting', 'generating', 'playing'];
+        }
+
+        // 入り直し以外で leftAt を変えられるのは、抜けたことを記録するときだけ
+        // (null に戻すのは入り直しのときだけ)
+        function isAllowedLeftAtChange() {
+          let beforeLeft = resource.data.get('leftAt', null);
+          let afterLeft = request.resource.data.get('leftAt', null);
+          return afterLeft == beforeLeft || (beforeLeft == null && afterLeft is timestamp);
+        }
+
         function validMemberUpdate() {
+          let room = roomData(code);
           let after = request.resource.data;
           return signedIn()
             && uid == request.auth.uid
-            && isPlayable(roomData(code))
-            && changedKeys().hasOnly(['nickname', 'leftAt'])
+            && isPlayable(room)
             && after.nickname is string
             && after.nickname.size() > 0
             && after.nickname.size() <= 30
-            && (after.get('leftAt', null) == null || after.leftAt is timestamp);
+            && (
+              isRejoin(room)
+              || (changedKeys().hasOnly(['nickname', 'leftAt']) && isAllowedLeftAtChange())
+            );
         }
 
         allow read: if isMember(code);

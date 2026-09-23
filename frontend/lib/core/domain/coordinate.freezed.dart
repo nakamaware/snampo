@@ -173,7 +173,7 @@ return internal(_that.latitude,_that.longitude);case _:
 
 class _Coordinate extends Coordinate {
   const _Coordinate({required this.latitude, required this.longitude}): super._();
-  
+
 
 @override final  double latitude;
 @override final  double longitude;

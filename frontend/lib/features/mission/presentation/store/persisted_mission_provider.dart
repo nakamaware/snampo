@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 
 part 'persisted_mission_provider.g.dart';
 

@@ -1,8 +1,8 @@
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 写真を永続保存するユースケース
 class SavePhotoUseCase {

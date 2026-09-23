@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 
 /// スポット ID 値オブジェクト
 ///

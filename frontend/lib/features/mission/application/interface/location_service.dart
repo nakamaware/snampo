@@ -1,4 +1,4 @@
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 
 /// 位置情報サービスのインターフェース
 ///

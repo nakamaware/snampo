@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 現在位置を取得するカスタムフック
 ///

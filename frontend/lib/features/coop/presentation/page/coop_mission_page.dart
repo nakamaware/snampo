@@ -4,16 +4,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
-import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
+import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 
 /// 協力プレイの Mission 画面 (端末で進行中のルーム)
@@ -75,7 +75,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
   }) {
     unawaited(
       ref
-          .read(coopMissionControllerProvider(roomCode).notifier)
+          .read(coopMissionStoreProvider(roomCode).notifier)
           .clearSpot(spotIndex: index, checkpoint: checkpoint),
     );
   }
@@ -99,22 +99,22 @@ class _CoopMissionEffects extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // ミッションの用意とクリアの同期は、協力プレイ中ずっと動かす
     ref
-      ..watch(coopMissionControllerProvider(roomCode).select((_) => null))
+      ..watch(coopMissionStoreProvider(roomCode).select((_) => null))
       // 「○○さんがスポット N を発見!」などのお知らせ
-      ..listen(
-        coopMissionControllerProvider(roomCode).select((s) => s.notice),
-        (_, notice) {
-          if (notice == null) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(notice.message),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-        },
-      )
+      ..listen(coopMissionStoreProvider(roomCode).select((s) => s.notice), (
+        _,
+        notice,
+      ) {
+        if (notice == null) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(notice.message),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+      })
       // finished になったら全員が結果画面へ自動で遷移する
       ..listen(coopRoomProvider(roomCode), (_, next) {
         if (next.value?.status == RoomStatus.finished) {
@@ -122,7 +122,7 @@ class _CoopMissionEffects extends ConsumerWidget {
         }
       });
     final prepareError = ref.watch(
-      coopMissionControllerProvider(roomCode).select((s) => s.prepareError),
+      coopMissionStoreProvider(roomCode).select((s) => s.prepareError),
     );
     if (prepareError != null) {
       return _PrepareErrorView(roomCode: roomCode);
@@ -150,9 +150,7 @@ class _PrepareErrorView extends ConsumerWidget {
               onPressed:
                   () =>
                       ref
-                          .read(
-                            coopMissionControllerProvider(roomCode).notifier,
-                          )
+                          .read(coopMissionStoreProvider(roomCode).notifier)
                           .retryPrepare(),
               child: const Text('再試行'),
             ),
@@ -205,7 +203,7 @@ class _CoopHostEndButton extends ConsumerWidget {
         if (confirmed != true) return;
         try {
           await ref
-              .read(coopMissionControllerProvider(roomCode).notifier)
+              .read(coopMissionStoreProvider(roomCode).notifier)
               .endByHost();
         } on Object {
           if (context.mounted) {
@@ -241,7 +239,7 @@ class _CoopDiscovererView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isSharing = ref.watch(
-      coopMissionControllerProvider(
+      coopMissionStoreProvider(
         roomCode,
       ).select((s) => spotId != null && s.sharingSpotIds.contains(spotId)),
     );

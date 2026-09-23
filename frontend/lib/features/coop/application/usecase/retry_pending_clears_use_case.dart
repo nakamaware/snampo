@@ -130,15 +130,16 @@ class RetryPendingClearsUseCase {
     String uid,
   ) async {
     final room = await _rooms.fetchRoom(code);
-    if (room == null ||
-        room.status != RoomStatus.playing ||
-        !room.isPlayable(_now())) {
+    if (room == null) {
       await _remove(task);
       return (
         task: task,
         reason: PendingClearFailureReason.roomClosed,
         existing: null,
       );
+    }
+    if (room.status != RoomStatus.playing || !room.isPlayable(_now())) {
+      return _settleClosedRoom(code, task, uid);
     }
     final thumbPath = await _uploadThumb(code, task, uid);
     final CreateClearResult result;
@@ -168,6 +169,40 @@ class RetryPendingClearsUseCase {
           existing: existing,
         );
     }
+  }
+
+  /// ルームが終わっていて、もうクリアを作れない場合の片付け
+  ///
+  /// キルされる前の自分の書き込みが届いていた (最後のクリアとして届いて finished になった
+  /// 場合を含む) なら、成功として扱い thumbPath を埋める。
+  Future<PendingClearFailure?> _settleClosedRoom(
+    RoomCode code,
+    PendingClearTask task,
+    String uid,
+  ) async {
+    final clears = await _rooms.fetchClears(code);
+    final existing = clears.where((c) => c.spotId == task.spotId).firstOrNull;
+    if (existing != null && existing.clearedBy == uid) {
+      final thumbPath =
+          existing.thumbPath == null
+              ? await _uploadThumb(code, task, uid)
+              : null;
+      await _completeClearTask(
+        task,
+        result: ClearCreated(thumbPathSaved: existing.thumbPath != null),
+        thumbPath: thumbPath,
+      );
+      return null;
+    }
+    await _remove(task);
+    return (
+      task: task,
+      reason:
+          existing == null
+              ? PendingClearFailureReason.roomClosed
+              : PendingClearFailureReason.alreadyCleared,
+      existing: existing,
+    );
   }
 
   Future<PendingClearFailure?> _retryThumb(

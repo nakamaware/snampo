@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 
 part 'image_coordinate.freezed.dart';
 part 'image_coordinate.g.dart';

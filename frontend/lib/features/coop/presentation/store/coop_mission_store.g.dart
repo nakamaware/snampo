@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'coop_mission_controller.dart';
+part of 'coop_mission_store.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -19,8 +19,8 @@ part of 'coop_mission_controller.dart';
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
-@ProviderFor(CoopMissionController)
-final coopMissionControllerProvider = CoopMissionControllerFamily._();
+@ProviderFor(CoopMissionStore)
+final coopMissionStoreProvider = CoopMissionStoreFamily._();
 
 /// 協力プレイのミッションを進める
 ///
@@ -32,8 +32,8 @@ final coopMissionControllerProvider = CoopMissionControllerFamily._();
 ///   (finished のあとも、サムネが再送で届くまでは確定しない)
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
-final class CoopMissionControllerProvider
-    extends $NotifierProvider<CoopMissionController, CoopMissionState> {
+final class CoopMissionStoreProvider
+    extends $NotifierProvider<CoopMissionStore, CoopMissionState> {
   /// 協力プレイのミッションを進める
   ///
   /// ルームと `clears` を監視し、次を行う。
@@ -44,30 +44,30 @@ final class CoopMissionControllerProvider
   ///   (finished のあとも、サムネが再送で届くまでは確定しない)
   ///
   /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
-  CoopMissionControllerProvider._({
-    required CoopMissionControllerFamily super.from,
+  CoopMissionStoreProvider._({
+    required CoopMissionStoreFamily super.from,
     required RoomCode super.argument,
   }) : super(
          retry: null,
-         name: r'coopMissionControllerProvider',
+         name: r'coopMissionStoreProvider',
          isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$coopMissionControllerHash();
+  String debugGetCreateSourceHash() => _$coopMissionStoreHash();
 
   @override
   String toString() {
-    return r'coopMissionControllerProvider'
+    return r'coopMissionStoreProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  CoopMissionController create() => CoopMissionController();
+  CoopMissionStore create() => CoopMissionStore();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(CoopMissionState value) {
@@ -79,7 +79,7 @@ final class CoopMissionControllerProvider
 
   @override
   bool operator ==(Object other) {
-    return other is CoopMissionControllerProvider && other.argument == argument;
+    return other is CoopMissionStoreProvider && other.argument == argument;
   }
 
   @override
@@ -88,8 +88,7 @@ final class CoopMissionControllerProvider
   }
 }
 
-String _$coopMissionControllerHash() =>
-    r'4396abace1f5c589632cdbc117bb3cd03be613a3';
+String _$coopMissionStoreHash() => r'ecda32269d170620ac895d1c148978b262d99971';
 
 /// 協力プレイのミッションを進める
 ///
@@ -102,19 +101,19 @@ String _$coopMissionControllerHash() =>
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
-final class CoopMissionControllerFamily extends $Family
+final class CoopMissionStoreFamily extends $Family
     with
         $ClassFamilyOverride<
-          CoopMissionController,
+          CoopMissionStore,
           CoopMissionState,
           CoopMissionState,
           CoopMissionState,
           RoomCode
         > {
-  CoopMissionControllerFamily._()
+  CoopMissionStoreFamily._()
     : super(
         retry: null,
-        name: r'coopMissionControllerProvider',
+        name: r'coopMissionStoreProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: false,
@@ -131,11 +130,11 @@ final class CoopMissionControllerFamily extends $Family
   ///
   /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
-  CoopMissionControllerProvider call(RoomCode roomCode) =>
-      CoopMissionControllerProvider._(argument: roomCode, from: this);
+  CoopMissionStoreProvider call(RoomCode roomCode) =>
+      CoopMissionStoreProvider._(argument: roomCode, from: this);
 
   @override
-  String toString() => r'coopMissionControllerProvider';
+  String toString() => r'coopMissionStoreProvider';
 }
 
 /// 協力プレイのミッションを進める
@@ -149,7 +148,7 @@ final class CoopMissionControllerFamily extends $Family
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 
-abstract class _$CoopMissionController extends $Notifier<CoopMissionState> {
+abstract class _$CoopMissionStore extends $Notifier<CoopMissionState> {
   late final _$args = ref.$arg as RoomCode;
   RoomCode get roomCode => _$args;
 

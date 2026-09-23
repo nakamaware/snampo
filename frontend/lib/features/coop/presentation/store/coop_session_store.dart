@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
-import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
+import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 
 part 'coop_session_store.g.dart';
@@ -47,7 +47,7 @@ class CoopSessionStore extends _$CoopSessionStore {
   void close() {
     final session = state.value;
     if (session != null) {
-      ref.invalidate(coopMissionControllerProvider(session.roomCode));
+      ref.invalidate(coopMissionStoreProvider(session.roomCode));
     }
     state = const AsyncValue.data(null);
   }

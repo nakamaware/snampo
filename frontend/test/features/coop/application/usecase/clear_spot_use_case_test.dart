@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
@@ -8,7 +9,6 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;

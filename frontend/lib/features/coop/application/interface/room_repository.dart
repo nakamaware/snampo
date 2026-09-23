@@ -1,8 +1,8 @@
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// Rules に拒否された (期限切れ、権限なし、先着に負けたなど)
 class CoopPermissionDeniedException implements Exception {
@@ -56,6 +56,8 @@ abstract class IRoomRepository {
   Stream<Room?> watchRoom(RoomCode code);
 
   /// 入室する。既にメンバーなら (抜けていた場合も) 戻る
+  ///
+  /// 抜けていた人が戻るときは入室時刻を更新する (人数の上限を入室順で数えるため)。
   Future<void> joinRoom(
     Room room, {
     required String uid,

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 
 void main() {
   group('MissionSessionKind.persistKey', () {

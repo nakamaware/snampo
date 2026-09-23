@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/data/mapper/room_mapper.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// Firestore 上のルーム
 class RoomRepository implements IRoomRepository {
@@ -72,17 +72,25 @@ class RoomRepository implements IRoomRepository {
     required String nickname,
   }) => _mapDenied(() async {
     final ref = _members(room.code).doc(uid);
-    var exists = false;
+    Map<String, dynamic>? current;
     try {
-      exists = (await ref.get()).exists;
+      current = (await ref.get()).data();
     } on FirebaseException catch (e) {
       // メンバーでなければ自分のドキュメントも読めない (= まだ入室していない)
       if (!_isPermissionDenied(e)) {
         rethrow;
       }
     }
-    if (exists) {
-      await ref.update({'nickname': nickname, 'leftAt': null});
+    if (current != null) {
+      final hasLeft = current['leftAt'] != null;
+      await ref.update({
+        'nickname': nickname,
+        if (hasLeft) ...{
+          'leftAt': null,
+          // 人数の上限を入室順で数えるため、入り直したら入室時刻を更新する
+          'joinedAt': FieldValue.serverTimestamp(),
+        },
+      });
       return;
     }
     await ref.set({

@@ -1,6 +1,6 @@
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 /// 協力プレイの Cloud Storage (ミッションバンドルとサムネ)
 abstract class ICoopStorage {

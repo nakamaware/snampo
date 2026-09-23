@@ -1,7 +1,7 @@
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 目的地指定モードでミッション情報を取得するユースケース
 class CreateDestinationMissionUseCase {

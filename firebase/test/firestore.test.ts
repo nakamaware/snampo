@@ -188,11 +188,42 @@ describe("members", () => {
   test("本人は nickname と leftAt だけ変更できる", async () => {
     await seedRoom(env);
     const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { nickname: "じろう" }));
     await assertSucceeds(updateDoc(ref, { leftAt: serverTimestamp() }));
-    await assertSucceeds(updateDoc(ref, { leftAt: null, nickname: "じろう" }));
     await assertFails(updateDoc(ref, { joinedAt: serverTimestamp() }));
     await assertFails(
       updateDoc(doc(db(HOST), "rooms", ROOM, "members", MEMBER), { nickname: "x" }),
+    );
+  });
+
+  test("抜けた人は入室時刻を更新して入り直せる (人数の上限を入室順で数えるため)", async () => {
+    await seedRoom(env);
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { leftAt: serverTimestamp() }));
+
+    // 入室時刻を更新せずに入り直すことはできない
+    await assertFails(updateDoc(ref, { leftAt: null }));
+    await assertSucceeds(
+      updateDoc(ref, { leftAt: null, nickname: "じろう", joinedAt: serverTimestamp() }),
+    );
+  });
+
+  test("抜けていない人は入室時刻を変えられない", async () => {
+    await seedRoom(env);
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertFails(updateDoc(ref, { leftAt: null, joinedAt: serverTimestamp() }));
+  });
+
+  test("finished のルームには入り直せない", async () => {
+    await seedRoom(env);
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { leftAt: serverTimestamp() }));
+    await env.withSecurityRulesDisabled(async (context) => {
+      await updateDoc(doc(context.firestore(), "rooms", ROOM), { status: "finished" });
+    });
+
+    await assertFails(
+      updateDoc(ref, { leftAt: null, joinedAt: serverTimestamp() }),
     );
   });
 });
@@ -347,6 +378,20 @@ describe("status と settings の変更", () => {
         finishedAt: serverTimestamp(),
       }),
     );
+  });
+
+  test("playing の間はミッション (missionRef / spotIds) を変えられない", async () => {
+    await seedRoom(env);
+    await assertFails(updateDoc(roomRef(HOST), { spotIds: [SPOT_GEO, SPOT_PLACE] }));
+    await assertFails(
+      updateDoc(roomRef(HOST), { missionRef: `rooms/${ROOM}/mission/other.json` }),
+    );
+    await assertFails(updateDoc(roomRef(HOST), { startedAt: serverTimestamp() }));
+  });
+
+  test("ミッションは generating から playing にするときだけ設定できる", async () => {
+    await seedRoom(env, { status: "waiting" });
+    await assertFails(updateDoc(roomRef(HOST), { spotIds: [SPOT_PLACE] }));
   });
 
   test("finished から戻せない", async () => {

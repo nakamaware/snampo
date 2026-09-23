@@ -1,6 +1,6 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 
 const _excellentDistanceThresholdMeters = 12.0;

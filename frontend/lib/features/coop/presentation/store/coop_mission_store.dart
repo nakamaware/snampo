@@ -3,7 +3,9 @@ import 'dart:developer';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
@@ -14,13 +16,11 @@ import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
-part 'coop_mission_controller.freezed.dart';
-part 'coop_mission_controller.g.dart';
+part 'coop_mission_store.freezed.dart';
+part 'coop_mission_store.g.dart';
 
 /// 画面に出すお知らせ (発見バナーなど)
 @freezed
@@ -63,7 +63,7 @@ abstract class CoopMissionState with _$CoopMissionState {
 ///
 /// ルームを抜けたら invalidate して監視を止める (抜けたルームの通知で今の進捗を変えないため)。
 @Riverpod(keepAlive: true)
-class CoopMissionController extends _$CoopMissionController {
+class CoopMissionStore extends _$CoopMissionStore {
   Set<SpotId>? _knownClearedSpotIds;
   var _noticeId = 0;
   var _preparing = false;

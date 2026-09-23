@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 void main() {
   final at = DateTime.utc(2026, 9, 23);

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 
 void main() {
   group('SpotId', () {

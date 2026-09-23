@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/features/coop/domain/entity/coop_checkpoint.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 
 /// 協力プレイの結果画面
 ///
 /// 既存の結果画面に、スポットごとの発見者と未クリアの表示、発見数ランキングを
 /// [ResultPageExtension] で差し込む。
-class CoopResultPage extends StatelessWidget {
+class CoopResultPage extends ConsumerWidget {
   /// [CoopResultPage] を作成する
   const CoopResultPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const ResultPage(
-    kind: MissionSessionKind.coop,
-    extension: _CoopResultPageExtension(),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myUid = ref.watch(coopSessionStoreProvider).value?.uid;
+    return ResultPage(
+      kind: MissionSessionKind.coop,
+      extension: _CoopResultPageExtension(myUid: myUid),
+    );
+  }
 }
 
 class _CoopResultPageExtension extends ResultPageExtension {
-  const _CoopResultPageExtension();
+  const _CoopResultPageExtension({required this.myUid});
+
+  /// 自分の Auth uid (セッションがなければ null)
+  final String? myUid;
 
   @override
   Widget? buildHeader(BuildContext context, MissionProgressEntity progress) {
@@ -41,11 +48,11 @@ class _CoopResultPageExtension extends ResultPageExtension {
     return discoverer == null ? '未クリア' : '発見: $discoverer';
   }
 
-  /// 発見者のサムネを表示する。同時に撮影して先着に負けたスポットでも、自分の写真ではなく
-  /// 発見者のサムネを出す (サムネがまだ届いていなければ自分の写真)
+  /// 発見者の写真を表示する。同時に撮影して先着に負けたスポットでも、自分の写真ではなく
+  /// 発見者のサムネを出す (サムネが届いていなければプレースホルダ)
   @override
   String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
-      checkpoint?.discovererThumbPath ?? checkpoint?.userPhotoPath;
+      checkpoint?.discovererPhotoPath(myUid: myUid ?? '');
 
   /// 端末の「ルームに戻る」を消す (履歴の同期は続く)
   @override

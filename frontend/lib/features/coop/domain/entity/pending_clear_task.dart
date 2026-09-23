@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/room_code.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 
 part 'pending_clear_task.freezed.dart';
 part 'pending_clear_task.g.dart';

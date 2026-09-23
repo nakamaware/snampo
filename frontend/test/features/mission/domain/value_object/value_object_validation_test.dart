@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 void main() {

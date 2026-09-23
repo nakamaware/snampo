@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
-import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// アプリケーションのトップページ

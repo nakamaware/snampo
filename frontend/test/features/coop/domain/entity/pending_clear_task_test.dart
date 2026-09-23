@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
-import 'package:snampo/features/mission/domain/value_object/spot_id.dart';
 
 void main() {
   final now = DateTime.utc(2026, 9, 23, 12);

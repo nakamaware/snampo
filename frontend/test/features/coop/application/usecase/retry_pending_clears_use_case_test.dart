@@ -121,6 +121,36 @@ void main() {
       expect(queue.queue.tasks, isEmpty);
     });
 
+    test('自分のクリアが届いてルームが終わっていたら、成功として thumbPath を埋める', () async {
+      // キルされる前の自分の書き込みが最後のクリアとして届き、finished になった
+      rooms.rooms[fx.code] = fx.room(status: RoomStatus.finished);
+      seedClear('a', 'me');
+      queue.queue = PendingClearQueue(tasks: [task('a')]);
+
+      final result = await useCase();
+
+      expect(result.failures, isEmpty);
+      expect(
+        rooms.clears[fx.code]![fx.spot('a')]!.thumbPath,
+        'rooms/ABCD23/thumbs/a/me.jpg',
+      );
+      expect(queue.queue.tasks, isEmpty);
+    });
+
+    test('ルームが終わっていて、先に他の人が発見していたら、競合として返す', () async {
+      rooms.rooms[fx.code] = fx.room(status: RoomStatus.finished);
+      seedClear('a', 'other');
+      queue.queue = PendingClearQueue(tasks: [task('a')]);
+
+      final result = await useCase();
+
+      expect(
+        result.failures.single.reason,
+        PendingClearFailureReason.alreadyCleared,
+      );
+      expect(queue.queue.tasks, isEmpty);
+    });
+
     test('クリアの送信が終わらなければ (オフライン) キューに残す', () async {
       rooms.createClearGate = Completer<void>();
       queue.queue = PendingClearQueue(tasks: [task('a')]);
