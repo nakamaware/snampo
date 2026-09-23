@@ -1,0 +1,196 @@
+rules_version = '2';
+
+// 協力プレイモードの Firestore Security Rules
+//
+// - 未認証 (request.auth == null) はすべて拒否する
+// - App Check はサービス側で強制する (Terraform)
+// - 遊べる期限 (expiresAt = 作成から 12 時間) を過ぎたルームへの書き込みはすべて拒否する
+// - 読み取りは保持期限 (deleteAt = 作成から 7 日、TTL で削除) まで可能
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roomPath(code) {
+      return /databases/$(database)/documents/rooms/$(code);
+    }
+
+    function roomData(code) {
+      return get(roomPath(code)).data;
+    }
+
+    function isMember(code) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/rooms/$(code)/members/$(request.auth.uid));
+    }
+
+    // 遊べる期限内か
+    function isPlayable(room) {
+      return request.time < room.expiresAt;
+    }
+
+    // 端末の時計のずれを許容する幅
+    function clockSkew() {
+      return duration.value(10, 'm');
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    match /rooms/{code} {
+      // ルームコード: 紛らわしい文字 (0 O 1 I L) を除いた英数字大文字 6 文字
+      function validCode() {
+        return code.matches('^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$');
+      }
+
+      function validSettings(settings) {
+        return settings is map
+          && settings.keys().hasOnly(['mode', 'radius', 'destination'])
+          && (
+            (settings.mode == 'random' && settings.radius is int)
+            || (settings.mode == 'destination'
+              && settings.destination is map
+              && settings.destination.lat is number
+              && settings.destination.lng is number)
+          );
+      }
+
+      // 期限は作成時刻 (createdAt) から計算した値と一致すること。
+      // createdAt はサーバ時刻との差が clockSkew 以内であること
+      function validRoomCreate() {
+        let data = request.resource.data;
+        return signedIn()
+          && validCode()
+          && data.keys().hasAll(['hostId', 'status', 'settings', 'createdAt', 'expiresAt', 'deleteAt'])
+          && data.keys().hasOnly(['hostId', 'status', 'settings', 'createdAt', 'expiresAt', 'deleteAt'])
+          && data.hostId == request.auth.uid
+          && data.status == 'waiting'
+          && validSettings(data.settings)
+          && data.createdAt is timestamp
+          && data.createdAt > request.time - clockSkew()
+          && data.createdAt < request.time + clockSkew()
+          && data.expiresAt == data.createdAt + duration.value(12, 'h')
+          && data.deleteAt == data.createdAt + duration.value(7 * 24, 'h');
+      }
+
+      function validTransition(from, to) {
+        return (from == to && from != 'finished')
+          || (from == 'waiting' && to == 'generating')
+          || (from == 'generating' && (to == 'waiting' || to == 'playing'))
+          || (from == 'playing' && to == 'finished');
+      }
+
+      function hostUpdate() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return request.auth.uid == before.hostId
+          && changedKeys().hasOnly([
+            'status', 'settings', 'missionRef', 'spotIds', 'generationError',
+            'finishReason', 'startedAt', 'finishedAt',
+          ])
+          && validTransition(before.status, after.status)
+          // 設定を変更できるのは waiting のときだけ
+          && (!changedKeys().hasAny(['settings'])
+            || (before.status == 'waiting' && validSettings(after.settings)))
+          && (after.status != 'playing' || (after.missionRef is string && after.spotIds is list))
+          && (after.status != 'finished'
+            || after.finishReason == 'allCleared' || after.finishReason == 'hostEnded');
+      }
+
+      // 全スポットがクリアされたときは、メンバーも playing → finished (allCleared) に更新できる。
+      // 全スポットがクリアされたこと自体は Rules では検証しない (スポットは最大 26 件あり、
+      // Rules で参照できるドキュメント数の上限を超えるため)。
+      function allClearedFinish() {
+        return isMember(code)
+          && resource.data.status == 'playing'
+          && request.resource.data.status == 'finished'
+          && request.resource.data.finishReason == 'allCleared'
+          && changedKeys().hasOnly(['status', 'finishReason', 'finishedAt']);
+      }
+
+      // 入室前の存在確認のため、認証済みなら get できる。一覧の取得はできない
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if validRoomCreate();
+      allow update: if signedIn()
+        && isPlayable(resource.data)
+        && (hostUpdate() || allClearedFinish());
+      allow delete: if false;
+
+      match /members/{uid} {
+        function validMemberCreate() {
+          let room = roomData(code);
+          let data = request.resource.data;
+          return signedIn()
+            && uid == request.auth.uid
+            && isPlayable(room)
+            && room.status in ['waiting', 'generating', 'playing']
+            && data.keys().hasAll(['nickname', 'joinedAt', 'deleteAt'])
+            && data.keys().hasOnly(['nickname', 'joinedAt', 'leftAt', 'deleteAt'])
+            && data.nickname is string
+            && data.nickname.size() > 0
+            && data.nickname.size() <= 30
+            && data.joinedAt == request.time
+            && data.get('leftAt', null) == null
+            && data.deleteAt == room.deleteAt;
+        }
+
+        function validMemberUpdate() {
+          let after = request.resource.data;
+          return signedIn()
+            && uid == request.auth.uid
+            && isPlayable(roomData(code))
+            && changedKeys().hasOnly(['nickname', 'leftAt'])
+            && after.nickname is string
+            && after.nickname.size() > 0
+            && after.nickname.size() <= 30
+            && (after.get('leftAt', null) == null || after.leftAt is timestamp);
+        }
+
+        allow read: if isMember(code);
+        allow create: if validMemberCreate();
+        allow update: if validMemberUpdate();
+        allow delete: if false;
+      }
+
+      match /clears/{spotId} {
+        // 先着勝ち: 作成のみ (既に存在する場合は update 扱いになり拒否される)
+        function validClearCreate() {
+          let room = roomData(code);
+          let data = request.resource.data;
+          return isMember(code)
+            && room.status == 'playing'
+            && isPlayable(room)
+            && spotId in room.spotIds
+            && data.keys().hasAll(['clearedBy', 'nickname', 'clearedAt', 'deleteAt'])
+            && data.keys().hasOnly(['clearedBy', 'nickname', 'clearedAt', 'thumbPath', 'deleteAt'])
+            && data.clearedBy == request.auth.uid
+            && data.nickname is string
+            && data.nickname.size() > 0
+            && data.nickname.size() <= 30
+            && data.clearedAt == request.time
+            && (data.get('thumbPath', null) == null || data.thumbPath is string)
+            && data.deleteAt == room.deleteAt;
+        }
+
+        // 発見者本人だけが、thumbPath を null から値へ 1 回だけ変更できる
+        function validThumbPathFill() {
+          return signedIn()
+            && resource.data.clearedBy == request.auth.uid
+            && resource.data.get('thumbPath', null) == null
+            && request.resource.data.thumbPath is string
+            && changedKeys().hasOnly(['thumbPath'])
+            && isPlayable(roomData(code));
+        }
+
+        allow read: if isMember(code);
+        allow create: if validClearCreate();
+        allow update: if validThumbPathFill();
+        allow delete: if false;
+      }
+    }
+  }
+}

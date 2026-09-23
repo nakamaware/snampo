@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// 協力プレイモードの Cloud Storage Security Rules
+//
+// - 読み取りは「メンバーか」だけを確認し (get 1 回)、期限は見ない。読み取り量を抑えるため
+// - 書き込みは「メンバーか (ホストか)」と「遊べる期限内か」を確認する
+// - 削除はできない (Lifecycle ルールで 7 日後に消える)
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(code) {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/rooms/$(code)/members/$(request.auth.uid));
+    }
+
+    function room(code) {
+      return firestore.get(/databases/(default)/documents/rooms/$(code)).data;
+    }
+
+    function isPlayable(roomData) {
+      return request.time < roomData.expiresAt;
+    }
+
+    match /rooms/{code}/mission/{path=**} {
+      function isHostWithinDeadline() {
+        let roomData = room(code);
+        return signedIn()
+          && roomData.hostId == request.auth.uid
+          && isPlayable(roomData);
+      }
+
+      allow read: if isMember(code);
+      allow create, update: if isHostWithinDeadline()
+        && request.resource.size < 5 * 1024 * 1024
+        && (request.resource.contentType == 'image/jpeg'
+          || request.resource.contentType == 'application/json');
+    }
+
+    match /rooms/{code}/thumbs/{spotId}/{fileName} {
+      allow read: if isMember(code);
+      allow create, update: if isMember(code)
+        && fileName == request.auth.uid + '.jpg'
+        && isPlayable(room(code))
+        && request.resource.contentType == 'image/jpeg'
+        && request.resource.size < 1 * 1024 * 1024;
+    }
+  }
+}

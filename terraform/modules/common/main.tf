@@ -39,6 +39,7 @@ module "project_services" {
   project_id = var.project_id
   activate_apis = concat(
     local.default_api_list,
+    local.firebase_api_list,
     var.api_list,
   )
 }

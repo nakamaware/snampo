@@ -16,6 +16,12 @@ void main() {
   // final instance = MidPoint();
 
   group('test MidPoint', () {
+    // スポット ID。ランドマークがある地点は Places API の place_id、ない地点 (目的地指定モードの目的地) は geo:{lat},{lng} (小数 6 桁)
+    // String spotId
+    test('to test the property `spotId`', () async {
+      // TODO
+    });
+
     // num latitude
     test('to test the property `latitude`', () async {
       // TODO
