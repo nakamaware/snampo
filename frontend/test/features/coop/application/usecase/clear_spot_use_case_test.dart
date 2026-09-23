@@ -153,6 +153,8 @@ void main() {
     final spot = histories.histories[fx.code]!.spots.single;
     expect(spot.discovererUid, 'me');
     expect(spot.discovererThumbPath, 'history:/photos/a.jpg.thumb');
+    // 発見日時はサーバのクリアに揃える
+    expect(spot.achievedAt, fx.clear('a', 'me').clearedAt);
   });
 
   test('Rules に拒否されたら (ルームが終わったあとなど)、共有できなかったとして返す', () async {

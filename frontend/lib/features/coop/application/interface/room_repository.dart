@@ -28,7 +28,7 @@ final class ClearCreated extends CreateClearResult {
   const ClearCreated();
 }
 
-/// 先に他の人がクリアしていた
+/// 先にクリアがあった (時間切れのあとに届いた、自分が前に書いたクリアのこともある)
 final class ClearAlreadyExists extends CreateClearResult {
   /// [ClearAlreadyExists] を作成する
   const ClearAlreadyExists(this.existing);

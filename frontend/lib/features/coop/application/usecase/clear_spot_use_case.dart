@@ -118,13 +118,17 @@ class ClearSpotUseCase {
     ) when existing.clearedBy != uid) {
       return ClearSpotAlreadyCleared(existing);
     }
-    // 作成できたか、時間切れのあとに届いた自分のクリアが先にあった (どちらも自分が発見者)
+    // 作成できたか、時間切れのあとに届いた自分のクリアが先にあった (どちらも自分が発見者)。
+    // 先にあった場合の発見日時は、サーバのクリアに揃える
     await _histories.applyCoopDiscoverer(
       roomCode: room.code,
       spotId: spotId,
       discovererUid: uid,
       discovererNickname: nickname.value,
-      clearedAt: checkpoint.achievedAt ?? _now(),
+      clearedAt: switch (result) {
+        ClearAlreadyExists(:final existing) => existing.clearedAt,
+        ClearCreated() => checkpoint.achievedAt ?? _now(),
+      },
     );
     await _histories.saveCoopThumb(
       roomCode: room.code,

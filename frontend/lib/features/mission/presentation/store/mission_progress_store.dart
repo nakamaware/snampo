@@ -56,6 +56,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   /// チェックポイントの撮影結果と採点結果を確定する
   ///
   /// 協力プレイで既に発見者がいる場合も、発見者の情報は残したまま自分の写真と採点を記録する。
+  /// 撮り直しなら前の写真を消し、発見者がいなければ達成日時を撮り直した時刻にする。
   Future<CheckpointProgress?> completeCheckpoint({
     required int index,
     required String tempPhotoPath,
