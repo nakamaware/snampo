@@ -26,6 +26,7 @@ void main() {
           lng: 139,
           streetViewImagePath: '/tmp/street-view.jpg',
           judgeRank: 'retry',
+          isCleared: 1,
         ),
       ],
     );

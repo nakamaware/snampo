@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
@@ -15,6 +18,9 @@ const String historyModeRandom = 'random';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeDestination = 'destination';
+
+/// Drift [MissionHistories.mode] の値 (協力プレイ)
+const String historyModeCoop = 'coop';
 
 PhotoJudgeRank? _judgeRankFromDb(String? value) {
   if (value == null || value.isEmpty) {
@@ -50,7 +56,13 @@ MissionSettings missionSettingsFromHistoryRow(
     }
     return MissionSettings.random(radius: Radius.internal(meters: meters));
   }
-  if (h.mode == historyModeDestination) {
+  if (h.mode == historyModeCoop) {
+    final meters = h.radiusMeters;
+    if (meters != null) {
+      return MissionSettings.random(radius: Radius.internal(meters: meters));
+    }
+  }
+  if (h.mode == historyModeDestination || h.mode == historyModeCoop) {
     var lat = h.destinationLat;
     var lng = h.destinationLng;
     if (lat == null || lng == null) {
@@ -107,6 +119,11 @@ MissionHistory missionHistoryFromDriftRows(
                 lng: s.guessLng,
               ),
               capturedHeading: s.capturedHeading,
+              spotId: s.spotId,
+              discovererUid: s.discovererUid,
+              discovererNickname: s.discovererNickname,
+              discovererThumbPath: s.discovererThumbPath,
+              isCleared: s.isCleared != 0,
             ),
           )
           .toList();
@@ -121,8 +138,49 @@ MissionHistory missionHistoryFromDriftRows(
     overviewPolyline: h.overviewPolyline,
     spots: spots,
     settings: settings,
+    coop: _coopInfoFromRow(h),
   );
 }
+
+CoopHistoryInfo? _coopInfoFromRow(MissionHistoryRow h) {
+  final roomCode = h.roomCode;
+  if (h.mode != historyModeCoop || roomCode == null) {
+    return null;
+  }
+  final expiresAt = h.coopExpiresAt;
+  final deleteAt = h.coopDeleteAt;
+  if (expiresAt == null || deleteAt == null) {
+    throw StateError('履歴 ${h.id} は coop ですが期限がありません');
+  }
+  return CoopHistoryInfo(
+    roomCode: roomCode,
+    syncState: coopSyncStateFromDb(h.coopSyncState),
+    isHost: h.coopIsHost == 1,
+    members: coopMembersFromDb(h.coopMembers),
+    expiresAt: DateTime.fromMillisecondsSinceEpoch(expiresAt, isUtc: true),
+    deleteAt: DateTime.fromMillisecondsSinceEpoch(deleteAt, isUtc: true),
+  );
+}
+
+/// Drift [MissionHistories.coopSyncState] から [CoopSyncState] に変換する
+CoopSyncState coopSyncStateFromDb(String? value) =>
+    value == CoopSyncState.finalized.name
+        ? CoopSyncState.finalized
+        : CoopSyncState.inProgress;
+
+/// Drift [MissionHistories.coopMembers] の JSON からメンバー一覧に変換する
+List<CoopHistoryMember> coopMembersFromDb(String? json) {
+  if (json == null || json.isEmpty) {
+    return const [];
+  }
+  return (jsonDecode(json) as List<dynamic>)
+      .map((e) => CoopHistoryMember.fromJson(e as Map<String, dynamic>))
+      .toList();
+}
+
+/// メンバー一覧を Drift [MissionHistories.coopMembers] の JSON に変換する
+String coopMembersToDb(List<CoopHistoryMember> members) =>
+    jsonEncode(members.map((m) => m.toJson()).toList());
 
 /// 完了ミッション (API 用モデル) から Drift 保存用コンパニオンへ変換する境界
 ///
@@ -161,6 +219,41 @@ class HistoryFromMissionMapper {
     );
   }
 
+  /// Drift `mission_histories` へ挿入する協力プレイの 1 行分
+  ///
+  /// 協力プレイの履歴は playing に遷移した時点で「進行中」として作成し、
+  /// その後は roomCode をキーに upsert する。完了日時は開始日時で仮置きする。
+  static MissionHistoriesCompanion coopHistoryRowCompanion({
+    required String id,
+    required MissionEntity mission,
+    required DateTime startedAt,
+    required CoopHistoryInfo coop,
+  }) {
+    final isRandom = mission.radius != null;
+    return MissionHistoriesCompanion.insert(
+      id: id,
+      completedAt: startedAt.millisecondsSinceEpoch,
+      startedAt: startedAt.millisecondsSinceEpoch,
+      departureLat: mission.departure.latitude,
+      departureLng: mission.departure.longitude,
+      overviewPolyline: mission.overviewPolyline,
+      radiusMeters: Value(mission.radius?.meters),
+      mode: const Value(historyModeCoop),
+      destinationLat: Value(
+        isRandom ? null : mission.destination.coordinate.latitude,
+      ),
+      destinationLng: Value(
+        isRandom ? null : mission.destination.coordinate.longitude,
+      ),
+      roomCode: Value(coop.roomCode),
+      coopSyncState: Value(coop.syncState.name),
+      coopIsHost: Value(coop.isHost ? 1 : 0),
+      coopMembers: Value(coopMembersToDb(coop.members)),
+      coopExpiresAt: Value(coop.expiresAt.millisecondsSinceEpoch),
+      coopDeleteAt: Value(coop.deleteAt.millisecondsSinceEpoch),
+    );
+  }
+
   /// Drift `history_spots` へ挿入する 1 行分
   static HistorySpotsCompanion spotRowCompanion({
     required String historyId,
@@ -170,6 +263,7 @@ class HistoryFromMissionMapper {
     required String streetViewImagePath,
     CheckpointProgress? checkpointProgress,
     String? userPhotoPath,
+    bool isCleared = true,
   }) {
     final cp = checkpointProgress;
     return HistorySpotsCompanion.insert(
@@ -191,6 +285,8 @@ class HistoryFromMissionMapper {
       guessLat: Value(cp?.guessPosition?.latitude),
       guessLng: Value(cp?.guessPosition?.longitude),
       capturedHeading: Value(cp?.capturedHeading),
+      spotId: Value(spot.spotId),
+      isCleared: Value(isCleared ? 1 : 0),
     );
   }
 }

@@ -95,13 +95,24 @@ class _HistoryDetailBody extends StatelessWidget {
             ),
           ),
         ),
+        if (record.coop case final coop?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Text(
+              '${formatCoopLabel(coop)}  ${formatCoopMembers(coop)}',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: record.spots.length,
             itemBuilder:
-                (context, index) =>
-                    _SpotCard(spot: record.spots[index], index: index),
+                (context, index) => _SpotCard(
+                  spot: record.spots[index],
+                  index: index,
+                  isCoop: record.coop != null,
+                ),
           ),
         ),
       ],
@@ -165,10 +176,15 @@ class _RouteMap extends StatelessWidget {
 
 /// スポットのカード
 class _SpotCard extends StatelessWidget {
-  const _SpotCard({required this.spot, required this.index});
+  const _SpotCard({
+    required this.spot,
+    required this.index,
+    this.isCoop = false,
+  });
 
   final MissionHistorySpot spot;
   final int index;
+  final bool isCoop;
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +202,20 @@ class _SpotCard extends StatelessWidget {
               formatHistorySpotTitle(spot: spot, index: index),
               style: theme.textTheme.titleSmall,
             ),
+            if (isCoop)
+              Text(
+                spot.discovererNickname != null
+                    ? '発見: ${spot.discovererNickname}'
+                    : spot.isCleared
+                    ? '発見者: 取得できませんでした'
+                    : '未クリア',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color:
+                      spot.isCleared
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline,
+                ),
+              ),
             if (hasScore) ...[
               const SizedBox(height: 8),
               _RankBadge(rank: spot.judgeRank!),
@@ -207,6 +237,19 @@ class _SpotCard extends StatelessWidget {
                     path: spot.userPhotoPath,
                   ),
                 ),
+                // 協力プレイで他の人が発見したスポットは、発見者のサムネを表示する
+                // (取得できなければプレースホルダ)
+                if (isCoop &&
+                    spot.discovererNickname != null &&
+                    spot.userPhotoPath == null) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PhotoColumn(
+                      label: '発見者の写真',
+                      path: spot.discovererThumbPath,
+                    ),
+                  ),
+                ],
               ],
             ),
             if (spot.genre != null ||

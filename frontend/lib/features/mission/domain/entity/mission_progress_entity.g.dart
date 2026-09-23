@@ -22,6 +22,9 @@ _CheckpointProgress _$CheckpointProgressFromJson(Map<String, dynamic> json) =>
           json['achievedAt'] == null
               ? null
               : DateTime.parse(json['achievedAt'] as String),
+      discovererUid: json['discovererUid'] as String?,
+      discovererNickname: json['discovererNickname'] as String?,
+      discovererThumbPath: json['discovererThumbPath'] as String?,
     );
 
 Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
@@ -35,12 +38,16 @@ Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
       'headingErrorDegrees': instance.headingErrorDegrees,
       'judgeRank': const PhotoJudgeRankConverter().toJson(instance.judgeRank),
       'achievedAt': instance.achievedAt?.toIso8601String(),
+      'discovererUid': instance.discovererUid,
+      'discovererNickname': instance.discovererNickname,
+      'discovererThumbPath': instance.discovererThumbPath,
     };
 
 _MissionProgressEntity _$MissionProgressEntityFromJson(
   Map<String, dynamic> json,
 ) => _MissionProgressEntity(
   startedAt: DateTime.parse(json['startedAt'] as String),
+  roomCode: json['roomCode'] as String?,
   checkpoints:
       (json['checkpoints'] as List<dynamic>?)
           ?.map(
@@ -57,5 +64,6 @@ Map<String, dynamic> _$MissionProgressEntityToJson(
   _MissionProgressEntity instance,
 ) => <String, dynamic>{
   'startedAt': instance.startedAt.toIso8601String(),
+  'roomCode': instance.roomCode,
   'checkpoints': _missionProgressCheckpointsToJson(instance.checkpoints),
 };

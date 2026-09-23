@@ -9,12 +9,16 @@ part of 'mission_progress_store.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// ミッション進捗を管理するストア
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 
 @ProviderFor(MissionProgressStoreNotifier)
 @JsonPersist()
-final missionProgressStoreProvider = MissionProgressStoreNotifierProvider._();
+final missionProgressStoreProvider = MissionProgressStoreNotifierFamily._();
 
 /// ミッション進捗を管理するストア
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 @JsonPersist()
 final class MissionProgressStoreNotifierProvider
     extends
@@ -23,34 +27,94 @@ final class MissionProgressStoreNotifierProvider
           MissionProgressEntity?
         > {
   /// ミッション進捗を管理するストア
-  MissionProgressStoreNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'missionProgressStoreProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  ///
+  /// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+  MissionProgressStoreNotifierProvider._({
+    required MissionProgressStoreNotifierFamily super.from,
+    required MissionSessionKind super.argument,
+  }) : super(
+         retry: null,
+         name: r'missionProgressStoreProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$missionProgressStoreNotifierHash();
 
+  @override
+  String toString() {
+    return r'missionProgressStoreProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   MissionProgressStoreNotifier create() => MissionProgressStoreNotifier();
+
+  @override
+  bool operator ==(Object other) {
+    return other is MissionProgressStoreNotifierProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$missionProgressStoreNotifierHash() =>
-    r'e5a6e4c0b729bedd1922b8961460cd38dea98f9b';
+    r'01d05b203cdf58d79ad1801c7ee99d0743086b5d';
 
 /// ミッション進捗を管理するストア
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+
+@JsonPersist()
+final class MissionProgressStoreNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          MissionProgressStoreNotifier,
+          AsyncValue<MissionProgressEntity?>,
+          MissionProgressEntity?,
+          FutureOr<MissionProgressEntity?>,
+          MissionSessionKind
+        > {
+  MissionProgressStoreNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'missionProgressStoreProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  /// ミッション進捗を管理するストア
+  ///
+  /// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+
+  @JsonPersist()
+  MissionProgressStoreNotifierProvider call(MissionSessionKind kind) =>
+      MissionProgressStoreNotifierProvider._(argument: kind, from: this);
+
+  @override
+  String toString() => r'missionProgressStoreProvider';
+}
+
+/// ミッション進捗を管理するストア
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 
 @JsonPersist()
 abstract class _$MissionProgressStoreNotifierBase
     extends $AsyncNotifier<MissionProgressEntity?> {
-  FutureOr<MissionProgressEntity?> build();
+  late final _$args = ref.$arg as MissionSessionKind;
+  MissionSessionKind get kind => _$args;
+
+  FutureOr<MissionProgressEntity?> build(MissionSessionKind kind);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -68,7 +132,7 @@ abstract class _$MissionProgressStoreNotifierBase
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
 
@@ -81,7 +145,9 @@ abstract class _$MissionProgressStoreNotifier
     extends _$MissionProgressStoreNotifierBase {
   /// The default key used by [persist].
   String get key {
-    const resolvedKey = "MissionProgressStoreNotifier";
+    late final args = kind;
+    late final resolvedKey = 'MissionProgressStoreNotifier($args)';
+
     return resolvedKey;
   }
 

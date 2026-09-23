@@ -162,6 +162,13 @@ class _HistoryListTile extends ConsumerWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
+                      if (record.coop case final coop?)
+                        Text(
+                          formatCoopLabel(coop),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                     ],
                   ),
                 ),

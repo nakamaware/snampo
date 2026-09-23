@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
@@ -17,5 +18,8 @@ abstract class MissionHistory with _$MissionHistory {
     required String overviewPolyline,
     required List<MissionHistorySpot> spots,
     required MissionSettings settings,
+
+    /// 協力プレイの情報 (ソロでは null)
+    CoopHistoryInfo? coop,
   }) = _MissionHistory;
 }

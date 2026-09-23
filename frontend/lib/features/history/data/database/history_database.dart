@@ -32,7 +32,10 @@ class MissionHistories extends Table {
   /// 探索半径 (m)。目的地指定モードでは null
   IntColumn get radiusMeters => integer().nullable()();
 
-  /// ミッション開始モード: `random` / `destination`
+  /// ミッション開始モード: `random` / `destination` / `coop`
+  ///
+  /// `coop` のときのミッション設定は [radiusMeters] (random) か
+  /// [destinationLat] / [destinationLng] (destination) から判定する。
   TextColumn get mode => text().withDefault(const Constant('random'))();
 
   /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
@@ -40,6 +43,24 @@ class MissionHistories extends Table {
 
   /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
   RealColumn get destinationLng => real().nullable()();
+
+  /// 協力プレイのルームコード (ソロでは null)。協力プレイの履歴はこれをキーに upsert する
+  TextColumn get roomCode => text().nullable()();
+
+  /// 協力プレイの同期の状態: `inProgress` (進行中) / `finalized` (確定)
+  TextColumn get coopSyncState => text().nullable()();
+
+  /// 自分がホストだったか (1 / 0)
+  IntColumn get coopIsHost => integer().nullable()();
+
+  /// 協力プレイのメンバー一覧 (`[{"uid": ..., "nickname": ...}]` の JSON)
+  TextColumn get coopMembers => text().nullable()();
+
+  /// 協力プレイの遊べる期限 (Unix ms)
+  IntColumn get coopExpiresAt => integer().nullable()();
+
+  /// 協力プレイのデータの保持期限 (Unix ms)
+  IntColumn get coopDeleteAt => integer().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -107,6 +128,21 @@ class HistorySpots extends Table {
 
   /// 撮影時の方角 (度)
   RealColumn get capturedHeading => real().nullable()();
+
+  /// スポット ID (place_id / geo URI)。旧データでは null
+  TextColumn get spotId => text().nullable()();
+
+  /// 協力プレイの発見者の uid
+  TextColumn get discovererUid => text().nullable()();
+
+  /// 協力プレイの発見者のニックネーム (発見時点)
+  TextColumn get discovererNickname => text().nullable()();
+
+  /// 協力プレイの発見者のサムネのパス
+  TextColumn get discovererThumbPath => text().nullable()();
+
+  /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
+  IntColumn get isCleared => integer().withDefault(const Constant(1))();
 }
 
 /// 履歴専用 Drift DB (`snampo_history.db`)
@@ -117,7 +153,7 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -180,6 +216,29 @@ UPDATE mission_histories SET destination_lat = (
         await customStatement(
           'ALTER TABLE history_spots ADD COLUMN captured_heading REAL',
         );
+      }
+      if (from < 4) {
+        for (final column in [
+          'room_code TEXT',
+          'coop_sync_state TEXT',
+          'coop_is_host INTEGER',
+          'coop_members TEXT',
+          'coop_expires_at INTEGER',
+          'coop_delete_at INTEGER',
+        ]) {
+          await customStatement(
+            'ALTER TABLE mission_histories ADD COLUMN $column',
+          );
+        }
+        for (final column in [
+          'spot_id TEXT',
+          'discoverer_uid TEXT',
+          'discoverer_nickname TEXT',
+          'discoverer_thumb_path TEXT',
+          'is_cleared INTEGER NOT NULL DEFAULT 1',
+        ]) {
+          await customStatement('ALTER TABLE history_spots ADD COLUMN $column');
+        }
       }
     },
     beforeOpen: (OpeningDetails details) async {

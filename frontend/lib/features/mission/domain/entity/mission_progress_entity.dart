@@ -30,8 +30,17 @@ abstract class CheckpointProgress with _$CheckpointProgress {
     /// 採点ランク
     @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank,
 
-    /// 達成した日時
+    /// 達成した日時 (協力プレイでは発見された日時)
     DateTime? achievedAt,
+
+    /// 協力プレイの発見者の uid (他の人のクリアは「発見者情報つき・自分の写真なし」で反映する)
+    String? discovererUid,
+
+    /// 協力プレイの発見者のニックネーム (発見時点)
+    String? discovererNickname,
+
+    /// 協力プレイの発見者のサムネのパス (取得できていなければ null)
+    String? discovererThumbPath,
   }) = _CheckpointProgress;
 
   /// JSON から [CheckpointProgress] を生成する
@@ -94,6 +103,9 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   const factory MissionProgressEntity({
     /// ミッション開始時刻
     required DateTime startedAt,
+
+    /// 協力プレイのルームコード (ソロでは null)
+    String? roomCode,
 
     /// 各チェックポイントの進捗（インデックス = スポット番号、null = 未挑戦）
     @Default([])

@@ -116,6 +116,72 @@ class $MissionHistoriesTable extends MissionHistories
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _roomCodeMeta = const VerificationMeta(
+    'roomCode',
+  );
+  @override
+  late final GeneratedColumn<String> roomCode = GeneratedColumn<String>(
+    'room_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopSyncStateMeta = const VerificationMeta(
+    'coopSyncState',
+  );
+  @override
+  late final GeneratedColumn<String> coopSyncState = GeneratedColumn<String>(
+    'coop_sync_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopIsHostMeta = const VerificationMeta(
+    'coopIsHost',
+  );
+  @override
+  late final GeneratedColumn<int> coopIsHost = GeneratedColumn<int>(
+    'coop_is_host',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopMembersMeta = const VerificationMeta(
+    'coopMembers',
+  );
+  @override
+  late final GeneratedColumn<String> coopMembers = GeneratedColumn<String>(
+    'coop_members',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopExpiresAtMeta = const VerificationMeta(
+    'coopExpiresAt',
+  );
+  @override
+  late final GeneratedColumn<int> coopExpiresAt = GeneratedColumn<int>(
+    'coop_expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopDeleteAtMeta = const VerificationMeta(
+    'coopDeleteAt',
+  );
+  @override
+  late final GeneratedColumn<int> coopDeleteAt = GeneratedColumn<int>(
+    'coop_delete_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -128,6 +194,12 @@ class $MissionHistoriesTable extends MissionHistories
     mode,
     destinationLat,
     destinationLng,
+    roomCode,
+    coopSyncState,
+    coopIsHost,
+    coopMembers,
+    coopExpiresAt,
+    coopDeleteAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -231,6 +303,57 @@ class $MissionHistoriesTable extends MissionHistories
         ),
       );
     }
+    if (data.containsKey('room_code')) {
+      context.handle(
+        _roomCodeMeta,
+        roomCode.isAcceptableOrUnknown(data['room_code']!, _roomCodeMeta),
+      );
+    }
+    if (data.containsKey('coop_sync_state')) {
+      context.handle(
+        _coopSyncStateMeta,
+        coopSyncState.isAcceptableOrUnknown(
+          data['coop_sync_state']!,
+          _coopSyncStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_is_host')) {
+      context.handle(
+        _coopIsHostMeta,
+        coopIsHost.isAcceptableOrUnknown(
+          data['coop_is_host']!,
+          _coopIsHostMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_members')) {
+      context.handle(
+        _coopMembersMeta,
+        coopMembers.isAcceptableOrUnknown(
+          data['coop_members']!,
+          _coopMembersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_expires_at')) {
+      context.handle(
+        _coopExpiresAtMeta,
+        coopExpiresAt.isAcceptableOrUnknown(
+          data['coop_expires_at']!,
+          _coopExpiresAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_delete_at')) {
+      context.handle(
+        _coopDeleteAtMeta,
+        coopDeleteAt.isAcceptableOrUnknown(
+          data['coop_delete_at']!,
+          _coopDeleteAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -287,6 +410,30 @@ class $MissionHistoriesTable extends MissionHistories
         DriftSqlType.double,
         data['${effectivePrefix}destination_lng'],
       ),
+      roomCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}room_code'],
+      ),
+      coopSyncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coop_sync_state'],
+      ),
+      coopIsHost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_is_host'],
+      ),
+      coopMembers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coop_members'],
+      ),
+      coopExpiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_expires_at'],
+      ),
+      coopDeleteAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_delete_at'],
+      ),
     );
   }
 
@@ -319,7 +466,10 @@ class MissionHistoryRow extends DataClass
   /// 探索半径 (m)。目的地指定モードでは null
   final int? radiusMeters;
 
-  /// ミッション開始モード: `random` / `destination`
+  /// ミッション開始モード: `random` / `destination` / `coop`
+  ///
+  /// `coop` のときのミッション設定は [radiusMeters] (random) か
+  /// [destinationLat] / [destinationLng] (destination) から判定する。
   final String mode;
 
   /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
@@ -327,6 +477,24 @@ class MissionHistoryRow extends DataClass
 
   /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
   final double? destinationLng;
+
+  /// 協力プレイのルームコード (ソロでは null)。協力プレイの履歴はこれをキーに upsert する
+  final String? roomCode;
+
+  /// 協力プレイの同期の状態: `inProgress` (進行中) / `finalized` (確定)
+  final String? coopSyncState;
+
+  /// 自分がホストだったか (1 / 0)
+  final int? coopIsHost;
+
+  /// 協力プレイのメンバー一覧 (`[{"uid": ..., "nickname": ...}]` の JSON)
+  final String? coopMembers;
+
+  /// 協力プレイの遊べる期限 (Unix ms)
+  final int? coopExpiresAt;
+
+  /// 協力プレイのデータの保持期限 (Unix ms)
+  final int? coopDeleteAt;
   const MissionHistoryRow({
     required this.id,
     required this.completedAt,
@@ -338,6 +506,12 @@ class MissionHistoryRow extends DataClass
     required this.mode,
     this.destinationLat,
     this.destinationLng,
+    this.roomCode,
+    this.coopSyncState,
+    this.coopIsHost,
+    this.coopMembers,
+    this.coopExpiresAt,
+    this.coopDeleteAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -357,6 +531,24 @@ class MissionHistoryRow extends DataClass
     }
     if (!nullToAbsent || destinationLng != null) {
       map['destination_lng'] = Variable<double>(destinationLng);
+    }
+    if (!nullToAbsent || roomCode != null) {
+      map['room_code'] = Variable<String>(roomCode);
+    }
+    if (!nullToAbsent || coopSyncState != null) {
+      map['coop_sync_state'] = Variable<String>(coopSyncState);
+    }
+    if (!nullToAbsent || coopIsHost != null) {
+      map['coop_is_host'] = Variable<int>(coopIsHost);
+    }
+    if (!nullToAbsent || coopMembers != null) {
+      map['coop_members'] = Variable<String>(coopMembers);
+    }
+    if (!nullToAbsent || coopExpiresAt != null) {
+      map['coop_expires_at'] = Variable<int>(coopExpiresAt);
+    }
+    if (!nullToAbsent || coopDeleteAt != null) {
+      map['coop_delete_at'] = Variable<int>(coopDeleteAt);
     }
     return map;
   }
@@ -382,6 +574,30 @@ class MissionHistoryRow extends DataClass
           destinationLng == null && nullToAbsent
               ? const Value.absent()
               : Value(destinationLng),
+      roomCode:
+          roomCode == null && nullToAbsent
+              ? const Value.absent()
+              : Value(roomCode),
+      coopSyncState:
+          coopSyncState == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopSyncState),
+      coopIsHost:
+          coopIsHost == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopIsHost),
+      coopMembers:
+          coopMembers == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopMembers),
+      coopExpiresAt:
+          coopExpiresAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopExpiresAt),
+      coopDeleteAt:
+          coopDeleteAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopDeleteAt),
     );
   }
 
@@ -401,6 +617,12 @@ class MissionHistoryRow extends DataClass
       mode: serializer.fromJson<String>(json['mode']),
       destinationLat: serializer.fromJson<double?>(json['destinationLat']),
       destinationLng: serializer.fromJson<double?>(json['destinationLng']),
+      roomCode: serializer.fromJson<String?>(json['roomCode']),
+      coopSyncState: serializer.fromJson<String?>(json['coopSyncState']),
+      coopIsHost: serializer.fromJson<int?>(json['coopIsHost']),
+      coopMembers: serializer.fromJson<String?>(json['coopMembers']),
+      coopExpiresAt: serializer.fromJson<int?>(json['coopExpiresAt']),
+      coopDeleteAt: serializer.fromJson<int?>(json['coopDeleteAt']),
     );
   }
   @override
@@ -417,6 +639,12 @@ class MissionHistoryRow extends DataClass
       'mode': serializer.toJson<String>(mode),
       'destinationLat': serializer.toJson<double?>(destinationLat),
       'destinationLng': serializer.toJson<double?>(destinationLng),
+      'roomCode': serializer.toJson<String?>(roomCode),
+      'coopSyncState': serializer.toJson<String?>(coopSyncState),
+      'coopIsHost': serializer.toJson<int?>(coopIsHost),
+      'coopMembers': serializer.toJson<String?>(coopMembers),
+      'coopExpiresAt': serializer.toJson<int?>(coopExpiresAt),
+      'coopDeleteAt': serializer.toJson<int?>(coopDeleteAt),
     };
   }
 
@@ -431,6 +659,12 @@ class MissionHistoryRow extends DataClass
     String? mode,
     Value<double?> destinationLat = const Value.absent(),
     Value<double?> destinationLng = const Value.absent(),
+    Value<String?> roomCode = const Value.absent(),
+    Value<String?> coopSyncState = const Value.absent(),
+    Value<int?> coopIsHost = const Value.absent(),
+    Value<String?> coopMembers = const Value.absent(),
+    Value<int?> coopExpiresAt = const Value.absent(),
+    Value<int?> coopDeleteAt = const Value.absent(),
   }) => MissionHistoryRow(
     id: id ?? this.id,
     completedAt: completedAt ?? this.completedAt,
@@ -444,6 +678,14 @@ class MissionHistoryRow extends DataClass
         destinationLat.present ? destinationLat.value : this.destinationLat,
     destinationLng:
         destinationLng.present ? destinationLng.value : this.destinationLng,
+    roomCode: roomCode.present ? roomCode.value : this.roomCode,
+    coopSyncState:
+        coopSyncState.present ? coopSyncState.value : this.coopSyncState,
+    coopIsHost: coopIsHost.present ? coopIsHost.value : this.coopIsHost,
+    coopMembers: coopMembers.present ? coopMembers.value : this.coopMembers,
+    coopExpiresAt:
+        coopExpiresAt.present ? coopExpiresAt.value : this.coopExpiresAt,
+    coopDeleteAt: coopDeleteAt.present ? coopDeleteAt.value : this.coopDeleteAt,
   );
   MissionHistoryRow copyWithCompanion(MissionHistoriesCompanion data) {
     return MissionHistoryRow(
@@ -476,6 +718,23 @@ class MissionHistoryRow extends DataClass
           data.destinationLng.present
               ? data.destinationLng.value
               : this.destinationLng,
+      roomCode: data.roomCode.present ? data.roomCode.value : this.roomCode,
+      coopSyncState:
+          data.coopSyncState.present
+              ? data.coopSyncState.value
+              : this.coopSyncState,
+      coopIsHost:
+          data.coopIsHost.present ? data.coopIsHost.value : this.coopIsHost,
+      coopMembers:
+          data.coopMembers.present ? data.coopMembers.value : this.coopMembers,
+      coopExpiresAt:
+          data.coopExpiresAt.present
+              ? data.coopExpiresAt.value
+              : this.coopExpiresAt,
+      coopDeleteAt:
+          data.coopDeleteAt.present
+              ? data.coopDeleteAt.value
+              : this.coopDeleteAt,
     );
   }
 
@@ -491,7 +750,13 @@ class MissionHistoryRow extends DataClass
           ..write('radiusMeters: $radiusMeters, ')
           ..write('mode: $mode, ')
           ..write('destinationLat: $destinationLat, ')
-          ..write('destinationLng: $destinationLng')
+          ..write('destinationLng: $destinationLng, ')
+          ..write('roomCode: $roomCode, ')
+          ..write('coopSyncState: $coopSyncState, ')
+          ..write('coopIsHost: $coopIsHost, ')
+          ..write('coopMembers: $coopMembers, ')
+          ..write('coopExpiresAt: $coopExpiresAt, ')
+          ..write('coopDeleteAt: $coopDeleteAt')
           ..write(')'))
         .toString();
   }
@@ -508,6 +773,12 @@ class MissionHistoryRow extends DataClass
     mode,
     destinationLat,
     destinationLng,
+    roomCode,
+    coopSyncState,
+    coopIsHost,
+    coopMembers,
+    coopExpiresAt,
+    coopDeleteAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -522,7 +793,13 @@ class MissionHistoryRow extends DataClass
           other.radiusMeters == this.radiusMeters &&
           other.mode == this.mode &&
           other.destinationLat == this.destinationLat &&
-          other.destinationLng == this.destinationLng);
+          other.destinationLng == this.destinationLng &&
+          other.roomCode == this.roomCode &&
+          other.coopSyncState == this.coopSyncState &&
+          other.coopIsHost == this.coopIsHost &&
+          other.coopMembers == this.coopMembers &&
+          other.coopExpiresAt == this.coopExpiresAt &&
+          other.coopDeleteAt == this.coopDeleteAt);
 }
 
 class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
@@ -536,6 +813,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
   final Value<String> mode;
   final Value<double?> destinationLat;
   final Value<double?> destinationLng;
+  final Value<String?> roomCode;
+  final Value<String?> coopSyncState;
+  final Value<int?> coopIsHost;
+  final Value<String?> coopMembers;
+  final Value<int?> coopExpiresAt;
+  final Value<int?> coopDeleteAt;
   final Value<int> rowid;
   const MissionHistoriesCompanion({
     this.id = const Value.absent(),
@@ -548,6 +831,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     this.mode = const Value.absent(),
     this.destinationLat = const Value.absent(),
     this.destinationLng = const Value.absent(),
+    this.roomCode = const Value.absent(),
+    this.coopSyncState = const Value.absent(),
+    this.coopIsHost = const Value.absent(),
+    this.coopMembers = const Value.absent(),
+    this.coopExpiresAt = const Value.absent(),
+    this.coopDeleteAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MissionHistoriesCompanion.insert({
@@ -561,6 +850,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     this.mode = const Value.absent(),
     this.destinationLat = const Value.absent(),
     this.destinationLng = const Value.absent(),
+    this.roomCode = const Value.absent(),
+    this.coopSyncState = const Value.absent(),
+    this.coopIsHost = const Value.absent(),
+    this.coopMembers = const Value.absent(),
+    this.coopExpiresAt = const Value.absent(),
+    this.coopDeleteAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        completedAt = Value(completedAt),
@@ -579,6 +874,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Expression<String>? mode,
     Expression<double>? destinationLat,
     Expression<double>? destinationLng,
+    Expression<String>? roomCode,
+    Expression<String>? coopSyncState,
+    Expression<int>? coopIsHost,
+    Expression<String>? coopMembers,
+    Expression<int>? coopExpiresAt,
+    Expression<int>? coopDeleteAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -592,6 +893,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       if (mode != null) 'mode': mode,
       if (destinationLat != null) 'destination_lat': destinationLat,
       if (destinationLng != null) 'destination_lng': destinationLng,
+      if (roomCode != null) 'room_code': roomCode,
+      if (coopSyncState != null) 'coop_sync_state': coopSyncState,
+      if (coopIsHost != null) 'coop_is_host': coopIsHost,
+      if (coopMembers != null) 'coop_members': coopMembers,
+      if (coopExpiresAt != null) 'coop_expires_at': coopExpiresAt,
+      if (coopDeleteAt != null) 'coop_delete_at': coopDeleteAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -607,6 +914,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Value<String>? mode,
     Value<double?>? destinationLat,
     Value<double?>? destinationLng,
+    Value<String?>? roomCode,
+    Value<String?>? coopSyncState,
+    Value<int?>? coopIsHost,
+    Value<String?>? coopMembers,
+    Value<int?>? coopExpiresAt,
+    Value<int?>? coopDeleteAt,
     Value<int>? rowid,
   }) {
     return MissionHistoriesCompanion(
@@ -620,6 +933,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       mode: mode ?? this.mode,
       destinationLat: destinationLat ?? this.destinationLat,
       destinationLng: destinationLng ?? this.destinationLng,
+      roomCode: roomCode ?? this.roomCode,
+      coopSyncState: coopSyncState ?? this.coopSyncState,
+      coopIsHost: coopIsHost ?? this.coopIsHost,
+      coopMembers: coopMembers ?? this.coopMembers,
+      coopExpiresAt: coopExpiresAt ?? this.coopExpiresAt,
+      coopDeleteAt: coopDeleteAt ?? this.coopDeleteAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -657,6 +976,24 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     if (destinationLng.present) {
       map['destination_lng'] = Variable<double>(destinationLng.value);
     }
+    if (roomCode.present) {
+      map['room_code'] = Variable<String>(roomCode.value);
+    }
+    if (coopSyncState.present) {
+      map['coop_sync_state'] = Variable<String>(coopSyncState.value);
+    }
+    if (coopIsHost.present) {
+      map['coop_is_host'] = Variable<int>(coopIsHost.value);
+    }
+    if (coopMembers.present) {
+      map['coop_members'] = Variable<String>(coopMembers.value);
+    }
+    if (coopExpiresAt.present) {
+      map['coop_expires_at'] = Variable<int>(coopExpiresAt.value);
+    }
+    if (coopDeleteAt.present) {
+      map['coop_delete_at'] = Variable<int>(coopDeleteAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -676,6 +1013,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
           ..write('mode: $mode, ')
           ..write('destinationLat: $destinationLat, ')
           ..write('destinationLng: $destinationLng, ')
+          ..write('roomCode: $roomCode, ')
+          ..write('coopSyncState: $coopSyncState, ')
+          ..write('coopIsHost: $coopIsHost, ')
+          ..write('coopMembers: $coopMembers, ')
+          ..write('coopExpiresAt: $coopExpiresAt, ')
+          ..write('coopDeleteAt: $coopDeleteAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -894,6 +1237,60 @@ class $HistorySpotsTable extends HistorySpots
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _spotIdMeta = const VerificationMeta('spotId');
+  @override
+  late final GeneratedColumn<String> spotId = GeneratedColumn<String>(
+    'spot_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discovererUidMeta = const VerificationMeta(
+    'discovererUid',
+  );
+  @override
+  late final GeneratedColumn<String> discovererUid = GeneratedColumn<String>(
+    'discoverer_uid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discovererNicknameMeta =
+      const VerificationMeta('discovererNickname');
+  @override
+  late final GeneratedColumn<String> discovererNickname =
+      GeneratedColumn<String>(
+        'discoverer_nickname',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererThumbPathMeta =
+      const VerificationMeta('discovererThumbPath');
+  @override
+  late final GeneratedColumn<String> discovererThumbPath =
+      GeneratedColumn<String>(
+        'discoverer_thumb_path',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _isClearedMeta = const VerificationMeta(
+    'isCleared',
+  );
+  @override
+  late final GeneratedColumn<int> isCleared = GeneratedColumn<int>(
+    'is_cleared',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -915,6 +1312,11 @@ class $HistorySpotsTable extends HistorySpots
     guessLat,
     guessLng,
     capturedHeading,
+    spotId,
+    discovererUid,
+    discovererNickname,
+    discovererThumbPath,
+    isCleared,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1075,6 +1477,45 @@ class $HistorySpotsTable extends HistorySpots
         ),
       );
     }
+    if (data.containsKey('spot_id')) {
+      context.handle(
+        _spotIdMeta,
+        spotId.isAcceptableOrUnknown(data['spot_id']!, _spotIdMeta),
+      );
+    }
+    if (data.containsKey('discoverer_uid')) {
+      context.handle(
+        _discovererUidMeta,
+        discovererUid.isAcceptableOrUnknown(
+          data['discoverer_uid']!,
+          _discovererUidMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_nickname')) {
+      context.handle(
+        _discovererNicknameMeta,
+        discovererNickname.isAcceptableOrUnknown(
+          data['discoverer_nickname']!,
+          _discovererNicknameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_thumb_path')) {
+      context.handle(
+        _discovererThumbPathMeta,
+        discovererThumbPath.isAcceptableOrUnknown(
+          data['discoverer_thumb_path']!,
+          _discovererThumbPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_cleared')) {
+      context.handle(
+        _isClearedMeta,
+        isCleared.isAcceptableOrUnknown(data['is_cleared']!, _isClearedMeta),
+      );
+    }
     return context;
   }
 
@@ -1167,6 +1608,27 @@ class $HistorySpotsTable extends HistorySpots
         DriftSqlType.double,
         data['${effectivePrefix}captured_heading'],
       ),
+      spotId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}spot_id'],
+      ),
+      discovererUid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_uid'],
+      ),
+      discovererNickname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_nickname'],
+      ),
+      discovererThumbPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_thumb_path'],
+      ),
+      isCleared:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}is_cleared'],
+          )!,
     );
   }
 
@@ -1216,7 +1678,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 正解画像の基準方角 (度)
   final double? referenceHeading;
 
-  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  /// 採点ランク (`excellent` / `good` / `fair` / `miss`)
+  ///
+  /// 旧バージョンで保存された `retry` は読み込み時に `miss` として扱う。
   final String? judgeRank;
 
   /// 位置誤差 (m)
@@ -1233,6 +1697,21 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
 
   /// 撮影時の方角 (度)
   final double? capturedHeading;
+
+  /// スポット ID (place_id / geo URI)。旧データでは null
+  final String? spotId;
+
+  /// 協力プレイの発見者の uid
+  final String? discovererUid;
+
+  /// 協力プレイの発見者のニックネーム (発見時点)
+  final String? discovererNickname;
+
+  /// 協力プレイの発見者のサムネのパス
+  final String? discovererThumbPath;
+
+  /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
+  final int isCleared;
   const HistorySpotRow({
     required this.id,
     required this.historyId,
@@ -1253,6 +1732,11 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     this.guessLat,
     this.guessLng,
     this.capturedHeading,
+    this.spotId,
+    this.discovererUid,
+    this.discovererNickname,
+    this.discovererThumbPath,
+    required this.isCleared,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1300,6 +1784,19 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     if (!nullToAbsent || capturedHeading != null) {
       map['captured_heading'] = Variable<double>(capturedHeading);
     }
+    if (!nullToAbsent || spotId != null) {
+      map['spot_id'] = Variable<String>(spotId);
+    }
+    if (!nullToAbsent || discovererUid != null) {
+      map['discoverer_uid'] = Variable<String>(discovererUid);
+    }
+    if (!nullToAbsent || discovererNickname != null) {
+      map['discoverer_nickname'] = Variable<String>(discovererNickname);
+    }
+    if (!nullToAbsent || discovererThumbPath != null) {
+      map['discoverer_thumb_path'] = Variable<String>(discovererThumbPath);
+    }
+    map['is_cleared'] = Variable<int>(isCleared);
     return map;
   }
 
@@ -1355,6 +1852,21 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           capturedHeading == null && nullToAbsent
               ? const Value.absent()
               : Value(capturedHeading),
+      spotId:
+          spotId == null && nullToAbsent ? const Value.absent() : Value(spotId),
+      discovererUid:
+          discovererUid == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererUid),
+      discovererNickname:
+          discovererNickname == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererNickname),
+      discovererThumbPath:
+          discovererThumbPath == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererThumbPath),
+      isCleared: Value(isCleared),
     );
   }
 
@@ -1389,6 +1901,15 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       guessLat: serializer.fromJson<double?>(json['guessLat']),
       guessLng: serializer.fromJson<double?>(json['guessLng']),
       capturedHeading: serializer.fromJson<double?>(json['capturedHeading']),
+      spotId: serializer.fromJson<String?>(json['spotId']),
+      discovererUid: serializer.fromJson<String?>(json['discovererUid']),
+      discovererNickname: serializer.fromJson<String?>(
+        json['discovererNickname'],
+      ),
+      discovererThumbPath: serializer.fromJson<String?>(
+        json['discovererThumbPath'],
+      ),
+      isCleared: serializer.fromJson<int>(json['isCleared']),
     );
   }
   @override
@@ -1414,6 +1935,11 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'guessLat': serializer.toJson<double?>(guessLat),
       'guessLng': serializer.toJson<double?>(guessLng),
       'capturedHeading': serializer.toJson<double?>(capturedHeading),
+      'spotId': serializer.toJson<String?>(spotId),
+      'discovererUid': serializer.toJson<String?>(discovererUid),
+      'discovererNickname': serializer.toJson<String?>(discovererNickname),
+      'discovererThumbPath': serializer.toJson<String?>(discovererThumbPath),
+      'isCleared': serializer.toJson<int>(isCleared),
     };
   }
 
@@ -1437,6 +1963,11 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     Value<double?> guessLat = const Value.absent(),
     Value<double?> guessLng = const Value.absent(),
     Value<double?> capturedHeading = const Value.absent(),
+    Value<String?> spotId = const Value.absent(),
+    Value<String?> discovererUid = const Value.absent(),
+    Value<String?> discovererNickname = const Value.absent(),
+    Value<String?> discovererThumbPath = const Value.absent(),
+    int? isCleared,
   }) => HistorySpotRow(
     id: id ?? this.id,
     historyId: historyId ?? this.historyId,
@@ -1469,6 +2000,18 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLng: guessLng.present ? guessLng.value : this.guessLng,
     capturedHeading:
         capturedHeading.present ? capturedHeading.value : this.capturedHeading,
+    spotId: spotId.present ? spotId.value : this.spotId,
+    discovererUid:
+        discovererUid.present ? discovererUid.value : this.discovererUid,
+    discovererNickname:
+        discovererNickname.present
+            ? discovererNickname.value
+            : this.discovererNickname,
+    discovererThumbPath:
+        discovererThumbPath.present
+            ? discovererThumbPath.value
+            : this.discovererThumbPath,
+    isCleared: isCleared ?? this.isCleared,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
     return HistorySpotRow(
@@ -1516,6 +2059,20 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           data.capturedHeading.present
               ? data.capturedHeading.value
               : this.capturedHeading,
+      spotId: data.spotId.present ? data.spotId.value : this.spotId,
+      discovererUid:
+          data.discovererUid.present
+              ? data.discovererUid.value
+              : this.discovererUid,
+      discovererNickname:
+          data.discovererNickname.present
+              ? data.discovererNickname.value
+              : this.discovererNickname,
+      discovererThumbPath:
+          data.discovererThumbPath.present
+              ? data.discovererThumbPath.value
+              : this.discovererThumbPath,
+      isCleared: data.isCleared.present ? data.isCleared.value : this.isCleared,
     );
   }
 
@@ -1540,13 +2097,18 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('headingErrorDegrees: $headingErrorDegrees, ')
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
-          ..write('capturedHeading: $capturedHeading')
+          ..write('capturedHeading: $capturedHeading, ')
+          ..write('spotId: $spotId, ')
+          ..write('discovererUid: $discovererUid, ')
+          ..write('discovererNickname: $discovererNickname, ')
+          ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     historyId,
     sortOrder,
@@ -1566,7 +2128,12 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLat,
     guessLng,
     capturedHeading,
-  );
+    spotId,
+    discovererUid,
+    discovererNickname,
+    discovererThumbPath,
+    isCleared,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1589,7 +2156,12 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.headingErrorDegrees == this.headingErrorDegrees &&
           other.guessLat == this.guessLat &&
           other.guessLng == this.guessLng &&
-          other.capturedHeading == this.capturedHeading);
+          other.capturedHeading == this.capturedHeading &&
+          other.spotId == this.spotId &&
+          other.discovererUid == this.discovererUid &&
+          other.discovererNickname == this.discovererNickname &&
+          other.discovererThumbPath == this.discovererThumbPath &&
+          other.isCleared == this.isCleared);
 }
 
 class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
@@ -1612,6 +2184,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<double?> guessLat;
   final Value<double?> guessLng;
   final Value<double?> capturedHeading;
+  final Value<String?> spotId;
+  final Value<String?> discovererUid;
+  final Value<String?> discovererNickname;
+  final Value<String?> discovererThumbPath;
+  final Value<int> isCleared;
   const HistorySpotsCompanion({
     this.id = const Value.absent(),
     this.historyId = const Value.absent(),
@@ -1632,6 +2209,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.spotId = const Value.absent(),
+    this.discovererUid = const Value.absent(),
+    this.discovererNickname = const Value.absent(),
+    this.discovererThumbPath = const Value.absent(),
+    this.isCleared = const Value.absent(),
   });
   HistorySpotsCompanion.insert({
     this.id = const Value.absent(),
@@ -1653,6 +2235,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.spotId = const Value.absent(),
+    this.discovererUid = const Value.absent(),
+    this.discovererNickname = const Value.absent(),
+    this.discovererThumbPath = const Value.absent(),
+    this.isCleared = const Value.absent(),
   }) : historyId = Value(historyId),
        sortOrder = Value(sortOrder),
        isDestination = Value(isDestination),
@@ -1679,6 +2266,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<double>? guessLat,
     Expression<double>? guessLng,
     Expression<double>? capturedHeading,
+    Expression<String>? spotId,
+    Expression<String>? discovererUid,
+    Expression<String>? discovererNickname,
+    Expression<String>? discovererThumbPath,
+    Expression<int>? isCleared,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1703,6 +2295,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       if (guessLat != null) 'guess_lat': guessLat,
       if (guessLng != null) 'guess_lng': guessLng,
       if (capturedHeading != null) 'captured_heading': capturedHeading,
+      if (spotId != null) 'spot_id': spotId,
+      if (discovererUid != null) 'discoverer_uid': discovererUid,
+      if (discovererNickname != null) 'discoverer_nickname': discovererNickname,
+      if (discovererThumbPath != null)
+        'discoverer_thumb_path': discovererThumbPath,
+      if (isCleared != null) 'is_cleared': isCleared,
     });
   }
 
@@ -1726,6 +2324,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<double?>? guessLat,
     Value<double?>? guessLng,
     Value<double?>? capturedHeading,
+    Value<String?>? spotId,
+    Value<String?>? discovererUid,
+    Value<String?>? discovererNickname,
+    Value<String?>? discovererThumbPath,
+    Value<int>? isCleared,
   }) {
     return HistorySpotsCompanion(
       id: id ?? this.id,
@@ -1747,6 +2350,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       guessLat: guessLat ?? this.guessLat,
       guessLng: guessLng ?? this.guessLng,
       capturedHeading: capturedHeading ?? this.capturedHeading,
+      spotId: spotId ?? this.spotId,
+      discovererUid: discovererUid ?? this.discovererUid,
+      discovererNickname: discovererNickname ?? this.discovererNickname,
+      discovererThumbPath: discovererThumbPath ?? this.discovererThumbPath,
+      isCleared: isCleared ?? this.isCleared,
     );
   }
 
@@ -1816,6 +2424,23 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     if (capturedHeading.present) {
       map['captured_heading'] = Variable<double>(capturedHeading.value);
     }
+    if (spotId.present) {
+      map['spot_id'] = Variable<String>(spotId.value);
+    }
+    if (discovererUid.present) {
+      map['discoverer_uid'] = Variable<String>(discovererUid.value);
+    }
+    if (discovererNickname.present) {
+      map['discoverer_nickname'] = Variable<String>(discovererNickname.value);
+    }
+    if (discovererThumbPath.present) {
+      map['discoverer_thumb_path'] = Variable<String>(
+        discovererThumbPath.value,
+      );
+    }
+    if (isCleared.present) {
+      map['is_cleared'] = Variable<int>(isCleared.value);
+    }
     return map;
   }
 
@@ -1840,7 +2465,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('headingErrorDegrees: $headingErrorDegrees, ')
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
-          ..write('capturedHeading: $capturedHeading')
+          ..write('capturedHeading: $capturedHeading, ')
+          ..write('spotId: $spotId, ')
+          ..write('discovererUid: $discovererUid, ')
+          ..write('discovererNickname: $discovererNickname, ')
+          ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
   }
@@ -1885,6 +2515,12 @@ typedef $$MissionHistoriesTableCreateCompanionBuilder =
       Value<String> mode,
       Value<double?> destinationLat,
       Value<double?> destinationLng,
+      Value<String?> roomCode,
+      Value<String?> coopSyncState,
+      Value<int?> coopIsHost,
+      Value<String?> coopMembers,
+      Value<int?> coopExpiresAt,
+      Value<int?> coopDeleteAt,
       Value<int> rowid,
     });
 typedef $$MissionHistoriesTableUpdateCompanionBuilder =
@@ -1899,6 +2535,12 @@ typedef $$MissionHistoriesTableUpdateCompanionBuilder =
       Value<String> mode,
       Value<double?> destinationLat,
       Value<double?> destinationLng,
+      Value<String?> roomCode,
+      Value<String?> coopSyncState,
+      Value<int?> coopIsHost,
+      Value<String?> coopMembers,
+      Value<int?> coopExpiresAt,
+      Value<int?> coopDeleteAt,
       Value<int> rowid,
     });
 
@@ -1996,6 +2638,36 @@ class $$MissionHistoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get roomCode => $composableBuilder(
+    column: $table.roomCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> historySpotsRefs(
     Expression<bool> Function($$HistorySpotsTableFilterComposer f) f,
   ) {
@@ -2080,6 +2752,36 @@ class $$MissionHistoriesTableOrderingComposer
     column: $table.destinationLng,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get roomCode => $composableBuilder(
+    column: $table.roomCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MissionHistoriesTableAnnotationComposer
@@ -2132,6 +2834,34 @@ class $$MissionHistoriesTableAnnotationComposer
 
   GeneratedColumn<double> get destinationLng => $composableBuilder(
     column: $table.destinationLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get roomCode =>
+      $composableBuilder(column: $table.roomCode, builder: (column) => column);
+
+  GeneratedColumn<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
     builder: (column) => column,
   );
 
@@ -2208,6 +2938,12 @@ class $$MissionHistoriesTableTableManager
                 Value<String> mode = const Value.absent(),
                 Value<double?> destinationLat = const Value.absent(),
                 Value<double?> destinationLng = const Value.absent(),
+                Value<String?> roomCode = const Value.absent(),
+                Value<String?> coopSyncState = const Value.absent(),
+                Value<int?> coopIsHost = const Value.absent(),
+                Value<String?> coopMembers = const Value.absent(),
+                Value<int?> coopExpiresAt = const Value.absent(),
+                Value<int?> coopDeleteAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion(
                 id: id,
@@ -2220,6 +2956,12 @@ class $$MissionHistoriesTableTableManager
                 mode: mode,
                 destinationLat: destinationLat,
                 destinationLng: destinationLng,
+                roomCode: roomCode,
+                coopSyncState: coopSyncState,
+                coopIsHost: coopIsHost,
+                coopMembers: coopMembers,
+                coopExpiresAt: coopExpiresAt,
+                coopDeleteAt: coopDeleteAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2234,6 +2976,12 @@ class $$MissionHistoriesTableTableManager
                 Value<String> mode = const Value.absent(),
                 Value<double?> destinationLat = const Value.absent(),
                 Value<double?> destinationLng = const Value.absent(),
+                Value<String?> roomCode = const Value.absent(),
+                Value<String?> coopSyncState = const Value.absent(),
+                Value<int?> coopIsHost = const Value.absent(),
+                Value<String?> coopMembers = const Value.absent(),
+                Value<int?> coopExpiresAt = const Value.absent(),
+                Value<int?> coopDeleteAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion.insert(
                 id: id,
@@ -2246,6 +2994,12 @@ class $$MissionHistoriesTableTableManager
                 mode: mode,
                 destinationLat: destinationLat,
                 destinationLng: destinationLng,
+                roomCode: roomCode,
+                coopSyncState: coopSyncState,
+                coopIsHost: coopIsHost,
+                coopMembers: coopMembers,
+                coopExpiresAt: coopExpiresAt,
+                coopDeleteAt: coopDeleteAt,
                 rowid: rowid,
               ),
           withReferenceMapper:
@@ -2330,6 +3084,11 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<String?> spotId,
+      Value<String?> discovererUid,
+      Value<String?> discovererNickname,
+      Value<String?> discovererThumbPath,
+      Value<int> isCleared,
     });
 typedef $$HistorySpotsTableUpdateCompanionBuilder =
     HistorySpotsCompanion Function({
@@ -2352,6 +3111,11 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<String?> spotId,
+      Value<String?> discovererUid,
+      Value<String?> discovererNickname,
+      Value<String?> discovererThumbPath,
+      Value<int> isCleared,
     });
 
 final class $$HistorySpotsTableReferences
@@ -2478,6 +3242,31 @@ class $$HistorySpotsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get spotId => $composableBuilder(
+    column: $table.spotId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MissionHistoriesTableFilterComposer get historyId {
     final $$MissionHistoriesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2601,6 +3390,31 @@ class $$HistorySpotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get spotId => $composableBuilder(
+    column: $table.spotId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MissionHistoriesTableOrderingComposer get historyId {
     final $$MissionHistoriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2706,6 +3520,27 @@ class $$HistorySpotsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get spotId =>
+      $composableBuilder(column: $table.spotId, builder: (column) => column);
+
+  GeneratedColumn<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get isCleared =>
+      $composableBuilder(column: $table.isCleared, builder: (column) => column);
+
   $$MissionHistoriesTableAnnotationComposer get historyId {
     final $$MissionHistoriesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -2780,6 +3615,11 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<String?> spotId = const Value.absent(),
+                Value<String?> discovererUid = const Value.absent(),
+                Value<String?> discovererNickname = const Value.absent(),
+                Value<String?> discovererThumbPath = const Value.absent(),
+                Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion(
                 id: id,
                 historyId: historyId,
@@ -2800,6 +3640,11 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                spotId: spotId,
+                discovererUid: discovererUid,
+                discovererNickname: discovererNickname,
+                discovererThumbPath: discovererThumbPath,
+                isCleared: isCleared,
               ),
           createCompanionCallback:
               ({
@@ -2822,6 +3667,11 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<String?> spotId = const Value.absent(),
+                Value<String?> discovererUid = const Value.absent(),
+                Value<String?> discovererNickname = const Value.absent(),
+                Value<String?> discovererThumbPath = const Value.absent(),
+                Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion.insert(
                 id: id,
                 historyId: historyId,
@@ -2842,6 +3692,11 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                spotId: spotId,
+                discovererUid: discovererUid,
+                discovererNickname: discovererNickname,
+                discovererThumbPath: discovererThumbPath,
+                isCleared: isCleared,
               ),
           withReferenceMapper:
               (p0) =>

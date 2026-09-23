@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
@@ -29,7 +30,20 @@ sealed class MissionStoreParams with _$MissionStoreParams {
   }) = MissionStoreParamsDestination;
 
   /// 保存済みミッションから再開する（API は呼ばず永続から復元）
-  const factory MissionStoreParams.resume() = MissionStoreParamsResume;
+  ///
+  /// 協力プレイは、ルームで配られたミッションを端末に用意したものを [kind] の枠から読む。
+  const factory MissionStoreParams.resume({
+    @Default(MissionSessionKind.solo) MissionSessionKind kind,
+  }) = MissionStoreParamsResume;
+}
+
+/// [MissionStoreParams] のセッション種別
+extension MissionStoreParamsKind on MissionStoreParams {
+  /// ミッションと進捗の保存枠
+  MissionSessionKind get kind => switch (this) {
+    MissionStoreParamsResume(:final kind) => kind,
+    _ => MissionSessionKind.solo,
+  };
 }
 
 /// ミッション情報を取得するストア（ランダム / 目的地 / 再開）
@@ -46,8 +60,8 @@ class MissionStoreNotifier extends _$MissionStoreNotifier {
         final useCase = ref.read(createDestinationMissionUseCaseProvider);
         return useCase.call(destination);
       },
-      resume: () async {
-        final saved = await ref.read(persistedMissionProvider.future);
+      resume: (kind) async {
+        final saved = await ref.read(persistedMissionProvider(kind).future);
         if (saved == null) {
           throw StateError('保存されたミッションがありません');
         }
@@ -60,6 +74,6 @@ class MissionStoreNotifier extends _$MissionStoreNotifier {
   ///
   /// 実体は [persistedMissionProvider] への委譲。
   void clearMission() {
-    ref.read(persistedMissionProvider.notifier).clearMission();
+    ref.read(persistedMissionProvider(params.kind).notifier).clearMission();
   }
 }

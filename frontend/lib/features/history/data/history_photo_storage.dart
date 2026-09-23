@@ -36,6 +36,29 @@ class HistoryPhotoStorage {
     return dest.path;
   }
 
+  /// 協力プレイの発見者のサムネを `{historyId}_thumb{sortOrder}_{時刻}{ext}` としてコピーし、絶対パスを返す
+  ///
+  /// 発見者が変わった場合に古いサムネと区別できるよう、ファイル名に時刻を含める。
+  /// コピー元が存在しない場合は null を返す。
+  Future<String?> copyCoopThumb({
+    required String historyId,
+    required int sortOrder,
+    required String sourcePath,
+  }) async {
+    final source = File(sourcePath);
+    if (!source.existsSync()) {
+      return null;
+    }
+    final dir = await _storageDirectory();
+    final ext = p.extension(sourcePath);
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    final dest = File(
+      p.join(dir.path, '${historyId}_thumb${sortOrder}_$timestamp$ext'),
+    );
+    await source.copy(dest.path);
+    return dest.path;
+  }
+
   /// [copyUserPhoto] で保存した 1 ファイルをパスで削除する
   Future<void> delete(String path) async {
     try {

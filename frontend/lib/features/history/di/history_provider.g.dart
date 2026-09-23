@@ -158,7 +158,7 @@ final class HistoryPhotoStorageProvider
 }
 
 String _$historyPhotoStorageHash() =>
-    r'a1b2c3d4e5f6789012345678abcdef0123456789';
+    r'568619836698ad4b981db182d3a41d7da389a5ef';
 
 /// 履歴リポジトリ
 
@@ -210,7 +210,7 @@ final class HistoryRepositoryProvider
   }
 }
 
-String _$historyRepositoryHash() => r'f0e5315ec31e3f0f0997c14e81cd28a025b9f818';
+String _$historyRepositoryHash() => r'44bed6a029dbf5353ae78850f38b89cbfa5ca22e';
 
 /// 履歴一覧を取得するユースケース
 

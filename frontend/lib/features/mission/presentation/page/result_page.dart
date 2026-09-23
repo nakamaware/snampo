@@ -4,23 +4,33 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/coop/presentation/page/coop_result_ranking_page.dart';
+import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// プレイ全体の結果を表示するページ
+///
+/// 協力プレイでは、スポットごとの発見者とサムネ、未クリアのスポット、発見数ランキングも表示する。
 class ResultPage extends ConsumerWidget {
   /// ResultPageのコンストラクタ
-  const ResultPage({super.key});
+  const ResultPage({this.kind = MissionSessionKind.solo, super.key});
+
+  /// ミッションと進捗の保存枠
+  final MissionSessionKind kind;
+
+  bool get _isCoop => kind == MissionSessionKind.coop;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final missionAsync = ref.watch(persistedMissionProvider);
-    final progressAsync = ref.watch(missionProgressStoreProvider);
+    final missionAsync = ref.watch(persistedMissionProvider(kind));
+    final progressAsync = ref.watch(missionProgressStoreProvider(kind));
     final theme = Theme.of(context);
 
     return missionAsync.when(
@@ -57,6 +67,13 @@ class ResultPage extends ConsumerWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
+                      if (_isCoop && progress.roomCode != null) ...[
+                        CoopResultRanking(
+                          roomCode: progress.roomCode!,
+                          progress: progress,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       Expanded(
                         child: ListView.builder(
                           itemCount: points.length,
@@ -77,6 +94,7 @@ class ResultPage extends ConsumerWidget {
                               isSelectedDestinationGoal:
                                   isDestinationMode &&
                                   index == points.length - 1,
+                              isCoop: _isCoop,
                               onTap:
                                   !hasResultPhoto
                                       ? null
@@ -136,14 +154,19 @@ class ResultPage extends ConsumerWidget {
     );
   }
 
+  /// 片付ける対象は、その種別の枠だけにする
   Future<void> _finishPlay(BuildContext context, WidgetRef ref) async {
-    final progressStore = ref.read(missionProgressStoreProvider.notifier);
-    final persistedMission = ref.read(persistedMissionProvider.notifier);
+    final progressStore = ref.read(missionProgressStoreProvider(kind).notifier);
+    final persistedMission = ref.read(persistedMissionProvider(kind).notifier);
 
     try {
+      // 協力プレイの写真は履歴にコピー済みなので、進捗の写真は消してよい
       await progressStore.clearProgress();
     } finally {
       persistedMission.clearMission();
+      if (_isCoop) {
+        ref.read(coopSessionStoreProvider.notifier).clear();
+      }
     }
 
     if (context.mounted) {
@@ -159,6 +182,7 @@ class _ResultCard extends StatelessWidget {
     required this.checkpoint,
     required this.isSelectedDestinationGoal,
     required this.onTap,
+    this.isCoop = false,
   });
 
   final String title;
@@ -166,6 +190,7 @@ class _ResultCard extends StatelessWidget {
   final CheckpointProgress? checkpoint;
   final bool isSelectedDestinationGoal;
   final VoidCallback? onTap;
+  final bool isCoop;
 
   @override
   Widget build(BuildContext context) {
@@ -191,16 +216,14 @@ class _ResultCard extends StatelessWidget {
                 height: 88,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child:
-                      checkpoint?.userPhotoPath == null
-                          ? const ColoredBox(
-                            color: Colors.black12,
-                            child: SizedBox.expand(),
-                          )
-                          : Image.file(
-                            File(checkpoint!.userPhotoPath!),
-                            fit: BoxFit.cover,
-                          ),
+                  child: switch (checkpoint?.userPhotoPath ??
+                      checkpoint?.discovererThumbPath) {
+                    null => const ColoredBox(
+                      color: Colors.black12,
+                      child: SizedBox.expand(),
+                    ),
+                    final path => Image.file(File(path), fit: BoxFit.cover),
+                  },
                 ),
               ),
               const SizedBox(width: 12),
@@ -209,6 +232,18 @@ class _ResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
+                    if (isCoop)
+                      Text(
+                        checkpoint?.discovererNickname == null
+                            ? '未クリア'
+                            : '発見: ${checkpoint!.discovererNickname}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color:
+                              checkpoint?.discovererNickname == null
+                                  ? theme.colorScheme.outline
+                                  : theme.colorScheme.primary,
+                        ),
+                      ),
                     const SizedBox(height: 4),
                     Text(pointNameText),
                     Text(genreText),

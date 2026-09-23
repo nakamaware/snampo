@@ -14,9 +14,11 @@ class SavePhotoUseCase {
   ///
   /// [tempPhotoPath] は一時ディレクトリの写真パス
   /// [checkpointIndex] はチェックポイントのインデックス
+  /// [photoSubdirectory] は保存先のサブディレクトリ (ソロは `solo`、協力プレイは `coop/{roomCode}`)
   Future<CheckpointProgress> call({
     required String tempPhotoPath,
     required int checkpointIndex,
+    required String photoSubdirectory,
     required Coordinate? guessPosition,
     required double? capturedHeading,
     required PhotoJudgeRank judgeRank,
@@ -26,6 +28,7 @@ class SavePhotoUseCase {
     final savedPath = await _photoStorage.savePhoto(
       tempPhotoPath,
       checkpointIndex,
+      subdirectory: photoSubdirectory,
     );
     return CheckpointProgress(
       guessPosition: guessPosition,

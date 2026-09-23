@@ -1,0 +1,106 @@
+import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/domain/entity/room_member.dart';
+import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+
+/// Rules に拒否された (期限切れ、権限なし、先着に負けたなど)
+class CoopPermissionDeniedException implements Exception {
+  /// [CoopPermissionDeniedException] を作成する
+  const CoopPermissionDeniedException([this.message]);
+
+  /// 詳細
+  final String? message;
+
+  @override
+  String toString() => 'CoopPermissionDeniedException($message)';
+}
+
+/// クリアの作成結果
+sealed class CreateClearResult {
+  const CreateClearResult();
+}
+
+/// 自分が発見者になった
+final class ClearCreated extends CreateClearResult {
+  /// [ClearCreated] を作成する
+  const ClearCreated();
+}
+
+/// 先に他の人がクリアしていた
+final class ClearAlreadyExists extends CreateClearResult {
+  /// [ClearAlreadyExists] を作成する
+  const ClearAlreadyExists(this.existing);
+
+  /// 先に作成されていたクリア
+  final SpotClear existing;
+}
+
+/// ルーム (Firestore) のリポジトリ
+abstract class IRoomRepository {
+  /// ルームを作成する (create-only)。コードが既に使われていれば false を返す
+  Future<bool> createRoom(Room room);
+
+  /// ルームを 1 回だけ取得する。存在しなければ null
+  Future<Room?> fetchRoom(RoomCode code);
+
+  /// ルームを監視する。消えたら null
+  Stream<Room?> watchRoom(RoomCode code);
+
+  /// 入室する。既にメンバーなら (抜けていた場合も) 戻る
+  Future<void> joinRoom(
+    Room room, {
+    required String uid,
+    required String nickname,
+  });
+
+  /// ルームを抜ける (`leftAt` を記録する。ドキュメントは削除しない)
+  Future<void> leaveRoom(RoomCode code, String uid);
+
+  /// メンバーを 1 回だけ取得する
+  Future<List<RoomMember>> fetchMembers(RoomCode code);
+
+  /// メンバーを監視する (入室順)
+  Stream<List<RoomMember>> watchMembers(RoomCode code);
+
+  /// 設定を変更する (ホストのみ、waiting のとき)
+  Future<void> updateSettings(RoomCode code, RoomSettings settings);
+
+  /// generating にする (ホストのみ)
+  Future<void> markGenerating(RoomCode code);
+
+  /// 生成に失敗したので waiting に戻す (ホストのみ)
+  Future<void> markGenerationFailed(RoomCode code, String reason);
+
+  /// バンドルのアップロードが完了したので playing にする (ホストのみ)
+  Future<void> markPlaying(
+    RoomCode code, {
+    required String missionRef,
+    required List<String> spotIds,
+  });
+
+  /// finished にする
+  Future<void> finish(RoomCode code, FinishReason reason);
+
+  /// クリアを作成する (先着勝ち)
+  ///
+  /// オフラインの間は SDK が端末に溜めておき、復帰したら送信するため、
+  /// サーバが受け付けるまで完了しない。
+  Future<CreateClearResult> createClear(
+    Room room, {
+    required String spotId,
+    required String uid,
+    required String nickname,
+    required String? thumbPath,
+  });
+
+  /// サムネのパスを後から埋める (発見者本人が 1 回だけ)
+  ///
+  /// 拒否されたら [CoopPermissionDeniedException] を投げる。
+  Future<void> fillThumbPath(RoomCode code, String spotId, String thumbPath);
+
+  /// クリアを 1 回だけ取得する
+  Future<List<SpotClear>> fetchClears(RoomCode code);
+
+  /// クリアを監視する
+  Stream<List<SpotClear>> watchClears(RoomCode code);
+}

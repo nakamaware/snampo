@@ -24,5 +24,20 @@ abstract class MissionHistorySpot with _$MissionHistorySpot {
     double? headingErrorDegrees,
     Coordinate? guessPosition,
     double? capturedHeading,
+
+    /// スポット ID (旧データでは null)
+    String? spotId,
+
+    /// 協力プレイの発見者の uid
+    String? discovererUid,
+
+    /// 協力プレイの発見者のニックネーム (発見時点)
+    String? discovererNickname,
+
+    /// 協力プレイの発見者のサムネのパス (取得できなければ null)
+    String? discovererThumbPath,
+
+    /// クリア済みか (協力プレイの途中終了では未クリアのスポットがある)
+    @Default(true) bool isCleared,
   }) = _MissionHistorySpot;
 }

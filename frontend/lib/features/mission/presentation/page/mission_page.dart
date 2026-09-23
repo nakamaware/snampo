@@ -9,12 +9,15 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/features/coop/presentation/page/coop_mission_overlay_page.dart';
+import 'package:snampo/features/coop/presentation/store/coop_mission_controller.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
@@ -32,16 +35,18 @@ import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// ミッション画面（ルートごとに `MissionStoreParams` が決まる）。
 ///
-/// 次の3モードをすべて提供する。
+/// 次のモードをすべて提供する。
 /// - **半径指定（ランダム）**: コンストラクタ … API が半径内で目的地を決める
 /// - **目的地指定**: `MissionPage.withDestination` … 地図で選んだ座標でルート生成
 /// - **再開**: `MissionPage.resume` … 永続ストアのミッションを復元（API 呼び出しなし）
+/// - **協力プレイ**: `MissionPage.coop` … ルームで配られたミッションを端末に用意したもの
 class MissionPage extends HookConsumerWidget {
   /// 半径指定（ランダム）モード。
   ///
   /// [radius] は検索半径（メートル）。`/mission/random/:radius` から遷移する想定。
   MissionPage({required int radius, super.key})
-    : _params = MissionStoreParams.random(radius: Radius(meters: radius));
+    : _params = MissionStoreParams.random(radius: Radius(meters: radius)),
+      coopRoomCode = null;
 
   /// 目的地指定モード。
   ///
@@ -55,14 +60,26 @@ class MissionPage extends HookConsumerWidget {
            latitude: destinationLat,
            longitude: destinationLng,
          ),
-       );
+       ),
+       coopRoomCode = null;
 
   /// ゲーム再開モード（永続化済みミッションの復元）。
   const MissionPage.resume({super.key})
-    : _params = const MissionStoreParams.resume();
+    : _params = const MissionStoreParams.resume(),
+      coopRoomCode = null;
+
+  /// 協力プレイモード。
+  ///
+  /// [roomCode] のルームで配られ、端末に用意したミッションを表示する。
+  const MissionPage.coop({required String roomCode, super.key})
+    : _params = const MissionStoreParams.resume(kind: MissionSessionKind.coop),
+      coopRoomCode = roomCode;
 
   /// ミッションストアのパラメータ
   final MissionStoreParams _params;
+
+  /// 協力プレイのルームコード (ソロでは null)
+  final String? coopRoomCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,15 +103,19 @@ class MissionPage extends HookConsumerWidget {
           // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
           // （startProgress だけだとパス参照が失われオーファンが残る）
           final progressNotifier = ref.read(
-            missionProgressStoreProvider.notifier,
+            missionProgressStoreProvider(MissionSessionKind.solo).notifier,
           );
-          final persistedNotifier = ref.read(persistedMissionProvider.notifier);
+          final persistedNotifier = ref.read(
+            persistedMissionProvider(MissionSessionKind.solo).notifier,
+          );
           final checkpointCount = mission.waypoints.length + 1;
           Future(() async {
             // build() の完了を待ってから state を書き換える。
             // build() と startProgress が並行すると、build() の返り値 (null) が
             // Riverpod によって遅延適用され startProgress の entity を上書きするため。
-            await ref.read(missionProgressStoreProvider.future);
+            await ref.read(
+              missionProgressStoreProvider(MissionSessionKind.solo).future,
+            );
             await progressNotifier.clearProgress();
             progressNotifier.startProgress(checkpointCount);
             persistedNotifier.setMission(mission);
@@ -103,22 +124,35 @@ class MissionPage extends HookConsumerWidget {
       });
     });
 
+    final roomCode = coopRoomCode;
+    if (roomCode != null) {
+      // ミッションの用意とクリアの同期は、協力プレイ中ずっと動かす
+      ref.watch(coopMissionControllerProvider(roomCode).select((_) => null));
+    }
+
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
+        final body = Stack(
+          children: [
+            MapView(currentLocation: missionInfo.departure, params: _params),
+            SnapView(params: _params, coopRoomCode: roomCode),
+          ],
+        );
         return Scaffold(
           appBar: AppBar(
             title: Text('On MISSION', style: textStyle),
             centerTitle: true,
             backgroundColor: theme.colorScheme.primary,
-          ),
-          body: Stack(
-            children: [
-              MapView(currentLocation: missionInfo.departure, params: _params),
-              SnapView(params: _params),
+            actions: [
+              if (roomCode != null) CoopHostEndButton(roomCode: roomCode),
             ],
           ),
+          body:
+              roomCode == null
+                  ? body
+                  : CoopMissionEffects(roomCode: roomCode, child: body),
         );
       },
       loading:
@@ -284,10 +318,13 @@ class _MapViewState extends ConsumerState<MapView> {
 /// mission_pageで表示するsnapのメニューウィジェット
 class SnapView extends StatelessWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.params, super.key});
+  const SnapView({required this.params, this.coopRoomCode, super.key});
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
+
+  /// 協力プレイのルームコード (ソロでは null)
+  final String? coopRoomCode;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +350,7 @@ class SnapView extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 50),
-                      SnapViewState(params: params),
+                      SnapViewState(params: params, coopRoomCode: coopRoomCode),
                     ],
                   ),
                 ),
@@ -348,10 +385,13 @@ class SnapView extends StatelessWidget {
 /// SnapView内でミッション情報を表示するウィジェット
 class SnapViewState extends HookConsumerWidget {
   /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({required this.params, super.key});
+  const SnapViewState({required this.params, this.coopRoomCode, super.key});
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
+
+  /// 協力プレイのルームコード (ソロでは null)
+  final String? coopRoomCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -364,7 +404,7 @@ class SnapViewState extends HookConsumerWidget {
       color: theme.colorScheme.onPrimary,
     );
     final missionAsyncValue = ref.watch(missionStoreProvider(params));
-    final progressAsync = ref.watch(missionProgressStoreProvider);
+    final progressAsync = ref.watch(missionProgressStoreProvider(params.kind));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
@@ -404,63 +444,71 @@ class SnapViewState extends HookConsumerWidget {
                 ),
                 totalCheckpointCount: missionSpots.length,
                 isDestinationMode: isDestinationMode,
+                kind: params.kind,
+                coopRoomCode: coopRoomCode,
               ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  // 形を変えるか否か
-                  borderRadius: BorderRadius.circular(10), // 角の丸み
+            // 協力プレイは全スポットのクリアかホストの途中終了で、全員が結果画面へ自動で遷移する
+            if (coopRoomCode == null)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary, // ボタンの背景色
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    // 形を変えるか否か
+                    borderRadius: BorderRadius.circular(10), // 角の丸み
+                  ),
+                ),
+                onPressed:
+                    !allCompleted || isSubmitting.value
+                        ? null
+                        : () async {
+                          isSubmitting.value = true;
+                          try {
+                            final progress = await _resolveCurrentProgress(
+                              ref,
+                              missionInfo,
+                              params.kind,
+                            );
+                            if (progress == null) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('進捗情報を取得できませんでした'),
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+                            try {
+                              await ref
+                                  .read(addMissionHistoryUseCaseProvider)
+                                  .call(
+                                    mission: missionInfo,
+                                    progress: progress,
+                                  );
+                            } on Exception {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('履歴の保存に失敗しました')),
+                                );
+                              }
+                              return;
+                            }
+                            if (context.mounted) {
+                              context.go('/result');
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              isSubmitting.value = false;
+                            }
+                          }
+                        },
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text('プレイ結果', style: buttonTextStyle),
                 ),
               ),
-              onPressed:
-                  !allCompleted || isSubmitting.value
-                      ? null
-                      : () async {
-                        isSubmitting.value = true;
-                        try {
-                          final progress = await _resolveCurrentProgress(
-                            ref,
-                            missionInfo,
-                          );
-                          if (progress == null) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('進捗情報を取得できませんでした'),
-                                ),
-                              );
-                            }
-                            return;
-                          }
-                          try {
-                            await ref
-                                .read(addMissionHistoryUseCaseProvider)
-                                .call(mission: missionInfo, progress: progress);
-                          } on Exception {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('履歴の保存に失敗しました')),
-                              );
-                            }
-                            return;
-                          }
-                          if (context.mounted) {
-                            context.go('/result');
-                          }
-                        } finally {
-                          if (context.mounted) {
-                            isSubmitting.value = false;
-                          }
-                        }
-                      },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('プレイ結果', style: buttonTextStyle),
-              ),
-            ),
           ],
         );
       },
@@ -477,6 +525,8 @@ class _MissionSpotRow extends StatelessWidget {
     required this.checkpoint,
     required this.totalCheckpointCount,
     required this.isDestinationMode,
+    required this.kind,
+    required this.coopRoomCode,
   });
 
   final int index;
@@ -484,6 +534,8 @@ class _MissionSpotRow extends StatelessWidget {
   final CheckpointProgress? checkpoint;
   final int totalCheckpointCount;
   final bool isDestinationMode;
+  final MissionSessionKind kind;
+  final String? coopRoomCode;
 
   @override
   Widget build(BuildContext context) {
@@ -502,8 +554,18 @@ class _MissionSpotRow extends StatelessWidget {
                 spotIndex: index,
                 missionPoint: missionPoint,
                 isDestinationMode: isDestinationMode,
+                kind: kind,
+                coopRoomCode: coopRoomCode,
               ),
-              if (checkpoint != null) ...[
+              if (coopRoomCode != null) ...[
+                const SizedBox(height: 8),
+                CoopDiscovererView(
+                  roomCode: coopRoomCode!,
+                  spotId: missionPoint.spotId,
+                  checkpoint: checkpoint,
+                ),
+              ],
+              if (checkpoint?.userPhotoPath != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(
                   onPressed:
@@ -570,8 +632,16 @@ class TakeSnap extends HookConsumerWidget {
     required this.spotIndex,
     required this.missionPoint,
     required this.isDestinationMode,
+    this.kind = MissionSessionKind.solo,
+    this.coopRoomCode,
     super.key,
   });
+
+  /// ミッションと進捗の保存枠
+  final MissionSessionKind kind;
+
+  /// 協力プレイのルームコード (ソロでは null)
+  final String? coopRoomCode;
 
   /// 撮影するスポットのインデックス
   final int spotIndex;
@@ -592,24 +662,27 @@ class TakeSnap extends HookConsumerWidget {
     );
 
     // feature: 再開後は進捗の永続パスで表示。撮り直し中は camera が先に更新されるため camera を優先する
-    final progressAsync = ref.watch(missionProgressStoreProvider);
-    final progressPath = progressAsync.maybeWhen(
+    final progressAsync = ref.watch(missionProgressStoreProvider(kind));
+    final checkpoint = progressAsync.maybeWhen(
       data: (progress) {
         if (progress == null || spotIndex >= progress.checkpoints.length) {
           return null;
         }
-        return progress.checkpoints[spotIndex]?.userPhotoPath;
+        return progress.checkpoints[spotIndex];
       },
       orElse: () => null,
     );
+    final progressPath = checkpoint?.userPhotoPath;
 
     final displayPath = progressPath ?? cameraPath;
+    // 協力プレイでは 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない
+    final clearedByOthers = checkpoint?.discovererUid != null;
 
     if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
         onPressed:
-            isCapturing.value
+            isCapturing.value || clearedByOthers
                 ? null
                 : () async {
                   isCapturing.value = true;
@@ -653,7 +726,7 @@ class TakeSnap extends HookConsumerWidget {
               );
 
           final checkpoint = await ref
-              .read(missionProgressStoreProvider.notifier)
+              .read(missionProgressStoreProvider(kind).notifier)
               .completeCheckpoint(
                 index: spotIndex,
                 tempPhotoPath: path,
@@ -666,6 +739,15 @@ class TakeSnap extends HookConsumerWidget {
           if (checkpoint == null) {
             return false;
           }
+          final roomCode = coopRoomCode;
+          if (roomCode != null) {
+            // 発見の共有は裏で進める (オフラインなら SDK が溜めておき、復帰したら送信する)
+            unawaited(
+              ref
+                  .read(coopMissionControllerProvider(roomCode).notifier)
+                  .clearSpot(spotIndex: spotIndex, checkpoint: checkpoint),
+            );
+          }
 
           ref
               .read(cameraStoreProvider.notifier)
@@ -674,7 +756,7 @@ class TakeSnap extends HookConsumerWidget {
             spotIndex: spotIndex,
             totalCheckpointCount:
                 ref
-                    .read(missionProgressStoreProvider)
+                    .read(missionProgressStoreProvider(kind))
                     .value
                     ?.checkpoints
                     .length ??
@@ -752,8 +834,9 @@ class SetTestImage extends StatelessWidget {
 Future<MissionProgressEntity?> _resolveCurrentProgress(
   WidgetRef ref,
   MissionEntity missionInfo,
+  MissionSessionKind kind,
 ) async {
-  final snap = ref.read(missionProgressStoreProvider);
+  final snap = ref.read(missionProgressStoreProvider(kind));
   if (snap.hasError) {
     return null;
   }
@@ -763,7 +846,7 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
   };
   if (progress == null && snap.isLoading) {
     try {
-      progress = await ref.read(missionProgressStoreProvider.future);
+      progress = await ref.read(missionProgressStoreProvider(kind).future);
     } on Object {
       return null;
     }
@@ -771,9 +854,9 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
   if (progress == null) {
     final checkpointCount = missionInfo.waypoints.length + 1;
     ref
-        .read(missionProgressStoreProvider.notifier)
+        .read(missionProgressStoreProvider(kind).notifier)
         .startProgress(checkpointCount);
-    final snap2 = ref.read(missionProgressStoreProvider);
+    final snap2 = ref.read(missionProgressStoreProvider(kind));
     progress = switch (snap2) {
       AsyncData(:final value) => value,
       _ => null,

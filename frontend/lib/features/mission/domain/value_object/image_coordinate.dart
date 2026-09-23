@@ -35,6 +35,9 @@ abstract class ImageCoordinate with _$ImageCoordinate {
 
     /// ストリートビュー撮影位置の経度 (ランドマーク座標 [coordinate] とは別)
     double? streetViewLongitude,
+
+    /// スポット ID (place_id / geo URI)。旧データ (ソロの再開データ) を読めるように nullable
+    String? spotId,
   }) = _ImageCoordinate;
 
   /// JSON から [ImageCoordinate] を生成する

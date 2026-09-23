@@ -1,12 +1,22 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/features/coop/domain/value_object/room_code.dart';
+import 'package:snampo/features/coop/presentation/page/coop_entry_page.dart';
+import 'package:snampo/features/coop/presentation/page/join_room_page.dart';
+import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
+import 'package:snampo/features/coop/presentation/page/qr_scan_page.dart';
+import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
 import 'package:snampo/features/history/presentation/page/history_page.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
+import 'package:snampo/features/mission/domain/value_object/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
-import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
+import 'package:snampo/features/settings/presentation/page/settings_page.dart';
 
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
@@ -57,6 +67,38 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
     GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsPage(),
+    ),
+    // 協力プレイ (deep link は #270 で扱う)
+    GoRoute(
+      path: '/coop',
+      builder: (context, state) => const CoopEntryPage(),
+      routes: [
+        GoRoute(
+          path: 'join',
+          builder: (context, state) => const JoinRoomPage(),
+          routes: [
+            GoRoute(
+              path: 'scan',
+              builder: (context, state) => const QrScanPage(),
+            ),
+          ],
+        ),
+        GoRoute(path: 'lobby', builder: (context, state) => const LobbyPage()),
+        GoRoute(
+          path: 'mission',
+          builder: (context, state) => const _CoopMissionRoute(),
+        ),
+        GoRoute(
+          path: 'result',
+          builder:
+              (context, state) =>
+                  const ResultPage(kind: MissionSessionKind.coop),
+        ),
+      ],
+    ),
+    GoRoute(
       path: '/history',
       builder: (context, state) => const HistoryPage(),
       routes: [
@@ -71,3 +113,18 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+/// 端末で進行中のルームの Mission 画面
+class _CoopMissionRoute extends ConsumerWidget {
+  const _CoopMissionRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(coopSessionStoreProvider).value;
+    final code = session == null ? null : RoomCode.tryParse(session.roomCode);
+    if (code == null) {
+      return const LobbyPage();
+    }
+    return MissionPage.coop(roomCode: code.value);
+  }
+}

@@ -1,3 +1,5 @@
+import 'package:snampo/features/coop/domain/value_object/nickname.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 
@@ -39,6 +41,8 @@ String formatMissionSettings(MissionSettings settings) {
 }
 
 /// スポット行一覧から最初のユーザー写真パスを返す
+///
+/// 自分の写真がなければ、協力プレイの発見者のサムネを使う。
 String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
   for (final line in spots) {
     final p = line.userPhotoPath;
@@ -46,7 +50,25 @@ String? firstUserPhotoPath(List<MissionHistorySpot> spots) {
       return p;
     }
   }
+  for (final line in spots) {
+    final p = line.discovererThumbPath;
+    if (p != null && p.isNotEmpty) {
+      return p;
+    }
+  }
   return null;
+}
+
+/// 協力プレイの履歴のラベル
+String formatCoopLabel(CoopHistoryInfo coop) =>
+    coop.syncState == CoopSyncState.inProgress ? 'みんなで (進行中)' : 'みんなで';
+
+/// 協力プレイのメンバー一覧 (重複した名前には番号を付ける)
+String formatCoopMembers(CoopHistoryInfo coop) {
+  final names = displayNicknames([
+    for (final m in coop.members) (uid: m.uid, nickname: m.nickname),
+  ]);
+  return 'メンバー: ${coop.members.map((m) => names[m.uid]).join('、')}';
 }
 
 /// 位置誤差 (m) を表示用にフォーマットする

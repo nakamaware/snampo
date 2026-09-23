@@ -8,7 +8,12 @@ abstract class IPhotoStorage {
   ///
   /// [sourcePath] は保存元の写真ファイルパス
   /// [checkpointIndex] はチェックポイントのインデックス
-  Future<String> savePhoto(String sourcePath, int checkpointIndex);
+  /// [subdirectory] は保存先のサブディレクトリ (ソロは `solo`、協力プレイは `coop/{roomCode}`)
+  Future<String> savePhoto(
+    String sourcePath,
+    int checkpointIndex, {
+    required String subdirectory,
+  });
 
   /// 写真ファイルを削除する
   ///
