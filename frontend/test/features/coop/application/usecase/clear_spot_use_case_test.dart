@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
@@ -71,7 +72,7 @@ void main() {
   }) => useCase(
     room: room,
     uid: uid,
-    nickname: uid,
+    nickname: Nickname.parse(uid),
     spotId: spotId,
     checkpoint: checkpoint,
     onSharing: onSharing,
@@ -107,7 +108,7 @@ void main() {
 
     final task = queue.queue.tasks.single;
     expect(task.clearCreated, isFalse);
-    expect(task.nickname, 'me');
+    expect(task.nickname, Nickname.parse('me'));
     expect(task.expiresAt, room.expiresAt);
     gate.complete();
     await future;
@@ -164,5 +165,19 @@ void main() {
     expect(events, ['start', 'done']);
     gate.complete();
     await future;
+  });
+
+  test('Rules に拒否されたら (ルームが終わったあとなど)、共有できなかったとして返しキューから取り除く', () async {
+    rooms.rejectClears = true;
+
+    final result = await clear();
+
+    expect(result, isA<ClearSpotRejected>());
+    expect(queue.queue.tasks, isEmpty);
+    // 自分の写真は手元に残す
+    expect(
+      histories.histories[fx.code]!.spots.single.userPhotoPath,
+      '/photos/a.jpg',
+    );
   });
 }

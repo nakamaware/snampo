@@ -57,3 +57,42 @@ final class FirebaseSetupProvider
 }
 
 String _$firebaseSetupHash() => r'436bb0cff48ed062972870ccc7e79c8b026ef4e2';
+
+/// App Check のデバッグトークン (dev ビルドで設定画面に表示する)
+
+@ProviderFor(appCheckDebugToken)
+final appCheckDebugTokenProvider = AppCheckDebugTokenProvider._();
+
+/// App Check のデバッグトークン (dev ビルドで設定画面に表示する)
+
+final class AppCheckDebugTokenProvider
+    extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
+    with $FutureModifier<String>, $FutureProvider<String> {
+  /// App Check のデバッグトークン (dev ビルドで設定画面に表示する)
+  AppCheckDebugTokenProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appCheckDebugTokenProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appCheckDebugTokenHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String> create(Ref ref) {
+    return appCheckDebugToken(ref);
+  }
+}
+
+String _$appCheckDebugTokenHash() =>
+    r'f5ed60fdb0461ae742d8355008512b8c42a93fb7';

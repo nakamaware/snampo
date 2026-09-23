@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
@@ -35,6 +36,9 @@ class FakeRoomRepository implements IRoomRepository {
   /// null 以外なら createClear はこの Future を待つ (オフラインの送信待ちの再現)
   Completer<void>? createClearGate;
 
+  /// true なら createClear を Rules の拒否として失敗させる (ルームが終わったあとなど)
+  bool rejectClears = false;
+
   /// 指定したユーザーだけが thumbPath を埋められる (Rules の再現)
   String? currentUid;
 
@@ -68,14 +72,14 @@ class FakeRoomRepository implements IRoomRepository {
   Future<void> joinRoom(
     Room room, {
     required String uid,
-    required String nickname,
+    required Nickname nickname,
   }) async {
     final list = members.putIfAbsent(room.code, () => []);
     final index = list.indexWhere((m) => m.uid == uid);
     if (index >= 0) {
       final hasLeft = list[index].hasLeft;
       list[index] = list[index].copyWith(
-        nickname: nickname,
+        nickname: nickname.value,
         leftAt: null,
         joinedAt: hasLeft ? now : list[index].joinedAt,
       );
@@ -83,7 +87,7 @@ class FakeRoomRepository implements IRoomRepository {
         now = now.add(const Duration(seconds: 1));
       }
     } else {
-      list.add(RoomMember(uid: uid, nickname: nickname, joinedAt: now));
+      list.add(RoomMember(uid: uid, nickname: nickname.value, joinedAt: now));
       now = now.add(const Duration(seconds: 1));
     }
   }
@@ -156,10 +160,13 @@ class FakeRoomRepository implements IRoomRepository {
     Room room, {
     required SpotId spotId,
     required String uid,
-    required String nickname,
+    required Nickname nickname,
     required String? thumbPath,
   }) async {
     await createClearGate?.future;
+    if (rejectClears) {
+      throw const CoopPermissionDeniedException();
+    }
     final map = clears.putIfAbsent(room.code, () => {});
     final existing = map[spotId];
     if (existing != null) {
@@ -171,7 +178,7 @@ class FakeRoomRepository implements IRoomRepository {
     map[spotId] = SpotClear(
       spotId: spotId,
       clearedBy: uid,
-      nickname: nickname,
+      nickname: nickname.value,
       clearedAt: now,
       thumbPath: thumbPath,
     );
@@ -279,7 +286,9 @@ class InMemoryPendingClearRepository implements IPendingClearRepository {
   Future<PendingClearQueue> load() async => queue;
 
   @override
-  Future<void> save(PendingClearQueue queue) async => this.queue = queue;
+  Future<PendingClearQueue> update(
+    PendingClearQueue Function(PendingClearQueue queue) change,
+  ) async => queue = change(queue);
 }
 
 /// 協力プレイの履歴だけを扱うメモリ上の履歴リポジトリ

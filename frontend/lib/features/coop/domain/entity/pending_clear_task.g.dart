@@ -10,7 +10,7 @@ _PendingClearTask _$PendingClearTaskFromJson(Map<String, dynamic> json) =>
     _PendingClearTask(
       roomCode: const RoomCodeConverter().fromJson(json['roomCode'] as String),
       spotId: const SpotIdConverter().fromJson(json['spotId'] as String),
-      nickname: json['nickname'] as String,
+      nickname: const NicknameConverter().fromJson(json['nickname'] as String),
       localThumbPath: json['localThumbPath'] as String,
       expiresAt: DateTime.parse(json['expiresAt'] as String),
       clearCreated: json['clearCreated'] as bool? ?? false,
@@ -20,7 +20,7 @@ Map<String, dynamic> _$PendingClearTaskToJson(_PendingClearTask instance) =>
     <String, dynamic>{
       'roomCode': const RoomCodeConverter().toJson(instance.roomCode),
       'spotId': const SpotIdConverter().toJson(instance.spotId),
-      'nickname': instance.nickname,
+      'nickname': const NicknameConverter().toJson(instance.nickname),
       'localThumbPath': instance.localThumbPath,
       'expiresAt': instance.expiresAt.toIso8601String(),
       'clearCreated': instance.clearCreated,

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/upsert_coop_history_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -27,8 +28,8 @@ void main() {
       upsertHistory: UpsertCoopHistoryUseCase(histories),
     );
     rooms.rooms[fx.code] = room;
-    await rooms.joinRoom(room, uid: 'host', nickname: 'たろう');
-    await rooms.joinRoom(room, uid: 'me', nickname: 'はなこ');
+    await rooms.joinRoom(room, uid: 'host', nickname: Nickname.parse('たろう'));
+    await rooms.joinRoom(room, uid: 'me', nickname: Nickname.parse('はなこ'));
   });
 
   test('バンドルを取得し、メンバーつきの履歴を「進行中」で作る', () async {

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
@@ -10,7 +11,7 @@ void main() {
   final task = PendingClearTask(
     roomCode: RoomCode.tryParse('ABCD23')!,
     spotId: SpotId.parse('a'),
-    nickname: 'me',
+    nickname: Nickname.parse('me'),
     localThumbPath: '/t.jpg',
     expiresAt: DateTime.utc(2026),
   );

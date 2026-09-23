@@ -75,8 +75,7 @@ class RetryPendingClearsUseCase {
       _running ??= _run().whenComplete(() => _running = null);
 
   Future<RetryPendingClearsResult> _run() async {
-    final queue = (await _queue.load()).pruneExpired(_now());
-    await _queue.save(queue);
+    final queue = await _queue.update((queue) => queue.pruneExpired(_now()));
     final failures = <PendingClearFailure>[];
     if (queue.tasks.isEmpty) {
       return (failures: failures);
@@ -219,6 +218,6 @@ class RetryPendingClearsUseCase {
     return null;
   }
 
-  Future<void> _remove(PendingClearTask task) async =>
-      _queue.save((await _queue.load()).remove(task));
+  Future<void> _remove(PendingClearTask task) =>
+      _queue.update((queue) => queue.remove(task));
 }

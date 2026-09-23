@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -23,7 +24,7 @@ class CreateRoomUseCase {
   /// 作成は create-only (存在しなければ作成)。衝突したら作り直して再試行する。
   Future<Room> call({
     required String uid,
-    required String nickname,
+    required Nickname nickname,
     required RoomSettings settings,
   }) async {
     for (var attempt = 0; attempt < maxAttempts; attempt++) {

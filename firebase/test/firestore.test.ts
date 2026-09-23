@@ -208,6 +208,20 @@ describe("members", () => {
     );
   });
 
+  test("入り直しのときも、nickname / leftAt / joinedAt 以外は変えられない", async () => {
+    await seedRoom(env);
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { leftAt: serverTimestamp() }));
+
+    await assertFails(
+      updateDoc(ref, {
+        leftAt: null,
+        joinedAt: serverTimestamp(),
+        deleteAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }),
+    );
+  });
+
   test("抜けていない人は入室時刻を変えられない", async () => {
     await seedRoom(env);
     const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
@@ -392,6 +406,20 @@ describe("status と settings の変更", () => {
   test("ミッションは generating から playing にするときだけ設定できる", async () => {
     await seedRoom(env, { status: "waiting" });
     await assertFails(updateDoc(roomRef(HOST), { spotIds: [SPOT_PLACE] }));
+  });
+
+  test("状態を変えずに終了や生成失敗の情報を書き換えられない", async () => {
+    await seedRoom(env);
+    await assertFails(updateDoc(roomRef(HOST), { finishReason: "hostEnded" }));
+    await assertFails(updateDoc(roomRef(HOST), { finishedAt: serverTimestamp() }));
+    await assertFails(updateDoc(roomRef(HOST), { generationError: "x" }));
+  });
+
+  test("生成に失敗したら、waiting に戻すときに理由を書ける", async () => {
+    await seedRoom(env, { status: "generating" });
+    await assertSucceeds(
+      updateDoc(roomRef(HOST), { status: "waiting", generationError: "API error" }),
+    );
   });
 
   test("finished から戻せない", async () => {

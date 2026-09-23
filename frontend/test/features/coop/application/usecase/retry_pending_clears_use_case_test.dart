@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/complete_clear_task_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/retry_pending_clears_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
@@ -24,7 +25,7 @@ void main() {
   }) => PendingClearTask(
     roomCode: fx.code,
     spotId: fx.spot(spotId),
-    nickname: 'me',
+    nickname: Nickname.parse('me'),
     localThumbPath: '/thumbs/$spotId.jpg',
     expiresAt: now.add(left),
     clearCreated: clearCreated,

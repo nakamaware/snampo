@@ -4,8 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:snampo/config.dart';
+import 'package:snampo/core/di/firebase_provider.dart';
 import 'package:snampo/core/domain/nickname.dart';
-import 'package:snampo/core/firebase/app_check_debug_token.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// 設定画面 (ニックネーム / dev ビルドだけ App Check のデバッグトークン)
@@ -19,7 +19,7 @@ class SettingsPage extends HookConsumerWidget {
     final controller = useTextEditingController();
     useEffect(() {
       if (saved != null && controller.text.isEmpty) {
-        controller.text = saved;
+        controller.text = saved.value;
       }
       return null;
     }, [saved]);
@@ -46,7 +46,7 @@ class SettingsPage extends HookConsumerWidget {
                 final value = ref
                     .read(nicknameStoreProvider.notifier)
                     .save(controller.text);
-                controller.text = value;
+                controller.text = value.value;
                 FocusScope.of(context).unfocus();
                 ScaffoldMessenger.of(
                   context,
@@ -66,13 +66,12 @@ class SettingsPage extends HookConsumerWidget {
 }
 
 /// App Check のデバッグトークン (dev ビルドのみ)。コピーと共有ができる
-class _AppCheckDebugTokenSection extends HookWidget {
+class _AppCheckDebugTokenSection extends ConsumerWidget {
   const _AppCheckDebugTokenSection();
 
   @override
-  Widget build(BuildContext context) {
-    final future = useMemoized(AppCheckDebugToken.loadOrCreate);
-    final token = useFuture(future).data;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final token = ref.watch(appCheckDebugTokenProvider).value;
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -38,8 +38,8 @@ class CompleteClearTaskUseCase {
         log('thumbPath を埋められなかった: $e', name: 'CompleteClearTask');
       }
     }
-    await _queue.save(
-      (await _queue.load()).settle(task, thumbPathSaved: thumbPathSaved),
+    await _queue.update(
+      (queue) => queue.settle(task, thumbPathSaved: thumbPathSaved),
     );
   }
 }

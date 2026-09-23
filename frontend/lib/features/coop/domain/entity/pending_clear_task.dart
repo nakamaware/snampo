@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 
@@ -14,7 +15,7 @@ abstract class PendingClearTask with _$PendingClearTask {
     @SpotIdConverter() required SpotId spotId,
 
     /// 発見時点の自分のニックネーム (クリアを作り直すときに使う)
-    required String nickname,
+    @NicknameConverter() required Nickname nickname,
 
     /// 端末に保存したサムネのパス
     required String localThumbPath,

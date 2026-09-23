@@ -6,17 +6,7 @@ import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
-
-/// 端末に反映済みの、あるスポットの発見
-typedef CoopSpotDiscovery =
-    ({
-      String uid,
-      String nickname,
-      DateTime clearedAt,
-
-      /// 端末に保存した発見者のサムネのパス (取得できていなければ null)
-      String? localThumbPath,
-    });
+import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 
 /// [SyncCoopClearsUseCase] の結果
 typedef CoopClearSyncResult =
@@ -25,7 +15,7 @@ typedef CoopClearSyncResult =
       bool hasAllThumbs,
 
       /// 端末に反映済みの発見 (スポット ID ごと)
-      Map<SpotId, CoopSpotDiscovery> discoveries,
+      Map<SpotId, CoopDiscovery> discoveries,
     });
 
 /// サーバの `clears` と履歴 (端末のキャッシュ) を比べ、不足分を取得して履歴に反映する
@@ -50,7 +40,7 @@ class SyncCoopClearsUseCase {
   ) async {
     final history = await _histories.getCoopHistory(roomCode);
     if (history == null) {
-      return (hasAllThumbs: false, discoveries: <SpotId, CoopSpotDiscovery>{});
+      return (hasAllThumbs: false, discoveries: <SpotId, CoopDiscovery>{});
     }
     final plan = planClearSync(clears: clears, local: _localStates(history));
     for (final clear in plan.discoverersToApply) {
@@ -88,7 +78,7 @@ class SyncCoopClearsUseCase {
               uid: spot.discovererUid!,
               nickname: spot.discovererNickname ?? '',
               clearedAt: spot.achievedAt ?? synced.startedAt,
-              localThumbPath: spot.discovererThumbPath,
+              thumbPath: spot.discovererThumbPath,
             ),
       },
     );

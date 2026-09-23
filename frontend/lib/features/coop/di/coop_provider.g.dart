@@ -1198,3 +1198,50 @@ final class SyncCoopHistoryUseCaseProvider
 
 String _$syncCoopHistoryUseCaseHash() =>
     r'd91f38814a4020be7c4eb459b9f62ed03c01e38a';
+
+/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
+///
+/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
+/// 端末では何もせず、手元の履歴だけを表示する。
+
+@ProviderFor(coopHistorySync)
+final coopHistorySyncProvider = CoopHistorySyncProvider._();
+
+/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
+///
+/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
+/// 端末では何もせず、手元の履歴だけを表示する。
+
+final class CoopHistorySyncProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  /// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
+  ///
+  /// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
+  /// 端末では何もせず、手元の履歴だけを表示する。
+  CoopHistorySyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'coopHistorySyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$coopHistorySyncHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return coopHistorySync(ref);
+  }
+}
+
+String _$coopHistorySyncHash() => r'e197a4a28d29343c3aa7e2898a11717f139ea786';

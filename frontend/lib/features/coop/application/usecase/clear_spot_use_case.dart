@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/pending_clear_repository.dart';
@@ -31,6 +32,12 @@ final class ClearSpotAlreadyCleared extends ClearSpotResult {
 
   /// 先に作成されていたクリア
   final SpotClear existing;
+}
+
+/// Rules に拒否された (ルームが終わったあと、遊べる期限を過ぎたなど)。送り直しても通らない
+final class ClearSpotRejected extends ClearSpotResult {
+  /// [ClearSpotRejected] を作成する
+  const ClearSpotRejected();
 }
 
 /// 撮影して採点したスポットをクリアにする (1 人のクリアで全員のクリアになる)
@@ -80,7 +87,7 @@ class ClearSpotUseCase {
   Future<ClearSpotResult> call({
     required Room room,
     required String uid,
-    required String nickname,
+    required Nickname nickname,
     required SpotId spotId,
     required CheckpointProgress checkpoint,
     void Function()? onSharing,
@@ -106,7 +113,7 @@ class ClearSpotUseCase {
       localThumbPath: localThumbPath,
       expiresAt: room.expiresAt,
     );
-    await _queue.save((await _queue.load()).enqueue(task));
+    await _queue.update((queue) => queue.enqueue(task));
     onSharing?.call();
 
     String? thumbPath;
@@ -125,13 +132,19 @@ class ClearSpotUseCase {
       onSharingDone?.call();
     }
 
-    final result = await _rooms.createClear(
-      room,
-      spotId: spotId,
-      uid: uid,
-      nickname: nickname,
-      thumbPath: thumbPath,
-    );
+    final CreateClearResult result;
+    try {
+      result = await _rooms.createClear(
+        room,
+        spotId: spotId,
+        uid: uid,
+        nickname: nickname,
+        thumbPath: thumbPath,
+      );
+    } on CoopPermissionDeniedException {
+      await _queue.update((queue) => queue.remove(task));
+      return const ClearSpotRejected();
+    }
     switch (result) {
       case ClearCreated():
         await _completeClearTask(task, result: result, thumbPath: thumbPath);
@@ -139,7 +152,7 @@ class ClearSpotUseCase {
           roomCode: room.code,
           spotId: spotId,
           discovererUid: uid,
-          discovererNickname: nickname,
+          discovererNickname: nickname.value,
           clearedAt: checkpoint.achievedAt ?? _now(),
         );
         await _histories.saveCoopThumb(
@@ -149,7 +162,7 @@ class ClearSpotUseCase {
         );
         return const ClearSpotCleared();
       case ClearAlreadyExists(:final existing):
-        await _queue.save((await _queue.load()).remove(task));
+        await _queue.update((queue) => queue.remove(task));
         return ClearSpotAlreadyCleared(existing);
     }
   }

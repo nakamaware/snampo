@@ -70,12 +70,12 @@ class CoopEntryPage extends HookConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.person),
-                  title: Text(nickname ?? 'ニックネーム未設定'),
+                  title: Text(nickname?.value ?? 'ニックネーム未設定'),
                   trailing: TextButton(
                     onPressed: () async {
                       final input = await showNicknameDialog(
                         context,
-                        initialValue: nickname ?? '',
+                        initialValue: nickname?.value ?? '',
                       );
                       if (input != null) {
                         ref.read(nicknameStoreProvider.notifier).save(input);

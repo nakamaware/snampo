@@ -41,7 +41,7 @@ void main() {
     expect(result.hasAllThumbs, isFalse);
     expect(result.discoveries.keys, [fx.spot('a'), fx.spot('b')]);
     expect(
-      result.discoveries[fx.spot('a')]!.localThumbPath,
+      result.discoveries[fx.spot('a')]!.thumbPath,
       'history:/tmp/download/1.jpg',
     );
   });

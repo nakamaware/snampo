@@ -5,6 +5,10 @@ abstract class IPendingClearRepository {
   /// 読み込む
   Future<PendingClearQueue> load();
 
-  /// 保存する
-  Future<void> save(PendingClearQueue queue);
+  /// 読み込んだキューに [change] を適用して保存し、保存したキューを返す
+  ///
+  /// 更新は 1 つずつ順番に行う (撮影と送り直しが重なっても、どちらの変更も失われないように)。
+  Future<PendingClearQueue> update(
+    PendingClearQueue Function(PendingClearQueue queue) change,
+  );
 }

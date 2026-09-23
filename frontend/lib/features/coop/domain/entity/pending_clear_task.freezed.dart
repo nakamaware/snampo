@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$PendingClearTask {
 
 @RoomCodeConverter() RoomCode get roomCode;@SpotIdConverter() SpotId get spotId;/// 発見時点の自分のニックネーム (クリアを作り直すときに使う)
- String get nickname;/// 端末に保存したサムネのパス
+@NicknameConverter() Nickname get nickname;/// 端末に保存したサムネのパス
  String get localThumbPath;/// 遊べる期限。再送するのはここまで
  DateTime get expiresAt;/// クリアを作成済みか (true ならサムネの再送だけが残っている)
  bool get clearCreated;
@@ -52,7 +52,7 @@ abstract mixin class $PendingClearTaskCopyWith<$Res>  {
   factory $PendingClearTaskCopyWith(PendingClearTask value, $Res Function(PendingClearTask) _then) = _$PendingClearTaskCopyWithImpl;
 @useResult
 $Res call({
-@RoomCodeConverter() RoomCode roomCode,@SpotIdConverter() SpotId spotId, String nickname, String localThumbPath, DateTime expiresAt, bool clearCreated
+@RoomCodeConverter() RoomCode roomCode,@SpotIdConverter() SpotId spotId,@NicknameConverter() Nickname nickname, String localThumbPath, DateTime expiresAt, bool clearCreated
 });
 
 
@@ -74,7 +74,7 @@ class _$PendingClearTaskCopyWithImpl<$Res>
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
 as RoomCode,spotId: null == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as SpotId,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
-as String,localThumbPath: null == localThumbPath ? _self.localThumbPath : localThumbPath // ignore: cast_nullable_to_non_nullable
+as Nickname,localThumbPath: null == localThumbPath ? _self.localThumbPath : localThumbPath // ignore: cast_nullable_to_non_nullable
 as String,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime,clearCreated: null == clearCreated ? _self.clearCreated : clearCreated // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -162,7 +162,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId,  String nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId, @NicknameConverter()  Nickname nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PendingClearTask() when $default != null:
 return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,_that.expiresAt,_that.clearCreated);case _:
@@ -183,7 +183,7 @@ return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId,  String nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId, @NicknameConverter()  Nickname nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)  $default,) {final _that = this;
 switch (_that) {
 case _PendingClearTask():
 return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,_that.expiresAt,_that.clearCreated);case _:
@@ -203,7 +203,7 @@ return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId,  String nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@RoomCodeConverter()  RoomCode roomCode, @SpotIdConverter()  SpotId spotId, @NicknameConverter()  Nickname nickname,  String localThumbPath,  DateTime expiresAt,  bool clearCreated)?  $default,) {final _that = this;
 switch (_that) {
 case _PendingClearTask() when $default != null:
 return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,_that.expiresAt,_that.clearCreated);case _:
@@ -218,13 +218,13 @@ return $default(_that.roomCode,_that.spotId,_that.nickname,_that.localThumbPath,
 @JsonSerializable()
 
 class _PendingClearTask implements PendingClearTask {
-  const _PendingClearTask({@RoomCodeConverter() required this.roomCode, @SpotIdConverter() required this.spotId, required this.nickname, required this.localThumbPath, required this.expiresAt, this.clearCreated = false});
+  const _PendingClearTask({@RoomCodeConverter() required this.roomCode, @SpotIdConverter() required this.spotId, @NicknameConverter() required this.nickname, required this.localThumbPath, required this.expiresAt, this.clearCreated = false});
   factory _PendingClearTask.fromJson(Map<String, dynamic> json) => _$PendingClearTaskFromJson(json);
 
 @override@RoomCodeConverter() final  RoomCode roomCode;
 @override@SpotIdConverter() final  SpotId spotId;
 /// 発見時点の自分のニックネーム (クリアを作り直すときに使う)
-@override final  String nickname;
+@override@NicknameConverter() final  Nickname nickname;
 /// 端末に保存したサムネのパス
 @override final  String localThumbPath;
 /// 遊べる期限。再送するのはここまで
@@ -265,7 +265,7 @@ abstract mixin class _$PendingClearTaskCopyWith<$Res> implements $PendingClearTa
   factory _$PendingClearTaskCopyWith(_PendingClearTask value, $Res Function(_PendingClearTask) _then) = __$PendingClearTaskCopyWithImpl;
 @override @useResult
 $Res call({
-@RoomCodeConverter() RoomCode roomCode,@SpotIdConverter() SpotId spotId, String nickname, String localThumbPath, DateTime expiresAt, bool clearCreated
+@RoomCodeConverter() RoomCode roomCode,@SpotIdConverter() SpotId spotId,@NicknameConverter() Nickname nickname, String localThumbPath, DateTime expiresAt, bool clearCreated
 });
 
 
@@ -287,7 +287,7 @@ class __$PendingClearTaskCopyWithImpl<$Res>
 roomCode: null == roomCode ? _self.roomCode : roomCode // ignore: cast_nullable_to_non_nullable
 as RoomCode,spotId: null == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as SpotId,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
-as String,localThumbPath: null == localThumbPath ? _self.localThumbPath : localThumbPath // ignore: cast_nullable_to_non_nullable
+as Nickname,localThumbPath: null == localThumbPath ? _self.localThumbPath : localThumbPath // ignore: cast_nullable_to_non_nullable
 as String,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime,clearCreated: null == clearCreated ? _self.clearCreated : clearCreated // ignore: cast_nullable_to_non_nullable
 as bool,

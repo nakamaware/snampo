@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/pending_clear_task.dart';
@@ -12,7 +13,7 @@ void main() {
   }) => PendingClearTask(
     roomCode: RoomCode.tryParse('ABCD23')!,
     spotId: SpotId.parse(spotId),
-    nickname: 'たろう',
+    nickname: Nickname.parse('たろう'),
     localThumbPath: '/tmp/$spotId.jpg',
     expiresAt: now.add(left),
   );

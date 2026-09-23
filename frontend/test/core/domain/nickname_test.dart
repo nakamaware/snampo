@@ -22,6 +22,29 @@ void main() {
     });
   });
 
+  group('Nickname.parse', () {
+    test('保存済みの値から復元する', () {
+      expect(Nickname.parse('たろう').value, 'たろう');
+    });
+
+    test('空欄や長すぎる値は FormatException (自動で命名はしない)', () {
+      expect(() => Nickname.parse('  '), throwsFormatException);
+      expect(
+        () => Nickname.parse('あ' * (Nickname.maxLength + 1)),
+        throwsFormatException,
+      );
+    });
+  });
+
+  group('NicknameConverter', () {
+    test('JSON の文字列と相互変換できる', () {
+      const converter = NicknameConverter();
+      final nickname = Nickname.parse('たろう');
+
+      expect(converter.fromJson(converter.toJson(nickname)), nickname);
+    });
+  });
+
   group('displayNicknames', () {
     test('重複した名前には入室順に番号を付ける', () {
       final names = displayNicknames([

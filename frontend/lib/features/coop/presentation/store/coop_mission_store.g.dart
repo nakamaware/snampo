@@ -88,7 +88,7 @@ final class CoopMissionStoreProvider
   }
 }
 
-String _$coopMissionStoreHash() => r'ecda32269d170620ac895d1c148978b262d99971';
+String _$coopMissionStoreHash() => r'28c800fbaa4d20a05c1f3824db5ede025388fd1d';
 
 /// 協力プレイのミッションを進める
 ///

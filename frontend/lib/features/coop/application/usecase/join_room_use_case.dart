@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -57,7 +58,7 @@ class JoinRoomUseCase {
   Future<JoinRoomResult> call({
     required RoomCode code,
     required String uid,
-    required String nickname,
+    required Nickname nickname,
   }) async {
     final room = await _rooms.fetchRoom(code);
     final error = checkJoinable(room, _now());

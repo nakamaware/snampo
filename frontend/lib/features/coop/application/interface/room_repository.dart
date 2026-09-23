@@ -1,3 +1,4 @@
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -61,7 +62,7 @@ abstract class IRoomRepository {
   Future<void> joinRoom(
     Room room, {
     required String uid,
-    required String nickname,
+    required Nickname nickname,
   });
 
   /// ルームを抜ける (`leftAt` を記録する。ドキュメントは削除しない)
@@ -100,7 +101,7 @@ abstract class IRoomRepository {
     Room room, {
     required SpotId spotId,
     required String uid,
-    required String nickname,
+    required Nickname nickname,
     required String? thumbPath,
   });
 

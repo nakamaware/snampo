@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -69,7 +70,7 @@ class RoomRepository implements IRoomRepository {
   Future<void> joinRoom(
     Room room, {
     required String uid,
-    required String nickname,
+    required Nickname nickname,
   }) => _mapDenied(() async {
     final ref = _members(room.code).doc(uid);
     Map<String, dynamic>? current;
@@ -84,7 +85,7 @@ class RoomRepository implements IRoomRepository {
     if (current != null) {
       final hasLeft = current['leftAt'] != null;
       await ref.update({
-        'nickname': nickname,
+        'nickname': nickname.value,
         if (hasLeft) ...{
           'leftAt': null,
           // 人数の上限を入室順で数えるため、入り直したら入室時刻を更新する
@@ -94,7 +95,7 @@ class RoomRepository implements IRoomRepository {
       return;
     }
     await ref.set({
-      'nickname': nickname,
+      'nickname': nickname.value,
       'joinedAt': FieldValue.serverTimestamp(),
       'deleteAt': Timestamp.fromDate(room.deleteAt),
     });
@@ -177,7 +178,7 @@ class RoomRepository implements IRoomRepository {
     Room room, {
     required SpotId spotId,
     required String uid,
-    required String nickname,
+    required Nickname nickname,
     required String? thumbPath,
   }) async {
     final ref = _clears(room.code).doc(spotId.value);
@@ -185,7 +186,7 @@ class RoomRepository implements IRoomRepository {
       // オフラインの間は SDK が端末に溜めておき、復帰したら送信する
       await ref.set({
         'clearedBy': uid,
-        'nickname': nickname,
+        'nickname': nickname.value,
         'clearedAt': FieldValue.serverTimestamp(),
         'thumbPath': thumbPath,
         'deleteAt': Timestamp.fromDate(room.deleteAt),

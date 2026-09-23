@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/app_scaffold_messenger.dart';
 import 'package:snampo/core/router.dart';
+import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/presentation/hook/use_coop_background_sync.dart';
+import 'package:snampo/features/history/di/history_provider.dart';
 
 void main() async {
   // runAppを呼び出す前にバインディングを初期化する.
@@ -14,7 +16,17 @@ void main() async {
   if (permission == LocationPermission.denied) {
     await Geolocator.requestPermission();
   }
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        // 履歴画面を開いたときに、協力プレイの履歴も同期する
+        historySyncProvider.overrideWith(
+          (ref) => ref.watch(coopHistorySyncProvider.future),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 /// アプリケーションのルートウィジェット

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -187,3 +189,19 @@ SyncCoopHistoryUseCase syncCoopHistoryUseCase(Ref ref) =>
       syncClears: ref.read(syncCoopClearsUseCaseProvider),
       finalize: ref.read(finalizeCoopHistoryUseCaseProvider),
     );
+
+/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
+///
+/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
+/// 端末では何もせず、手元の履歴だけを表示する。
+@riverpod
+Future<void> coopHistorySync(Ref ref) async {
+  try {
+    if (await ref.read(getCoopSignedInUidUseCaseProvider)() == null) {
+      return;
+    }
+    await ref.read(syncCoopHistoryUseCaseProvider)();
+  } on Object catch (e) {
+    log('協力プレイ履歴の同期をスキップした: $e', name: 'CoopHistorySync');
+  }
+}

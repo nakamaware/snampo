@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/leave_room_use_case.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;
@@ -9,7 +10,7 @@ void main() {
     final rooms = FakeRoomRepository();
     final room = fx.room();
     rooms.rooms[fx.code] = room;
-    await rooms.joinRoom(room, uid: 'me', nickname: 'たろう');
+    await rooms.joinRoom(room, uid: 'me', nickname: Nickname.parse('たろう'));
 
     await LeaveRoomUseCase(rooms)(fx.code, 'me');
 

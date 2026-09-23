@@ -45,7 +45,7 @@ Future<String?> showNicknameDialog(
 /// 保存したニックネームを返す。未設定なら入力を促し、入力した値をアプリに保存する
 ///
 /// キャンセルされたら null を返す。
-Future<String?> ensureNickname(BuildContext context, WidgetRef ref) async {
+Future<Nickname?> ensureNickname(BuildContext context, WidgetRef ref) async {
   final saved = await ref.read(nicknameStoreProvider.future);
   if (saved != null) {
     return saved;

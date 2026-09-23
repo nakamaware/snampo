@@ -4,10 +4,10 @@ import 'dart:developer';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
-import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
@@ -18,6 +18,7 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 part 'coop_mission_store.freezed.dart';
 part 'coop_mission_store.g.dart';
@@ -112,16 +113,18 @@ class CoopMissionStore extends _$CoopMissionStore {
         : [...mission.waypoints, mission.destination];
   }
 
-  /// ルーム内での自分のニックネーム (メンバーを読めなければ既定の名前)
-  String _myNickname(String uid) {
+  /// ルーム内での自分のニックネーム
+  ///
+  /// メンバーを読めなければ、アプリに保存したニックネーム (なければ自動で命名したもの) を使う。
+  Nickname _myNickname(String uid) {
     final members =
         ref.read(coopMembersProvider(roomCode)).value ?? const <RoomMember>[];
     for (final member in members) {
       if (member.uid == uid) {
-        return member.nickname;
+        return Nickname.orAuto(member.nickname);
       }
     }
-    return 'プレイヤー';
+    return ref.read(nicknameStoreProvider).value ?? Nickname.orAuto('');
   }
 
   void _notify(String message) {
@@ -241,16 +244,10 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
-  void _applyDiscoveriesToProgress(Map<SpotId, CoopSpotDiscovery> found) {
+  void _applyDiscoveriesToProgress(Map<SpotId, CoopDiscovery> found) {
     _progress.applyCoopDiscoveries(roomCode, {
       for (final (index, spot) in _spots.indexed)
-        if (found[spot.spotId] case final d?)
-          index: (
-            uid: d.uid,
-            nickname: d.nickname,
-            clearedAt: d.clearedAt,
-            thumbPath: d.localThumbPath,
-          ),
+        if (found[spot.spotId] case final discovery?) index: discovery,
     });
   }
 
@@ -309,8 +306,13 @@ class CoopMissionStore extends _$CoopMissionStore {
         onSharing: () => setSharing(sharing: true),
         onSharingDone: () => setSharing(sharing: false),
       );
-      if (result case ClearSpotAlreadyCleared(:final existing)) {
-        _notify('先に${existing.nickname}さんが発見しました');
+      switch (result) {
+        case ClearSpotCleared():
+          break;
+        case ClearSpotAlreadyCleared(:final existing):
+          _notify('先に${existing.nickname}さんが発見しました');
+        case ClearSpotRejected():
+          _notify('ルームが終了していたため、発見を共有できませんでした');
       }
       _syncClears();
     } on Object catch (e, st) {

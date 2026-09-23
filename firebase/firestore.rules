@@ -95,6 +95,12 @@ service cloud.firestore {
           // ミッション (missionRef / spotIds / startedAt) を設定できるのは generating → playing のときだけ
           && (!changedKeys().hasAny(['missionRef', 'spotIds', 'startedAt'])
             || (before.status == 'generating' && after.status == 'playing'))
+          // 終了の情報 (finishReason / finishedAt) を書けるのは finished にするときだけ
+          && (!changedKeys().hasAny(['finishReason', 'finishedAt'])
+            || (before.status != 'finished' && after.status == 'finished'))
+          // 生成の失敗の理由 (generationError) を書き換えられるのは、状態を変えるときだけ
+          && (!changedKeys().hasAny(['generationError'])
+            || before.status != after.status)
           // 設定を変更できるのは waiting のときだけ
           && (!changedKeys().hasAny(['settings'])
             || (before.status == 'waiting' && validSettings(after.settings)))
@@ -170,7 +176,7 @@ service cloud.firestore {
             && after.nickname.size() > 0
             && after.nickname.size() <= 30
             && (
-              isRejoin(room)
+              (changedKeys().hasOnly(['nickname', 'leftAt', 'joinedAt']) && isRejoin(room))
               || (changedKeys().hasOnly(['nickname', 'leftAt']) && isAllowedLeftAtChange())
             );
         }

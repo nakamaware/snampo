@@ -21,6 +21,17 @@ class Nickname {
     );
   }
 
+  /// 保存済みの値から復元する (前後の空白は除く)
+  ///
+  /// 空欄や長すぎる値は [FormatException] を投げる (自動で命名はしない)。
+  factory Nickname.parse(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed.runes.length > maxLength) {
+      throw FormatException('不正なニックネーム', value);
+    }
+    return Nickname._(trimmed);
+  }
+
   /// ニックネームの最大文字数 (Security Rules の上限と揃える)
   static const maxLength = 30;
 
@@ -35,6 +46,18 @@ class Nickname {
 
   @override
   String toString() => value;
+}
+
+/// [Nickname] を JSON (文字列) と相互変換する [JsonConverter]
+class NicknameConverter implements JsonConverter<Nickname, String> {
+  /// [NicknameConverter] を作成する
+  const NicknameConverter();
+
+  @override
+  Nickname fromJson(String json) => Nickname.parse(json);
+
+  @override
+  String toJson(Nickname object) => object.value;
 }
 
 /// ルーム内の表示名を uid ごとに返す

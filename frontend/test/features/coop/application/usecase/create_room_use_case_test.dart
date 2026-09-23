@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/create_room_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/mission/domain/value_object/radius.dart';
@@ -20,7 +21,7 @@ void main() {
   test('ホストとしてルームを作成し、自分もメンバーとして入室する', () async {
     final room = await useCase(
       uid: 'host',
-      nickname: 'たろう',
+      nickname: Nickname.parse('たろう'),
       settings: RoomSettings.random(radius: Radius(meters: 1000)),
     );
 
@@ -38,7 +39,7 @@ void main() {
 
     final room = await useCase(
       uid: 'host',
-      nickname: 'たろう',
+      nickname: Nickname.parse('たろう'),
       settings: RoomSettings.random(radius: Radius(meters: 1000)),
     );
 
@@ -51,7 +52,7 @@ void main() {
     expect(
       () => useCase(
         uid: 'host',
-        nickname: 'たろう',
+        nickname: Nickname.parse('たろう'),
         settings: RoomSettings.random(radius: Radius(meters: 1000)),
       ),
       throwsStateError,
