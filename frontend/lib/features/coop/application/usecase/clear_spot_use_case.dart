@@ -30,13 +30,13 @@ final class ClearSpotAlreadyCleared extends ClearSpotResult {
   final SpotClear existing;
 }
 
-/// Rules に拒否された (ルームが終わったあと、遊べる期限を過ぎたなど)。撮り直しても通らない
+/// Rules に拒否された (ルームが終わったあと、遊べる期限を過ぎたなど)。撮影は捨てる
 final class ClearSpotRejected extends ClearSpotResult {
   /// [ClearSpotRejected] を作成する
   const ClearSpotRejected();
 }
 
-/// 通信に失敗した、または時間内に終わらなかった (電波の良い場所で撮り直してもらう)
+/// 通信に失敗した、または時間内に終わらなかった (撮影は捨て、電波の良い場所で撮り直してもらう)
 final class ClearSpotFailed extends ClearSpotResult {
   /// [ClearSpotFailed] を作成する
   const ClearSpotFailed();
@@ -44,9 +44,10 @@ final class ClearSpotFailed extends ClearSpotResult {
 
 /// 撮影して採点したスポットをクリアにする (1 人のクリアで全員のクリアになる)
 ///
-/// 1. 自分の写真と採点を履歴に残す (先に他の人が発見していても、共有に失敗しても手元に残す)
-/// 2. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
+/// 1. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
 ///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)
+/// 2. 共有できたら、自分の写真と採点を履歴に残す (先に他の人が発見していても残す)。
+///    共有に失敗した撮影は、誰もクリアしていない扱いにして履歴に残さない
 /// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
 ///
 /// 最後のクリアで finished にするのは、`clears` を監視しているストア (CoopMissionStore) が行う。
@@ -84,16 +85,6 @@ class ClearSpotUseCase {
   }) async {
     final photoPath =
         checkpoint.userPhotoPath ?? (throw ArgumentError('写真がありません'));
-    try {
-      await _histories.saveCoopUserPhoto(
-        roomCode: room.code,
-        spotId: spotId,
-        checkpoint: checkpoint,
-      );
-    } on Object catch (e) {
-      log('履歴への写真の保存に失敗した: $e', name: 'ClearSpot');
-    }
-
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
     final CreateClearResult result;
     try {
@@ -111,6 +102,15 @@ class ClearSpotUseCase {
       return const ClearSpotFailed();
     }
 
+    try {
+      await _histories.saveCoopUserPhoto(
+        roomCode: room.code,
+        spotId: spotId,
+        checkpoint: checkpoint,
+      );
+    } on Object catch (e) {
+      log('履歴への写真の保存に失敗した: $e', name: 'ClearSpot');
+    }
     if (result case ClearAlreadyExists(
       :final existing,
     ) when existing.clearedBy != uid) {

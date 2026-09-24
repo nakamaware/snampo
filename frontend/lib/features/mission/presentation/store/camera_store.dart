@@ -17,6 +17,11 @@ class CameraStore extends _$CameraStore {
     state = {...state, index: path};
   }
 
+  /// 写真のパスを消す (撮影の記録を捨てたとき)
+  void removePhoto(int index) {
+    state = {...state}..remove(index);
+  }
+
   /// 指定したインデックスの写真パスを取得する
   String? getPath(int index) => state[index];
 }

@@ -87,18 +87,15 @@ void main() {
     expect(spot.isCleared, isTrue);
   });
 
-  test('サムネのアップロードに失敗したら、クリアを作成せず失敗を返す (撮り直してもらう)', () async {
+  test('サムネのアップロードに失敗したら、クリアを作成せず失敗を返し、履歴にも残さない', () async {
     storage.thumbUploadError = Exception('network');
 
     final result = await clear();
 
     expect(result, isA<ClearSpotFailed>());
     expect(rooms.clears[fx.code]?[spotId], isNull);
-    // 自分の写真は手元に残す
-    expect(
-      histories.histories[fx.code]!.spots.single.userPhotoPath,
-      '/photos/a.jpg',
-    );
+    // 共有に失敗した撮影は捨てる (誰もクリアしていない扱い)
+    expect(histories.histories[fx.code]!.spots.single.userPhotoPath, isNull);
   });
 
   test('サムネのアップロードが時間内に終わらなければ、クリアを作成せず失敗を返す', () async {
@@ -150,5 +147,6 @@ void main() {
     final result = await clear();
 
     expect(result, isA<ClearSpotRejected>());
+    expect(histories.histories[fx.code]!.spots.single.userPhotoPath, isNull);
   });
 }

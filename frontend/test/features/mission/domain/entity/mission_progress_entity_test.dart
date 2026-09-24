@@ -110,4 +110,50 @@ void main() {
       expect(updated.checkpoints[0]!.discovererThumbPath, '/t.jpg');
     });
   });
+
+  group('MissionProgressEntity.withoutCapture', () {
+    final startedAt = DateTime(2024);
+
+    test('撮影の記録を捨てて未挑戦 (null) に戻す', () {
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        checkpoints: [
+          CheckpointProgress(
+            userPhotoPath: '/mine.jpg',
+            judgeRank: PhotoJudgeRank.good,
+            achievedAt: startedAt,
+          ),
+          null,
+        ],
+      );
+
+      expect(entity.withoutCapture(0).checkpoints, [null, null]);
+    });
+
+    test('発見者の情報があれば、それだけを残す', () {
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        checkpoints: [
+          CheckpointProgress(
+            userPhotoPath: '/mine.jpg',
+            judgeRank: PhotoJudgeRank.good,
+            achievedAt: startedAt,
+            discovererUid: 'other',
+            discovererNickname: 'じろう',
+            discovererThumbPath: '/thumb.jpg',
+          ),
+        ],
+      );
+
+      expect(
+        entity.withoutCapture(0).checkpoints.single,
+        CheckpointProgress(
+          achievedAt: startedAt,
+          discovererUid: 'other',
+          discovererNickname: 'じろう',
+          discovererThumbPath: '/thumb.jpg',
+        ),
+      );
+    });
+  });
 }

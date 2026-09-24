@@ -131,6 +131,28 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   factory MissionProgressEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionProgressEntityFromJson(json);
 
+  /// [index] の撮影の記録 (自分の写真と採点) を捨てた進捗を返す
+  ///
+  /// 協力プレイで発見を共有できなかったとき、誰もクリアしていない扱いに戻すために使う。
+  /// 発見者の情報があれば、それだけを残す。写真のファイルは消さない (呼び出し側で消す)。
+  MissionProgressEntity withoutCapture(int index) {
+    if (index < 0 || index >= checkpoints.length) {
+      return this;
+    }
+    final current = checkpoints[index];
+    final updated = List<CheckpointProgress?>.from(checkpoints);
+    updated[index] =
+        current?.discovererUid == null
+            ? null
+            : CheckpointProgress(
+              achievedAt: current!.achievedAt,
+              discovererUid: current.discovererUid,
+              discovererNickname: current.discovererNickname,
+              discovererThumbPath: current.discovererThumbPath,
+            );
+    return copyWith(checkpoints: updated);
+  }
+
   /// 協力プレイの発見者を反映した進捗を返す (キーはチェックポイントのインデックス)
   ///
   /// 他の人のクリアは「発見者情報つき・自分の写真なし」として反映する。

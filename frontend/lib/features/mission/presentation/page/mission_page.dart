@@ -668,48 +668,28 @@ class TakeSnap extends HookConsumerWidget {
         ) ??
         true;
 
-    Future<void> capture() async {
-      isCapturing.value = true;
-      try {
-        await _handleCameraCapture(context, ref);
-      } finally {
-        if (context.mounted) isCapturing.value = false;
-      }
-    }
-
-    final onCapture = isCapturing.value || !canCapture ? null : capture;
-
     if (displayPath == null) {
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
-        onPressed: onCapture,
+        onPressed:
+            isCapturing.value || !canCapture
+                ? null
+                : () async {
+                  isCapturing.value = true;
+                  try {
+                    await _handleCameraCapture(context, ref);
+                  } finally {
+                    if (context.mounted) isCapturing.value = false;
+                  }
+                },
         child: const Icon(Icons.add_a_photo),
       );
     }
 
-    final image = SizedBox(
+    return SizedBox(
       width: 150,
       height: 150,
       child: SetImage(picture: File(displayPath)),
-    );
-    if (!(extension?.allowsRetake ?? false) || onCapture == null) {
-      return image;
-    }
-    // 撮り直し (協力プレイで発見を共有できなかったときなど)
-    return Stack(
-      children: [
-        image,
-        Positioned(
-          right: 4,
-          bottom: 4,
-          child: FloatingActionButton.small(
-            heroTag: 'retake_snap_spot_$spotIndex',
-            tooltip: '撮り直す',
-            onPressed: onCapture,
-            child: const Icon(Icons.add_a_photo),
-          ),
-        ),
-      ],
     );
   }
 
@@ -897,9 +877,6 @@ abstract class MissionPageExtension {
     required ImageCoordinate spot,
     required CheckpointProgress? checkpoint,
   }) => true;
-
-  /// 撮影済みのスポットを撮り直せるか ([canCapture] も満たすときだけ撮り直せる)
-  bool get allowsRetake => false;
 
   /// 撮影と採点が確定したとき
   void onCheckpointCompleted(

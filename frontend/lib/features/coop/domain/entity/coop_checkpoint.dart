@@ -6,7 +6,7 @@ extension CoopCheckpoint on CheckpointProgress {
   ///
   /// - 自分が発見者なら自分の写真
   /// - 他の人が発見者なら、その人のサムネ。自分の写真 (先着に負けたもの) は使わない
-  /// - 発見者がいなければ (未クリア。共有に失敗した自分の写真があっても) null
+  /// - 発見者がいなければ (未クリア) null
   String? discovererPhotoPath({required String myUid}) =>
       switch (discovererUid) {
         null => null,

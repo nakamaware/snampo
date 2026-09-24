@@ -70,7 +70,7 @@ class _CoopResultPageExtension extends ResultPageExtension {
 
   /// 発見者の写真を表示する。同時に撮影して先着に負けたスポットでも、自分の写真ではなく
   /// 発見者のサムネを出す (サムネが届いていなければプレースホルダ)。
-  /// 発見者のいないスポット (共有に失敗したものを含む) はプレースホルダ
+  /// 発見者のいないスポット (未クリア) はプレースホルダ
   @override
   String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
       checkpoint?.discovererPhotoPath(myUid: myUid ?? '');

@@ -33,7 +33,7 @@ void main() {
       expect(checkpoint.discovererPhotoPath(myUid: 'me'), isNull);
     });
 
-    test('発見者がいなければ、共有に失敗した自分の写真があっても null (未クリア)', () {
+    test('発見者がいなければ null (未クリア)', () {
       const checkpoint = CheckpointProgress(userPhotoPath: '/mine.jpg');
 
       expect(checkpoint.discovererPhotoPath(myUid: 'me'), isNull);

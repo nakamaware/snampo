@@ -44,7 +44,7 @@ final class CameraStoreProvider
   }
 }
 
-String _$cameraStoreHash() => r'9c941b7ab886365b8ff9c94de6d86d2cb5dae404';
+String _$cameraStoreHash() => r'25b59d8307ce28de54144179eb7f0317251e0052';
 
 /// 写真のパスを保存するストア
 

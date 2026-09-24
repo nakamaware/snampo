@@ -16,6 +16,7 @@ import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
@@ -289,8 +290,8 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// 撮影して採点したスポットをクリアにする
   ///
-  /// 自分の写真と採点は、先に他の人が発見していても、共有に失敗しても手元 (進捗と履歴) に残す。
-  /// 共有に失敗したスポットは発見者が付かないので、撮り直せる。
+  /// 自分の写真と採点は、先に他の人が発見していても手元 (進捗と履歴) に残す。
+  /// 共有に失敗した撮影は捨てる (誰もクリアしていない扱いに戻り、もう一度撮影できる)。
   Future<void> clearSpot({
     required int spotIndex,
     required CheckpointProgress checkpoint,
@@ -329,18 +330,27 @@ class CoopMissionStore extends _$CoopMissionStore {
             'さんが発見しました',
           );
         case ClearSpotRejected():
+          await _discardCapture(spotIndex);
           _notify('ルームが終了していたため、発見を共有できませんでした');
         case ClearSpotFailed():
+          await _discardCapture(spotIndex);
           _notify('発見を共有できませんでした。電波の良い場所で撮り直してください');
       }
       _syncClears();
     } on Object catch (e, st) {
       // 通信の失敗は ClearSpotFailed で返るので、ここに来るのは端末の中の失敗 (サムネの作成など)
       log('クリアの共有に失敗した', error: e, stackTrace: st, name: 'CoopMission');
+      await _discardCapture(spotIndex);
       _notify('発見を共有できませんでした。もう一度撮影してください');
     } finally {
       setSharing(sharing: false);
     }
+  }
+
+  /// 共有できなかった撮影を捨てる (誰もクリアしていない扱いに戻し、撮影できるようにする)
+  Future<void> _discardCapture(int spotIndex) async {
+    ref.read(cameraStoreProvider.notifier).removePhoto(spotIndex);
+    await _progress.discardCapture(spotIndex);
   }
 
   /// ホストが途中終了する

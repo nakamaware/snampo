@@ -56,7 +56,6 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   /// チェックポイントの撮影結果と採点結果を確定する
   ///
   /// 協力プレイで既に発見者がいる場合も、発見者の情報は残したまま自分の写真と採点を記録する。
-  /// 撮り直しなら前の写真を消し、発見者がいなければ達成日時を撮り直した時刻にする。
   Future<CheckpointProgress?> completeCheckpoint({
     required int index,
     required String tempPhotoPath,
@@ -99,27 +98,35 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     }
 
     final previous = latest.checkpoints[index];
-    final hasDiscoverer = previous?.discovererUid != null;
     final merged = checkpoint.copyWith(
       discovererUid: previous?.discovererUid,
       discovererNickname: previous?.discovererNickname,
       discovererThumbPath: previous?.discovererThumbPath,
-      // 発見者がいれば、達成日時は発見された日時のままにする
-      achievedAt: hasDiscoverer ? previous!.achievedAt : checkpoint.achievedAt,
+      achievedAt: previous?.achievedAt ?? checkpoint.achievedAt,
     );
-    // 撮り直し (協力プレイで共有に失敗したときなど) なら、前の写真を消す
-    final previousPhoto = previous?.userPhotoPath;
-    if (previousPhoto != null && previousPhoto != merged.userPhotoPath) {
-      try {
-        await photoStorage.deletePhoto(previousPhoto);
-      } on Object {
-        // 消せなくても撮り直しは続ける
-      }
-    }
     final updated = List<CheckpointProgress?>.from(latest.checkpoints);
     updated[index] = merged;
     state = AsyncValue.data(latest.copyWith(checkpoints: updated));
     return merged;
+  }
+
+  /// [index] の撮影の記録 (自分の写真と採点) を捨てる (写真のファイルも消す)
+  ///
+  /// 協力プレイで発見を共有できなかったとき、誰もクリアしていない扱いに戻すために使う。
+  Future<void> discardCapture(int index) async {
+    final current = state.value;
+    if (current == null || index < 0 || index >= current.checkpoints.length) {
+      return;
+    }
+    final photoPath = current.checkpoints[index]?.userPhotoPath;
+    state = AsyncValue.data(current.withoutCapture(index));
+    if (photoPath != null) {
+      try {
+        await ref.read(photoStorageProvider).deletePhoto(photoPath);
+      } on Object {
+        // 消せなくても、進捗からは捨ててあるので続ける
+      }
+    }
   }
 
   /// 協力プレイの発見者を進捗に反映する (キーはチェックポイントのインデックス)
