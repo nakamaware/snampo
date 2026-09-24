@@ -7,7 +7,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
@@ -17,6 +16,7 @@ import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
+import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
@@ -152,26 +152,7 @@ class MissionPage extends HookConsumerWidget {
           ),
         );
       },
-      loading:
-          () => Scaffold(
-            appBar: AppBar(
-              title: Text('On MISSION', style: textStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LoadingAnimationWidget.staggeredDotsWave(
-                    color: Colors.blue,
-                    size: 100,
-                  ),
-                  const Text('NOW LOADING'),
-                ],
-              ),
-            ),
-          ),
+      loading: () => const MissionLoadingView(),
       error: (error, stackTrace) {
         log('error: $error');
         return Scaffold(
