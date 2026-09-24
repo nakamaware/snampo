@@ -204,7 +204,18 @@ class _SpotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasScore = spot.judgeRank != null;
+    // 自分が撮影していなければ、協力プレイの発見者の採点を表示する
+    final ownScore = spot.judgeRank != null;
+    final discovererJudgement = ownScore ? null : spot.discovererJudgement;
+    final rank = spot.judgeRank ?? discovererJudgement?.rank;
+    final distanceErrorMeters =
+        ownScore
+            ? spot.distanceErrorMeters
+            : discovererJudgement?.distanceErrorMeters;
+    final headingErrorDegrees =
+        ownScore
+            ? spot.headingErrorDegrees
+            : discovererJudgement?.headingErrorDegrees;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -230,9 +241,17 @@ class _SpotCard extends StatelessWidget {
                           : theme.colorScheme.outline,
                 ),
               ),
-            if (hasScore) ...[
+            if (rank != null) ...[
               const SizedBox(height: 8),
-              _RankBadge(rank: spot.judgeRank!),
+              Row(
+                children: [
+                  _RankBadge(rank: rank),
+                  if (discovererJudgement != null) ...[
+                    const SizedBox(width: 8),
+                    Text('発見者の採点', style: theme.textTheme.bodySmall),
+                  ],
+                ],
+              ),
             ],
             const SizedBox(height: 8),
             Row(
@@ -267,20 +286,20 @@ class _SpotCard extends StatelessWidget {
               ],
             ),
             if (spot.genre != null ||
-                spot.distanceErrorMeters != null ||
-                spot.headingErrorDegrees != null) ...[
+                distanceErrorMeters != null ||
+                headingErrorDegrees != null) ...[
               const SizedBox(height: 8),
               if (spot.genre != null)
                 _InfoRow(label: 'ジャンル', value: spot.genre!.japaneseLabel),
-              if (spot.distanceErrorMeters != null)
+              if (distanceErrorMeters != null)
                 _InfoRow(
                   label: 'スポットまで残り',
-                  value: formatDistanceError(spot.distanceErrorMeters),
+                  value: formatDistanceError(distanceErrorMeters),
                 ),
-              if (spot.headingErrorDegrees != null)
+              if (headingErrorDegrees != null)
                 _InfoRow(
                   label: '向きのずれ',
-                  value: formatHeadingError(spot.headingErrorDegrees),
+                  value: formatHeadingError(headingErrorDegrees),
                 ),
             ],
             if (spot.googleMapsUrl != null) ...[

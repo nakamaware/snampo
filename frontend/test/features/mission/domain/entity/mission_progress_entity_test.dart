@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 void main() {
   group('CheckpointProgress.fromJson', () {
@@ -61,6 +64,7 @@ void main() {
           nickname: 'はなこ',
           clearedAt: clearedAt,
           thumbPath: '/t.jpg',
+          judgement: null,
         ),
       });
 
@@ -72,11 +76,41 @@ void main() {
       expect(checkpoint.userPhotoPath, isNull);
     });
 
+    test('発見者の採点も反映し、保存して読み戻せる', () {
+      const judgement = PhotoJudgement(
+        rank: PhotoJudgeRank.good,
+        distanceErrorMeters: 18,
+        headingErrorDegrees: 5,
+      );
+
+      final updated = progress(roomA).withCoopDiscoveries(roomA, {
+        0: (
+          uid: 'x',
+          nickname: 'はなこ',
+          clearedAt: clearedAt,
+          thumbPath: null,
+          judgement: judgement,
+        ),
+      });
+
+      expect(updated.checkpoints[0]!.discovererJudgement, judgement);
+      final restored = MissionProgressEntity.fromJson(
+        jsonDecode(jsonEncode(updated.toJson())) as Map<String, dynamic>,
+      );
+      expect(restored.checkpoints[0]!.discovererJudgement, judgement);
+    });
+
     test('別のルームの発見は反映しない (抜けた前のルームの通知が混ざらないように)', () {
       final current = progress(roomB);
 
       final updated = current.withCoopDiscoveries(roomA, {
-        0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+        0: (
+          uid: 'x',
+          nickname: 'はなこ',
+          clearedAt: clearedAt,
+          thumbPath: null,
+          judgement: null,
+        ),
       });
 
       expect(updated, current);
@@ -87,7 +121,13 @@ void main() {
 
       expect(
         current.withCoopDiscoveries(roomA, {
-          0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+          0: (
+            uid: 'x',
+            nickname: 'はなこ',
+            clearedAt: clearedAt,
+            thumbPath: null,
+            judgement: null,
+          ),
         }),
         current,
       );
@@ -100,11 +140,18 @@ void main() {
           nickname: 'はなこ',
           clearedAt: clearedAt,
           thumbPath: '/t.jpg',
+          judgement: null,
         ),
       });
 
       final updated = withThumb.withCoopDiscoveries(roomA, {
-        0: (uid: 'x', nickname: 'はなこ', clearedAt: clearedAt, thumbPath: null),
+        0: (
+          uid: 'x',
+          nickname: 'はなこ',
+          clearedAt: clearedAt,
+          thumbPath: null,
+          judgement: null,
+        ),
       });
 
       expect(updated.checkpoints[0]!.discovererThumbPath, '/t.jpg');
@@ -154,6 +201,10 @@ void main() {
             discovererUid: 'other',
             discovererNickname: 'じろう',
             discovererThumbPath: '/thumb.jpg',
+            discovererJudgement: const PhotoJudgement(
+              rank: PhotoJudgeRank.fair,
+              distanceErrorMeters: 30,
+            ),
           ),
         ],
       );
@@ -165,6 +216,10 @@ void main() {
           discovererUid: 'other',
           discovererNickname: 'じろう',
           discovererThumbPath: '/thumb.jpg',
+          discovererJudgement: const PhotoJudgement(
+            rank: PhotoJudgeRank.fair,
+            distanceErrorMeters: 30,
+          ),
         ),
       );
     });

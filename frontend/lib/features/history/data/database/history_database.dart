@@ -141,6 +141,24 @@ class HistorySpots extends Table {
   /// 協力プレイの発見者のサムネのパス
   TextColumn get discovererThumbPath => text().nullable()();
 
+  /// 協力プレイの発見者の採点ランク (`excellent` / `good` / `fair` / `miss`)
+  TextColumn get discovererJudgeRank => text().nullable()();
+
+  /// 協力プレイの発見者の位置誤差 (m)
+  RealColumn get discovererDistanceErrorMeters => real().nullable()();
+
+  /// 協力プレイの発見者の方角誤差 (度)
+  RealColumn get discovererHeadingErrorDegrees => real().nullable()();
+
+  /// 協力プレイの発見者が撮影した緯度
+  RealColumn get discovererGuessLat => real().nullable()();
+
+  /// 協力プレイの発見者が撮影した経度
+  RealColumn get discovererGuessLng => real().nullable()();
+
+  /// 協力プレイの発見者が撮影したときの方角 (度)
+  RealColumn get discovererCapturedHeading => real().nullable()();
+
   /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
   IntColumn get isCleared => integer().withDefault(const Constant(1))();
 }
@@ -153,7 +171,7 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -236,6 +254,18 @@ UPDATE mission_histories SET destination_lat = (
           'discoverer_nickname TEXT',
           'discoverer_thumb_path TEXT',
           'is_cleared INTEGER NOT NULL DEFAULT 1',
+        ]) {
+          await customStatement('ALTER TABLE history_spots ADD COLUMN $column');
+        }
+      }
+      if (from < 5) {
+        for (final column in [
+          'discoverer_judge_rank TEXT',
+          'discoverer_distance_error_meters REAL',
+          'discoverer_heading_error_degrees REAL',
+          'discoverer_guess_lat REAL',
+          'discoverer_guess_lng REAL',
+          'discoverer_captured_heading REAL',
         ]) {
           await customStatement('ALTER TABLE history_spots ADD COLUMN $column');
         }

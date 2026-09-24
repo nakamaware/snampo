@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;
 import '../coop_fakes.dart';
@@ -27,6 +29,23 @@ void main() {
     expect(spots[1].discovererUid, 'y');
     expect(spots[1].discovererThumbPath, 'history:/tmp/download/2.jpg');
     expect(spots[2].isCleared, isFalse);
+  });
+
+  test('発見者の採点を履歴に反映し、反映済みの発見と一緒に返す', () async {
+    const judgement = PhotoJudgement(
+      rank: PhotoJudgeRank.excellent,
+      distanceErrorMeters: 3,
+    );
+
+    final result = await syncClears(fx.code, [
+      fx.clear('a', 'x', judgement: judgement),
+    ]);
+
+    expect(
+      histories.histories[fx.code]!.spots[0].discovererJudgement,
+      judgement,
+    );
+    expect(result.discoveries[fx.spot('a')]!.judgement, judgement);
   });
 
   test('反映済みの発見と、サムネがそろったかを返す', () async {

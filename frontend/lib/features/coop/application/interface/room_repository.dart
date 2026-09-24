@@ -4,6 +4,7 @@ import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// Rules に拒否された (期限切れ、権限なし、先着に負けたなど)
 class CoopPermissionDeniedException implements Exception {
@@ -98,6 +99,7 @@ abstract class IRoomRepository {
     required String uid,
     required Nickname nickname,
     required String thumbPath,
+    required PhotoJudgement? judgement,
   });
 
   /// クリアを 1 回だけサーバから取得する (キャッシュは使わない)

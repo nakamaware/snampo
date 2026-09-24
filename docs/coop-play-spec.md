@@ -199,6 +199,13 @@ rooms/{roomCode}/clears/{spotId}
   nickname: string               // 発見時点の発見者のニックネーム
   clearedAt: timestamp
   thumbPath: string              // サムネの Storage パス (サムネを上げてからクリアを作成するので必ずある)
+  judgement: map?                // 発見者の採点 (他の人も同じ結果を見るため)。古いクリアにはない
+    rank: 'excellent' | 'good' | 'fair' | 'miss'
+    distanceErrorMeters: number
+    headingErrorDegrees: number? // 向きを取れなければ書かない
+    guessLatitude: number?       // 撮影した位置 (緯度と経度はそろって書く)
+    guessLongitude: number?
+    capturedHeading: number?     // 撮影したときの向き
   deleteAt: timestamp
 ```
 
@@ -258,6 +265,7 @@ stateDiagram-v2
 - ランクに関係なく (Miss も含む)、撮影して採点したらクリアになる。撮影したら完了、という既存のソロの挙動と揃える
 - **1 人のクリアで全員のクリア**になる。クリア済みのスポットは誰も撮影できない (撮影ボタンを無効にする)
 - 先着勝ち: `clears/{spotId}` は作成のみ
+- 発見者の採点 (判定・距離・向き・撮影位置) もクリアに入れて共有する。他の人のスポットの結果画面、プレイ結果、履歴でも、発見者と同じ結果を見られる
   - 同時に撮影して作成に失敗した側は、自分の写真と採点を手元に残す
   - そのうえで「先に○○さんが発見しました」と表示する
 - 他の人がクリアしたとき
@@ -346,7 +354,7 @@ stateDiagram-v2
 |---|---|---|---|---|
 | `rooms/{code}` | メンバーまたはホスト。入室前の存在確認 (`get`) は認証済みなら可 | 認証済みで `hostId == auth.uid`。create-only で、期限の値は作成時刻から計算した値と一致すること | ホストのみ、遊べる期限内。変更できるフィールドは `status`、`settings`、`missionRef`、`spotIds`、`generationError`、`finishReason`、`startedAt`、`finishedAt`。例外として、全スポットがクリアされたときは抜けていないメンバーも `playing` → `finished` (`allCleared`) に更新できる | 不可 |
 | `members/{uid}` | メンバー | 本人 (`uid == auth.uid`) のみ。遊べる期限内 | 本人のみ。`nickname` と `leftAt` だけ変更できる | 不可 |
-| `clears/{spotId}` | メンバー | 抜けていない (`leftAt` のない) メンバーで、`status == playing` かつ遊べる期限内。`clearedBy == auth.uid`。`spotId` が `spotIds` に含まれていること。`thumbPath` は必須 | 不可 | 不可 |
+| `clears/{spotId}` | メンバー | 抜けていない (`leftAt` のない) メンバーで、`status == playing` かつ遊べる期限内。`clearedBy == auth.uid`。`spotId` が `spotIds` に含まれていること。`thumbPath` は必須。`judgement` は任意で、書いた項目だけ型と範囲を確認する | 不可 | 不可 |
 
 - 「全スポットがクリアされたときはメンバーも `finished` にできる」の「全スポットがクリアされたか」は、Rules では検証しない
   - スポットは最大 26 件あり、Rules が 1 回に参照できるドキュメント数の上限を超えるため
@@ -381,6 +389,7 @@ stateDiagram-v2
   - `clears` は 2 回目の作成 (上書き) ができない (先着勝ち)
   - 他人の `uid` を `clearedBy` にして書けない
   - `thumbPath` のないクリアは作成できない。作成したクリアは誰も変更できない
+  - `judgement` は正しい形なら書ける。判定の値や数値の範囲がおかしいもの、余計な項目があるものは書けない
   - 遊べる期限を過ぎたルームには書けない。保持期限内なら読める
   - `status` と `settings` の変更はホストだけ (全スポットがクリアされたときの `finished` は例外)
   - サムネは自分の `uid` のパスにしか上げられない。ミッション画像はホストしか上げられない

@@ -4,6 +4,7 @@ import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 final createdAt = DateTime.utc(2026, 9, 23, 10);
 
@@ -35,10 +36,16 @@ RoomMember member(String uid, {int joinedMinutes = 0, bool left = false}) =>
       leftAt: left ? createdAt.add(const Duration(hours: 1)) : null,
     );
 
-SpotClear clear(String spotId, String uid, {String? thumbPath}) => SpotClear(
+SpotClear clear(
+  String spotId,
+  String uid, {
+  String? thumbPath,
+  PhotoJudgement? judgement,
+}) => SpotClear(
   spotId: spot(spotId),
   clearedBy: uid,
   nickname: uid,
   clearedAt: createdAt.add(const Duration(minutes: 30)),
   thumbPath: thumbPath ?? 'rooms/ABCD23/thumbs/$spotId/$uid.jpg',
+  judgement: judgement,
 );

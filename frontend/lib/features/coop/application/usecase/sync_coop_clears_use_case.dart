@@ -50,6 +50,7 @@ class SyncCoopClearsUseCase {
         discovererUid: clear.clearedBy,
         discovererNickname: clear.nickname,
         clearedAt: clear.clearedAt,
+        judgement: clear.judgement,
       );
     }
     for (final clear in plan.thumbsToFetch) {
@@ -79,6 +80,7 @@ class SyncCoopClearsUseCase {
               nickname: spot.discovererNickname ?? '',
               clearedAt: spot.achievedAt ?? synced.startedAt,
               thumbPath: spot.discovererThumbPath,
+              judgement: spot.discovererJudgement,
             ),
       },
     );

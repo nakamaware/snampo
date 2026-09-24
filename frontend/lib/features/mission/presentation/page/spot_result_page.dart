@@ -77,14 +77,34 @@ class SpotResultPage extends StatelessWidget {
     }
 
     final point = args.missionPoint;
-    final rank = checkpoint.judgeRank ?? PhotoJudgeRank.miss;
+    // 他の人の発見は、共有された発見者の採点を表示する (古いクリアには採点がない)
+    final othersJudgement =
+        isOthersDiscovery ? checkpoint.discovererJudgement : null;
+    final hasJudgement = !isOthersDiscovery || othersJudgement != null;
+    final rank =
+        (isOthersDiscovery ? othersJudgement?.rank : checkpoint.judgeRank) ??
+        PhotoJudgeRank.miss;
+    final distanceErrorMeters =
+        isOthersDiscovery
+            ? othersJudgement?.distanceErrorMeters
+            : checkpoint.distanceErrorMeters;
     final distanceErrorText =
-        checkpoint.distanceErrorMeters == null
+        distanceErrorMeters == null
             ? '取得できませんでした'
-            : '${checkpoint.distanceErrorMeters!.toStringAsFixed(1)} m';
+            : '${distanceErrorMeters.toStringAsFixed(1)} m';
     final headingErrorText = _buildHeadingErrorText(
-      checkpoint.headingErrorDegrees,
+      isOthersDiscovery
+          ? othersJudgement?.headingErrorDegrees
+          : checkpoint.headingErrorDegrees,
     );
+    // 地図には、撮影した人の位置と向きを出す
+    final mapCheckpoint =
+        isOthersDiscovery
+            ? checkpoint.copyWith(
+              guessPosition: othersJudgement?.guessPosition,
+              capturedHeading: othersJudgement?.capturedHeading,
+            )
+            : checkpoint;
     final pointNameText =
         point.name ?? (isSelectedDestinationGoal ? '指定したゴール地点' : '取得できませんでした');
     final genreText =
@@ -124,21 +144,21 @@ class SpotResultPage extends StatelessWidget {
                         ),
               ),
               const SizedBox(height: 16),
-              if (isOthersDiscovery)
+              if (isOthersDiscovery) ...[
                 _InfoTile(
                   label: '発見者',
                   value: discovererLabel(
                     args.discovererDisplayName ?? checkpoint.discovererNickname,
                     isCleared: true,
                   ),
-                )
-              else
-                _RankCard(rank: rank),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (hasJudgement) _RankCard(rank: rank),
               const SizedBox(height: 16),
               _InfoTile(label: '名称', value: pointNameText),
               _InfoTile(label: 'ジャンル', value: genreText),
-              // 位置と向きのずれは自分の撮影の採点なので、他の人の発見では表示しない
-              if (!isOthersDiscovery) ...[
+              if (hasJudgement) ...[
                 _InfoTile(label: 'スポットまで残り', value: distanceErrorText),
                 _InfoTile(label: '向きのずれ', value: headingErrorText),
               ],
@@ -147,7 +167,7 @@ class SpotResultPage extends StatelessWidget {
                 height: 220,
                 child: SpotResultMap(
                   missionPoint: point,
-                  checkpoint: checkpoint,
+                  checkpoint: mapCheckpoint,
                 ),
               ),
               const SizedBox(height: 16),

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/spot_id.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 part 'spot_clear.freezed.dart';
 
@@ -21,6 +22,9 @@ abstract class SpotClear with _$SpotClear {
 
     /// サムネの Storage パス (サムネを上げてからクリアを作成するので必ずある)
     required String thumbPath,
+
+    /// 発見者の採点 (他の人も同じ結果を見るため。古いクリアにはない)
+    PhotoJudgement? judgement,
   }) = _SpotClear;
 }
 

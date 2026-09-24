@@ -9,6 +9,8 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;
 import '../coop_fakes.dart';
@@ -18,6 +20,18 @@ void main() {
   final checkpoint = CheckpointProgress(
     userPhotoPath: '/photos/a.jpg',
     achievedAt: fx.createdAt.add(const Duration(minutes: 10)),
+    judgeRank: PhotoJudgeRank.good,
+    distanceErrorMeters: 12.5,
+    headingErrorDegrees: -30,
+    guessPosition: Coordinate(latitude: 35.1, longitude: 139.1),
+    capturedHeading: 90,
+  );
+  final judgement = PhotoJudgement(
+    rank: PhotoJudgeRank.good,
+    distanceErrorMeters: 12.5,
+    headingErrorDegrees: -30,
+    guessPosition: Coordinate(latitude: 35.1, longitude: 139.1),
+    capturedHeading: 90,
   );
   late FakeRoomRepository rooms;
   late FakeCoopStorage storage;
@@ -77,6 +91,12 @@ void main() {
     expect(created.thumbPath, 'rooms/ABCD23/thumbs/a/me.jpg');
   });
 
+  test('他の人も同じ結果を見られるよう、採点もクリアに入れて共有する', () async {
+    await clear();
+
+    expect(rooms.clears[fx.code]![spotId]!.judgement, judgement);
+  });
+
   test('自分の写真と、発見者として自分のサムネを履歴に残す', () async {
     await clear();
 
@@ -84,6 +104,7 @@ void main() {
     expect(spot.userPhotoPath, '/photos/a.jpg');
     expect(spot.discovererUid, 'me');
     expect(spot.discovererThumbPath, 'history:/photos/a.jpg.thumb');
+    expect(spot.discovererJudgement, judgement);
     expect(spot.isCleared, isTrue);
   });
 

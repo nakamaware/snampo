@@ -291,6 +291,54 @@ describe("clears", () => {
     await assertFails(setDoc(clearRef(MEMBER), withoutThumb));
   });
 
+  test("発見者の採点 (judgement) を一緒に書ける", async () => {
+    const { deleteAt } = await seedRoom(env);
+    await assertSucceeds(
+      setDoc(
+        clearRef(MEMBER),
+        newClear(MEMBER, deleteAt, {
+          judgement: {
+            rank: "good",
+            distanceErrorMeters: 12.5,
+            headingErrorDegrees: -30,
+            guessLatitude: 35.68,
+            guessLongitude: 139.76,
+            capturedHeading: 270,
+          },
+        }),
+      ),
+    );
+  });
+
+  test("採点は判定と位置誤差だけでも書ける (向きを取れない端末)", async () => {
+    const { deleteAt } = await seedRoom(env);
+    await assertSucceeds(
+      setDoc(
+        clearRef(MEMBER),
+        newClear(MEMBER, deleteAt, { judgement: { rank: "miss", distanceErrorMeters: 120 } }),
+      ),
+    );
+  });
+
+  test("壊れた採点は書けない", async () => {
+    const { deleteAt } = await seedRoom(env);
+    const invalid = [
+      { rank: "perfect", distanceErrorMeters: 1 },
+      { rank: "good" },
+      { rank: "good", distanceErrorMeters: -1 },
+      { rank: "good", distanceErrorMeters: "1" },
+      { rank: "good", distanceErrorMeters: 1, headingErrorDegrees: 200 },
+      { rank: "good", distanceErrorMeters: 1, guessLatitude: 35 },
+      { rank: "good", distanceErrorMeters: 1, guessLatitude: 91, guessLongitude: 139 },
+      { rank: "good", distanceErrorMeters: 1, capturedHeading: 400 },
+      { rank: "good", distanceErrorMeters: 1, photoUrl: "https://example.com" },
+      "good",
+    ];
+    for (const judgement of invalid) {
+      await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt, { judgement })));
+    }
+  });
+
   test("作成したクリアは発見者本人も変更できない", async () => {
     const { deleteAt } = await seedRoom(env);
     await assertSucceeds(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt)));

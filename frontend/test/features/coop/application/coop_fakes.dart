@@ -17,6 +17,7 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// メモリ上のルームリポジトリ
 class FakeRoomRepository implements IRoomRepository {
@@ -156,6 +157,7 @@ class FakeRoomRepository implements IRoomRepository {
     required String uid,
     required Nickname nickname,
     required String thumbPath,
+    required PhotoJudgement? judgement,
   }) async {
     await createClearGate?.future;
     if (rejectClears) {
@@ -172,6 +174,7 @@ class FakeRoomRepository implements IRoomRepository {
       nickname: nickname.value,
       clearedAt: now,
       thumbPath: thumbPath,
+      judgement: judgement,
     );
     return const ClearCreated();
   }
@@ -320,6 +323,7 @@ class FakeHistoryRepository implements IHistoryRepository {
     required String discovererUid,
     required String discovererNickname,
     required DateTime clearedAt,
+    required PhotoJudgement? judgement,
   }) async {
     _update(
       roomCode,
@@ -333,6 +337,7 @@ class FakeHistoryRepository implements IHistoryRepository {
                 : null,
         achievedAt: clearedAt,
         isCleared: true,
+        discovererJudgement: judgement,
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// スポットのクリアの結果
 sealed class ClearSpotResult {
@@ -86,6 +87,8 @@ class ClearSpotUseCase {
     final photoPath =
         checkpoint.userPhotoPath ?? (throw ArgumentError('写真がありません'));
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
+    // 他の人も同じ結果を見られるよう、採点も一緒に共有する
+    final judgement = PhotoJudgement.ofCheckpoint(checkpoint);
     final CreateClearResult result;
     try {
       result = await _share(
@@ -94,6 +97,7 @@ class ClearSpotUseCase {
         nickname: nickname,
         spotId: spotId,
         localThumbPath: localThumbPath,
+        judgement: judgement,
       ).timeout(shareTimeout);
     } on CoopPermissionDeniedException {
       return const ClearSpotRejected();
@@ -123,6 +127,7 @@ class ClearSpotUseCase {
       spotId: spotId,
       discovererUid: uid,
       discovererNickname: nickname.value,
+      judgement: judgement,
       clearedAt: switch (result) {
         ClearAlreadyExists(:final existing) => existing.clearedAt,
         ClearCreated() => checkpoint.achievedAt ?? _now(),
@@ -142,6 +147,7 @@ class ClearSpotUseCase {
     required Nickname nickname,
     required SpotId spotId,
     required String localThumbPath,
+    required PhotoJudgement? judgement,
   }) async {
     final thumbPath = await _storage.uploadThumb(
       code: room.code,
@@ -155,6 +161,7 @@ class ClearSpotUseCase {
       uid: uid,
       nickname: nickname,
       thumbPath: thumbPath,
+      judgement: judgement,
     );
   }
 }

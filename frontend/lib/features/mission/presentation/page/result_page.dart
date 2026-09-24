@@ -87,8 +87,10 @@ class ResultPage extends ConsumerWidget {
                                 index < progress.checkpoints.length
                                     ? progress.checkpoints[index]
                                     : null;
+                            // 協力プレイで他の人が発見したスポットも、発見者の結果を見られる
                             final hasResultPhoto =
-                                checkpoint?.userPhotoPath != null;
+                                checkpoint?.userPhotoPath != null ||
+                                checkpoint?.discovererUid != null;
                             return _ResultCard(
                               title:
                                   index == points.length - 1
@@ -200,6 +202,10 @@ class _ResultCard extends StatelessWidget {
   final bool isSelectedDestinationGoal;
   final VoidCallback? onTap;
 
+  /// 表示する判定 (自分が撮影していなければ、協力プレイの発見者の判定)
+  PhotoJudgeRank? get _rank =>
+      checkpoint?.judgeRank ?? checkpoint?.discovererJudgement?.rank;
+
   /// モード固有の状態 (協力プレイの発見者など)
   final String? statusLabel;
 
@@ -256,7 +262,7 @@ class _ResultCard extends StatelessWidget {
                     Text(pointNameText),
                     Text(genreText),
                     const SizedBox(height: 4),
-                    Text('判定: ${checkpoint?.judgeRank?.label ?? '未採点'}'),
+                    Text('判定: ${_rank?.label ?? '未採点'}'),
                     const SizedBox(height: 8),
                     Text(
                       onTap == null ? '未撮影' : 'タップして結果を見る',

@@ -6,6 +6,8 @@ import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// Firestore のドキュメントと協力プレイのエンティティの相互変換
 class RoomMapper {
@@ -109,5 +111,46 @@ class RoomMapper {
     nickname: data['nickname'] as String,
     clearedAt: _time(data['clearedAt']),
     thumbPath: data['thumbPath'] as String,
+    judgement: judgementFromFirestore(data['judgement']),
   );
+
+  /// [PhotoJudgement] を、クリアの `judgement` (Firestore の map) にする
+  ///
+  /// 値のない項目は書かない (Security Rules は、書いた項目だけ型を検証する)。
+  static Map<String, Object> judgementToFirestore(PhotoJudgement judgement) => {
+    'rank': judgement.rank.name,
+    'distanceErrorMeters': judgement.distanceErrorMeters,
+    if (judgement.headingErrorDegrees case final heading?)
+      'headingErrorDegrees': heading,
+    if (judgement.guessPosition case final position?) ...{
+      'guessLatitude': position.latitude,
+      'guessLongitude': position.longitude,
+    },
+    if (judgement.capturedHeading case final heading?)
+      'capturedHeading': heading,
+  };
+
+  /// クリアの `judgement` を [PhotoJudgement] にする (なければ、読めなければ null)
+  static PhotoJudgement? judgementFromFirestore(Object? value) {
+    if (value is! Map) {
+      return null;
+    }
+    final rank = PhotoJudgeRank.values.asNameMap()[value['rank']];
+    final distance = value['distanceErrorMeters'];
+    if (rank == null || distance is! num) {
+      return null;
+    }
+    final lat = value['guessLatitude'];
+    final lng = value['guessLongitude'];
+    return PhotoJudgement(
+      rank: rank,
+      distanceErrorMeters: distance.toDouble(),
+      headingErrorDegrees: (value['headingErrorDegrees'] as num?)?.toDouble(),
+      guessPosition:
+          lat is num && lng is num
+              ? Coordinate(latitude: lat.toDouble(), longitude: lng.toDouble())
+              : null,
+      capturedHeading: (value['capturedHeading'] as num?)?.toDouble(),
+    );
+  }
 }

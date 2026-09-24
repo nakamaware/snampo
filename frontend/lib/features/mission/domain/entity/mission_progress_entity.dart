@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 part 'mission_progress_entity.freezed.dart';
 part 'mission_progress_entity.g.dart';
@@ -42,12 +43,22 @@ abstract class CheckpointProgress with _$CheckpointProgress {
 
     /// 協力プレイの発見者のサムネのパス (取得できていなければ null)
     String? discovererThumbPath,
+
+    /// 協力プレイの発見者の採点 (共有されていなければ null)
+    @JsonKey(fromJson: _judgementFromJson, toJson: _judgementToJson)
+    PhotoJudgement? discovererJudgement,
   }) = _CheckpointProgress;
 
   /// JSON から [CheckpointProgress] を生成する
   factory CheckpointProgress.fromJson(Map<String, dynamic> json) =>
       _$CheckpointProgressFromJson(json);
 }
+
+PhotoJudgement? _judgementFromJson(Map<String, dynamic>? json) =>
+    json == null ? null : PhotoJudgement.fromJson(json);
+
+Map<String, dynamic>? _judgementToJson(PhotoJudgement? judgement) =>
+    judgement?.toJson();
 
 /// Coordinate? の JSON 変換
 ///
@@ -104,6 +115,9 @@ typedef CoopDiscovery =
 
       /// 端末に保存した発見者のサムネのパス (取得できていなければ null)
       String? thumbPath,
+
+      /// 発見者の採点 (共有されていなければ null)
+      PhotoJudgement? judgement,
     });
 
 /// ミッション進捗エンティティ
@@ -160,6 +174,7 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
               discovererUid: current.discovererUid,
               discovererNickname: current.discovererNickname,
               discovererThumbPath: current.discovererThumbPath,
+              discovererJudgement: current.discovererJudgement,
             );
     return copyWith(checkpoints: updated);
   }
@@ -187,6 +202,7 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
             (previous?.discovererUid == d.uid
                 ? previous?.discovererThumbPath
                 : null),
+        discovererJudgement: d.judgement,
         achievedAt: d.clearedAt,
       );
     }

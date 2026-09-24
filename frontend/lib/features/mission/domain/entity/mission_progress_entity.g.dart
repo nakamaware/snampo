@@ -25,6 +25,9 @@ _CheckpointProgress _$CheckpointProgressFromJson(Map<String, dynamic> json) =>
       discovererUid: json['discovererUid'] as String?,
       discovererNickname: json['discovererNickname'] as String?,
       discovererThumbPath: json['discovererThumbPath'] as String?,
+      discovererJudgement: _judgementFromJson(
+        json['discovererJudgement'] as Map<String, dynamic>?,
+      ),
     );
 
 Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
@@ -41,6 +44,7 @@ Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
       'discovererUid': instance.discovererUid,
       'discovererNickname': instance.discovererNickname,
       'discovererThumbPath': instance.discovererThumbPath,
+      'discovererJudgement': _judgementToJson(instance.discovererJudgement),
     };
 
 _MissionProgressEntity _$MissionProgressEntityFromJson(

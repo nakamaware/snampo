@@ -1279,6 +1279,72 @@ class $HistorySpotsTable extends HistorySpots
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _discovererJudgeRankMeta =
+      const VerificationMeta('discovererJudgeRank');
+  @override
+  late final GeneratedColumn<String> discovererJudgeRank =
+      GeneratedColumn<String>(
+        'discoverer_judge_rank',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererDistanceErrorMetersMeta =
+      const VerificationMeta('discovererDistanceErrorMeters');
+  @override
+  late final GeneratedColumn<double> discovererDistanceErrorMeters =
+      GeneratedColumn<double>(
+        'discoverer_distance_error_meters',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererHeadingErrorDegreesMeta =
+      const VerificationMeta('discovererHeadingErrorDegrees');
+  @override
+  late final GeneratedColumn<double> discovererHeadingErrorDegrees =
+      GeneratedColumn<double>(
+        'discoverer_heading_error_degrees',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererGuessLatMeta =
+      const VerificationMeta('discovererGuessLat');
+  @override
+  late final GeneratedColumn<double> discovererGuessLat =
+      GeneratedColumn<double>(
+        'discoverer_guess_lat',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererGuessLngMeta =
+      const VerificationMeta('discovererGuessLng');
+  @override
+  late final GeneratedColumn<double> discovererGuessLng =
+      GeneratedColumn<double>(
+        'discoverer_guess_lng',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererCapturedHeadingMeta =
+      const VerificationMeta('discovererCapturedHeading');
+  @override
+  late final GeneratedColumn<double> discovererCapturedHeading =
+      GeneratedColumn<double>(
+        'discoverer_captured_heading',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _isClearedMeta = const VerificationMeta(
     'isCleared',
   );
@@ -1316,6 +1382,12 @@ class $HistorySpotsTable extends HistorySpots
     discovererUid,
     discovererNickname,
     discovererThumbPath,
+    discovererJudgeRank,
+    discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees,
+    discovererGuessLat,
+    discovererGuessLng,
+    discovererCapturedHeading,
     isCleared,
   ];
   @override
@@ -1510,6 +1582,60 @@ class $HistorySpotsTable extends HistorySpots
         ),
       );
     }
+    if (data.containsKey('discoverer_judge_rank')) {
+      context.handle(
+        _discovererJudgeRankMeta,
+        discovererJudgeRank.isAcceptableOrUnknown(
+          data['discoverer_judge_rank']!,
+          _discovererJudgeRankMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_distance_error_meters')) {
+      context.handle(
+        _discovererDistanceErrorMetersMeta,
+        discovererDistanceErrorMeters.isAcceptableOrUnknown(
+          data['discoverer_distance_error_meters']!,
+          _discovererDistanceErrorMetersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_heading_error_degrees')) {
+      context.handle(
+        _discovererHeadingErrorDegreesMeta,
+        discovererHeadingErrorDegrees.isAcceptableOrUnknown(
+          data['discoverer_heading_error_degrees']!,
+          _discovererHeadingErrorDegreesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_guess_lat')) {
+      context.handle(
+        _discovererGuessLatMeta,
+        discovererGuessLat.isAcceptableOrUnknown(
+          data['discoverer_guess_lat']!,
+          _discovererGuessLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_guess_lng')) {
+      context.handle(
+        _discovererGuessLngMeta,
+        discovererGuessLng.isAcceptableOrUnknown(
+          data['discoverer_guess_lng']!,
+          _discovererGuessLngMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_captured_heading')) {
+      context.handle(
+        _discovererCapturedHeadingMeta,
+        discovererCapturedHeading.isAcceptableOrUnknown(
+          data['discoverer_captured_heading']!,
+          _discovererCapturedHeadingMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_cleared')) {
       context.handle(
         _isClearedMeta,
@@ -1624,6 +1750,30 @@ class $HistorySpotsTable extends HistorySpots
         DriftSqlType.string,
         data['${effectivePrefix}discoverer_thumb_path'],
       ),
+      discovererJudgeRank: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_judge_rank'],
+      ),
+      discovererDistanceErrorMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_distance_error_meters'],
+      ),
+      discovererHeadingErrorDegrees: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_heading_error_degrees'],
+      ),
+      discovererGuessLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_guess_lat'],
+      ),
+      discovererGuessLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_guess_lng'],
+      ),
+      discovererCapturedHeading: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_captured_heading'],
+      ),
       isCleared:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
@@ -1710,6 +1860,24 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 協力プレイの発見者のサムネのパス
   final String? discovererThumbPath;
 
+  /// 協力プレイの発見者の採点ランク (`excellent` / `good` / `fair` / `miss`)
+  final String? discovererJudgeRank;
+
+  /// 協力プレイの発見者の位置誤差 (m)
+  final double? discovererDistanceErrorMeters;
+
+  /// 協力プレイの発見者の方角誤差 (度)
+  final double? discovererHeadingErrorDegrees;
+
+  /// 協力プレイの発見者が撮影した緯度
+  final double? discovererGuessLat;
+
+  /// 協力プレイの発見者が撮影した経度
+  final double? discovererGuessLng;
+
+  /// 協力プレイの発見者が撮影したときの方角 (度)
+  final double? discovererCapturedHeading;
+
   /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
   final int isCleared;
   const HistorySpotRow({
@@ -1736,6 +1904,12 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     this.discovererUid,
     this.discovererNickname,
     this.discovererThumbPath,
+    this.discovererJudgeRank,
+    this.discovererDistanceErrorMeters,
+    this.discovererHeadingErrorDegrees,
+    this.discovererGuessLat,
+    this.discovererGuessLng,
+    this.discovererCapturedHeading,
     required this.isCleared,
   });
   @override
@@ -1795,6 +1969,30 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     }
     if (!nullToAbsent || discovererThumbPath != null) {
       map['discoverer_thumb_path'] = Variable<String>(discovererThumbPath);
+    }
+    if (!nullToAbsent || discovererJudgeRank != null) {
+      map['discoverer_judge_rank'] = Variable<String>(discovererJudgeRank);
+    }
+    if (!nullToAbsent || discovererDistanceErrorMeters != null) {
+      map['discoverer_distance_error_meters'] = Variable<double>(
+        discovererDistanceErrorMeters,
+      );
+    }
+    if (!nullToAbsent || discovererHeadingErrorDegrees != null) {
+      map['discoverer_heading_error_degrees'] = Variable<double>(
+        discovererHeadingErrorDegrees,
+      );
+    }
+    if (!nullToAbsent || discovererGuessLat != null) {
+      map['discoverer_guess_lat'] = Variable<double>(discovererGuessLat);
+    }
+    if (!nullToAbsent || discovererGuessLng != null) {
+      map['discoverer_guess_lng'] = Variable<double>(discovererGuessLng);
+    }
+    if (!nullToAbsent || discovererCapturedHeading != null) {
+      map['discoverer_captured_heading'] = Variable<double>(
+        discovererCapturedHeading,
+      );
     }
     map['is_cleared'] = Variable<int>(isCleared);
     return map;
@@ -1866,6 +2064,30 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           discovererThumbPath == null && nullToAbsent
               ? const Value.absent()
               : Value(discovererThumbPath),
+      discovererJudgeRank:
+          discovererJudgeRank == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererJudgeRank),
+      discovererDistanceErrorMeters:
+          discovererDistanceErrorMeters == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererDistanceErrorMeters),
+      discovererHeadingErrorDegrees:
+          discovererHeadingErrorDegrees == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererHeadingErrorDegrees),
+      discovererGuessLat:
+          discovererGuessLat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererGuessLat),
+      discovererGuessLng:
+          discovererGuessLng == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererGuessLng),
+      discovererCapturedHeading:
+          discovererCapturedHeading == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererCapturedHeading),
       isCleared: Value(isCleared),
     );
   }
@@ -1909,6 +2131,24 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       discovererThumbPath: serializer.fromJson<String?>(
         json['discovererThumbPath'],
       ),
+      discovererJudgeRank: serializer.fromJson<String?>(
+        json['discovererJudgeRank'],
+      ),
+      discovererDistanceErrorMeters: serializer.fromJson<double?>(
+        json['discovererDistanceErrorMeters'],
+      ),
+      discovererHeadingErrorDegrees: serializer.fromJson<double?>(
+        json['discovererHeadingErrorDegrees'],
+      ),
+      discovererGuessLat: serializer.fromJson<double?>(
+        json['discovererGuessLat'],
+      ),
+      discovererGuessLng: serializer.fromJson<double?>(
+        json['discovererGuessLng'],
+      ),
+      discovererCapturedHeading: serializer.fromJson<double?>(
+        json['discovererCapturedHeading'],
+      ),
       isCleared: serializer.fromJson<int>(json['isCleared']),
     );
   }
@@ -1939,6 +2179,18 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'discovererUid': serializer.toJson<String?>(discovererUid),
       'discovererNickname': serializer.toJson<String?>(discovererNickname),
       'discovererThumbPath': serializer.toJson<String?>(discovererThumbPath),
+      'discovererJudgeRank': serializer.toJson<String?>(discovererJudgeRank),
+      'discovererDistanceErrorMeters': serializer.toJson<double?>(
+        discovererDistanceErrorMeters,
+      ),
+      'discovererHeadingErrorDegrees': serializer.toJson<double?>(
+        discovererHeadingErrorDegrees,
+      ),
+      'discovererGuessLat': serializer.toJson<double?>(discovererGuessLat),
+      'discovererGuessLng': serializer.toJson<double?>(discovererGuessLng),
+      'discovererCapturedHeading': serializer.toJson<double?>(
+        discovererCapturedHeading,
+      ),
       'isCleared': serializer.toJson<int>(isCleared),
     };
   }
@@ -1967,6 +2219,12 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     Value<String?> discovererUid = const Value.absent(),
     Value<String?> discovererNickname = const Value.absent(),
     Value<String?> discovererThumbPath = const Value.absent(),
+    Value<String?> discovererJudgeRank = const Value.absent(),
+    Value<double?> discovererDistanceErrorMeters = const Value.absent(),
+    Value<double?> discovererHeadingErrorDegrees = const Value.absent(),
+    Value<double?> discovererGuessLat = const Value.absent(),
+    Value<double?> discovererGuessLng = const Value.absent(),
+    Value<double?> discovererCapturedHeading = const Value.absent(),
     int? isCleared,
   }) => HistorySpotRow(
     id: id ?? this.id,
@@ -2011,6 +2269,30 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
         discovererThumbPath.present
             ? discovererThumbPath.value
             : this.discovererThumbPath,
+    discovererJudgeRank:
+        discovererJudgeRank.present
+            ? discovererJudgeRank.value
+            : this.discovererJudgeRank,
+    discovererDistanceErrorMeters:
+        discovererDistanceErrorMeters.present
+            ? discovererDistanceErrorMeters.value
+            : this.discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees:
+        discovererHeadingErrorDegrees.present
+            ? discovererHeadingErrorDegrees.value
+            : this.discovererHeadingErrorDegrees,
+    discovererGuessLat:
+        discovererGuessLat.present
+            ? discovererGuessLat.value
+            : this.discovererGuessLat,
+    discovererGuessLng:
+        discovererGuessLng.present
+            ? discovererGuessLng.value
+            : this.discovererGuessLng,
+    discovererCapturedHeading:
+        discovererCapturedHeading.present
+            ? discovererCapturedHeading.value
+            : this.discovererCapturedHeading,
     isCleared: isCleared ?? this.isCleared,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
@@ -2072,6 +2354,30 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           data.discovererThumbPath.present
               ? data.discovererThumbPath.value
               : this.discovererThumbPath,
+      discovererJudgeRank:
+          data.discovererJudgeRank.present
+              ? data.discovererJudgeRank.value
+              : this.discovererJudgeRank,
+      discovererDistanceErrorMeters:
+          data.discovererDistanceErrorMeters.present
+              ? data.discovererDistanceErrorMeters.value
+              : this.discovererDistanceErrorMeters,
+      discovererHeadingErrorDegrees:
+          data.discovererHeadingErrorDegrees.present
+              ? data.discovererHeadingErrorDegrees.value
+              : this.discovererHeadingErrorDegrees,
+      discovererGuessLat:
+          data.discovererGuessLat.present
+              ? data.discovererGuessLat.value
+              : this.discovererGuessLat,
+      discovererGuessLng:
+          data.discovererGuessLng.present
+              ? data.discovererGuessLng.value
+              : this.discovererGuessLng,
+      discovererCapturedHeading:
+          data.discovererCapturedHeading.present
+              ? data.discovererCapturedHeading.value
+              : this.discovererCapturedHeading,
       isCleared: data.isCleared.present ? data.isCleared.value : this.isCleared,
     );
   }
@@ -2102,6 +2408,16 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('discovererUid: $discovererUid, ')
           ..write('discovererNickname: $discovererNickname, ')
           ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('discovererJudgeRank: $discovererJudgeRank, ')
+          ..write(
+            'discovererDistanceErrorMeters: $discovererDistanceErrorMeters, ',
+          )
+          ..write(
+            'discovererHeadingErrorDegrees: $discovererHeadingErrorDegrees, ',
+          )
+          ..write('discovererGuessLat: $discovererGuessLat, ')
+          ..write('discovererGuessLng: $discovererGuessLng, ')
+          ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
           ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
@@ -2132,6 +2448,12 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     discovererUid,
     discovererNickname,
     discovererThumbPath,
+    discovererJudgeRank,
+    discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees,
+    discovererGuessLat,
+    discovererGuessLng,
+    discovererCapturedHeading,
     isCleared,
   ]);
   @override
@@ -2161,6 +2483,14 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.discovererUid == this.discovererUid &&
           other.discovererNickname == this.discovererNickname &&
           other.discovererThumbPath == this.discovererThumbPath &&
+          other.discovererJudgeRank == this.discovererJudgeRank &&
+          other.discovererDistanceErrorMeters ==
+              this.discovererDistanceErrorMeters &&
+          other.discovererHeadingErrorDegrees ==
+              this.discovererHeadingErrorDegrees &&
+          other.discovererGuessLat == this.discovererGuessLat &&
+          other.discovererGuessLng == this.discovererGuessLng &&
+          other.discovererCapturedHeading == this.discovererCapturedHeading &&
           other.isCleared == this.isCleared);
 }
 
@@ -2188,6 +2518,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<String?> discovererUid;
   final Value<String?> discovererNickname;
   final Value<String?> discovererThumbPath;
+  final Value<String?> discovererJudgeRank;
+  final Value<double?> discovererDistanceErrorMeters;
+  final Value<double?> discovererHeadingErrorDegrees;
+  final Value<double?> discovererGuessLat;
+  final Value<double?> discovererGuessLng;
+  final Value<double?> discovererCapturedHeading;
   final Value<int> isCleared;
   const HistorySpotsCompanion({
     this.id = const Value.absent(),
@@ -2213,6 +2549,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.discovererUid = const Value.absent(),
     this.discovererNickname = const Value.absent(),
     this.discovererThumbPath = const Value.absent(),
+    this.discovererJudgeRank = const Value.absent(),
+    this.discovererDistanceErrorMeters = const Value.absent(),
+    this.discovererHeadingErrorDegrees = const Value.absent(),
+    this.discovererGuessLat = const Value.absent(),
+    this.discovererGuessLng = const Value.absent(),
+    this.discovererCapturedHeading = const Value.absent(),
     this.isCleared = const Value.absent(),
   });
   HistorySpotsCompanion.insert({
@@ -2239,6 +2581,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.discovererUid = const Value.absent(),
     this.discovererNickname = const Value.absent(),
     this.discovererThumbPath = const Value.absent(),
+    this.discovererJudgeRank = const Value.absent(),
+    this.discovererDistanceErrorMeters = const Value.absent(),
+    this.discovererHeadingErrorDegrees = const Value.absent(),
+    this.discovererGuessLat = const Value.absent(),
+    this.discovererGuessLng = const Value.absent(),
+    this.discovererCapturedHeading = const Value.absent(),
     this.isCleared = const Value.absent(),
   }) : historyId = Value(historyId),
        sortOrder = Value(sortOrder),
@@ -2270,6 +2618,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<String>? discovererUid,
     Expression<String>? discovererNickname,
     Expression<String>? discovererThumbPath,
+    Expression<String>? discovererJudgeRank,
+    Expression<double>? discovererDistanceErrorMeters,
+    Expression<double>? discovererHeadingErrorDegrees,
+    Expression<double>? discovererGuessLat,
+    Expression<double>? discovererGuessLng,
+    Expression<double>? discovererCapturedHeading,
     Expression<int>? isCleared,
   }) {
     return RawValuesInsertable({
@@ -2300,6 +2654,18 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       if (discovererNickname != null) 'discoverer_nickname': discovererNickname,
       if (discovererThumbPath != null)
         'discoverer_thumb_path': discovererThumbPath,
+      if (discovererJudgeRank != null)
+        'discoverer_judge_rank': discovererJudgeRank,
+      if (discovererDistanceErrorMeters != null)
+        'discoverer_distance_error_meters': discovererDistanceErrorMeters,
+      if (discovererHeadingErrorDegrees != null)
+        'discoverer_heading_error_degrees': discovererHeadingErrorDegrees,
+      if (discovererGuessLat != null)
+        'discoverer_guess_lat': discovererGuessLat,
+      if (discovererGuessLng != null)
+        'discoverer_guess_lng': discovererGuessLng,
+      if (discovererCapturedHeading != null)
+        'discoverer_captured_heading': discovererCapturedHeading,
       if (isCleared != null) 'is_cleared': isCleared,
     });
   }
@@ -2328,6 +2694,12 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<String?>? discovererUid,
     Value<String?>? discovererNickname,
     Value<String?>? discovererThumbPath,
+    Value<String?>? discovererJudgeRank,
+    Value<double?>? discovererDistanceErrorMeters,
+    Value<double?>? discovererHeadingErrorDegrees,
+    Value<double?>? discovererGuessLat,
+    Value<double?>? discovererGuessLng,
+    Value<double?>? discovererCapturedHeading,
     Value<int>? isCleared,
   }) {
     return HistorySpotsCompanion(
@@ -2354,6 +2726,15 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       discovererUid: discovererUid ?? this.discovererUid,
       discovererNickname: discovererNickname ?? this.discovererNickname,
       discovererThumbPath: discovererThumbPath ?? this.discovererThumbPath,
+      discovererJudgeRank: discovererJudgeRank ?? this.discovererJudgeRank,
+      discovererDistanceErrorMeters:
+          discovererDistanceErrorMeters ?? this.discovererDistanceErrorMeters,
+      discovererHeadingErrorDegrees:
+          discovererHeadingErrorDegrees ?? this.discovererHeadingErrorDegrees,
+      discovererGuessLat: discovererGuessLat ?? this.discovererGuessLat,
+      discovererGuessLng: discovererGuessLng ?? this.discovererGuessLng,
+      discovererCapturedHeading:
+          discovererCapturedHeading ?? this.discovererCapturedHeading,
       isCleared: isCleared ?? this.isCleared,
     );
   }
@@ -2438,6 +2819,32 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
         discovererThumbPath.value,
       );
     }
+    if (discovererJudgeRank.present) {
+      map['discoverer_judge_rank'] = Variable<String>(
+        discovererJudgeRank.value,
+      );
+    }
+    if (discovererDistanceErrorMeters.present) {
+      map['discoverer_distance_error_meters'] = Variable<double>(
+        discovererDistanceErrorMeters.value,
+      );
+    }
+    if (discovererHeadingErrorDegrees.present) {
+      map['discoverer_heading_error_degrees'] = Variable<double>(
+        discovererHeadingErrorDegrees.value,
+      );
+    }
+    if (discovererGuessLat.present) {
+      map['discoverer_guess_lat'] = Variable<double>(discovererGuessLat.value);
+    }
+    if (discovererGuessLng.present) {
+      map['discoverer_guess_lng'] = Variable<double>(discovererGuessLng.value);
+    }
+    if (discovererCapturedHeading.present) {
+      map['discoverer_captured_heading'] = Variable<double>(
+        discovererCapturedHeading.value,
+      );
+    }
     if (isCleared.present) {
       map['is_cleared'] = Variable<int>(isCleared.value);
     }
@@ -2470,6 +2877,16 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('discovererUid: $discovererUid, ')
           ..write('discovererNickname: $discovererNickname, ')
           ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('discovererJudgeRank: $discovererJudgeRank, ')
+          ..write(
+            'discovererDistanceErrorMeters: $discovererDistanceErrorMeters, ',
+          )
+          ..write(
+            'discovererHeadingErrorDegrees: $discovererHeadingErrorDegrees, ',
+          )
+          ..write('discovererGuessLat: $discovererGuessLat, ')
+          ..write('discovererGuessLng: $discovererGuessLng, ')
+          ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
           ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
@@ -3088,6 +3505,12 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       Value<String?> discovererUid,
       Value<String?> discovererNickname,
       Value<String?> discovererThumbPath,
+      Value<String?> discovererJudgeRank,
+      Value<double?> discovererDistanceErrorMeters,
+      Value<double?> discovererHeadingErrorDegrees,
+      Value<double?> discovererGuessLat,
+      Value<double?> discovererGuessLng,
+      Value<double?> discovererCapturedHeading,
       Value<int> isCleared,
     });
 typedef $$HistorySpotsTableUpdateCompanionBuilder =
@@ -3115,6 +3538,12 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<String?> discovererUid,
       Value<String?> discovererNickname,
       Value<String?> discovererThumbPath,
+      Value<String?> discovererJudgeRank,
+      Value<double?> discovererDistanceErrorMeters,
+      Value<double?> discovererHeadingErrorDegrees,
+      Value<double?> discovererGuessLat,
+      Value<double?> discovererGuessLng,
+      Value<double?> discovererCapturedHeading,
       Value<int> isCleared,
     });
 
@@ -3259,6 +3688,36 @@ class $$HistorySpotsTableFilterComposer
 
   ColumnFilters<String> get discovererThumbPath => $composableBuilder(
     column: $table.discovererThumbPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererDistanceErrorMeters => $composableBuilder(
+    column: $table.discovererDistanceErrorMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererHeadingErrorDegrees => $composableBuilder(
+    column: $table.discovererHeadingErrorDegrees,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3410,6 +3869,38 @@ class $$HistorySpotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererDistanceErrorMeters =>
+      $composableBuilder(
+        column: $table.discovererDistanceErrorMeters,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<double> get discovererHeadingErrorDegrees =>
+      $composableBuilder(
+        column: $table.discovererHeadingErrorDegrees,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get isCleared => $composableBuilder(
     column: $table.isCleared,
     builder: (column) => ColumnOrderings(column),
@@ -3538,6 +4029,38 @@ class $$HistorySpotsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererDistanceErrorMeters =>
+      $composableBuilder(
+        column: $table.discovererDistanceErrorMeters,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<double> get discovererHeadingErrorDegrees =>
+      $composableBuilder(
+        column: $table.discovererHeadingErrorDegrees,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get isCleared =>
       $composableBuilder(column: $table.isCleared, builder: (column) => column);
 
@@ -3619,6 +4142,14 @@ class $$HistorySpotsTableTableManager
                 Value<String?> discovererUid = const Value.absent(),
                 Value<String?> discovererNickname = const Value.absent(),
                 Value<String?> discovererThumbPath = const Value.absent(),
+                Value<String?> discovererJudgeRank = const Value.absent(),
+                Value<double?> discovererDistanceErrorMeters =
+                    const Value.absent(),
+                Value<double?> discovererHeadingErrorDegrees =
+                    const Value.absent(),
+                Value<double?> discovererGuessLat = const Value.absent(),
+                Value<double?> discovererGuessLng = const Value.absent(),
+                Value<double?> discovererCapturedHeading = const Value.absent(),
                 Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion(
                 id: id,
@@ -3644,6 +4175,12 @@ class $$HistorySpotsTableTableManager
                 discovererUid: discovererUid,
                 discovererNickname: discovererNickname,
                 discovererThumbPath: discovererThumbPath,
+                discovererJudgeRank: discovererJudgeRank,
+                discovererDistanceErrorMeters: discovererDistanceErrorMeters,
+                discovererHeadingErrorDegrees: discovererHeadingErrorDegrees,
+                discovererGuessLat: discovererGuessLat,
+                discovererGuessLng: discovererGuessLng,
+                discovererCapturedHeading: discovererCapturedHeading,
                 isCleared: isCleared,
               ),
           createCompanionCallback:
@@ -3671,6 +4208,14 @@ class $$HistorySpotsTableTableManager
                 Value<String?> discovererUid = const Value.absent(),
                 Value<String?> discovererNickname = const Value.absent(),
                 Value<String?> discovererThumbPath = const Value.absent(),
+                Value<String?> discovererJudgeRank = const Value.absent(),
+                Value<double?> discovererDistanceErrorMeters =
+                    const Value.absent(),
+                Value<double?> discovererHeadingErrorDegrees =
+                    const Value.absent(),
+                Value<double?> discovererGuessLat = const Value.absent(),
+                Value<double?> discovererGuessLng = const Value.absent(),
+                Value<double?> discovererCapturedHeading = const Value.absent(),
                 Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion.insert(
                 id: id,
@@ -3696,6 +4241,12 @@ class $$HistorySpotsTableTableManager
                 discovererUid: discovererUid,
                 discovererNickname: discovererNickname,
                 discovererThumbPath: discovererThumbPath,
+                discovererJudgeRank: discovererJudgeRank,
+                discovererDistanceErrorMeters: discovererDistanceErrorMeters,
+                discovererHeadingErrorDegrees: discovererHeadingErrorDegrees,
+                discovererGuessLat: discovererGuessLat,
+                discovererGuessLng: discovererGuessLng,
+                discovererCapturedHeading: discovererCapturedHeading,
                 isCleared: isCleared,
               ),
           withReferenceMapper:

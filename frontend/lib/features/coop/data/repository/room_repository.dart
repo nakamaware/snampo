@@ -7,6 +7,7 @@ import 'package:snampo/features/coop/data/mapper/room_mapper.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// Firestore 上のルーム
 class RoomRepository implements IRoomRepository {
@@ -180,6 +181,7 @@ class RoomRepository implements IRoomRepository {
     required String uid,
     required Nickname nickname,
     required String thumbPath,
+    required PhotoJudgement? judgement,
   }) => _mapDenied(
     () => _firestore.runTransaction<CreateClearResult>((transaction) async {
       final ref = _clears(room.code).doc(spotId.value);
@@ -197,6 +199,8 @@ class RoomRepository implements IRoomRepository {
         'clearedAt': FieldValue.serverTimestamp(),
         'thumbPath': thumbPath,
         'deleteAt': Timestamp.fromDate(room.deleteAt),
+        if (judgement != null)
+          'judgement': RoomMapper.judgementToFirestore(judgement),
       });
       return const ClearCreated();
     }),

@@ -14,6 +14,7 @@ import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 import 'package:uuid/uuid.dart';
 
 /// Drift 上の履歴 CRUD
@@ -302,6 +303,7 @@ class HistoryRepository implements IHistoryRepository {
     required String discovererUid,
     required String discovererNickname,
     required DateTime clearedAt,
+    required PhotoJudgement? judgement,
   }) async {
     final spot = await _selectCoopSpot(roomCode, spotId);
     if (spot == null) {
@@ -315,6 +317,12 @@ class HistoryRepository implements IHistoryRepository {
         discovererNickname: Value(discovererNickname),
         achievedAt: Value(clearedAt.millisecondsSinceEpoch),
         isCleared: const Value(1),
+        discovererJudgeRank: Value(judgement?.rank.name),
+        discovererDistanceErrorMeters: Value(judgement?.distanceErrorMeters),
+        discovererHeadingErrorDegrees: Value(judgement?.headingErrorDegrees),
+        discovererGuessLat: Value(judgement?.guessPosition?.latitude),
+        discovererGuessLng: Value(judgement?.guessPosition?.longitude),
+        discovererCapturedHeading: Value(judgement?.capturedHeading),
         // 発見者が変わった場合 (自分の送信待ちのクリアが拒否されたなど) は前のサムネを外す
         discovererThumbPath:
             discovererChanged ? const Value(null) : const Value.absent(),

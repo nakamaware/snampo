@@ -14,6 +14,7 @@ import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeRandom = 'random';
@@ -44,6 +45,25 @@ Coordinate? _guessPositionFromDb({required double? lat, required double? lng}) {
     return null;
   }
   return Coordinate(latitude: lat, longitude: lng);
+}
+
+/// 発見者の採点の列から [PhotoJudgement] を組み立てる (ランクと位置誤差がなければ null)
+PhotoJudgement? _discovererJudgementFromDb(HistorySpotRow s) {
+  final rank = _judgeRankFromDb(s.discovererJudgeRank);
+  final distance = s.discovererDistanceErrorMeters;
+  if (rank == null || distance == null) {
+    return null;
+  }
+  return PhotoJudgement(
+    rank: rank,
+    distanceErrorMeters: distance,
+    headingErrorDegrees: s.discovererHeadingErrorDegrees,
+    guessPosition: _guessPositionFromDb(
+      lat: s.discovererGuessLat,
+      lng: s.discovererGuessLng,
+    ),
+    capturedHeading: s.discovererCapturedHeading,
+  );
 }
 
 /// Drift 行とスポット一覧から [MissionSettings] を組み立てる
@@ -125,6 +145,7 @@ MissionHistory missionHistoryFromDriftRows(
               discovererUid: s.discovererUid,
               discovererNickname: s.discovererNickname,
               discovererThumbPath: s.discovererThumbPath,
+              discovererJudgement: _discovererJudgementFromDb(s),
               isCleared: s.isCleared != 0,
             ),
           )
