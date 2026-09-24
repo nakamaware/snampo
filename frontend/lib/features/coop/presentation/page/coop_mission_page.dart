@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -9,7 +8,6 @@ import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
-import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
@@ -59,16 +57,21 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     const _CoopMissionMenu(),
   ];
 
+  /// 自分の発見は「あなた」、他の人は入室順に番号を付けた名前 (重複した名前を見分けるため)
   @override
-  Widget? buildSpotExtra(
-    BuildContext context, {
-    required ImageCoordinate spot,
+  String? discovererName(
+    WidgetRef ref, {
     required CheckpointProgress? checkpoint,
-  }) => _CoopDiscovererView(
-    roomCode: roomCode,
-    spotId: spot.spotId,
-    checkpoint: checkpoint,
-  );
+  }) {
+    final uid = checkpoint?.discovererUid;
+    if (uid == null) return null;
+    if (uid == ref.watch(coopSessionStoreProvider).value?.uid) return 'あなた';
+    final members = ref.watch(coopMembersProvider(roomCode)).value ?? const [];
+    return displayNicknames([
+          for (final m in members) (uid: m.uid, nickname: m.nickname),
+        ])[uid] ??
+        checkpoint?.discovererNickname;
+  }
 
   /// 1 人のクリアで全員のクリアになり、クリア済みのスポットは誰も撮影できない。
   /// 共有中のスポットも撮影できない (同じ発見を並行して送らないため)
@@ -418,75 +421,6 @@ class _CoopHostEndButton extends ConsumerWidget {
         }
       },
       child: const Text('途中終了'),
-    );
-  }
-}
-
-/// スポットカードに表示する発見者とサムネ
-class _CoopDiscovererView extends ConsumerWidget {
-  const _CoopDiscovererView({
-    required this.roomCode,
-    required this.spotId,
-    required this.checkpoint,
-  });
-
-  /// ルームコード
-  final RoomCode roomCode;
-
-  /// スポット ID
-  final SpotId? spotId;
-
-  /// このスポットの進捗
-  final CheckpointProgress? checkpoint;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isSharing = ref.watch(
-      coopMissionStoreProvider(
-        roomCode,
-      ).select((s) => spotId != null && s.sharingSpotIds.contains(spotId)),
-    );
-    final discovererUid = checkpoint?.discovererUid;
-    // 重複した名前には、表示するときだけ入室順に番号を付ける
-    final members = ref.watch(coopMembersProvider(roomCode)).value ?? const [];
-    final discoverer =
-        discovererUid == null
-            ? null
-            : displayNicknames([
-                  for (final m in members) (uid: m.uid, nickname: m.nickname),
-                ])[discovererUid] ??
-                checkpoint?.discovererNickname;
-    final thumbPath = checkpoint?.discovererThumbPath;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (discoverer != null) ...[
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child:
-                  thumbPath == null
-                      ? const ColoredBox(
-                        color: Colors.black12,
-                        child: Icon(Icons.image_outlined),
-                      )
-                      : Image.file(File(thumbPath), fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(discovererLabel(discoverer), style: theme.textTheme.bodySmall),
-        ],
-        if (isSharing)
-          Text(
-            '発見を共有中…',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
-          ),
-      ],
     );
   }
 }
