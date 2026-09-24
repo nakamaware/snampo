@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/nickname.dart';
@@ -13,34 +14,41 @@ import 'package:snampo/features/settings/presentation/store/nickname_store.dart'
 Future<String?> showNicknameDialog(
   BuildContext context, {
   String initialValue = '',
-}) async {
-  final controller = TextEditingController(text: initialValue);
-  try {
-    return await showDialog<String>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('ニックネーム'),
-            content: TextField(
-              controller: controller,
-              autofocus: true,
-              maxLength: Nickname.maxLength,
-              decoration: const InputDecoration(hintText: '空欄なら自動で命名します'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(controller.text),
-                child: const Text('決定'),
-              ),
-            ],
-          ),
+}) => showDialog<String>(
+  context: context,
+  builder: (context) => _NicknameDialog(initialValue: initialValue),
+);
+
+// controller はダイアログと同じ寿命にする。showDialog の Future は pop した時点で完了するが、
+// ダイアログは閉じるアニメーションの間も TextField を描画するため、呼び出し側で破棄すると
+// 破棄済みの controller が使われてしまう
+class _NicknameDialog extends HookWidget {
+  const _NicknameDialog({required this.initialValue});
+
+  final String initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = useTextEditingController(text: initialValue);
+    return AlertDialog(
+      title: const Text('ニックネーム'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        maxLength: Nickname.maxLength,
+        decoration: const InputDecoration(hintText: '空欄なら自動で命名します'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('キャンセル'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(controller.text),
+          child: const Text('決定'),
+        ),
+      ],
     );
-  } finally {
-    controller.dispose();
   }
 }
 
