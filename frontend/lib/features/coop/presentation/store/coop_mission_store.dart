@@ -207,7 +207,9 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// バンドルを取得してミッションを端末に用意する (済んでいれば何もしない)
   Future<void> _prepare(Room room) async {
-    if (state.isReady || _preparing) {
+    // ルームがすでに届いていると (ホームの「ルームに戻る」など)、build の途中で呼ばれ、
+    // state がまだない。そのときは未準備として扱う
+    if ((stateOrNull?.isReady ?? false) || _preparing) {
       return;
     }
     _preparing = true;
