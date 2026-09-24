@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
@@ -16,7 +18,7 @@ class HomePage extends ConsumerWidget {
       persistedMissionProvider(MissionSessionKind.solo),
     );
     final hasSavedMission = savedMissionAsync.value != null;
-    final hasCoopSession = ref.watch(coopSessionStoreProvider).value != null;
+    final coopSession = ref.watch(coopSessionStoreProvider).value;
 
     return Scaffold(
       body: Stack(
@@ -30,8 +32,8 @@ class HomePage extends ConsumerWidget {
                   child: Image.asset('images/snampo.png', fit: BoxFit.contain),
                 ),
                 const SizedBox(height: 20),
-                if (hasCoopSession) ...[
-                  const BackToRoomButton(),
+                if (coopSession != null) ...[
+                  BackToRoomButton(roomCode: coopSession.roomCode),
                   const SizedBox(height: 10),
                 ],
                 if (hasSavedMission) ...[
@@ -81,13 +83,21 @@ class ResumeButton extends StatelessWidget {
 }
 
 /// 協力プレイ中のルームに戻るボタン (アプリのキルや電波断のあと)
-class BackToRoomButton extends StatelessWidget {
+///
+/// ルームがもう終わっていれば (結果を見る前に閉じた場合)、「結果を見る」として結果画面を開く。
+/// 結果画面の「ホームへ戻る」で、このボタンは消える。
+class BackToRoomButton extends ConsumerWidget {
   /// [BackToRoomButton] を作成する
-  const BackToRoomButton({super.key});
+  const BackToRoomButton({required this.roomCode, super.key});
+
+  /// 参加中のルームのコード
+  final RoomCode roomCode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final room = ref.watch(coopRoomProvider(roomCode)).value;
+    final hasEnded = room != null && room.hasEnded(DateTime.now());
     final style = theme.textTheme.headlineMedium!.copyWith(
       color: theme.colorScheme.onSecondary,
     );
@@ -97,10 +107,10 @@ class BackToRoomButton extends StatelessWidget {
         backgroundColor: theme.colorScheme.secondary,
         foregroundColor: theme.colorScheme.onSecondary,
       ),
-      onPressed: () => context.push('/coop/lobby'),
+      onPressed: () => context.push(hasEnded ? '/coop/result' : '/coop/lobby'),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Text('ルームに戻る', style: style),
+        child: Text(hasEnded ? '結果を見る' : 'ルームに戻る', style: style),
       ),
     );
   }

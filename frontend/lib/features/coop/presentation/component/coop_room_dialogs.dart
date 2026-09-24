@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
+import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
@@ -74,6 +75,7 @@ Future<Nickname?> ensureNickname(BuildContext context, WidgetRef ref) async {
 ///
 /// 実際に抜けるのは、新しいルームへの入室や作成に成功したとき ([CoopSessionStore.enter])。
 /// 抜けたルームは `leftAt` を記録し、履歴の同期は続ける。続けてよければ true を返す。
+/// 今のルームがもう終わっていれば (結果を見る前のルーム)、確認せずに続ける。
 Future<bool> confirmLeaveCurrentRoom(
   BuildContext context,
   WidgetRef ref, {
@@ -81,6 +83,10 @@ Future<bool> confirmLeaveCurrentRoom(
 }) async {
   final current = await ref.read(coopSessionStoreProvider.future);
   if (current == null || current.roomCode == nextCode) {
+    return true;
+  }
+  final room = ref.read(coopRoomProvider(current.roomCode)).value;
+  if (room != null && room.hasEnded(DateTime.now())) {
     return true;
   }
   if (!context.mounted) {

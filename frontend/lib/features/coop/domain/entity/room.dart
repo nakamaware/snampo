@@ -90,6 +90,10 @@ abstract class Room with _$Room {
   /// 遊べる期限内か
   bool isPlayable(DateTime now) => now.isBefore(expiresAt);
 
+  /// ルームが終わったか (終了した、または遊べる期限を過ぎた)
+  bool hasEnded(DateTime now) =>
+      status == RoomStatus.finished || !isPlayable(now);
+
   /// [uid] がホストか
   bool isHost(String uid) => hostId == uid;
 }

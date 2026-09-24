@@ -18,6 +18,23 @@ void main() {
     });
   });
 
+  group('Room.hasEnded', () {
+    test('遊んでいる途中なら終わっていない', () {
+      final target = room();
+      expect(target.hasEnded(createdAt), isFalse);
+    });
+
+    test('finished なら終わっている', () {
+      final target = room(status: RoomStatus.finished);
+      expect(target.hasEnded(createdAt), isTrue);
+    });
+
+    test('遊べる期限を過ぎたら、status にかかわらず終わっている', () {
+      final target = room();
+      expect(target.hasEnded(target.expiresAt), isTrue);
+    });
+  });
+
   group('checkJoinable', () {
     final now = createdAt.add(const Duration(hours: 1));
 
