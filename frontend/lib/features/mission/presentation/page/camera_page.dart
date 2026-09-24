@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/presentation/component/photo_confirm_dialog.dart';
 
 /// カメラページの引数
@@ -338,6 +339,12 @@ class _CameraPageState extends State<CameraPage> {
         onPressed: () async {
           try {
             await _handleCapture(context);
+          } on LocationUnavailableException {
+            if (!context.mounted) return;
+            await _showErrorDialog(
+              '現在地を取得できなかったため、採点できませんでした。'
+              '端末の位置情報をオンにして、もう一度撮影してください。',
+            );
           } catch (e) {
             if (!context.mounted) return;
             await _showErrorDialog('写真の撮影に失敗しました。');

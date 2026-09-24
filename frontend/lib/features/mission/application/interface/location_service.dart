@@ -1,5 +1,17 @@
 import 'package:snampo/core/domain/coordinate.dart';
 
+/// 現在地を取得できない (端末の位置情報がオフ、または権限がない)
+class LocationUnavailableException implements Exception {
+  /// [LocationUnavailableException] を作成する
+  const LocationUnavailableException([this.message]);
+
+  /// 理由
+  final String? message;
+
+  @override
+  String toString() => 'LocationUnavailableException($message)';
+}
+
 /// 位置情報サービスのインターフェース
 ///
 /// 警告を抑制する理由:
@@ -10,6 +22,7 @@ import 'package:snampo/core/domain/coordinate.dart';
 abstract class ILocationService {
   /// 現在位置を取得する
   ///
-  /// 高精度で現在位置を取得します
+  /// 高精度で現在位置を取得します。
+  /// 端末の位置情報がオフ、または権限がなければ [LocationUnavailableException] を投げる。
   Future<Coordinate> getCurrentPosition();
 }
