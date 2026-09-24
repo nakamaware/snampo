@@ -615,7 +615,7 @@ final class StartCoopMissionUseCaseProvider
 }
 
 String _$startCoopMissionUseCaseHash() =>
-    r'558b1965c12374f3c016a96b8aea1c81b284b66c';
+    r'8605e283cb1764a2038b48e28671e23efc48c536';
 
 /// 協力プレイの履歴を作成・更新するユースケース
 
