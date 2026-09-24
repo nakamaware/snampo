@@ -550,7 +550,9 @@ class _MissionSpotRow extends StatelessWidget {
                 extension: extension,
               ),
               if (extra != null) ...[const SizedBox(height: 8), extra],
-              if (checkpoint?.userPhotoPath != null) ...[
+              // 協力プレイで他の人が発見したスポットも、結果 (発見者の写真) を見られる
+              if (checkpoint?.userPhotoPath != null ||
+                  checkpoint?.discovererUid != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(
                   onPressed:
@@ -705,6 +707,7 @@ class TakeSnap extends HookConsumerWidget {
       '/camera',
       extra: CameraPageArgs(
         referenceImageBase64: missionPoint.imageBase64,
+        loadingMessage: extension?.captureLoadingMessage ?? '採点中...',
         onPhotoAccepted: (capturedFile, zoomLevel) async {
           final path = capturedFile.path;
           final currentPosition =
@@ -734,7 +737,7 @@ class TakeSnap extends HookConsumerWidget {
           if (checkpoint == null) {
             return false;
           }
-          extension?.onCheckpointCompleted(
+          await extension?.onCheckpointCompleted(
             ref,
             index: spotIndex,
             checkpoint: checkpoint,
@@ -755,6 +758,7 @@ class TakeSnap extends HookConsumerWidget {
             missionPoint: missionPoint,
             checkpoint: checkpoint,
             isDestinationMode: isDestinationMode,
+            closeLabel: extension?.spotResultCloseLabel(ref, index: spotIndex),
           );
           return true;
         },
@@ -884,11 +888,20 @@ abstract class MissionPageExtension {
   }) => true;
 
   /// 撮影と採点が確定したとき
-  void onCheckpointCompleted(
+  ///
+  /// 完了するまで撮影画面のローディングを続け、完了したらスポットの結果画面へ進む。
+  /// 撮影を受け付けられなければ [PhotoRejectedException] を投げる (結果画面へは進まない)。
+  Future<void> onCheckpointCompleted(
     WidgetRef ref, {
     required int index,
     required CheckpointProgress checkpoint,
-  }) {}
+  }) async {}
+
+  /// 撮影してから [onCheckpointCompleted] が完了するまでに表示する文言
+  String get captureLoadingMessage => '採点中...';
+
+  /// 撮影した [index] 番目のスポットの結果画面で、閉じるボタンに出す文言 (null なら既定)
+  String? spotResultCloseLabel(WidgetRef ref, {required int index}) => null;
 
   /// 「プレイ結果」ボタンを表示するか
   bool get showsResultButton => true;

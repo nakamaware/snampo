@@ -35,6 +35,22 @@ abstract class CoopNotice with _$CoopNotice {
   }) = _CoopNotice;
 }
 
+/// 他の人がスポットを発見したこと (全員でそのスポットの結果画面を見るため)
+@freezed
+abstract class CoopDiscoveryEvent with _$CoopDiscoveryEvent {
+  /// [CoopDiscoveryEvent] を作成する
+  const factory CoopDiscoveryEvent({
+    /// 同じスポットでも別のイベントとして扱うための連番
+    required int id,
+
+    /// 発見されたスポットのインデックス
+    required int spotIndex,
+
+    /// 発見者の表示名
+    required String discovererName,
+  }) = _CoopDiscoveryEvent;
+}
+
 /// 協力プレイのミッションの状態
 @freezed
 abstract class CoopMissionState with _$CoopMissionState {
@@ -51,6 +67,9 @@ abstract class CoopMissionState with _$CoopMissionState {
 
     /// 最新のお知らせ
     CoopNotice? notice,
+
+    /// 最新の、他の人による発見 (最後のスポットは、ルームの終了に合わせて Mission 画面が開く)
+    CoopDiscoveryEvent? discovery,
   }) = _CoopMissionState;
 }
 
@@ -58,7 +77,8 @@ abstract class CoopMissionState with _$CoopMissionState {
 ///
 /// ルームと `clears` を監視し、次を行う。
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
-/// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせる
+/// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせて、
+///   そのスポットの結果画面へ移るためのイベントを出す
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
 ///   (finished のあとも、サムネを取得するまでは確定しない)
@@ -68,6 +88,7 @@ abstract class CoopMissionState with _$CoopMissionState {
 class CoopMissionStore extends _$CoopMissionStore {
   Set<SpotId>? _knownClearedSpotIds;
   var _noticeId = 0;
+  var _discoveryId = 0;
   var _preparing = false;
   List<SpotClear> _latestClears = const [];
   Future<void> _clearSync = Future.value();
@@ -153,6 +174,9 @@ class CoopMissionStore extends _$CoopMissionStore {
       notice: CoopNotice(id: ++_noticeId, message: message),
     );
   }
+
+  /// ここまでに受け取った `clears` を、履歴と進捗に反映し終えるまで待つ
+  Future<void> get clearsSynced => _clearSync;
 
   /// `clears` の反映を順番に行う (前の反映が終わってから次を始める)
   void _syncClears() {
@@ -282,6 +306,8 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
     final uid = await _uid();
     final spots = _spots;
+    // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
+    final allCleared = clears.length >= spots.length;
     for (final clear in clears) {
       if (known.contains(clear.spotId) || clear.clearedBy == uid) {
         continue;
@@ -290,29 +316,39 @@ class CoopMissionStore extends _$CoopMissionStore {
       if (index < 0) {
         continue;
       }
+      final name = _displayName(clear.clearedBy, clear.nickname);
       final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
-      _notify('${_displayName(clear.clearedBy, clear.nickname)}さんが$labelを発見!');
+      _notify('$nameさんが$labelを発見!');
+      if (!allCleared) {
+        state = state.copyWith(
+          discovery: CoopDiscoveryEvent(
+            id: ++_discoveryId,
+            spotIndex: index,
+            discovererName: name,
+          ),
+        );
+      }
     }
   }
 
   /// 撮影して採点したスポットをクリアにする
   ///
   /// 自分の写真と採点は、先に他の人が発見していても手元 (進捗と履歴) に残す。
-  /// 共有に失敗した撮影は捨てる (誰もクリアしていない扱いに戻り、もう一度撮影できる)。
-  Future<void> clearSpot({
+  /// 共有に失敗した撮影は捨て (誰もクリアしていない扱いに戻り、もう一度撮影できる)、
+  /// 利用者に表示する理由を返す。共有できたら (先を越された場合を含む) null を返す。
+  Future<String?> clearSpot({
     required int spotIndex,
     required CheckpointProgress checkpoint,
   }) async {
     final room = _room;
     final spotId = _spotIdAt(spotIndex);
     if (checkpoint.userPhotoPath == null) {
-      return;
+      return null;
     }
     if (room == null || spotId == null) {
       // 共有できないので、撮影は捨てる
       await _discardCapture(spotIndex);
-      _notify('発見を共有できませんでした。もう一度撮影してください');
-      return;
+      return '発見を共有できませんでした。もう一度撮影してください';
     }
     void setSharing({required bool sharing}) {
       final ids = {...state.sharingSpotIds};
@@ -330,27 +366,30 @@ class CoopMissionStore extends _$CoopMissionStore {
         spotId: spotId,
         checkpoint: checkpoint,
       );
+      final String? error;
       switch (result) {
         case ClearSpotCleared():
-          break;
+          error = null;
         case ClearSpotAlreadyCleared(:final existing):
+          error = null;
           _notify(
             '先に${_displayName(existing.clearedBy, existing.nickname)}'
             'さんが発見しました',
           );
         case ClearSpotRejected():
           await _discardCapture(spotIndex);
-          _notify('ルームが終了していたため、発見を共有できませんでした');
+          error = 'ルームが終了していたため、発見を共有できませんでした';
         case ClearSpotFailed():
           await _discardCapture(spotIndex);
-          _notify('発見を共有できませんでした。電波の良い場所で撮り直してください');
+          error = '発見を共有できませんでした。電波の良い場所で撮り直してください';
       }
       _syncClears();
+      return error;
     } on Object catch (e, st) {
       // 通信の失敗は ClearSpotFailed で返るので、ここに来るのは端末の中の失敗 (サムネの作成など)
       log('クリアの共有に失敗した', error: e, stackTrace: st, name: 'CoopMission');
       await _discardCapture(spotIndex);
-      _notify('発見を共有できませんでした。もう一度撮影してください');
+      return '発見を共有できませんでした。もう一度撮影してください';
     } finally {
       setSharing(sharing: false);
     }

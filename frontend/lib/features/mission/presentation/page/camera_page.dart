@@ -15,13 +15,32 @@ class CameraPageArgs {
   const CameraPageArgs({
     required this.referenceImageBase64,
     required this.onPhotoAccepted,
+    this.loadingMessage = '採点中...',
   });
 
   /// 正解画像の base64 文字列
   final String referenceImageBase64;
 
   /// 画像確定後の処理。撮影時のズームレベルを合わせて渡す
+  ///
+  /// 完了するまでローディングを表示する。撮影を受け付けられなければ
+  /// [PhotoRejectedException] を投げる (理由をそのまま表示する)。
   final Future<bool> Function(XFile file, double zoomLevel) onPhotoAccepted;
+
+  /// [onPhotoAccepted] の完了を待つ間に表示する文言
+  final String loadingMessage;
+}
+
+/// 撮影を受け付けられなかった ([message] を利用者にそのまま表示する)
+class PhotoRejectedException implements Exception {
+  /// [PhotoRejectedException] を作成する
+  const PhotoRejectedException(this.message);
+
+  /// 利用者に表示する理由
+  final String message;
+
+  @override
+  String toString() => 'PhotoRejectedException($message)';
 }
 
 /// カメラページウィジェット。
@@ -339,6 +358,9 @@ class _CameraPageState extends State<CameraPage> {
         onPressed: () async {
           try {
             await _handleCapture(context);
+          } on PhotoRejectedException catch (e) {
+            if (!context.mounted) return;
+            await _showErrorDialog(e.message);
           } on LocationUnavailableException {
             if (!context.mounted) return;
             await _showErrorDialog(
@@ -449,9 +471,12 @@ class _CameraPageState extends State<CameraPage> {
                           size: 100,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          '採点中...',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        Text(
+                          widget.args.loadingMessage,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),

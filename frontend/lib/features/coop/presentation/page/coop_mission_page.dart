@@ -18,7 +18,11 @@ import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart'
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
+import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
+import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// 協力プレイの Mission 画面 (端末で進行中のルーム)
 ///
@@ -81,24 +85,50 @@ class _CoopMissionPageExtension extends MissionPageExtension {
         ).select((s) => s.sharingSpotIds.contains(spot.spotId)),
       );
 
-  /// 発見の共有は裏で進める (共有中は「発見を共有中…」を表示する)
+  /// 発見の共有が終わるまで撮影画面のローディングを続け、共有できたら結果画面へ進む。
+  /// 共有できなければ撮影を捨て、理由を表示する (結果画面へは進まず、撮り直せる)
   @override
-  void onCheckpointCompleted(
+  Future<void> onCheckpointCompleted(
     WidgetRef ref, {
     required int index,
     required CheckpointProgress checkpoint,
-  }) {
-    unawaited(
-      ref
-          .read(coopMissionStoreProvider(roomCode).notifier)
-          .clearSpot(spotIndex: index, checkpoint: checkpoint),
+  }) async {
+    final error = await ref
+        .read(coopMissionStoreProvider(roomCode).notifier)
+        .clearSpot(spotIndex: index, checkpoint: checkpoint);
+    if (error != null) {
+      throw PhotoRejectedException(error);
+    }
+  }
+
+  @override
+  String get captureLoadingMessage => '採点して、発見を共有しています...';
+
+  /// 最後のスポットの結果画面は、閉じるとプレイ結果へ移る
+  @override
+  String? spotResultCloseLabel(WidgetRef ref, {required int index}) {
+    final checkpoints =
+        ref
+            .read(missionProgressStoreProvider(MissionSessionKind.coop))
+            .value
+            ?.checkpoints ??
+        const [];
+    final isLast = checkpoints.indexed.every(
+      (e) =>
+          e.$1 == index ||
+          e.$2?.discovererUid != null ||
+          e.$2?.userPhotoPath != null,
     );
+    return isLast ? _finalSpotCloseLabel : null;
   }
 
   /// 全スポットのクリアかホストの途中終了で、全員が結果画面へ自動で遷移する
   @override
   bool get showsResultButton => false;
 }
+
+/// 最後のスポットの結果画面の、閉じるボタンの文言
+const _finalSpotCloseLabel = 'プレイ結果を見る';
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
 class _CoopMissionEffects extends HookConsumerWidget {
@@ -109,6 +139,105 @@ class _CoopMissionEffects extends HookConsumerWidget {
 
   /// 中身
   final Widget child;
+
+  /// 他の人が発見したスポットの結果画面を開く
+  ///
+  /// Mission 画面が前面にあるときだけ開く (撮影中などは割り込まず、お知らせだけにする)。
+  static void _openDiscoveredSpot(
+    BuildContext context,
+    WidgetRef ref,
+    CoopDiscoveryEvent discovery,
+  ) {
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    final mission =
+        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
+    final checkpoints =
+        ref
+            .read(missionProgressStoreProvider(MissionSessionKind.coop))
+            .value
+            ?.checkpoints;
+    final index = discovery.spotIndex;
+    final checkpoint =
+        checkpoints != null && index < checkpoints.length
+            ? checkpoints[index]
+            : null;
+    if (mission == null ||
+        checkpoint == null ||
+        index >= mission.spots.length) {
+      return;
+    }
+    context.push(
+      '/spot-result',
+      extra: SpotResultPageArgs(
+        spotIndex: index,
+        totalCheckpointCount: mission.spots.length,
+        missionPoint: mission.spots[index],
+        checkpoint: checkpoint,
+        isDestinationMode: mission.radius == null,
+        discovererDisplayName: discovery.discovererName,
+      ),
+    );
+  }
+
+  /// ルームが終わったら、Mission 画面が前面に戻った時点で結果画面へ移る
+  ///
+  /// 全スポットのクリアで終わったときは、先に最後に発見されたスポットの結果画面を開き、
+  /// それを閉じて戻ってきたら結果画面へ移る。自分で撮影した (結果を見た) スポットなら開かない。
+  static Future<void> _onFinished(
+    BuildContext context,
+    WidgetRef ref,
+    RoomCode roomCode,
+    Room room,
+    ObjectRef<bool> finalSpotShown,
+  ) async {
+    if (room.finishReason != FinishReason.allCleared || finalSpotShown.value) {
+      context.go('/coop/result');
+      return;
+    }
+    finalSpotShown.value = true;
+    // 発見者とサムネを進捗に反映し終えてから開く
+    await ref.read(coopMissionStoreProvider(roomCode).notifier).clearsSynced;
+    if (!context.mounted) return;
+    final clears = ref.read(coopClearsProvider(roomCode)).value ?? const [];
+    final mission =
+        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
+    final checkpoints =
+        ref
+            .read(missionProgressStoreProvider(MissionSessionKind.coop))
+            .value
+            ?.checkpoints;
+    if (clears.isEmpty || mission == null || checkpoints == null) {
+      context.go('/coop/result');
+      return;
+    }
+    final last = clears.reduce(
+      (a, b) => a.clearedAt.isAfter(b.clearedAt) ? a : b,
+    );
+    final index = mission.spots.indexWhere((s) => s.spotId == last.spotId);
+    final checkpoint =
+        index >= 0 && index < checkpoints.length ? checkpoints[index] : null;
+    if (checkpoint == null || checkpoint.userPhotoPath != null) {
+      context.go('/coop/result');
+      return;
+    }
+    final members = ref.read(coopMembersProvider(roomCode)).value ?? const [];
+    await context.push<void>(
+      '/spot-result',
+      extra: SpotResultPageArgs(
+        spotIndex: index,
+        totalCheckpointCount: mission.spots.length,
+        missionPoint: mission.spots[index],
+        checkpoint: checkpoint,
+        isDestinationMode: mission.radius == null,
+        discovererDisplayName:
+            displayNicknames([
+              for (final m in members) (uid: m.uid, nickname: m.nickname),
+            ])[last.clearedBy] ??
+            last.nickname,
+        closeLabel: _finalSpotCloseLabel,
+      ),
+    );
+  }
 
   /// 期限切れを知らせて結果画面へ移る
   static void _goToResultAsExpired(BuildContext context) {
@@ -138,12 +267,37 @@ class _CoopMissionEffects extends HookConsumerWidget {
             ),
           );
       })
-      // finished になったら全員が結果画面へ自動で遷移する
-      ..listen(coopRoomProvider(roomCode), (_, next) {
-        if (next.value?.status == RoomStatus.finished) {
-          context.go('/coop/result');
+      // 他の人が発見したら、全員でそのスポットの結果画面を見る
+      ..listen(coopMissionStoreProvider(roomCode).select((s) => s.discovery), (
+        _,
+        discovery,
+      ) {
+        if (discovery != null) _openDiscoveredSpot(context, ref, discovery);
+      });
+
+    // finished になったら全員が結果画面へ移る。撮影中やスポットの結果画面を見ている間は
+    // 割り込まず、Mission 画面が前面に戻った時点で移る
+    final finishedRoom = ref.watch(
+      coopRoomProvider(roomCode).select((room) {
+        final value = room.value;
+        return value?.status == RoomStatus.finished ? value : null;
+      }),
+    );
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
+    final finalSpotShown = useRef(false);
+    useEffect(() {
+      if (finishedRoom == null || !isCurrent) return null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // 撮影した人は、カメラを閉じた直後にスポットの結果画面を開く。その間に移らないよう、
+        // 次のフレームでも前面にあるときだけ移る
+        if (context.mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          unawaited(
+            _onFinished(context, ref, roomCode, finishedRoom, finalSpotShown),
+          );
         }
       });
+      return null;
+    }, [finishedRoom, isCurrent]);
 
     // 遊べる期限を過ぎると誰も finished にできないので、期限切れとして結果画面へ移る
     final expiresAt = ref.watch(

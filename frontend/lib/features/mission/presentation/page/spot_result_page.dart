@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
@@ -19,6 +20,8 @@ class SpotResultPageArgs {
     required this.checkpoint,
     this.fromResultPage = false,
     this.isDestinationMode = false,
+    this.discovererDisplayName,
+    this.closeLabel,
   });
 
   /// Spot のインデックス
@@ -38,6 +41,14 @@ class SpotResultPageArgs {
 
   /// 目的地指定モードのミッションかどうか
   final bool isDestinationMode;
+
+  /// 協力プレイの発見者の表示名 (null なら発見時点のニックネームを使う)
+  final String? discovererDisplayName;
+
+  /// 画面を閉じるボタンの文言 (null なら戻り先に合わせる)
+  ///
+  /// 協力プレイの最後のスポットでは、閉じるとプレイ結果へ移るため、そのことを文言で示す。
+  final String? closeLabel;
 }
 
 /// Spot単位の採点結果画面
@@ -54,7 +65,14 @@ class SpotResultPage extends StatelessWidget {
     final checkpoint = args.checkpoint;
     final isGoal = args.spotIndex == args.totalCheckpointCount - 1;
     final isSelectedDestinationGoal = isGoal && args.isDestinationMode;
-    if (checkpoint.userPhotoPath == null) {
+    // 協力プレイで他の人が発見したスポット (自分の写真と採点はない) は、発見者の写真を表示する
+    final isOthersDiscovery =
+        checkpoint.userPhotoPath == null && checkpoint.discovererUid != null;
+    final photoPath =
+        isOthersDiscovery
+            ? checkpoint.discovererThumbPath
+            : checkpoint.userPhotoPath;
+    if (checkpoint.userPhotoPath == null && !isOthersDiscovery) {
       return _ErrorScaffold(message: '採点結果を表示できませんでした。', isGoal: isGoal);
     }
 
@@ -94,24 +112,36 @@ class SpotResultPage extends StatelessWidget {
               const SizedBox(height: 16),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(
-                  File(checkpoint.userPhotoPath!),
-                  fit: BoxFit.contain,
-                  // 協力プレイで共有に失敗すると、表示中に写真を捨てることがある
-                  errorBuilder:
-                      (_, _, _) => const AspectRatio(
-                        aspectRatio: 4 / 3,
-                        child: ColoredBox(color: Colors.black12),
-                      ),
-                ),
+                child:
+                    photoPath == null
+                        // 発見者の写真をまだ取得できていない
+                        ? const _PhotoPlaceholder()
+                        : Image.file(
+                          File(photoPath),
+                          fit: BoxFit.contain,
+                          // 協力プレイで共有に失敗すると、表示中に写真を捨てることがある
+                          errorBuilder: (_, _, _) => const _PhotoPlaceholder(),
+                        ),
               ),
               const SizedBox(height: 16),
-              _RankCard(rank: rank),
+              if (isOthersDiscovery)
+                _InfoTile(
+                  label: '発見者',
+                  value: discovererLabel(
+                    args.discovererDisplayName ?? checkpoint.discovererNickname,
+                    isCleared: true,
+                  ),
+                )
+              else
+                _RankCard(rank: rank),
               const SizedBox(height: 16),
               _InfoTile(label: '名称', value: pointNameText),
               _InfoTile(label: 'ジャンル', value: genreText),
-              _InfoTile(label: 'スポットまで残り', value: distanceErrorText),
-              _InfoTile(label: '向きのずれ', value: headingErrorText),
+              // 位置と向きのずれは自分の撮影の採点なので、他の人の発見では表示しない
+              if (!isOthersDiscovery) ...[
+                _InfoTile(label: 'スポットまで残り', value: distanceErrorText),
+                _InfoTile(label: '向きのずれ', value: headingErrorText),
+              ],
               const SizedBox(height: 16),
               SizedBox(
                 height: 220,
@@ -131,7 +161,10 @@ class SpotResultPage extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => context.pop(),
-                child: Text(args.fromResultPage ? 'プレイ結果画面に戻る' : 'ミッション画面へ戻る'),
+                child: Text(
+                  args.closeLabel ??
+                      (args.fromResultPage ? 'プレイ結果画面に戻る' : 'ミッション画面へ戻る'),
+                ),
               ),
             ],
           ),
@@ -168,6 +201,16 @@ class SpotResultPage extends StatelessWidget {
       }
     }
   }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder();
+
+  @override
+  Widget build(BuildContext context) => const AspectRatio(
+    aspectRatio: 4 / 3,
+    child: ColoredBox(color: Colors.black12),
+  );
 }
 
 class _RankCard extends StatelessWidget {
