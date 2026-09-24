@@ -169,4 +169,21 @@ void main() {
       );
     });
   });
+
+  test(
+    'MissionProgressEntity.unsharedCaptureIndexes: 写真はあるが発見者がいない撮影の番号を返す',
+    () {
+      final entity = MissionProgressEntity(
+        startedAt: DateTime(2024),
+        checkpoints: const [
+          CheckpointProgress(userPhotoPath: '/unshared.jpg'),
+          CheckpointProgress(userPhotoPath: '/mine.jpg', discovererUid: 'me'),
+          CheckpointProgress(discovererUid: 'other'),
+          null,
+        ],
+      );
+
+      expect(entity.unsharedCaptureIndexes, [0]);
+    },
+  );
 }

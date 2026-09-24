@@ -355,14 +355,28 @@ class CoopMissionStore extends _$CoopMissionStore {
   ///
   /// 共有の結果を待たずに終わっているので、共有できなかった扱いにする
   /// (もう一度撮影できるようにする)。ミッションを端末に用意した直後に呼ぶ。
+  ///
+  /// サーバにそのスポットのクリアがあれば (共有は届いていて、同期の前に終了した。先着に
+  /// 負けた場合を含む) 捨てない。発見者はこのあとの同期で付く。`clears` を読めなければ、
+  /// 判断できないので何もしない。
   Future<void> _discardUnsharedCaptures() async {
     final progress = await ref.read(
       missionProgressStoreProvider(MissionSessionKind.coop).future,
     );
-    final checkpoints = progress?.checkpoints ?? const [];
-    for (final (index, checkpoint) in checkpoints.indexed) {
-      if (checkpoint?.userPhotoPath != null &&
-          checkpoint?.discovererUid == null) {
+    final indexes = [...?progress?.unsharedCaptureIndexes];
+    if (indexes.isEmpty) return;
+    final List<SpotClear> clears;
+    try {
+      clears = await ref.read(coopClearsProvider(roomCode).future);
+    } on Object catch (e) {
+      log('未共有の撮影を確かめられなかった: $e', name: 'CoopMission');
+      return;
+    }
+    final clearedSpotIds = {for (final clear in clears) clear.spotId};
+    final spots = _spots;
+    for (final index in indexes) {
+      final spotId = index < spots.length ? spots[index].spotId : null;
+      if (!clearedSpotIds.contains(spotId)) {
         await _discardCapture(index);
       }
     }
