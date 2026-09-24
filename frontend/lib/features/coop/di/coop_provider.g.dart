@@ -772,7 +772,7 @@ final class ClearSpotUseCaseProvider
   }
 }
 
-String _$clearSpotUseCaseHash() => r'88b0daeed949c948f0a791343fbc5464b1accd65';
+String _$clearSpotUseCaseHash() => r'f3c0a6f3595715d928f1d8808b6840b9ae2b2a25';
 
 /// 全スポットがクリアされていれば finished にするユースケース
 

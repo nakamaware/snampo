@@ -40,7 +40,8 @@ void main() {
         },
       );
 
-      expect(plan.isEmpty, isTrue);
+      expect(plan.discoverersToApply, isEmpty);
+      expect(plan.thumbsToFetch, isEmpty);
     });
   });
 

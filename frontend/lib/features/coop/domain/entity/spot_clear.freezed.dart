@@ -747,8 +747,8 @@ return $default(_that.discoverersToApply,_that.thumbsToFetch);case _:
 /// @nodoc
 
 
-class _ClearSyncPlan extends ClearSyncPlan {
-  const _ClearSyncPlan({required final  List<SpotClear> discoverersToApply, required final  List<SpotClear> thumbsToFetch}): _discoverersToApply = discoverersToApply,_thumbsToFetch = thumbsToFetch,super._();
+class _ClearSyncPlan implements ClearSyncPlan {
+  const _ClearSyncPlan({required final  List<SpotClear> discoverersToApply, required final  List<SpotClear> thumbsToFetch}): _discoverersToApply = discoverersToApply,_thumbsToFetch = thumbsToFetch;
 
 
 /// 発見者を端末に反映するクリア

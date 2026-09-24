@@ -176,17 +176,14 @@ class _Lobby extends HookConsumerWidget {
     );
   }
 
-  Future<bool> _confirmRestart(BuildContext context) async {
-    final confirmed = await showConfirmDialog(
-      context,
-      title: 'ミッションの生成をやり直しますか?',
-      content:
-          '前回の生成が途中で止まった可能性があります。'
-          '生成中の場合は、しばらく待ってからやり直してください。',
-      confirmLabel: 'やり直す',
-    );
-    return confirmed;
-  }
+  Future<bool> _confirmRestart(BuildContext context) => showConfirmDialog(
+    context,
+    title: 'ミッションの生成をやり直しますか?',
+    content:
+        '前回の生成が途中で止まった可能性があります。'
+        '生成中の場合は、しばらく待ってからやり直してください。',
+    confirmLabel: 'やり直す',
+  );
 
   Future<void> _start(BuildContext context, WidgetRef ref, Room room) async {
     try {

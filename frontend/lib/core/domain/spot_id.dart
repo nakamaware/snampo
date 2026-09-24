@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:snampo/core/domain/coordinate.dart';
 
 /// スポット ID 値オブジェクト
 ///
@@ -29,27 +28,10 @@ sealed class SpotId {
     if (lat.abs() > 90 || lng.abs() > 180) {
       throw FormatException('geo URI の座標が範囲外です', value);
     }
-    return GeoSpotId._(value, Coordinate(latitude: lat, longitude: lng));
+    return GeoSpotId._(value);
   }
-
-  /// 座標から geo URI のスポット ID を作る (小数 6 桁)
-  factory SpotId.fromCoordinate(Coordinate coordinate) {
-    final lat = coordinate.latitude.toStringAsFixed(_geoDecimalPlaces);
-    final lng = coordinate.longitude.toStringAsFixed(_geoDecimalPlaces);
-    return SpotId.parse('$_geoPrefix$lat,$lng');
-  }
-
-  /// [pathSegment] で作ったパスの部分から元に戻す
-  factory SpotId.fromPathSegment(String segment) => SpotId.parse(
-    segment.startsWith(_geoPathPrefix)
-        ? segment
-            .replaceFirst(_geoPathPrefix, _geoPrefix)
-            .replaceFirst(_pathSeparator, ',')
-        : segment,
-  );
 
   static const _geoPrefix = 'geo:';
-  static const _geoDecimalPlaces = 6;
 
   // place_id は英数字と `_`、`-` だけでできているため、`~` とは衝突しない
   static const _pathSeparator = '~';
@@ -83,10 +65,7 @@ final class PlaceSpotId extends SpotId {
 
 /// 座標のスポット ID (geo URI)
 final class GeoSpotId extends SpotId {
-  const GeoSpotId._(super.value, this.coordinate) : super._();
-
-  /// スポット ID から戻した座標
-  final Coordinate coordinate;
+  const GeoSpotId._(super.value) : super._();
 }
 
 /// [SpotId] を JSON (文字列) と相互変換する [JsonConverter]

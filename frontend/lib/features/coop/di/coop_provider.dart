@@ -126,7 +126,6 @@ ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
   storage: ref.read(coopStorageProvider),
   rooms: ref.read(roomRepositoryProvider),
   histories: ref.read(historyRepositoryProvider),
-  finishIfAllCleared: ref.read(finishIfAllClearedUseCaseProvider),
 );
 
 /// 全スポットがクリアされていれば finished にするユースケース

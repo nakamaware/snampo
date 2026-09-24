@@ -191,7 +191,6 @@ class FakeRoomRepository implements IRoomRepository {
 
 /// メモリ上の Storage
 class FakeCoopStorage implements ICoopStorage {
-  final uploadedThumbs = <String>[];
   final downloadedThumbs = <String>[];
 
   /// null 以外なら uploadThumb はこの Future を待つ
@@ -234,7 +233,6 @@ class FakeCoopStorage implements ICoopStorage {
       throw thumbUploadError!;
     }
     final path = 'rooms/${code.value}/thumbs/${spotId.pathSegment}/$uid.jpg';
-    uploadedThumbs.add(path);
     return path;
   }
 

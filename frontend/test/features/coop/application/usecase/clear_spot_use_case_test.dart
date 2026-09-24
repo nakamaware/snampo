@@ -5,7 +5,6 @@ import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
-import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
@@ -57,10 +56,6 @@ void main() {
       storage: storage,
       rooms: rooms,
       histories: histories,
-      finishIfAllCleared: FinishIfAllClearedUseCase(
-        rooms,
-        now: () => fx.createdAt,
-      ),
       shareTimeout: const Duration(milliseconds: 50),
     );
   });
@@ -90,14 +85,6 @@ void main() {
     expect(spot.discovererUid, 'me');
     expect(spot.discovererThumbPath, 'history:/photos/a.jpg.thumb');
     expect(spot.isCleared, isTrue);
-  });
-
-  test('最後のクリアなら finished にする', () async {
-    rooms.clears[fx.code] = {fx.spot('b'): fx.clear('b', 'other')};
-
-    await clear();
-
-    expect(rooms.rooms[fx.code]!.status, RoomStatus.finished);
   });
 
   test('サムネのアップロードに失敗したら、クリアを作成せず失敗を返す (撮り直してもらう)', () async {

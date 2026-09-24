@@ -5,7 +5,6 @@ import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/application/interface/thumbnail_service.dart';
-import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
@@ -48,7 +47,9 @@ final class ClearSpotFailed extends ClearSpotResult {
 /// 1. 自分の写真と採点を履歴に残す (先に他の人が発見していても、共有に失敗しても手元に残す)
 /// 2. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
 ///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)
-/// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映し、最後のクリアなら finished にする
+/// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
+///
+/// 最後のクリアで finished にするのは、`clears` を監視しているストア (CoopMissionStore) が行う。
 class ClearSpotUseCase {
   /// [ClearSpotUseCase] を作成する
   ClearSpotUseCase({
@@ -56,21 +57,18 @@ class ClearSpotUseCase {
     required ICoopStorage storage,
     required IRoomRepository rooms,
     required IHistoryRepository histories,
-    required FinishIfAllClearedUseCase finishIfAllCleared,
     DateTime Function()? now,
     this.shareTimeout = const Duration(seconds: 30),
   }) : _thumbnails = thumbnails,
        _storage = storage,
        _rooms = rooms,
        _histories = histories,
-       _finishIfAllCleared = finishIfAllCleared,
        _now = now ?? DateTime.now;
 
   final IThumbnailService _thumbnails;
   final ICoopStorage _storage;
   final IRoomRepository _rooms;
   final IHistoryRepository _histories;
-  final FinishIfAllClearedUseCase _finishIfAllCleared;
   final DateTime Function() _now;
 
   /// サムネのアップロードとクリアの作成を待つ時間
@@ -135,12 +133,6 @@ class ClearSpotUseCase {
       spotId: spotId,
       sourcePath: localThumbPath,
     );
-    try {
-      // 画面でルームを監視していなくても、最後のクリアを書いた端末が finished にする
-      await _finishIfAllCleared(room, await _rooms.fetchClears(room.code));
-    } on Object catch (e) {
-      log('finished への更新に失敗した: $e', name: 'ClearSpot');
-    }
     return const ClearSpotCleared();
   }
 

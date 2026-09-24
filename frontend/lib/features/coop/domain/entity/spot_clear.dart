@@ -48,11 +48,6 @@ abstract class ClearSyncPlan with _$ClearSyncPlan {
     /// サムネを取得するクリア
     required List<SpotClear> thumbsToFetch,
   }) = _ClearSyncPlan;
-
-  const ClearSyncPlan._();
-
-  /// 何もすることがないか
-  bool get isEmpty => discoverersToApply.isEmpty && thumbsToFetch.isEmpty;
 }
 
 /// サーバの [clears] と端末の状態 [local] (spotId ごと) を比べ、不足分を返す
