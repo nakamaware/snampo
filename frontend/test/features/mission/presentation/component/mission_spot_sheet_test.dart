@@ -64,6 +64,17 @@ void main() {
       expect(find.bySemanticsLabel('Spot 2 未発見'), findsOneWidget);
     });
 
+    testWidgets('チップは押しやすい高さにする', (tester) async {
+      for (final count in const [3, 20]) {
+        await _pump(tester, spots: [for (var i = 0; i < count; i++) _todo]);
+        expect(
+          tester.getSize(find.bySemanticsLabel('Spot 1 未発見')).height,
+          40,
+          reason: '$count スポット',
+        );
+      }
+    });
+
     testWidgets('カードの撮影ボタンと「結果を見る」は、そのスポットの番号を渡す', (tester) async {
       final captured = <int>[];
       final shown = <int>[];

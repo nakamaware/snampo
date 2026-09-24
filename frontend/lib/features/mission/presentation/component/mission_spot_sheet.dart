@@ -294,7 +294,7 @@ class MissionSpotSheet extends HookWidget {
 }
 
 /// 見出しの高さの目安 (測るまでの最初の 1 フレームだけ使う)
-const _estimatedHeaderHeight = 126.0;
+const _estimatedHeaderHeight = 130.0;
 
 /// カードの見本がこれ以上縮まないようにする、カルーセルの高さの下限
 const _minCarouselHeight = 160.0;
@@ -446,6 +446,8 @@ class _SpotChips extends HookWidget {
     required this.onTap,
   });
 
+  /// 屋外で歩きながらでも押しやすい高さ
+  static const _height = 40.0;
   static const _gap = 8.0;
   static const _labeledMinWidth = 84.0;
   static const _numberWidth = 44.0;
@@ -489,7 +491,7 @@ class _SpotChips extends HookWidget {
     );
 
     return SizedBox(
-      height: 36,
+      height: _height,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final rowWidth = constraints.maxWidth - _horizontalPadding * 2;
@@ -500,6 +502,7 @@ class _SpotChips extends HookWidget {
                 horizontal: _horizontalPadding,
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (var i = 0; i < count; i++) ...[
                     if (i > 0) const SizedBox(width: _gap),
