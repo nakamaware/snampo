@@ -92,7 +92,7 @@ mise trust
 mise install
 ```
 
-これにより、プロジェクトに必要なFlutterとJavaのバージョンが自動的にインストールされます。
+これにより、プロジェクトに必要な Flutter と Java のバージョンが自動的にインストールされます。Security Rules のテストで使う Node.js と Java 21 は `firebase/.mise.toml` にあり、`firebase/` で `mise install` すると入ります。手順は [協力プレイのセットアップ](./coop-play-setup.md#6-security-rules-のテスト) を参照してください。
 
 ### 7. 依存関係のインストール
 

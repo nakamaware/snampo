@@ -89,8 +89,12 @@ Storage を使うため Blaze プランが前提。予算アラートは既存�
 
 ## 6. Security Rules のテスト
 
+Node.js 22 と Java 21 は `firebase/.mise.toml` で管理している。`firebase/` に入ると、ルートの Java 17 ではなく Java 21 が使われる。
+
 ```bash
 cd firebase
+mise trust   # 初回のみ
+mise install
 npm ci
-npm test   # Java 21 以上が必要 (firebase-tools のエミュレータ)
+npm test
 ```

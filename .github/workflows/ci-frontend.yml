@@ -67,11 +67,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
+          # firebase/.mise.toml と揃える
           node-version: 22
           cache: npm
           cache-dependency-path: firebase/package-lock.json
       - name: Setup Java
-        # firebase-tools のエミュレータは Java 21 以上が必要
+        # firebase/.mise.toml と同じ。エミュレータは Java 21 以上が必要
         uses: actions/setup-java@v4
         with:
           distribution: temurin
