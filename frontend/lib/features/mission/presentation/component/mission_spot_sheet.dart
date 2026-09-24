@@ -49,7 +49,8 @@ class MissionSheetSpot {
 
   /// スポットの状態の文言
   String get statusLabel {
-    if (!isCleared) return 'まだ見つけていません';
+    // 何をすればよいかが伝わるよう、状態ではなく次にすることを書く
+    if (!isCleared) return '見本と同じ景色を探そう';
     final discoverer = discovererName;
     return discoverer == null ? '撮影済み' : discovererLabel(discoverer);
   }

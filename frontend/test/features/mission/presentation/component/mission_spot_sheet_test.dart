@@ -127,7 +127,7 @@ void main() {
       expect(find.text('Spot 1 · 発見: たなか'), findsOneWidget);
       // 見つける前は、答えになる名前を出さない
       expect(find.text('まだ秘密の場所'), findsNothing);
-      expect(find.text('まだ見つけていません'), findsOneWidget);
+      expect(find.text('見本と同じ景色を探そう'), findsOneWidget);
     });
 
     testWidgets('スポットがクリアになると、チップに ✓ が現れて振動する', (tester) async {
@@ -192,7 +192,7 @@ void main() {
       // 2 枚目のカードへめくる
       await tester.drag(find.byType(PageView), const Offset(-300, 0));
       await tester.pumpAndSettle();
-      expect(find.text('まだ見つけていません'), findsOneWidget);
+      expect(find.text('見本と同じ景色を探そう'), findsOneWidget);
       await tester.tap(find.text('撮影する'));
       expect(captured, [1]);
     });
