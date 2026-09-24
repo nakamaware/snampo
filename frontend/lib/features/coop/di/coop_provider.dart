@@ -90,20 +90,24 @@ UpdateRoomSettingsUseCase updateRoomSettingsUseCase(Ref ref) =>
 
 /// ホストがミッションを生成して配るユースケース
 @riverpod
-StartCoopMissionUseCase startCoopMissionUseCase(Ref ref) =>
-    StartCoopMissionUseCase(
-      rooms: ref.read(roomRepositoryProvider),
-      storage: ref.read(coopStorageProvider),
-      createMission:
-          (settings) => switch (settings) {
-            RoomSettingsRandom(:final radius) => ref.read(
-              createRandomMissionUseCaseProvider,
-            )(radius),
-            RoomSettingsDestination(:final destination) => ref.read(
-              createDestinationMissionUseCaseProvider,
-            )(destination),
-          },
-    );
+StartCoopMissionUseCase startCoopMissionUseCase(Ref ref) {
+  // 呼び出し側は ref.read で取り出すため、この Provider は生成の途中で破棄される。
+  // 破棄後に ref を使えないよう、依存するユースケースはここで取り出しておく
+  final createRandomMission = ref.read(createRandomMissionUseCaseProvider);
+  final createDestinationMission = ref.read(
+    createDestinationMissionUseCaseProvider,
+  );
+  return StartCoopMissionUseCase(
+    rooms: ref.read(roomRepositoryProvider),
+    storage: ref.read(coopStorageProvider),
+    createMission:
+        (settings) => switch (settings) {
+          RoomSettingsRandom(:final radius) => createRandomMission(radius),
+          RoomSettingsDestination(:final destination) =>
+            createDestinationMission(destination),
+        },
+  );
+}
 
 /// 協力プレイの履歴を作成・更新するユースケース
 @riverpod
