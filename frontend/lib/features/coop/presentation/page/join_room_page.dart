@@ -82,8 +82,14 @@ class JoinRoomPage extends HookConsumerWidget {
                 maxLength: RoomCode.length,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
+                // textCapitalization はキーボードへの指定にすぎず、貼り付けや一部のキーボードでは
+                // 小文字が入るため、入力された値そのものを大文字にする
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp('[a-zA-Z0-9]')),
+                  TextInputFormatter.withFunction(
+                    (_, value) =>
+                        value.copyWith(text: value.text.toUpperCase()),
+                  ),
                 ],
                 decoration: InputDecoration(
                   labelText: 'ルームコード',
