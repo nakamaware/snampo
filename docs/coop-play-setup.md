@@ -36,27 +36,33 @@ module "snampo_prod" {
 
 注意: Play Console を使っていない現状では、prod の Android ビルドの協力プレイは動かない (Play 経由でインストールしたアプリが前提のため)。
 
-## 2. Firebase の設定ファイル (`firebase_options_*.dart`) を更新する
+## 2. Firebase の設定 (`FIREBASE_*`) を登録する
 
-`frontend/lib/core/firebase/firebase_options_dev.dart` と `firebase_options_prod.dart` は公開値なのでコミットする。
-値が `UNSET` のままの間、アプリは Firebase を初期化せず、協力プレイだけを使えない状態にする (ソロは遊べる)。
+API キーとアプリ ID は公開値だが、念のため secret として扱う。リポジトリには置かず、ビルド時に dart-define で渡す。
+プロジェクト ID とバケット名は `frontend/lib/core/firebase/firebase_options.dart` に置く。
+そのプラットフォームの値が空の間、アプリは Firebase を初期化せず、協力プレイだけを使えない状態にする (ソロは遊べる)。
 
-apply 後、Terraform の output から値を取り出して更新する。
+apply 後、Terraform の output から値を取り出す (出力をそのまま `.env` の形で使える)。
 
 ```bash
 cd terraform/env/dev   # prod なら terraform/env/prod
-terraform output -json firebase_options
+terraform output -json firebase_options | jq -r '
+  "FIREBASE_ANDROID_API_KEY=\(.android_config_json | fromjson | .client[0].api_key[0].current_key)",
+  "FIREBASE_ANDROID_APP_ID=\(.android_app_id)",
+  "FIREBASE_IOS_API_KEY=\(.ios_config_plist | capture("<key>API_KEY</key>\\s*<string>(?<k>[^<]+)</string>").k)",
+  "FIREBASE_IOS_APP_ID=\(.ios_app_id)",
+  "FIREBASE_MESSAGING_SENDER_ID=\(.messaging_sender_id)"'
 ```
 
-| Dart のフィールド | 値 |
+取り出した値を、次の場所に登録する。
+
+| 登録先 | 登録する値 |
 |---|---|
-| `android.appId` | `android_app_id` |
-| `android.apiKey` | `android_config_json` の `client[0].api_key[0].current_key` |
-| `ios.appId` | `ios_app_id` |
-| `ios.apiKey` | `ios_config_plist` の `API_KEY` |
-| `messagingSenderId` | `messaging_sender_id` |
-| `projectId` | `project_id` |
-| `storageBucket` | `storage_bucket` |
+| ローカルの `frontend/.env` | 5 つすべて |
+| GitHub の Environment `dev` の Secrets (`cd-frontend.yml` の Android の APK のビルド) | `FIREBASE_ANDROID_API_KEY`、`FIREBASE_ANDROID_APP_ID`、`FIREBASE_MESSAGING_SENDER_ID` |
+| Codemagic の環境変数グループ `ios-dev` (Secure にする) (iOS のビルド) | `FIREBASE_IOS_API_KEY`、`FIREBASE_IOS_APP_ID`、`FIREBASE_MESSAGING_SENDER_ID` |
+
+prod のビルドの仕組みはまだないため、prod の値は prod のビルドを用意するときに同じように登録する。
 
 `google-services.json` と `GoogleService-Info.plist` はアプリに置かない。
 

@@ -3,8 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:snampo/config.dart';
 import 'package:snampo/core/firebase/app_check_debug_token.dart';
-import 'package:snampo/core/firebase/firebase_options_dev.dart';
-import 'package:snampo/core/firebase/firebase_options_prod.dart';
+import 'package:snampo/core/firebase/firebase_options.dart';
 
 /// Firebase を使えない (初期化に失敗した、または設定が未反映)
 class FirebaseUnavailableException implements Exception {
@@ -37,22 +36,15 @@ class FirebaseSetup {
 /// 失敗しても例外はソロプレイに影響させない (協力プレイの中でだけ扱う)。
 Future<FirebaseSetup> initializeFirebase() async {
   final isDev = Env.flavor != 'prod';
-  final configured =
-      isDev
-          ? FirebaseOptionsDev.isConfigured
-          : FirebaseOptionsProd.isConfigured;
-  if (!configured) {
+  final options = firebaseOptionsFor(
+    isProd: !isDev,
+    platform: defaultTargetPlatform,
+  );
+  if (options == null) {
     throw const FirebaseUnavailableException(
-      'Firebase の設定 (firebase_options_*.dart) が未反映です',
+      'Firebase の設定 (dart-define の FIREBASE_*) が未設定です',
     );
   }
-  final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-  final options = switch ((isDev, isIos)) {
-    (true, true) => FirebaseOptionsDev.ios,
-    (true, false) => FirebaseOptionsDev.android,
-    (false, true) => FirebaseOptionsProd.ios,
-    (false, false) => FirebaseOptionsProd.android,
-  };
   await Firebase.initializeApp(options: options);
 
   if (isDev) {

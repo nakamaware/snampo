@@ -108,8 +108,8 @@
   - `mobile_scanner` (QR の読み取り)
   - QR 生成用のパッケージ (`qr_flutter` など)
 - Firebase の設定は、FlutterFire のベストプラクティスに合わせる
-  - `lib/core/firebase/firebase_options_dev.dart` と `firebase_options_prod.dart` をコミットし、既存の dart-define `FLAVOR` で切り替える
-  - 値は公開値なので、secrets には置かない
+  - API キーとアプリ ID は公開値だが、念のため secret として扱う。リポジトリには置かず、dart-define (`FIREBASE_*`) で渡す
+  - プロジェクト ID とバケット名は `lib/core/firebase/firebase_options.dart` に置き、既存の dart-define `FLAVOR` で切り替える
   - `google-services.json` と `GoogleService-Info.plist` は使わない
 - iOS の App Attest 用に entitlement を追加する (`com.apple.developer.devicecheck.appattest-environment`)
 
@@ -494,7 +494,7 @@ flowchart TD
   - 設定画面かログからトークンを取得し、管理者に共有し、登録するまで
 - Apple Developer で App ID の App Attest capability を有効にする (必要な場合)
 - dev の Terraform CD が #257 で失敗している間は、Firebase のリソースも apply 自体はされる (budget 以外)。それでも失敗したら、ローカルから apply する手順
-- Firebase の設定ファイル (`firebase_options_*.dart`) を Terraform の output から更新する手順
+- Firebase の設定 (dart-define の `FIREBASE_*`) を Terraform の output から取り出して登録する手順
 - 料金表の再確認 ([Firebase Pricing](https://firebase.google.com/pricing/))
 
 ## 11. テスト方針

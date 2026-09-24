@@ -122,7 +122,14 @@ cp .env.example .env
 FLAVOR=dev
 GOOGLE_MAP_API_KEY=your_google_maps_api_key_here
 API_BASE_URL=your_api_base_url_here
+FIREBASE_ANDROID_API_KEY=
+FIREBASE_ANDROID_APP_ID=
+FIREBASE_IOS_API_KEY=
+FIREBASE_IOS_APP_ID=
+FIREBASE_MESSAGING_SENDER_ID=
 ```
+
+`FIREBASE_*` は協力プレイ用です。空のままでもソロは遊べます。値の取り出し方は [協力プレイの手作業の手順](coop-play-setup.md) を参照してください。
 
 API_BASE_URLは以下のように設定します：
 
