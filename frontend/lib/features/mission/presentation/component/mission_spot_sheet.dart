@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/mission/presentation/store/mission_sheet_layout_store.dart';
@@ -555,7 +556,10 @@ class _SpotChips extends HookWidget {
   }
 }
 
-class _SpotChip extends StatelessWidget {
+/// クリアしたときの ✓ の動きの長さ
+const _clearAnimationDuration = Duration(milliseconds: 500);
+
+class _SpotChip extends HookWidget {
   const _SpotChip({
     required this.index,
     required this.isCleared,
@@ -572,21 +576,46 @@ class _SpotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // クリアしたら ✓ を弾ませて振動する。撮影画面や結果画面の裏にいる間 (TickerMode が無効) と、
+    // その画面が閉じていく途中は待っておき、この画面が見えきってから見せる。
+    // 最初からクリア済みなら動かさない
+    final covering = ModalRoute.of(context)?.secondaryAnimation;
+    final coveredAmount = useAnimation(
+      covering ?? const AlwaysStoppedAnimation<double>(0),
+    );
+    final isVisible = TickerMode.of(context) && coveredAmount == 0;
+    final clear = useAnimationController(
+      duration: _clearAnimationDuration,
+      initialValue: isCleared ? 1 : 0,
+    );
+    useEffect(() {
+      if (!isCleared) {
+        clear.value = 0;
+      } else if (clear.value < 1 && isVisible) {
+        HapticFeedback.mediumImpact();
+        clear.forward();
+      }
+      return null;
+    }, [isCleared, isVisible]);
+    final progress = useAnimation(clear);
+    final shownCleared = isCleared && progress > 0;
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final fill = Curves.easeOut.transform(progress);
     final foreground =
-        isCleared
-            ? colorScheme.onSecondaryContainer
-            : isCurrent
-            ? colorScheme.onSurface
-            : colorScheme.onSurfaceVariant;
+        Color.lerp(
+          isCurrent ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
+          colorScheme.onSecondaryContainer,
+          fill,
+        )!;
     final BorderSide side;
     if (isCurrent) {
       side = BorderSide(color: colorScheme.primary, width: 2);
-    } else if (isCleared) {
-      side = BorderSide.none;
     } else {
-      side = BorderSide(color: colorScheme.outlineVariant);
+      side = BorderSide(
+        color: colorScheme.outlineVariant.withValues(alpha: 1 - fill),
+      );
     }
     final shape = StadiumBorder(side: side);
     return Semantics(
@@ -596,7 +625,7 @@ class _SpotChip extends StatelessWidget {
       label: 'Spot ${index + 1} ${isCleared ? 'クリア' : '未発見'}',
       excludeSemantics: true,
       child: Material(
-        color: isCleared ? colorScheme.secondaryContainer : Colors.transparent,
+        color: colorScheme.secondaryContainer.withValues(alpha: fill),
         shape: shape,
         child: InkWell(
           customBorder: shape,
@@ -604,11 +633,17 @@ class _SpotChip extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isCleared ? Icons.check : Icons.radio_button_unchecked,
-                size: isCleared ? 16 : 14,
-                color: isCleared ? colorScheme.primary : foreground,
-              ),
+              if (shownCleared)
+                Transform.scale(
+                  scale: Curves.easeOutBack.transform(progress),
+                  child: Icon(
+                    Icons.check,
+                    size: 16,
+                    color: colorScheme.primary,
+                  ),
+                )
+              else
+                Icon(Icons.radio_button_unchecked, size: 14, color: foreground),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
@@ -654,7 +689,11 @@ class _SpotCarousel extends StatelessWidget {
     return PageView.builder(
       controller: controller,
       itemCount: spots.length,
-      onPageChanged: onPageChanged,
+      onPageChanged: (index) {
+        // めくった手応えを返す
+        HapticFeedback.selectionClick();
+        onPageChanged(index);
+      },
       itemBuilder:
           (context, index) => Padding(
             padding: EdgeInsets.fromLTRB(

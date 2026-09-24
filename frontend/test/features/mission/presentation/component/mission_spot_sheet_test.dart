@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
 import 'package:snampo/features/mission/presentation/store/mission_sheet_layout_store.dart';
@@ -25,6 +26,7 @@ Future<void> _pump(
   bool showPlayResultButton = false,
   VoidCallback? onShowPlayResult,
   Size size = const Size(393, 852),
+  bool tickerEnabled = true,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -32,19 +34,43 @@ Future<void> _pump(
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
-        body: MissionSpotSheet(
-          spots: spots,
-          layout: layout,
-          onLayoutChanged: onLayoutChanged ?? (_) {},
-          onCapture: onCapture ?? (_) {},
-          onShowResult: onShowResult ?? (_) {},
-          showPlayResultButton: showPlayResultButton,
-          onShowPlayResult: onShowPlayResult,
+        body: TickerMode(
+          enabled: tickerEnabled,
+          child: MissionSpotSheet(
+            spots: spots,
+            layout: layout,
+            onLayoutChanged: onLayoutChanged ?? (_) {},
+            onCapture: onCapture ?? (_) {},
+            onShowResult: onShowResult ?? (_) {},
+            showPlayResultButton: showPlayResultButton,
+            onShowPlayResult: onShowPlayResult,
+          ),
         ),
       ),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+/// 端末の振動 (HapticFeedback) を記録する
+List<String> _recordHaptics(WidgetTester tester) {
+  final haptics = <String>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        haptics.add(call.arguments as String);
+      }
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+  return haptics;
 }
 
 /// 見出しをタップしてシートを開く
@@ -102,6 +128,50 @@ void main() {
       // 見つける前は、答えになる名前を出さない
       expect(find.text('まだ秘密の場所'), findsNothing);
       expect(find.text('まだ見つけていません'), findsOneWidget);
+    });
+
+    testWidgets('スポットがクリアになると、チップに ✓ が現れて振動する', (tester) async {
+      final haptics = _recordHaptics(tester);
+      await _pump(tester, spots: const [_todo, _todo]);
+      expect(find.byIcon(Icons.check), findsNothing);
+
+      await _pump(tester, spots: const [_shot, _todo]);
+      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(haptics, ['HapticFeedbackType.mediumImpact']);
+
+      // もう一度作り直しても、同じスポットでは振動しない
+      await _pump(tester, spots: const [_shot, _todo]);
+      expect(haptics, hasLength(1));
+    });
+
+    testWidgets('画面の裏でクリアになったら、前に戻ったときに ✓ を出して振動する', (tester) async {
+      final haptics = _recordHaptics(tester);
+      await _pump(tester, spots: const [_todo], tickerEnabled: false);
+      await _pump(tester, spots: const [_shot], tickerEnabled: false);
+      expect(haptics, isEmpty);
+      expect(find.byIcon(Icons.check), findsNothing);
+
+      await _pump(tester, spots: const [_shot]);
+      expect(haptics, ['HapticFeedbackType.mediumImpact']);
+      expect(find.byIcon(Icons.check), findsOneWidget);
+    });
+
+    testWidgets('最初からクリア済みのスポットでは振動しない', (tester) async {
+      final haptics = _recordHaptics(tester);
+      await _pump(tester, spots: const [_shot, _todo]);
+
+      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(haptics, isEmpty);
+    });
+
+    testWidgets('カードをめくると、軽く振動する', (tester) async {
+      await _pump(tester, spots: const [_todo, _todo]);
+      await _open(tester);
+      final haptics = _recordHaptics(tester);
+
+      await tester.drag(find.byType(PageView), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+      expect(haptics, ['HapticFeedbackType.selectionClick']);
     });
 
     testWidgets('カードの撮影ボタンと「結果を見る」は、そのスポットの番号を渡す', (tester) async {
