@@ -669,6 +669,11 @@ class TakeSnap extends HookConsumerWidget {
         true;
 
     if (displayPath == null) {
+      // 撮影できないスポット (協力プレイで他の人がクリア済み) には撮影ボタンを出さない。
+      // FloatingActionButton は押せなくても見た目が変わらず、押せるように見えるため
+      if (!canCapture && !isCapturing.value) {
+        return const SizedBox.shrink();
+      }
       return FloatingActionButton(
         heroTag: 'take_snap_spot_$spotIndex',
         onPressed:
