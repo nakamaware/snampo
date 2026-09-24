@@ -181,6 +181,32 @@ void main() {
       expect(pressed, 1);
     });
 
+    testWidgets('カードの見本をタップすると拡大し、タップで閉じる', (tester) async {
+      await _pump(tester, spots: const [_todo]);
+      await _open(tester);
+
+      await tester.tap(find.bySemanticsLabel(RegExp('Spot 1 の見本を拡大')));
+      await tester.pumpAndSettle();
+      expect(find.text('Spot 1 の見本'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('閉じる'));
+      await tester.pumpAndSettle();
+      expect(find.text('Spot 1 の見本'), findsNothing);
+    });
+
+    testWidgets('リストの見本もタップで拡大する', (tester) async {
+      await _pump(
+        tester,
+        spots: const [_todo, _todo],
+        layout: MissionSheetLayout.list,
+      );
+      await _open(tester);
+
+      await tester.tap(find.bySemanticsLabel(RegExp('Spot 2 の見本を拡大')));
+      await tester.pumpAndSettle();
+      expect(find.text('Spot 2 の見本'), findsOneWidget);
+    });
+
     for (final layout in MissionSheetLayout.values) {
       for (final size in const [Size(320, 667), Size(430, 932)]) {
         for (final count in const [1, 4, 20]) {

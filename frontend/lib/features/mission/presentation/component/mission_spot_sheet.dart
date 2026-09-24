@@ -692,7 +692,7 @@ class _SpotCard extends StatelessWidget {
             Flexible(
               child: SizedBox(
                 height: constraints.maxWidth,
-                child: _SpotHero(spot: spot),
+                child: _SpotHero(index: index, spot: spot),
               ),
             ),
             const SizedBox(height: 12),
@@ -720,14 +720,15 @@ class _SpotCard extends StatelessWidget {
 
 /// カードの見本 (撮った写真があれば右下に重ねる)
 class _SpotHero extends StatelessWidget {
-  const _SpotHero({required this.spot});
+  const _SpotHero({required this.index, required this.spot});
 
+  final int index;
   final MissionSheetSpot spot;
 
   @override
   Widget build(BuildContext context) {
     final photoPath = spot.photoPath;
-    return ClipRRect(
+    final hero = ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -741,15 +742,34 @@ class _SpotHero extends StatelessWidget {
                 top: 8,
                 child: _ImageBadge(label: '見本'),
               ),
+              const Positioned(right: 8, top: 8, child: _ZoomHint()),
               if (photoPath != null)
                 Positioned(
                   right: 8,
                   bottom: 8,
                   width: pipSize.toDouble(),
                   height: pipSize.toDouble(),
-                  child: _PhotoThumb(
-                    path: photoPath,
-                    ownerName: spot.photoOwnerName,
+                  child: Semantics(
+                    container: true,
+                    button: true,
+                    label: '撮った写真を拡大',
+                    child: GestureDetector(
+                      onTap:
+                          () => _showZoom(
+                            context,
+                            image: Image.file(
+                              File(photoPath),
+                              fit: BoxFit.contain,
+                            ),
+                            caption:
+                                'Spot ${index + 1} · '
+                                '${spot.photoOwnerName ?? 'あなた'}の写真',
+                          ),
+                      child: _PhotoThumb(
+                        path: photoPath,
+                        ownerName: spot.photoOwnerName,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -757,7 +777,113 @@ class _SpotHero extends StatelessWidget {
         },
       ),
     );
+    return _ZoomableReference(index: index, spot: spot, child: hero);
   }
+}
+
+/// タップすると見本を拡大する (カードでは切り取って表示しているので、拡大で全体を見られる)
+class _ZoomableReference extends StatelessWidget {
+  const _ZoomableReference({
+    required this.index,
+    required this.spot,
+    required this.child,
+  });
+
+  final int index;
+  final MissionSheetSpot spot;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      button: true,
+      label: 'Spot ${index + 1} の見本を拡大',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap:
+            () => _showZoom(
+              context,
+              image: _Base64Image(
+                base64: spot.referenceImageBase64,
+                fit: BoxFit.contain,
+              ),
+              caption: 'Spot ${index + 1} の見本',
+            ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// 見本の右上の、拡大できることを示すアイコン
+class _ZoomHint extends StatelessWidget {
+  const _ZoomHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+      child: Padding(
+        padding: EdgeInsets.all(7),
+        child: Icon(Icons.open_in_full, size: 18, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// 画像を画面の幅いっぱいに拡大して見せる (タップか閉じるボタンで閉じる。ピンチで拡大できる)
+Future<void> _showZoom(
+  BuildContext context, {
+  required Widget image,
+  required String caption,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierColor: Colors.black87,
+    builder:
+        (context) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).pop(),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 1,
+                        child: InteractiveViewer(maxScale: 4, child: image),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        caption,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    tooltip: '閉じる',
+                    color: Colors.white,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white24,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+  );
 }
 
 /// 見本に重ねる、撮った写真
@@ -1008,11 +1134,15 @@ class _SpotListRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox.square(
-              dimension: 64,
-              child: _Base64Image(base64: spot.referenceImageBase64),
+          _ZoomableReference(
+            index: index,
+            spot: spot,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox.square(
+                dimension: 64,
+                child: _Base64Image(base64: spot.referenceImageBase64),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1027,9 +1157,10 @@ class _SpotListRow extends StatelessWidget {
 
 /// Base64 の画像 (デコードは画像が変わったときだけ)
 class _Base64Image extends HookWidget {
-  const _Base64Image({required this.base64});
+  const _Base64Image({required this.base64, this.fit = BoxFit.cover});
 
   final String base64;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -1040,7 +1171,7 @@ class _Base64Image extends HookWidget {
     if (bytes.isEmpty) return placeholder;
     return Image.memory(
       bytes,
-      fit: BoxFit.cover,
+      fit: fit,
       gaplessPlayback: true,
       errorBuilder: (_, __, ___) => placeholder,
     );
