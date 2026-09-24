@@ -16,10 +16,14 @@ class MissionSheetSpot {
     required this.referenceImageBase64,
     required this.isCleared,
     required this.canCapture,
+    this.name,
     this.photoPath,
     this.photoOwnerName,
     this.discovererName,
   });
+
+  /// 場所の名前 (答えになるので、発見するまでは表示しない)
+  final String? name;
 
   /// 見本の画像 (Base64)
   final String referenceImageBase64;
@@ -39,11 +43,14 @@ class MissionSheetSpot {
   /// 発見者の表示名 (協力プレイのみ。ソロでは null)
   final String? discovererName;
 
+  /// 見出しに出す場所の名前 (発見するまでは null)
+  String? get revealedName => isCleared ? name : null;
+
   /// スポットの状態の文言
   String get statusLabel {
     if (!isCleared) return 'まだ見つけていません';
-    final name = discovererName;
-    return name == null ? '撮影済み' : discovererLabel(name);
+    final discoverer = discovererName;
+    return discoverer == null ? '撮影済み' : discovererLabel(discoverer);
   }
 }
 
@@ -986,14 +993,22 @@ class _SpotTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final spotLabel = 'Spot ${index + 1}';
+    final name = spot.revealedName;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Spot ${index + 1}', style: theme.textTheme.titleMedium),
+        // 発見したら場所の名前を見出しにし、番号は状態の行へ回す
+        Text(
+          name ?? spotLabel,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleMedium,
+        ),
         const SizedBox(height: 2),
         Text(
-          spot.statusLabel,
+          name == null ? spot.statusLabel : '$spotLabel · ${spot.statusLabel}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(

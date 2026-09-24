@@ -350,6 +350,7 @@ class SnapView extends HookConsumerWidget {
           );
           return MissionSheetSpot(
             referenceImageBase64: missionSpots[i].imageBase64,
+            name: missionSpots[i].name,
             // 協力プレイで他の人が発見したスポットも、結果 (発見者の写真) を見られる
             isCleared:
                 checkpoint?.userPhotoPath != null ||

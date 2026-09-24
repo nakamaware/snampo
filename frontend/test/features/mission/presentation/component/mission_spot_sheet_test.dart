@@ -75,6 +75,35 @@ void main() {
       }
     });
 
+    testWidgets('発見したスポットは、番号の代わりに場所の名前を見出しにする', (tester) async {
+      await _pump(
+        tester,
+        spots: const [
+          MissionSheetSpot(
+            referenceImageBase64: '',
+            isCleared: true,
+            canCapture: false,
+            name: '千葉定吉道場跡',
+            discovererName: 'たなか',
+          ),
+          MissionSheetSpot(
+            referenceImageBase64: '',
+            isCleared: false,
+            canCapture: true,
+            name: 'まだ秘密の場所',
+          ),
+        ],
+        layout: MissionSheetLayout.list,
+      );
+      await _open(tester);
+
+      expect(find.text('千葉定吉道場跡'), findsOneWidget);
+      expect(find.text('Spot 1 · 発見: たなか'), findsOneWidget);
+      // 見つける前は、答えになる名前を出さない
+      expect(find.text('まだ秘密の場所'), findsNothing);
+      expect(find.text('まだ見つけていません'), findsOneWidget);
+    });
+
     testWidgets('カードの撮影ボタンと「結果を見る」は、そのスポットの番号を渡す', (tester) async {
       final captured = <int>[];
       final shown = <int>[];
