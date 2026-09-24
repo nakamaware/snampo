@@ -113,10 +113,12 @@ void main() {
 
   group('MissionProgressEntity.withoutCapture', () {
     final startedAt = DateTime(2024);
+    final roomCode = RoomCode.tryParse('ABCD23')!;
 
     test('撮影の記録を捨てて未挑戦 (null) に戻す', () {
       final entity = MissionProgressEntity(
         startedAt: startedAt,
+        roomCode: roomCode,
         checkpoints: [
           CheckpointProgress(
             userPhotoPath: '/mine.jpg',
@@ -127,12 +129,23 @@ void main() {
         ],
       );
 
-      expect(entity.withoutCapture(0).checkpoints, [null, null]);
+      expect(entity.withoutCapture(roomCode, 0).checkpoints, [null, null]);
+    });
+
+    test('別のルームの進捗なら何も変えない (進捗が次のルームに入れ替わったあと)', () {
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        roomCode: RoomCode.tryParse('WXYZ89'),
+        checkpoints: [const CheckpointProgress(userPhotoPath: '/next.jpg')],
+      );
+
+      expect(entity.withoutCapture(roomCode, 0), same(entity));
     });
 
     test('発見者の情報があれば、それだけを残す', () {
       final entity = MissionProgressEntity(
         startedAt: startedAt,
+        roomCode: roomCode,
         checkpoints: [
           CheckpointProgress(
             userPhotoPath: '/mine.jpg',
@@ -146,7 +159,7 @@ void main() {
       );
 
       expect(
-        entity.withoutCapture(0).checkpoints.single,
+        entity.withoutCapture(roomCode, 0).checkpoints.single,
         CheckpointProgress(
           achievedAt: startedAt,
           discovererUid: 'other',

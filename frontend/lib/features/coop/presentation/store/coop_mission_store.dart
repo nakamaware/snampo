@@ -205,6 +205,7 @@ class CoopMissionStore extends _$CoopMissionStore {
             .setMission(mission);
       }
       state = state.copyWith(isReady: true, prepareError: null);
+      await _discardUnsharedCaptures();
       _syncClears();
     } on Object catch (e, st) {
       log('ミッションの用意に失敗した', error: e, stackTrace: st, name: 'CoopMission');
@@ -298,11 +299,14 @@ class CoopMissionStore extends _$CoopMissionStore {
   }) async {
     final room = _room;
     final spots = _spots;
-    if (room == null || spotIndex >= spots.length) {
+    final spotId = spotIndex < spots.length ? spots[spotIndex].spotId : null;
+    if (checkpoint.userPhotoPath == null) {
       return;
     }
-    final spotId = spots[spotIndex].spotId;
-    if (spotId == null || checkpoint.userPhotoPath == null) {
+    if (room == null || spotId == null) {
+      // 共有できないので、撮影は捨てる
+      await _discardCapture(spotIndex);
+      _notify('発見を共有できませんでした。もう一度撮影してください');
       return;
     }
     void setSharing({required bool sharing}) {
@@ -347,10 +351,27 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
+  /// 共有の途中でアプリが終了した撮影 (自分の写真はあるが発見者がいない) を捨てる
+  ///
+  /// 共有の結果を待たずに終わっているので、共有できなかった扱いにする
+  /// (もう一度撮影できるようにする)。ミッションを端末に用意した直後に呼ぶ。
+  Future<void> _discardUnsharedCaptures() async {
+    final progress = await ref.read(
+      missionProgressStoreProvider(MissionSessionKind.coop).future,
+    );
+    final checkpoints = progress?.checkpoints ?? const [];
+    for (final (index, checkpoint) in checkpoints.indexed) {
+      if (checkpoint?.userPhotoPath != null &&
+          checkpoint?.discovererUid == null) {
+        await _discardCapture(index);
+      }
+    }
+  }
+
   /// 共有できなかった撮影を捨てる (誰もクリアしていない扱いに戻し、撮影できるようにする)
   Future<void> _discardCapture(int spotIndex) async {
     ref.read(cameraStoreProvider.notifier).removePhoto(spotIndex);
-    await _progress.discardCapture(spotIndex);
+    await _progress.discardCapture(roomCode, spotIndex);
   }
 
   /// ホストが途中終了する

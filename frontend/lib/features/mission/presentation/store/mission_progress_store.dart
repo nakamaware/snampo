@@ -113,13 +113,14 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   /// [index] の撮影の記録 (自分の写真と採点) を捨てる (写真のファイルも消す)
   ///
   /// 協力プレイで発見を共有できなかったとき、誰もクリアしていない扱いに戻すために使う。
-  Future<void> discardCapture(int index) async {
+  /// [roomCode] がこの進捗のルームと違えば何もしない。
+  Future<void> discardCapture(RoomCode roomCode, int index) async {
     final current = state.value;
-    if (current == null || index < 0 || index >= current.checkpoints.length) {
-      return;
-    }
+    if (current == null) return;
+    final next = current.withoutCapture(roomCode, index);
+    if (identical(next, current)) return;
     final photoPath = current.checkpoints[index]?.userPhotoPath;
-    state = AsyncValue.data(current.withoutCapture(index));
+    state = AsyncValue.data(next);
     if (photoPath != null) {
       try {
         await ref.read(photoStorageProvider).deletePhoto(photoPath);

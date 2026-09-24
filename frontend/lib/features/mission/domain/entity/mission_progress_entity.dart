@@ -135,8 +135,9 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   ///
   /// 協力プレイで発見を共有できなかったとき、誰もクリアしていない扱いに戻すために使う。
   /// 発見者の情報があれば、それだけを残す。写真のファイルは消さない (呼び出し側で消す)。
-  MissionProgressEntity withoutCapture(int index) {
-    if (index < 0 || index >= checkpoints.length) {
+  /// [roomCode] がこの進捗のルームと違えば (進捗が次のルームに入れ替わったなど)、何も変えない。
+  MissionProgressEntity withoutCapture(RoomCode roomCode, int index) {
+    if (this.roomCode != roomCode || index < 0 || index >= checkpoints.length) {
       return this;
     }
     final current = checkpoints[index];

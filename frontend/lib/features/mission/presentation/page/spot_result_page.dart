@@ -97,6 +97,12 @@ class SpotResultPage extends StatelessWidget {
                 child: Image.file(
                   File(checkpoint.userPhotoPath!),
                   fit: BoxFit.contain,
+                  // 協力プレイで共有に失敗すると、表示中に写真を捨てることがある
+                  errorBuilder:
+                      (_, _, _) => const AspectRatio(
+                        aspectRatio: 4 / 3,
+                        child: ColoredBox(color: Colors.black12),
+                      ),
                 ),
               ),
               const SizedBox(height: 16),
