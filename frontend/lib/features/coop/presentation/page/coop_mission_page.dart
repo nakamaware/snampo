@@ -53,8 +53,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
 
   @override
   List<Widget> appBarActions(BuildContext context) => [
-    _CoopHostEndButton(roomCode: roomCode),
-    const _CoopMissionMenu(),
+    _CoopMissionMenu(roomCode: roomCode),
   ];
 
   /// 自分の発見は「あなた」、他の人は入室順に番号を付けた名前 (重複した名前を見分けるため)
@@ -331,22 +330,65 @@ class _CoopMissionEffects extends HookConsumerWidget {
   }
 }
 
-/// AppBar のメニュー (「ルームを抜ける」)
+/// AppBar のメニュー (ホストには「途中終了」、全員に「ルームを抜ける」)
+///
+/// 「途中終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる
+/// (AppBar に並べるとタイトルとも重なる)。
 class _CoopMissionMenu extends ConsumerWidget {
-  const _CoopMissionMenu();
+  const _CoopMissionMenu({required this.roomCode});
+
+  /// ルームコード
+  final RoomCode roomCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(coopSessionStoreProvider).value;
+    final room = ref.watch(coopRoomProvider(roomCode)).value;
+    final canEnd =
+        session != null &&
+        room != null &&
+        room.isHost(session.uid) &&
+        room.status == RoomStatus.playing;
     return PopupMenuButton<void>(
       iconColor: Theme.of(context).colorScheme.onPrimary,
+      tooltip: 'メニュー',
       itemBuilder:
-          (context) => [
+          (_) => [
+            if (canEnd)
+              PopupMenuItem(
+                onTap: () => _endByHostWithConfirm(context, ref, roomCode),
+                child: const Text('途中終了'),
+              ),
             PopupMenuItem(
               onTap: () => leaveRoomWithConfirm(context, ref),
               child: const Text('ルームを抜ける'),
             ),
           ],
     );
+  }
+}
+
+/// 確認してから、ホストとしてミッションを途中終了する
+Future<void> _endByHostWithConfirm(
+  BuildContext context,
+  WidgetRef ref,
+  RoomCode roomCode,
+) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    title: 'ミッションを終了しますか?',
+    content: '全員のミッションが終了し、結果画面に移ります。',
+    confirmLabel: '終了する',
+  );
+  if (!confirmed) return;
+  try {
+    await ref.read(coopMissionStoreProvider(roomCode).notifier).endByHost();
+  } on Object {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('終了できませんでした。再度お試しください')));
+    }
   }
 }
 
@@ -376,51 +418,6 @@ class _PrepareErrorView extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// ホストだけに表示する「途中終了」ボタン (確認ダイアログあり)
-class _CoopHostEndButton extends ConsumerWidget {
-  const _CoopHostEndButton({required this.roomCode});
-
-  /// ルームコード
-  final RoomCode roomCode;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(coopSessionStoreProvider).value;
-    final room = ref.watch(coopRoomProvider(roomCode)).value;
-    if (session == null ||
-        room == null ||
-        !room.isHost(session.uid) ||
-        room.status != RoomStatus.playing) {
-      return const SizedBox.shrink();
-    }
-    final theme = Theme.of(context);
-    return TextButton(
-      style: TextButton.styleFrom(foregroundColor: theme.colorScheme.onPrimary),
-      onPressed: () async {
-        final confirmed = await showConfirmDialog(
-          context,
-          title: 'ミッションを終了しますか?',
-          content: '全員のミッションが終了し、結果画面に移ります。',
-          confirmLabel: '終了する',
-        );
-        if (!confirmed) return;
-        try {
-          await ref
-              .read(coopMissionStoreProvider(roomCode).notifier)
-              .endByHost();
-        } on Object {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('終了できませんでした。再度お試しください')),
-            );
-          }
-        }
-      },
-      child: const Text('途中終了'),
     );
   }
 }

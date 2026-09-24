@@ -93,10 +93,9 @@ class MissionPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
     final theme = Theme.of(context);
-    final textStyle = (theme.textTheme.displaySmall ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
+    // 地図とシートを広く見せるため、タイトルは控えめな大きさにする
+    final textStyle = (theme.textTheme.titleLarge ?? const TextStyle())
+        .copyWith(color: theme.colorScheme.onPrimary, letterSpacing: 1);
 
     // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
     // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
