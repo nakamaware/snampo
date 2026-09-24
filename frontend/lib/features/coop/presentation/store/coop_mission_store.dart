@@ -118,6 +118,12 @@ class CoopMissionStore extends _$CoopMissionStore {
     return mission == null ? const [] : mission.spots;
   }
 
+  /// [index] 番目のスポットの ID (なければ null)
+  SpotId? _spotIdAt(int index) {
+    final spots = _spots;
+    return index < spots.length ? spots[index].spotId : null;
+  }
+
   /// ルーム内での自分のニックネーム
   ///
   /// メンバーを読めなければ、アプリに保存したニックネーム (なければ自動で命名したもの) を使う。
@@ -298,8 +304,7 @@ class CoopMissionStore extends _$CoopMissionStore {
     required CheckpointProgress checkpoint,
   }) async {
     final room = _room;
-    final spots = _spots;
-    final spotId = spotIndex < spots.length ? spots[spotIndex].spotId : null;
+    final spotId = _spotIdAt(spotIndex);
     if (checkpoint.userPhotoPath == null) {
       return;
     }
@@ -373,10 +378,8 @@ class CoopMissionStore extends _$CoopMissionStore {
       return;
     }
     final clearedSpotIds = {for (final clear in clears) clear.spotId};
-    final spots = _spots;
     for (final index in indexes) {
-      final spotId = index < spots.length ? spots[index].spotId : null;
-      if (!clearedSpotIds.contains(spotId)) {
+      if (!clearedSpotIds.contains(_spotIdAt(index))) {
         await _discardCapture(index);
       }
     }

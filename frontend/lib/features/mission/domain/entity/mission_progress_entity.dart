@@ -131,9 +131,7 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
   factory MissionProgressEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionProgressEntityFromJson(json);
 
-  /// 協力プレイで、共有の結果が付いていない撮影 (自分の写真はあるが発見者がいない) の番号
-  ///
-  /// 共有の途中でアプリが終了したものなど。共有できなかった扱いにして捨てる対象。
+  /// 協力プレイで、共有の結果がまだ付いていない撮影 (自分の写真はあるが発見者がいない) の番号
   Iterable<int> get unsharedCaptureIndexes sync* {
     for (final (index, checkpoint) in checkpoints.indexed) {
       if (checkpoint?.userPhotoPath != null &&
