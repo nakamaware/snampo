@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,6 +16,7 @@ import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
@@ -135,14 +137,19 @@ class MissionPage extends HookConsumerWidget {
             SnapView(params: _params, extension: extension),
           ],
         );
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('On MISSION', style: textStyle),
-            centerTitle: true,
-            backgroundColor: theme.colorScheme.primary,
-            actions: extension?.appBarActions(context) ?? const [],
+        // AppBar は置かず、地図を画面いっぱいに見せる (見出しはシートの「ミッション」が兼ねる)。
+        // 戻るボタンとモードのボタンは、モードの画面 (準備の失敗など) の上にも出す
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          // 地図の上なので、ステータスバーの文字を濃くする
+          value: SystemUiOverlayStyle.dark,
+          child: Scaffold(
+            body: Stack(
+              children: [
+                extension?.wrapBody(context, body) ?? body,
+                MapTopBar(actions: extension?.topActions(context) ?? const []),
+              ],
+            ),
           ),
-          body: extension?.wrapBody(context, body) ?? body,
         );
       },
       loading:
@@ -291,6 +298,10 @@ class _MapViewState extends ConsumerState<MapView> {
                 ),
               },
               polylines: _polylines,
+              padding: EdgeInsets.only(
+                top: MediaQuery.paddingOf(context).top + MapTopBar.height,
+                bottom: MediaQuery.paddingOf(context).bottom + 130,
+              ),
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -582,8 +593,8 @@ abstract class MissionPageExtension {
   /// 画面の中身を包む (モード固有のお知らせや画面遷移など)
   Widget wrapBody(BuildContext context, Widget body) => body;
 
-  /// AppBar に並べるボタン
-  List<Widget> appBarActions(BuildContext context) => const [];
+  /// 地図の右上に並べるボタン
+  List<Widget> topActions(BuildContext context) => const [];
 
   /// スポットの発見者の表示名 (発見者がいない・ソロなら null)
   ///

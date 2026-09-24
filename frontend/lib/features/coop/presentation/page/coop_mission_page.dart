@@ -52,7 +52,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
       _CoopMissionEffects(roomCode: roomCode, child: body);
 
   @override
-  List<Widget> appBarActions(BuildContext context) => [
+  List<Widget> topActions(BuildContext context) => [
     _CoopMissionMenu(roomCode: roomCode),
   ];
 
@@ -330,10 +330,9 @@ class _CoopMissionEffects extends HookConsumerWidget {
   }
 }
 
-/// AppBar のメニュー (ホストには「途中終了」、全員に「ルームを抜ける」)
+/// 地図の右上のメニュー (ホストには「途中終了」、全員に「ルームを抜ける」)
 ///
-/// 「途中終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる
-/// (AppBar に並べるとタイトルとも重なる)。
+/// 「途中終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる。
 class _CoopMissionMenu extends ConsumerWidget {
   const _CoopMissionMenu({required this.roomCode});
 
@@ -350,7 +349,6 @@ class _CoopMissionMenu extends ConsumerWidget {
         room.isHost(session.uid) &&
         room.status == RoomStatus.playing;
     return PopupMenuButton<void>(
-      iconColor: Theme.of(context).colorScheme.onPrimary,
       tooltip: 'メニュー',
       itemBuilder:
           (_) => [
