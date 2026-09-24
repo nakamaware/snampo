@@ -38,11 +38,10 @@ class HomePage extends ConsumerWidget {
                   const ResumeButton(),
                   const SizedBox(height: 10),
                 ],
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [StartButton(), SizedBox(width: 10), CoopButton()],
-                ),
-                const SizedBox(height: 10), // 2つの間を空ける
+                const StartButton(),
+                const SizedBox(height: 10),
+                const CoopButton(),
+                const SizedBox(height: 10),
                 const HistoryButton(),
               ],
             ),
