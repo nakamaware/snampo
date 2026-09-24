@@ -128,6 +128,17 @@ void main() {
     expect(rooms.clears[fx.code]?[spotId], isNull);
   });
 
+  test('時間切れのあとにアップロードが終わっても、クリアを作成しない (失敗と表示した撮影が発見にならない)', () async {
+    final gate = storage.thumbUploadGate = Completer<void>();
+
+    final result = await clear();
+    gate.complete();
+    await pumpEventQueue();
+
+    expect(result, isA<ClearSpotFailed>());
+    expect(rooms.clears[fx.code]?[spotId], isNull);
+  });
+
   test('クリアの作成が時間内に終わらなければ、失敗を返す', () async {
     rooms.createClearGate = Completer<void>();
 

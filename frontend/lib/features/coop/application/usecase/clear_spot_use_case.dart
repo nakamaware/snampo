@@ -46,7 +46,8 @@ final class ClearSpotFailed extends ClearSpotResult {
 /// 撮影して採点したスポットをクリアにする (1 人のクリアで全員のクリアになる)
 ///
 /// 1. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
-///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)
+///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)。
+///    時間切れのあとにアップロードが終わっても、クリアは作成しない (失敗と伝えた撮影を発見にしない)
 /// 2. 共有できたら、自分の写真と採点を履歴に残す (先に他の人が発見していても残す)。
 ///    共有に失敗した撮影は、誰もクリアしていない扱いにして履歴に残さない
 /// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
@@ -90,6 +91,7 @@ class ClearSpotUseCase {
     // 他の人も同じ結果を見られるよう、採点も一緒に共有する
     final judgement = PhotoJudgement.ofCheckpoint(checkpoint);
     final CreateClearResult result;
+    var abandoned = false;
     try {
       result = await _share(
         room,
@@ -98,10 +100,13 @@ class ClearSpotUseCase {
         spotId: spotId,
         localThumbPath: localThumbPath,
         judgement: judgement,
+        isAbandoned: () => abandoned,
       ).timeout(shareTimeout);
     } on CoopPermissionDeniedException {
+      abandoned = true;
       return const ClearSpotRejected();
     } on Object catch (e) {
+      abandoned = true;
       log('発見を共有できなかった: $e', name: 'ClearSpot');
       return const ClearSpotFailed();
     }
@@ -148,6 +153,7 @@ class ClearSpotUseCase {
     required SpotId spotId,
     required String localThumbPath,
     required PhotoJudgement? judgement,
+    required bool Function() isAbandoned,
   }) async {
     final thumbPath = await _storage.uploadThumb(
       code: room.code,
@@ -155,6 +161,11 @@ class ClearSpotUseCase {
       uid: uid,
       localPath: localThumbPath,
     );
+    // 時間切れで失敗と伝えたあとは、クリアを作成しない。クリアの作成中に時間切れになった
+    // 場合は取り消せないため、そのクリアは clears の通知で自分の発見として反映される
+    if (isAbandoned()) {
+      throw StateError('時間切れのため、クリアを作成しない');
+    }
     return _rooms.createClear(
       room,
       spotId: spotId,
