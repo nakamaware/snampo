@@ -18,7 +18,26 @@ import 'package:snampo/features/settings/presentation/page/settings_page.dart';
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomePage(),
+      // 協力プレイのルームの画面は、ホームの上に積む。「みんなで」の上に積むと、戻ったときに
+      // 下に画面がなく、戻るボタンが消えて Android の戻るでアプリが閉じてしまう
+      routes: [
+        GoRoute(
+          path: 'coop/lobby',
+          builder: (context, state) => const LobbyPage(),
+        ),
+        GoRoute(
+          path: 'coop/mission',
+          builder: (context, state) => const CoopMissionPage(),
+        ),
+        GoRoute(
+          path: 'coop/result',
+          builder: (context, state) => const CoopResultPage(),
+        ),
+      ],
+    ),
     GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
     GoRoute(
       path: '/mission/random/:radius',
@@ -81,15 +100,6 @@ final GoRouter appRouter = GoRouter(
               builder: (context, state) => const QrScanPage(),
             ),
           ],
-        ),
-        GoRoute(path: 'lobby', builder: (context, state) => const LobbyPage()),
-        GoRoute(
-          path: 'mission',
-          builder: (context, state) => const CoopMissionPage(),
-        ),
-        GoRoute(
-          path: 'result',
-          builder: (context, state) => const CoopResultPage(),
         ),
       ],
     ),
