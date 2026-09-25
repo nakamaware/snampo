@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
+import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
+import 'package:snampo/features/coop/presentation/component/join_and_enter_room.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
+import 'package:snampo/features/coop/presentation/store/left_coop_room_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
 
 /// アプリケーションのトップページ
@@ -19,7 +24,9 @@ class HomePage extends ConsumerWidget {
     );
     final hasSavedMission = savedMissionAsync.value != null;
     final coopSession = ref.watch(coopSessionStoreProvider).value;
-    final hasContinue = coopSession != null || hasSavedMission;
+    final rejoinCode = _rejoinableRoomCode(ref, inRoom: coopSession != null);
+    final hasContinue =
+        coopSession != null || rejoinCode != null || hasSavedMission;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -42,6 +49,7 @@ class HomePage extends ConsumerWidget {
                     if (hasContinue) ...[
                       ContinueCard(
                         roomCode: coopSession?.roomCode,
+                        rejoinCode: rejoinCode,
                         hasSavedMission: hasSavedMission,
                       ),
                       const SizedBox(height: 24),
@@ -85,6 +93,21 @@ class HomePage extends ConsumerWidget {
   }
 }
 
+/// 抜けたルームのうち、まだ遊べて入り直せるルームのコード
+///
+/// 参加中のルームがあるとき、ルームを読み込めていないとき、ルームが終わったときは null。
+RoomCode? _rejoinableRoomCode(WidgetRef ref, {required bool inRoom}) {
+  final left = ref.watch(leftCoopRoomStoreProvider).value;
+  if (inRoom || left == null) {
+    return null;
+  }
+  final room = ref.watch(coopRoomProvider(left.roomCode)).value;
+  if (room == null || room.hasEnded(DateTime.now())) {
+    return null;
+  }
+  return left.roomCode;
+}
+
 /// 「ひとりで」「みんなで」ボタンの幅
 const double _playButtonWidth = 296;
 
@@ -116,7 +139,7 @@ class _PlayButton extends StatelessWidget {
   }
 }
 
-/// 続きのカード (協力プレイ中のルームと、ソロの続き)
+/// 続きのカード (協力プレイ中のルーム、抜けたがまだ入り直せるルーム、ソロの続き)
 ///
 /// ルームがもう終わっていれば (結果を見る前に閉じた場合)、「結果を見る」として結果画面を開く。
 /// 結果画面の「ホームへ戻る」で、ルームの行は消える。
@@ -124,12 +147,16 @@ class ContinueCard extends ConsumerWidget {
   /// [ContinueCard] を作成する
   const ContinueCard({
     required this.roomCode,
+    required this.rejoinCode,
     required this.hasSavedMission,
     super.key,
   });
 
   /// 参加中のルームのコード (参加していなければ null)
   final RoomCode? roomCode;
+
+  /// 抜けたが、まだ入り直せるルームのコード (なければ null)
+  final RoomCode? rejoinCode;
 
   /// ソロの続きがあるか
   final bool hasSavedMission;
@@ -168,7 +195,8 @@ class ContinueCard extends ConsumerWidget {
                 label: hasEnded ? 'ルーム $roomCode の結果を見る' : 'ルーム $roomCode に戻る',
                 path: hasEnded ? '/coop/result' : '/coop/lobby',
               ),
-            if (roomCode != null && hasSavedMission)
+            if (rejoinCode case final code?) _RejoinTile(roomCode: code),
+            if ((roomCode != null || rejoinCode != null) && hasSavedMission)
               Divider(
                 height: 1,
                 indent: 16,
@@ -212,6 +240,65 @@ class _ContinueTile extends StatelessWidget {
       textColor: colors.onSecondaryContainer,
       iconColor: colors.onSurfaceVariant,
       onTap: () => context.push(path),
+    );
+  }
+}
+
+/// 抜けたルームに入り直す行 (コードを入れずに、同じ人として戻る)
+class _RejoinTile extends HookConsumerWidget {
+  const _RejoinTile({required this.roomCode});
+
+  final RoomCode roomCode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).colorScheme;
+    final isJoining = useState(false);
+
+    Future<void> rejoin() async {
+      // 入れると、この行は「ルームに戻る」に変わって消えるので、先に取っておく
+      final router = GoRouter.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final name = await ensureNickname(context, ref);
+      if (name == null || !context.mounted) return;
+      isJoining.value = true;
+      String? error;
+      try {
+        final result = await joinAndEnterRoom(
+          ref,
+          code: roomCode,
+          nickname: name,
+        );
+        switch (result) {
+          case JoinRoomJoined():
+            router.go('/coop/lobby');
+          case JoinRoomFailed(error: final e):
+            error = joinRoomErrorMessage(e);
+        }
+      } on Object {
+        error = joinRoomNetworkErrorMessage;
+      } finally {
+        if (context.mounted) isJoining.value = false;
+      }
+      if (error != null) {
+        messenger.showSnackBar(SnackBar(content: Text(error)));
+      }
+    }
+
+    return ListTile(
+      leading: Icon(Icons.group, color: colors.secondary),
+      title: Text('ルーム $roomCode'),
+      subtitle: const Text('抜けたルームにまた入る'),
+      trailing:
+          isJoining.value
+              ? const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+              : const Icon(Icons.chevron_right),
+      textColor: colors.onSecondaryContainer,
+      iconColor: colors.onSurfaceVariant,
+      onTap: isJoining.value ? null : rejoin,
     );
   }
 }

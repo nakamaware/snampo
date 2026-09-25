@@ -5,6 +5,7 @@ import 'package:snampo/core/di/storage_provider.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
+import 'package:snampo/features/coop/presentation/store/left_coop_room_store.dart';
 
 part 'coop_session_store.g.dart';
 
@@ -27,18 +28,21 @@ class CoopSessionStore extends _$CoopSessionStore {
     if (current != null && current.roomCode != session.roomCode) {
       leave();
     }
+    ref.read(leftCoopRoomStoreProvider.notifier).clear();
     state = AsyncValue.data(session);
   }
 
-  /// ルームを抜ける (`leftAt` を記録し、端末の「ルームに戻る」を消す)
+  /// ルームを抜ける (`leftAt` を記録し、端末の「ルームに戻る」を「また入る」に変える)
   ///
   /// 通信の結果を待たずに端末の記録を消す (抜けたルームの履歴の同期は続く)。
+  /// 抜けたルームは [LeftCoopRoomStore] に残し、ホームから入り直せるようにする。
   void leave() {
     final session = state.value;
     if (session == null) {
       return;
     }
     ref.read(leaveRoomUseCaseProvider)(session.roomCode, session.uid);
+    ref.read(leftCoopRoomStoreProvider.notifier).record(session);
     close();
   }
 

@@ -9,6 +9,7 @@ import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
+import 'package:snampo/features/coop/presentation/store/left_coop_room_store.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
@@ -47,6 +48,19 @@ class _InRoom extends CoopSessionStore {
       CoopSession(roomCode: fx.code, uid: 'me');
 }
 
+/// 端末の DB を使わない抜けたルーム (なし)
+class _NoLeftRoom extends LeftCoopRoomStore {
+  @override
+  Future<CoopSession?> build() async => null;
+}
+
+/// 端末の DB を使わない抜けたルーム (ルーム [fx.code] を抜けた)
+class _LeftRoom extends LeftCoopRoomStore {
+  @override
+  Future<CoopSession?> build() async =>
+      CoopSession(roomCode: fx.code, uid: 'me');
+}
+
 /// まだ遊べるルーム
 Room _playingRoom() =>
     fx.room().copyWith(expiresAt: DateTime.now().add(const Duration(hours: 1)));
@@ -72,6 +86,7 @@ Future<void> _pumpHome(
   WidgetTester tester, {
   bool hasSavedMission = false,
   Room? room,
+  bool hasLeftRoom = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -80,7 +95,10 @@ Future<void> _pumpHome(
           hasSavedMission ? _SavedMission.new : _NoMission.new,
         ),
         coopSessionStoreProvider.overrideWith(
-          room != null ? _InRoom.new : _NoCoopSession.new,
+          room != null && !hasLeftRoom ? _InRoom.new : _NoCoopSession.new,
+        ),
+        leftCoopRoomStoreProvider.overrideWith(
+          hasLeftRoom ? _LeftRoom.new : _NoLeftRoom.new,
         ),
         coopRoomProvider(fx.code).overrideWith((ref) => Stream.value(room)),
       ],
@@ -181,6 +199,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('画面 /mission'), findsOneWidget);
+    });
+
+    testWidgets('抜けたルームがまだ遊べれば、「また入る」を出す', (tester) async {
+      await _pumpHome(tester, room: _playingRoom(), hasLeftRoom: true);
+
+      expect(find.text('つづきがあります'), findsOneWidget);
+      expect(find.text('ルーム ABCD23'), findsOneWidget);
+      expect(find.text('抜けたルームにまた入る'), findsOneWidget);
+      expect(find.text('ルーム ABCD23 に戻る'), findsNothing);
+    });
+
+    testWidgets('抜けたルームが終わっていれば、続きのカードを出さない', (tester) async {
+      await _pumpHome(
+        tester,
+        room: fx.room(status: RoomStatus.finished),
+        hasLeftRoom: true,
+      );
+
+      expect(find.text('つづきがあります'), findsNothing);
     });
   });
 }

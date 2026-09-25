@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'coop_session_store.dart';
+part of 'left_coop_room_store.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -8,42 +8,50 @@ part of 'coop_session_store.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 端末で進行中の協力プレイ (アプリのキルや電波断のあとに「ルームに戻る」ため保存する)
+/// 最後に抜けたルーム (ルームが終わるまで、ホームから入り直せるように保存する)
+///
+/// 別のルームに入ると消す (`CoopSessionStore.enter`)。
 
-@ProviderFor(CoopSessionStore)
+@ProviderFor(LeftCoopRoomStore)
 @JsonPersist()
-final coopSessionStoreProvider = CoopSessionStoreProvider._();
+final leftCoopRoomStoreProvider = LeftCoopRoomStoreProvider._();
 
-/// 端末で進行中の協力プレイ (アプリのキルや電波断のあとに「ルームに戻る」ため保存する)
+/// 最後に抜けたルーム (ルームが終わるまで、ホームから入り直せるように保存する)
+///
+/// 別のルームに入ると消す (`CoopSessionStore.enter`)。
 @JsonPersist()
-final class CoopSessionStoreProvider
-    extends $AsyncNotifierProvider<CoopSessionStore, CoopSession?> {
-  /// 端末で進行中の協力プレイ (アプリのキルや電波断のあとに「ルームに戻る」ため保存する)
-  CoopSessionStoreProvider._()
+final class LeftCoopRoomStoreProvider
+    extends $AsyncNotifierProvider<LeftCoopRoomStore, CoopSession?> {
+  /// 最後に抜けたルーム (ルームが終わるまで、ホームから入り直せるように保存する)
+  ///
+  /// 別のルームに入ると消す (`CoopSessionStore.enter`)。
+  LeftCoopRoomStoreProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'coopSessionStoreProvider',
+        name: r'leftCoopRoomStoreProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$coopSessionStoreHash();
+  String debugGetCreateSourceHash() => _$leftCoopRoomStoreHash();
 
   @$internal
   @override
-  CoopSessionStore create() => CoopSessionStore();
+  LeftCoopRoomStore create() => LeftCoopRoomStore();
 }
 
-String _$coopSessionStoreHash() => r'0255051dfb2278b7b90375d7ddf39067b7680e8d';
+String _$leftCoopRoomStoreHash() => r'8156d7cfac734f1ae823a17461c8cc74e275c6b0';
 
-/// 端末で進行中の協力プレイ (アプリのキルや電波断のあとに「ルームに戻る」ため保存する)
+/// 最後に抜けたルーム (ルームが終わるまで、ホームから入り直せるように保存する)
+///
+/// 別のルームに入ると消す (`CoopSessionStore.enter`)。
 
 @JsonPersist()
-abstract class _$CoopSessionStoreBase extends $AsyncNotifier<CoopSession?> {
+abstract class _$LeftCoopRoomStoreBase extends $AsyncNotifier<CoopSession?> {
   FutureOr<CoopSession?> build();
   @$mustCallSuper
   @override
@@ -66,10 +74,10 @@ abstract class _$CoopSessionStoreBase extends $AsyncNotifier<CoopSession?> {
 // **************************************************************************
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
-abstract class _$CoopSessionStore extends _$CoopSessionStoreBase {
+abstract class _$LeftCoopRoomStore extends _$LeftCoopRoomStoreBase {
   /// The default key used by [persist].
   String get key {
-    const resolvedKey = "CoopSessionStore";
+    const resolvedKey = "LeftCoopRoomStore";
     return resolvedKey;
   }
 

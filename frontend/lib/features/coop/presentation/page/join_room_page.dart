@@ -5,23 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
-import 'package:snampo/features/coop/di/coop_provider.dart';
-import 'package:snampo/features/coop/domain/entity/coop_session.dart';
-import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
-import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
+import 'package:snampo/features/coop/presentation/component/join_and_enter_room.dart';
 
 /// 「ルームに入る」: コード入力と QR スキャン
 class JoinRoomPage extends HookConsumerWidget {
   /// [JoinRoomPage] を作成する
   const JoinRoomPage({super.key});
-
-  static String _errorMessage(JoinRoomError error) => switch (error) {
-    JoinRoomError.notFound => 'ルームが見つかりません。コードを確認してください',
-    JoinRoomError.expired => 'このルームは期限切れです',
-    JoinRoomError.finished => 'このルームは終了しています',
-    JoinRoomError.full => 'このルームは満員です (最大 ${Room.maxActiveMembers} 人)',
-  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,23 +26,15 @@ class JoinRoomPage extends HookConsumerWidget {
       if (!await confirmLeaveCurrentRoom(context, ref, nextCode: code)) return;
       isJoining.value = true;
       try {
-        final uid = await ref.read(ensureCoopSignInUseCaseProvider)();
-        final result = await ref.read(joinRoomUseCaseProvider)(
-          code: code,
-          uid: uid,
-          nickname: name,
-        );
+        final result = await joinAndEnterRoom(ref, code: code, nickname: name);
         switch (result) {
           case JoinRoomJoined():
-            ref
-                .read(coopSessionStoreProvider.notifier)
-                .enter(CoopSession(roomCode: code, uid: uid));
             if (context.mounted) context.go('/coop/lobby');
           case JoinRoomFailed(error: final e):
-            error.value = _errorMessage(e);
+            error.value = joinRoomErrorMessage(e);
         }
       } on Object {
-        error.value = '入室できませんでした。電波の良い場所で再度お試しください';
+        error.value = joinRoomNetworkErrorMessage;
       } finally {
         if (context.mounted) isJoining.value = false;
       }
