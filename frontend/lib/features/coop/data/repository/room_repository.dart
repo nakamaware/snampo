@@ -216,11 +216,24 @@ class RoomRepository implements IRoomRepository {
   }
 
   @override
-  Stream<List<SpotClear>> watchClears(RoomCode code) =>
-      _clears(code).snapshots().map(
-        (snapshot) => [
+  Stream<SpotClearsSnapshot> watchClears(RoomCode code) async* {
+    // キャッシュからサーバの値に変わったことを知るため、メタデータの変更も受け取る。
+    // クリアも、キャッシュかどうかも変わらない通知 (書き込みの確定など) は流さない
+    bool? lastFromCache;
+    final snapshots = _clears(code).snapshots(includeMetadataChanges: true);
+    await for (final snapshot in snapshots) {
+      final isFromCache = snapshot.metadata.isFromCache;
+      if (snapshot.docChanges.isEmpty && isFromCache == lastFromCache) {
+        continue;
+      }
+      lastFromCache = isFromCache;
+      yield (
+        clears: [
           for (final doc in snapshot.docs)
             RoomMapper.clearFromFirestore(doc.id, doc.data()),
         ],
+        isFromCache: isFromCache,
       );
+    }
+  }
 }

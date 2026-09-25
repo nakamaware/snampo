@@ -28,6 +28,15 @@ abstract class SpotClear with _$SpotClear {
   }) = _SpotClear;
 }
 
+/// `clears` の監視で届いた値
+typedef SpotClearsSnapshot =
+    ({
+      List<SpotClear> clears,
+
+      /// サーバと同期する前の、端末のキャッシュの値か
+      bool isFromCache,
+    });
+
 /// 端末に反映済みのクリアの状態 (スポットごと)
 @freezed
 abstract class LocalClearState with _$LocalClearState {

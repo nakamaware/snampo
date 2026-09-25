@@ -17,7 +17,7 @@ Stream<Room?> coopRoom(Ref ref, RoomCode roomCode) =>
 Stream<List<RoomMember>> coopMembers(Ref ref, RoomCode roomCode) =>
     ref.watch(watchRoomUseCaseProvider).members(roomCode);
 
-/// クリアを監視する
+/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
 @riverpod
-Stream<List<SpotClear>> coopClears(Ref ref, RoomCode roomCode) =>
+Stream<SpotClearsSnapshot> coopClears(Ref ref, RoomCode roomCode) =>
     ref.watch(watchRoomUseCaseProvider).clears(roomCode);

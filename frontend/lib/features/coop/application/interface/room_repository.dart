@@ -108,5 +108,8 @@ abstract class IRoomRepository {
   Future<List<SpotClear>> fetchClears(RoomCode code);
 
   /// クリアを監視する
-  Stream<List<SpotClear>> watchClears(RoomCode code);
+  ///
+  /// 値がサーバと同期する前のキャッシュかどうかも伝える (キャッシュからサーバの値に
+  /// 変わったときも、クリアに変更がなくても通知する)。
+  Stream<SpotClearsSnapshot> watchClears(RoomCode code);
 }

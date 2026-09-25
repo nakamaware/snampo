@@ -170,22 +170,24 @@ final class CoopMembersFamily extends $Family
   String toString() => r'coopMembersProvider';
 }
 
-/// クリアを監視する
+/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
 
 @ProviderFor(coopClears)
 final coopClearsProvider = CoopClearsFamily._();
 
-/// クリアを監視する
+/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
 
 final class CoopClearsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<SpotClear>>,
-          List<SpotClear>,
-          Stream<List<SpotClear>>
+          AsyncValue<SpotClearsSnapshot>,
+          SpotClearsSnapshot,
+          Stream<SpotClearsSnapshot>
         >
-    with $FutureModifier<List<SpotClear>>, $StreamProvider<List<SpotClear>> {
-  /// クリアを監視する
+    with
+        $FutureModifier<SpotClearsSnapshot>,
+        $StreamProvider<SpotClearsSnapshot> {
+  /// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
   CoopClearsProvider._({
     required CoopClearsFamily super.from,
     required RoomCode super.argument,
@@ -209,12 +211,12 @@ final class CoopClearsProvider
 
   @$internal
   @override
-  $StreamProviderElement<List<SpotClear>> $createElement(
+  $StreamProviderElement<SpotClearsSnapshot> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<List<SpotClear>> create(Ref ref) {
+  Stream<SpotClearsSnapshot> create(Ref ref) {
     final argument = this.argument as RoomCode;
     return coopClears(ref, argument);
   }
@@ -230,12 +232,12 @@ final class CoopClearsProvider
   }
 }
 
-String _$coopClearsHash() => r'4e20be921fbe676dd3163096194ba43ff7e8e428';
+String _$coopClearsHash() => r'59515106a24ce1cfaa1ec16e5c565b6fbc3710a9';
 
-/// クリアを監視する
+/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
 
 final class CoopClearsFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<List<SpotClear>>, RoomCode> {
+    with $FunctionalFamilyOverride<Stream<SpotClearsSnapshot>, RoomCode> {
   CoopClearsFamily._()
     : super(
         retry: null,
@@ -245,7 +247,7 @@ final class CoopClearsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// クリアを監視する
+  /// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
 
   CoopClearsProvider call(RoomCode roomCode) =>
       CoopClearsProvider._(argument: roomCode, from: this);

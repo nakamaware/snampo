@@ -188,8 +188,10 @@ class FakeRoomRepository implements IRoomRepository {
   }
 
   @override
-  Stream<List<SpotClear>> watchClears(RoomCode code) =>
-      Stream.value((clears[code] ?? const {}).values.toList());
+  Stream<SpotClearsSnapshot> watchClears(RoomCode code) => Stream.value((
+    clears: (clears[code] ?? const {}).values.toList(),
+    isFromCache: false,
+  ));
 }
 
 /// メモリ上の Storage

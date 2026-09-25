@@ -88,10 +88,13 @@ abstract class CoopMissionState with _$CoopMissionState {
 @Riverpod(keepAlive: true)
 class CoopMissionStore extends _$CoopMissionStore {
   Set<SpotId>? _knownClearedSpotIds;
+
+  /// サーバと同期したクリアを 1 度でも反映したか
+  var _hasSyncedWithServer = false;
   var _noticeId = 0;
   var _discoveryId = 0;
   var _preparing = false;
-  List<SpotClear> _latestClears = const [];
+  SpotClearsSnapshot _latestClears = (clears: const [], isFromCache: true);
   Future<void> _clearSync = Future.value();
 
   @override
@@ -111,9 +114,9 @@ class CoopMissionStore extends _$CoopMissionStore {
         }
       }, fireImmediately: true)
       ..listen(coopClearsProvider(roomCode), (_, next) {
-        final clears = next.value;
-        if (clears != null) {
-          _latestClears = clears;
+        final snapshot = next.value;
+        if (snapshot != null) {
+          _latestClears = snapshot;
           _syncClears();
         }
       }, fireImmediately: true)
@@ -272,17 +275,18 @@ class CoopMissionStore extends _$CoopMissionStore {
   }
 
   /// `clears` を履歴と進捗に反映する
-  Future<void> _onClears(List<SpotClear> clears) async {
+  Future<void> _onClears(SpotClearsSnapshot snapshot) async {
     if (!state.isReady) {
       return;
     }
+    final clears = snapshot.clears;
     try {
       final result = await ref.read(syncCoopClearsUseCaseProvider)(
         roomCode,
         clears,
       );
       _applyDiscoveriesToProgress(result.discoveries);
-      await _announceNewDiscoveries(clears);
+      await _announceNewDiscoveries(snapshot);
       final room = _room;
       if (room != null) {
         await ref.read(finishIfAllClearedUseCaseProvider)(room, clears);
@@ -305,11 +309,18 @@ class CoopMissionStore extends _$CoopMissionStore {
     });
   }
 
-  Future<void> _announceNewDiscoveries(List<SpotClear> clears) async {
+  Future<void> _announceNewDiscoveries(SpotClearsSnapshot snapshot) async {
+    final clears = snapshot.clears;
     final known = _knownClearedSpotIds;
     _knownClearedSpotIds = clears.map((c) => c.spotId).toSet();
-    // 最初の読み込み (途中参加・復帰) ではバナーを出さない
-    if (known == null) {
+    // 追いつくまで (途中参加・復帰) の発見は、バナーを出さず結果画面も開かない。
+    // 最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
+    // 届くので、サーバの最初の値までを「追いつくまで」とする
+    final isCatchingUp = known == null || !_hasSyncedWithServer;
+    if (!snapshot.isFromCache) {
+      _hasSyncedWithServer = true;
+    }
+    if (isCatchingUp) {
       return;
     }
     final uid = await _uid();

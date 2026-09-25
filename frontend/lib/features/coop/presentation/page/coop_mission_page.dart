@@ -205,7 +205,8 @@ class _CoopMissionEffects extends HookConsumerWidget {
     // 発見者とサムネを進捗に反映し終えてから開く
     await ref.read(coopMissionStoreProvider(roomCode).notifier).clearsSynced;
     if (!context.mounted) return;
-    final clears = ref.read(coopClearsProvider(roomCode)).value ?? const [];
+    final clears =
+        ref.read(coopClearsProvider(roomCode)).value?.clears ?? const [];
     final mission =
         ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
     final checkpoints =
