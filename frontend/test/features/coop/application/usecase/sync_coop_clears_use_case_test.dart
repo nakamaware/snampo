@@ -132,6 +132,38 @@ void main() {
     expect(steps.last.hasAllThumbs, isTrue);
   });
 
+  test('途中経過として、サムネを取得できなくても (時間切れを含む)、そのスポットの取得を試し終えた時点の結果を流す', () async {
+    // a のサムネは電波が弱く取得が終わらず、b は取得できる
+    storage.thumbDownloadGates[fx.clear('a', 'x').thumbPath] =
+        Completer<void>();
+    syncClears = SyncCoopClearsUseCase(
+      storage: storage,
+      histories: histories,
+      thumbTimeout: const Duration(milliseconds: 10),
+    );
+
+    final steps = await syncClears
+        .syncInSteps(fx.code, [fx.clear('a', 'x'), fx.clear('b', 'y')])
+        .toList()
+        .timeout(const Duration(seconds: 1));
+
+    expect(
+      [
+        for (final step in steps)
+          (
+            step.thumbAttemptedSpotId,
+            step.discoveries[fx.spot('a')]?.thumbPath,
+            step.discoveries[fx.spot('b')]?.thumbPath,
+          ),
+      ],
+      [
+        (null, null, null),
+        (fx.spot('a'), null, null),
+        (fx.spot('b'), null, 'history:/tmp/download/1.jpg'),
+      ],
+    );
+  });
+
   test('取得済みのサムネは取り直さない', () async {
     final clears = [
       fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),

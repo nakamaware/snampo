@@ -378,9 +378,9 @@ class CoopMissionStore extends _$CoopMissionStore {
       // 途中経過は必ず 1 つ以上流れる ([SyncCoopClearsUseCase.syncInSteps])
       late CoopClearSyncResult result;
       var isFirstStep = true;
-      // その場で開くスポットの結果画面は、そのスポットのサムネを取得してから開く
-      // (開いた結果画面は、あとから届いたサムネに変わらないため)。ほかのスポットの
-      // サムネの取り直しは待たない
+      // その場で開くスポットの結果画面は、そのスポットのサムネの取得を試し終えてから開く
+      // (開いた結果画面は、あとから届いたサムネに変わらないため。取得できなければ
+      // プレースホルダ)。ほかのスポットのサムネの取り直しは待たない
       CoopDiscoveryEvent? pendingDiscovery;
       await for (final step in ref
           .read(syncCoopClearsUseCaseProvider)
@@ -402,13 +402,14 @@ class CoopMissionStore extends _$CoopMissionStore {
           // 最後のスポットの発見を出してから、サムネの取得を待たずに終了にする
           _finishIfAllCleared(clears);
         }
-        if (pendingDiscovery != null && _hasThumb(step, pendingDiscovery)) {
+        if (pendingDiscovery != null &&
+            _hasTriedThumb(step, pendingDiscovery)) {
           state = state.copyWith(discovery: pendingDiscovery);
           pendingDiscovery = null;
         }
       }
       if (pendingDiscovery != null) {
-        // サムネを取得できなかった (時間切れなど)。反映し終えたら、プレースホルダで開く
+        // サムネの取得を試さなかった。反映し終えたら、反映できた分で開く
         state = state.copyWith(discovery: pendingDiscovery);
       }
       final room = _room;
@@ -446,10 +447,17 @@ class CoopMissionStore extends _$CoopMissionStore {
     );
   }
 
-  /// [discovery] のスポットの、発見者のサムネを [synced] で反映済みか
-  bool _hasThumb(CoopClearSyncResult synced, CoopDiscoveryEvent discovery) {
+  /// [discovery] のスポットの、発見者のサムネを [synced] までに取得し終えたか
+  ///
+  /// 反映済みか、取得を試したが取得できなかった (時間切れを含む) なら true。
+  bool _hasTriedThumb(
+    CoopClearSyncResult synced,
+    CoopDiscoveryEvent discovery,
+  ) {
     final spotId = _spotIdAt(discovery.spotIndex);
-    return spotId != null && synced.discoveries[spotId]?.thumbPath != null;
+    return spotId != null &&
+        (synced.discoveries[spotId]?.thumbPath != null ||
+            synced.thumbAttemptedSpotId == spotId);
   }
 
   void _applyDiscoveriesToProgress(Map<SpotId, CoopDiscovery> found) {

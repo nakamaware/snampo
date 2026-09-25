@@ -16,6 +16,12 @@ typedef CoopClearSyncResult =
 
       /// 端末に反映済みの発見 (スポット ID ごと)
       Map<SpotId, CoopDiscovery> discoveries,
+
+      /// この途中経過の直前に、サムネの取得を試したスポット
+      ///
+      /// 取得できなかった (時間切れを含む) 場合もそのスポットになる。発見者を反映した
+      /// 時点の途中経過では null。
+      SpotId? thumbAttemptedSpotId,
     });
 
 /// サーバの `clears` と履歴 (端末のキャッシュ) を比べ、不足分を取得して履歴に反映する
@@ -49,16 +55,22 @@ class SyncCoopClearsUseCase {
 
   /// 反映し、途中経過を流す (履歴がなければ、何もせずに空の結果を 1 つだけ流す)
   ///
-  /// 発見者を反映した時点と、サムネを 1 枚取得するごとに、その時点の結果を流す。
-  /// 最後に流すのが反映し終えた結果。サムネの取得を待たずに、発見者を先に画面へ
-  /// 出せるようにするため (電波が弱いとサムネの取得は [thumbTimeout] まで終わらない)。
+  /// 発見者を反映した時点と、サムネを 1 枚取得しようとするごと (取得できなかった場合や
+  /// 時間切れを含む) に、その時点の結果を流す。最後に流すのが反映し終えた結果。
+  /// サムネの取得を待たずに発見者を先に画面へ出し、あるスポットのサムネを待つ画面が、
+  /// ほかのサムネの取得まで待たずに済むようにするため (電波が弱いとサムネの取得は
+  /// [thumbTimeout] まで終わらない)。
   Stream<CoopClearSyncResult> syncInSteps(
     RoomCode roomCode,
     List<SpotClear> clears,
   ) async* {
     final history = await _histories.getCoopHistory(roomCode);
     if (history == null) {
-      yield (hasAllThumbs: false, discoveries: <SpotId, CoopDiscovery>{});
+      yield (
+        hasAllThumbs: false,
+        discoveries: <SpotId, CoopDiscovery>{},
+        thumbAttemptedSpotId: null,
+      );
       return;
     }
     final plan = planClearSync(clears: clears, local: _localStates(history));
@@ -72,7 +84,7 @@ class SyncCoopClearsUseCase {
         judgement: clear.judgement,
       );
     }
-    yield await _result(roomCode, clears, fallback: history);
+    yield await _result(roomCode, clears, fallback: history, attempted: null);
     for (final clear in plan.thumbsToFetch) {
       try {
         final downloaded = await _storage
@@ -86,9 +98,13 @@ class SyncCoopClearsUseCase {
       } on Object catch (e) {
         // 時間切れも含め、次の同期で取り直す
         log('サムネの取得に失敗した: $e', name: 'SyncCoopClears');
-        continue;
       }
-      yield await _result(roomCode, clears, fallback: history);
+      yield await _result(
+        roomCode,
+        clears,
+        fallback: history,
+        attempted: clear.spotId,
+      );
     }
   }
 
@@ -97,6 +113,7 @@ class SyncCoopClearsUseCase {
     RoomCode roomCode,
     List<SpotClear> clears, {
     required MissionHistory fallback,
+    required SpotId? attempted,
   }) async {
     final synced = await _histories.getCoopHistory(roomCode) ?? fallback;
     return (
@@ -115,6 +132,7 @@ class SyncCoopClearsUseCase {
               judgement: spot.discovererJudgement,
             ),
       },
+      thumbAttemptedSpotId: attempted,
     );
   }
 
