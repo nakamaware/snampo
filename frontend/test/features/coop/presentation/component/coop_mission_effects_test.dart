@@ -38,12 +38,18 @@ class _FinalDiscoveryStore extends CoopMissionStore {
 
   @override
   Future<void> get clearsSynced => synced.future;
+
+  /// 他の人がその場でスポットを発見した (その前のスポットの反映が終わった)
+  void discover(CoopDiscoveryEvent discovery) {
+    state = state.copyWith(discovery: discovery);
+  }
 }
 
 void main() {
   group('CoopMissionEffects', () {
     late StreamController<Room> roomUpdates;
     late Completer<void> synced;
+    late _FinalDiscoveryStore store;
 
     /// 全スポットのクリアで終わったルーム
     Room finishedRoom({DateTime? finishedAt}) =>
@@ -107,7 +113,7 @@ void main() {
             coopRoomProvider(code).overrideWith((ref) => roomUpdates.stream),
             coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
             coopMissionStoreProvider.overrideWith(
-              () => _FinalDiscoveryStore(synced),
+              () => store = _FinalDiscoveryStore(synced),
             ),
             missionProgressStoreProvider.overrideWith(
               () => ProgressOf(
@@ -117,7 +123,10 @@ void main() {
                   checkpoints: const [
                     null,
                     null,
-                    null,
+                    CheckpointProgress(
+                      discovererUid: 'other',
+                      discovererNickname: 'other',
+                    ),
                     CheckpointProgress(
                       discovererUid: 'other',
                       discovererNickname: 'other',
@@ -169,6 +178,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('spot 3 · 結果を見る'), findsOneWidget);
+    });
+
+    testWidgets('最後のスポットを開く前の待ち合わせの間に、その前のスポットの結果画面が開いても、重ねて開かず、最後は結果画面へ移る', (
+      tester,
+    ) async {
+      await openMission(tester);
+
+      // 最後のスポット (3) の発見で終わったが、その前のスポット (2) の反映 (サムネの取得) が続いている
+      roomUpdates.add(finishedRoom(finishedAt: DateTime.now()));
+      await tester.pumpAndSettle();
+      // その前のスポットの反映が終わり、その結果画面が開く
+      store.discover(
+        const CoopDiscoveryEvent(id: 2, spotIndex: 2, discovererName: 'other'),
+      );
+      await tester.pumpAndSettle();
+      synced.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.text('spot 2 · null'), findsOneWidget);
+      expect(find.text('spot 3 · 結果を見る'), findsNothing);
+
+      await tester.tap(find.text('spot 2 · null'));
+      await tester.pumpAndSettle();
+      expect(find.text('spot 3 · 結果を見る'), findsOneWidget);
+
+      await tester.tap(find.text('spot 3 · 結果を見る'));
+      await tester.pumpAndSettle();
+      expect(find.text('result'), findsOneWidget);
     });
   });
 }

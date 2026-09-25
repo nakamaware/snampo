@@ -139,6 +139,12 @@ class CoopMissionEffects extends HookConsumerWidget {
     final store = ref.read(coopMissionStoreProvider(roomCode).notifier);
     await store.clearsSynced.timeout(_finalSpotSyncTimeout, onTimeout: () {});
     if (!context.mounted) return;
+    if (showingSpot.value || !(ModalRoute.of(context)?.isCurrent ?? false)) {
+      // 待っている間に、ほかのスポットの結果画面が開いた (その前のスポットの反映が
+      // 終わったなど) か、撮影を始めた。重ねて開かず、Mission 画面が前面に戻ったら開き直す
+      finalSpotShown.value = false;
+      return;
+    }
     final discovery =
         ref.read(coopMissionStoreProvider(roomCode)).finalDiscovery;
     final args =
