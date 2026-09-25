@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/discoverer_rank.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/domain/entity/coop_checkpoint.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
