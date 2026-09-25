@@ -6,9 +6,6 @@ import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
-import 'package:snampo/core/storage/mission_photo_directory.dart';
-import 'package:snampo/core/storage/photo_storage.dart';
-import 'package:snampo/features/coop/application/usecase/get_coop_signed_in_uid_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -16,7 +13,6 @@ import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
-import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
@@ -24,6 +20,7 @@ import 'package:snampo/features/mission/presentation/store/persisted_mission_pro
 
 import '../../application/coop_fakes.dart';
 import '../../domain/entity/coop_fixtures.dart';
+import '../coop_store_fakes.dart';
 
 /// 端末の DB を使わない進捗 (まだ何も保存していない)
 class _EmptyProgress extends MissionProgressStoreNotifier {
@@ -59,11 +56,6 @@ class _PreparedMission extends PersistedMission {
   Future<MissionEntity?> build(MissionSessionKind kind) async => _mission;
 }
 
-class _FakeSignedInUid implements GetCoopSignedInUidUseCase {
-  @override
-  Future<String?> call() async => 'me';
-}
-
 /// 用意した回数を数える
 class _FakePrepare implements PrepareCoopMissionUseCase {
   int calls = 0;
@@ -79,20 +71,6 @@ class _FakePrepare implements PrepareCoopMissionUseCase {
   }
 }
 
-ImageCoordinate _spotOf(String spotId) => ImageCoordinate(
-  coordinate: Coordinate(latitude: 35, longitude: 139),
-  imageBase64: '',
-  spotId: spot(spotId),
-);
-
-/// スポット a, b, c, d のミッション
-final _fourSpotMission = MissionEntity(
-  departure: Coordinate(latitude: 35, longitude: 139),
-  waypoints: [_spotOf('a'), _spotOf('b'), _spotOf('c')],
-  destination: _spotOf('d'),
-  overviewPolyline: 'p',
-);
-
 /// スポット a, b, c, d のルームの進捗 (用意済み)
 class _FourSpotProgress extends MissionProgressStoreNotifier {
   @override
@@ -102,48 +80,6 @@ class _FourSpotProgress extends MissionProgressStoreNotifier {
         roomCode: code,
         checkpoints: const [null, null, null, null],
       );
-}
-
-/// スポット a, b, c, d のミッション (用意済み)
-class _FourSpotMission extends PersistedMission {
-  @override
-  Future<MissionEntity?> build(MissionSessionKind kind) async =>
-      _fourSpotMission;
-}
-
-/// [initial] から始まる進捗 (端末の DB を使わない)
-class _ProgressOf extends MissionProgressStoreNotifier {
-  _ProgressOf(this.initial);
-
-  final MissionProgressEntity initial;
-
-  @override
-  Future<MissionProgressEntity?> build(MissionSessionKind kind) async =>
-      initial;
-}
-
-/// 消した写真を記録する
-class _FakePhotoStorage implements IPhotoStorage {
-  final deleted = <String>[];
-
-  @override
-  Future<void> deletePhoto(String path) async => deleted.add(path);
-
-  @override
-  Future<String> savePhoto(
-    String sourcePath,
-    int checkpointIndex, {
-    required MissionPhotoDirectory directory,
-  }) => throw UnimplementedError();
-}
-
-class _FakePrepareFourSpots implements PrepareCoopMissionUseCase {
-  @override
-  Future<MissionEntity> call(
-    Room room, {
-    required String uid,
-    MissionEntity? prepared,
-  }) async => _fourSpotMission;
 }
 
 void main() {
@@ -181,7 +117,7 @@ void main() {
           missionProgressStoreProvider.overrideWith(_PreparedProgress.new),
           persistedMissionProvider.overrideWith(_PreparedMission.new),
           getCoopSignedInUidUseCaseProvider.overrideWithValue(
-            _FakeSignedInUid(),
+            FakeSignedInUid(),
           ),
           prepareCoopMissionUseCaseProvider.overrideWithValue(prepare),
         ],
@@ -223,44 +159,31 @@ void main() {
         clears = StreamController<SpotClearsSnapshot>();
         addTearDown(clears.close);
         rooms = FakeRoomRepository();
-        final fourSpotRoom = room(spotIds: ['a', 'b', 'c', 'd']);
-        rooms.rooms[code] = fourSpotRoom;
+        final playing = fourSpotRoom();
+        rooms.rooms[code] = playing;
         // b の共有はサーバに届いていた
         rooms.clears[code] = {spot('b'): clear('b', 'me')};
         histories = FakeHistoryRepository();
-        await histories.upsertCoopHistory(
-          mission: _fourSpotMission,
-          startedAt: createdAt,
-          coop: CoopHistoryInfo(
-            roomCode: code,
-            syncState: CoopSyncState.inProgress,
-            isHost: false,
-            members: const [],
-            expiresAt: fourSpotRoom.expiresAt,
-            deleteAt: fourSpotRoom.deleteAt,
-          ),
-        );
+        await seedFourSpotHistory(histories);
         container = ProviderContainer(
           overrides: [
-            coopRoomProvider(
-              code,
-            ).overrideWith((ref) => Stream.value(fourSpotRoom)),
+            coopRoomProvider(code).overrideWith((ref) => Stream.value(playing)),
             coopClearsProvider(code).overrideWith((ref) => clears.stream),
             coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
             missionProgressStoreProvider.overrideWith(
-              () => _ProgressOf(unshared),
+              () => ProgressOf(unshared),
             ),
-            persistedMissionProvider.overrideWith(_FourSpotMission.new),
+            persistedMissionProvider.overrideWith(FourSpotMission.new),
             getCoopSignedInUidUseCaseProvider.overrideWithValue(
-              _FakeSignedInUid(),
+              FakeSignedInUid(),
             ),
             prepareCoopMissionUseCaseProvider.overrideWithValue(
-              _FakePrepareFourSpots(),
+              FakePrepareFourSpots(),
             ),
             roomRepositoryProvider.overrideWithValue(rooms),
             coopStorageProvider.overrideWithValue(FakeCoopStorage()),
             historyRepositoryProvider.overrideWithValue(histories),
-            photoStorageProvider.overrideWithValue(_FakePhotoStorage()),
+            photoStorageProvider.overrideWithValue(FakePhotoStorage()),
           ],
         );
         addTearDown(container.dispose);
@@ -319,22 +242,20 @@ void main() {
         clears = StreamController<SpotClearsSnapshot>();
         addTearDown(clears.close);
         final rooms = FakeRoomRepository();
-        final fourSpotRoom = room(spotIds: ['a', 'b', 'c', 'd']);
-        rooms.rooms[code] = fourSpotRoom;
+        final playing = fourSpotRoom();
+        rooms.rooms[code] = playing;
         container = ProviderContainer(
           overrides: [
-            coopRoomProvider(
-              code,
-            ).overrideWith((ref) => Stream.value(fourSpotRoom)),
+            coopRoomProvider(code).overrideWith((ref) => Stream.value(playing)),
             coopClearsProvider(code).overrideWith((ref) => clears.stream),
             coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
             missionProgressStoreProvider.overrideWith(_FourSpotProgress.new),
-            persistedMissionProvider.overrideWith(_FourSpotMission.new),
+            persistedMissionProvider.overrideWith(FourSpotMission.new),
             getCoopSignedInUidUseCaseProvider.overrideWithValue(
-              _FakeSignedInUid(),
+              FakeSignedInUid(),
             ),
             prepareCoopMissionUseCaseProvider.overrideWithValue(
-              _FakePrepareFourSpots(),
+              FakePrepareFourSpots(),
             ),
             roomRepositoryProvider.overrideWithValue(rooms),
             coopStorageProvider.overrideWithValue(FakeCoopStorage()),

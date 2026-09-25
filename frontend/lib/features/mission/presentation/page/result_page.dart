@@ -99,6 +99,19 @@ class ResultPage extends ConsumerWidget {
     final progressStore = ref.read(missionProgressStoreProvider(kind).notifier);
     final persistedMission = ref.read(persistedMissionProvider(kind).notifier);
 
+    if (!await _extension.canClearProgress(ref)) {
+      // 片付けずにホームへ戻る (ホームから、もう一度この結果画面を開ける)
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('撮影を確かめられなかったため、結果を残しました。電波の良い場所で、ホームから開き直してください'),
+          ),
+        );
+        context.go('/');
+      }
+      return;
+    }
+
     try {
       // 協力プレイの写真は履歴にコピー済みなので、進捗の写真は消してよい
       await progressStore.clearProgress();
@@ -606,6 +619,11 @@ abstract class ResultPageExtension {
   /// スポットに表示する写真のパス (既定は自分の写真)
   String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
       checkpoint?.userPhotoPath;
+
+  /// 「ホームへ戻る」で、その種別の枠を片付けてよいか
+  ///
+  /// false なら片付けず ([onFinish] も呼ばず) にホームへ戻る。
+  Future<bool> canClearProgress(WidgetRef ref) async => true;
 
   /// 「ホームへ戻る」で、その種別の枠を片付けたあとに呼ぶ
   Future<void> onFinish(WidgetRef ref) async {}

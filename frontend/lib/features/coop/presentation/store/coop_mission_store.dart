@@ -93,7 +93,9 @@ class CoopMissionStore extends _$CoopMissionStore {
   var _hasSyncedWithServer = false;
   var _noticeId = 0;
   var _discoveryId = 0;
-  var _preparing = false;
+
+  /// ミッションの用意 (用意している間だけある)
+  Future<void>? _preparation;
 
   /// 共有の途中でアプリが終了した撮影のうち、捨てるかをまだ決められていないものの番号
   /// (ルームに戻ったときにサーバの `clears` を読めなかった)
@@ -220,12 +222,19 @@ class CoopMissionStore extends _$CoopMissionStore {
     await _prepare(room);
   }
 
-  /// バンドルを取得してミッションを端末に用意する (済んでいれば何もしない)
-  Future<void> _prepare(Room room) async {
-    if (state.isReady || _preparing) {
-      return;
+  /// バンドルを取得してミッションを端末に用意する
+  ///
+  /// 済んでいれば何もしない。用意している途中なら、それが終わるのを待つ。
+  Future<void> _prepare(Room room) {
+    if (state.isReady) {
+      return Future.value();
     }
-    _preparing = true;
+    return _preparation ??= _prepareOnce(
+      room,
+    ).whenComplete(() => _preparation = null);
+  }
+
+  Future<void> _prepareOnce(Room room) async {
     try {
       final progress = await ref.read(
         missionProgressStoreProvider(MissionSessionKind.coop).future,
@@ -263,9 +272,31 @@ class CoopMissionStore extends _$CoopMissionStore {
     } on Object catch (e, st) {
       log('ミッションの用意に失敗した', error: e, stackTrace: st, name: 'CoopMission');
       state = state.copyWith(prepareError: e);
-    } finally {
-      _preparing = false;
     }
+  }
+
+  /// 結果画面で進捗を片付けてよいか (共有の途中で終了した撮影の扱いを決め終えたか)
+  ///
+  /// ミッションの用意や撮影の扱いがまだなら、ここで済ませる。決められない撮影が残っていれば
+  /// (サーバから読めないなど) false を返す。片付けると、サーバに届いていた撮影の写真まで
+  /// 消してしまうため。
+  Future<bool> settleUnsharedCaptures() async {
+    final room = _room;
+    if (!state.isReady && room != null) {
+      await _prepare(room);
+    }
+    if (!state.isReady) {
+      // 用意できなければ撮影の扱いを決められないので、決めるものがないときだけ片付けてよい
+      final progress =
+          ref.read(missionProgressStoreProvider(MissionSessionKind.coop)).value;
+      return progress?.roomCode != roomCode ||
+          progress!.unsharedCaptureIndexes.isEmpty;
+    }
+    _clearSync = _clearSync.then(
+      (_) => _resolveUnsharedCaptures(_latestClears),
+    );
+    await _clearSync;
+    return _unresolvedCaptureIndexes.isEmpty;
   }
 
   Future<void> _updateHistoryMembers(List<RoomMember> members) async {
