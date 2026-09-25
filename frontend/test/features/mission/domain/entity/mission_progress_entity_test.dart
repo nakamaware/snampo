@@ -24,6 +24,13 @@ void main() {
       expect(progress.judgeRank, PhotoJudgeRank.excellent);
     });
 
+    test('ズームの倍率を保存して読み戻せる (古いデータにはない)', () {
+      const progress = CheckpointProgress(zoomLevel: 2);
+
+      expect(CheckpointProgress.fromJson(progress.toJson()).zoomLevel, 2);
+      expect(CheckpointProgress.fromJson(const {}).zoomLevel, isNull);
+    });
+
     test('judgeRank が null の場合は null のまま復元する', () {
       final progress = CheckpointProgress.fromJson(const {});
 
@@ -241,4 +248,19 @@ void main() {
       expect(entity.unsharedCaptureIndexes, [0]);
     },
   );
+
+  group('PhotoJudgement', () {
+    test('ofCheckpoint は、ズームの倍率も採点に含める', () {
+      final judgement = PhotoJudgement.ofCheckpoint(
+        const CheckpointProgress(
+          judgeRank: PhotoJudgeRank.good,
+          distanceErrorMeters: 30,
+          zoomLevel: 2,
+        ),
+      );
+
+      expect(judgement?.zoomLevel, 2);
+      expect(PhotoJudgement.fromJson(judgement!.toJson()).zoomLevel, 2);
+    });
+  });
 }

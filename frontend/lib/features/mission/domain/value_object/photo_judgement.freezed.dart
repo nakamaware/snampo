@@ -20,7 +20,8 @@ mixin _$PhotoJudgement {
  double get distanceErrorMeters;/// 方角誤差 (度。向きを取れなければ null)
  double? get headingErrorDegrees;/// 撮影した位置
 @NullableCoordinateConverter() Coordinate? get guessPosition;/// 撮影したときの向き (度)
- double? get capturedHeading;
+ double? get capturedHeading;/// 撮影したときのズームの倍率 (共有されていなければ null)
+ double? get zoomLevel;
 /// Create a copy of PhotoJudgement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -33,16 +34,16 @@ $PhotoJudgementCopyWith<PhotoJudgement> get copyWith => _$PhotoJudgementCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PhotoJudgement&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PhotoJudgement&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.zoomLevel, zoomLevel) || other.zoomLevel == zoomLevel));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,rank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading);
+int get hashCode => Object.hash(runtimeType,rank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading,zoomLevel);
 
 @override
 String toString() {
-  return 'PhotoJudgement(rank: $rank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading)';
+  return 'PhotoJudgement(rank: $rank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading, zoomLevel: $zoomLevel)';
 }
 
 
@@ -53,7 +54,7 @@ abstract mixin class $PhotoJudgementCopyWith<$Res>  {
   factory $PhotoJudgementCopyWith(PhotoJudgement value, $Res Function(PhotoJudgement) _then) = _$PhotoJudgementCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) PhotoJudgeRank rank, double distanceErrorMeters, double? headingErrorDegrees,@NullableCoordinateConverter() Coordinate? guessPosition, double? capturedHeading
+@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) PhotoJudgeRank rank, double distanceErrorMeters, double? headingErrorDegrees,@NullableCoordinateConverter() Coordinate? guessPosition, double? capturedHeading, double? zoomLevel
 });
 
 
@@ -70,13 +71,14 @@ class _$PhotoJudgementCopyWithImpl<$Res>
 
 /// Create a copy of PhotoJudgement
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? rank = null,Object? distanceErrorMeters = null,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? rank = null,Object? distanceErrorMeters = null,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,Object? zoomLevel = freezed,}) {
   return _then(_self.copyWith(
 rank: null == rank ? _self.rank : rank // ignore: cast_nullable_to_non_nullable
 as PhotoJudgeRank,distanceErrorMeters: null == distanceErrorMeters ? _self.distanceErrorMeters : distanceErrorMeters // ignore: cast_nullable_to_non_nullable
 as double,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
+as double?,zoomLevel: freezed == zoomLevel ? _self.zoomLevel : zoomLevel // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PhotoJudgement() when $default != null:
-return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel)  $default,) {final _that = this;
 switch (_that) {
 case _PhotoJudgement():
-return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +205,10 @@ return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson)  PhotoJudgeRank rank,  double distanceErrorMeters,  double? headingErrorDegrees, @NullableCoordinateConverter()  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel)?  $default,) {final _that = this;
 switch (_that) {
 case _PhotoJudgement() when $default != null:
-return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel);case _:
   return null;
 
 }
@@ -218,7 +220,7 @@ return $default(_that.rank,_that.distanceErrorMeters,_that.headingErrorDegrees,_
 @JsonSerializable()
 
 class _PhotoJudgement implements PhotoJudgement {
-  const _PhotoJudgement({@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) required this.rank, required this.distanceErrorMeters, this.headingErrorDegrees, @NullableCoordinateConverter() this.guessPosition, this.capturedHeading});
+  const _PhotoJudgement({@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) required this.rank, required this.distanceErrorMeters, this.headingErrorDegrees, @NullableCoordinateConverter() this.guessPosition, this.capturedHeading, this.zoomLevel});
   factory _PhotoJudgement.fromJson(Map<String, dynamic> json) => _$PhotoJudgementFromJson(json);
 
 /// 採点ランク
@@ -231,6 +233,8 @@ class _PhotoJudgement implements PhotoJudgement {
 @override@NullableCoordinateConverter() final  Coordinate? guessPosition;
 /// 撮影したときの向き (度)
 @override final  double? capturedHeading;
+/// 撮影したときのズームの倍率 (共有されていなければ null)
+@override final  double? zoomLevel;
 
 /// Create a copy of PhotoJudgement
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PhotoJudgement&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PhotoJudgement&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.zoomLevel, zoomLevel) || other.zoomLevel == zoomLevel));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,rank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading);
+int get hashCode => Object.hash(runtimeType,rank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading,zoomLevel);
 
 @override
 String toString() {
-  return 'PhotoJudgement(rank: $rank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading)';
+  return 'PhotoJudgement(rank: $rank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading, zoomLevel: $zoomLevel)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$PhotoJudgementCopyWith<$Res> implements $PhotoJudgementCo
   factory _$PhotoJudgementCopyWith(_PhotoJudgement value, $Res Function(_PhotoJudgement) _then) = __$PhotoJudgementCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) PhotoJudgeRank rank, double distanceErrorMeters, double? headingErrorDegrees,@NullableCoordinateConverter() Coordinate? guessPosition, double? capturedHeading
+@JsonKey(fromJson: _rankFromJson, toJson: _rankToJson) PhotoJudgeRank rank, double distanceErrorMeters, double? headingErrorDegrees,@NullableCoordinateConverter() Coordinate? guessPosition, double? capturedHeading, double? zoomLevel
 });
 
 
@@ -282,13 +286,14 @@ class __$PhotoJudgementCopyWithImpl<$Res>
 
 /// Create a copy of PhotoJudgement
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? rank = null,Object? distanceErrorMeters = null,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? rank = null,Object? distanceErrorMeters = null,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,Object? zoomLevel = freezed,}) {
   return _then(_PhotoJudgement(
 rank: null == rank ? _self.rank : rank // ignore: cast_nullable_to_non_nullable
 as PhotoJudgeRank,distanceErrorMeters: null == distanceErrorMeters ? _self.distanceErrorMeters : distanceErrorMeters // ignore: cast_nullable_to_non_nullable
 as double,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
+as double?,zoomLevel: freezed == zoomLevel ? _self.zoomLevel : zoomLevel // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }

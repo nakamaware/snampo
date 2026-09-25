@@ -32,6 +32,9 @@ abstract class CheckpointProgress with _$CheckpointProgress {
     /// 採点ランク
     @PhotoJudgeRankConverter() PhotoJudgeRank? judgeRank,
 
+    /// 撮影したときのズームの倍率 (判定は、位置誤差をこの倍率で割って決める。古いデータでは null)
+    double? zoomLevel,
+
     /// 達成した日時 (協力プレイでは発見された日時)
     DateTime? achievedAt,
 

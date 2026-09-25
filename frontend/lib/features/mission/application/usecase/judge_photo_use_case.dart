@@ -3,15 +3,6 @@ import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
-const _excellentDistanceThresholdMeters = 12.0;
-const _excellentHeadingThresholdDegrees = 90.0;
-
-const _goodDistanceThresholdMeters = 25.0;
-const _goodHeadingThresholdDegrees = 90.0;
-
-const _fairDistanceThresholdMeters = 50.0;
-const _fairHeadingThresholdDegrees = 90.0;
-
 /// 写真採点結果
 class PhotoJudgeResult {
   /// PhotoJudgeResultのコンストラクタ
@@ -19,6 +10,7 @@ class PhotoJudgeResult {
     required this.rank,
     required this.distanceErrorMeters,
     required this.headingErrorDegrees,
+    required this.zoomLevel,
   });
 
   /// 4 段階評価
@@ -29,6 +21,9 @@ class PhotoJudgeResult {
 
   /// 方角誤差
   final double? headingErrorDegrees;
+
+  /// 撮影したときのズームの倍率
+  final double zoomLevel;
 }
 
 /// 写真を採点するユースケース
@@ -50,10 +45,6 @@ class JudgePhotoUseCase {
       target.coordinate.latitude,
       target.coordinate.longitude,
     );
-    final effectiveDistanceMeters = _applyZoomCorrection(
-      distanceErrorMeters,
-      zoomLevel,
-    );
     final headingErrorDegrees = _calculateHeadingError(
       referenceHeading: target.referenceHeading,
       capturedHeading: capturedHeading,
@@ -61,66 +52,33 @@ class JudgePhotoUseCase {
 
     return PhotoJudgeResult(
       rank: _resolveRank(
-        distanceErrorMeters: effectiveDistanceMeters,
+        distanceErrorMeters: effectiveDistanceMeters(
+          distanceErrorMeters,
+          zoomLevel,
+        ),
         headingErrorDegrees: headingErrorDegrees,
       ),
       distanceErrorMeters: distanceErrorMeters,
       headingErrorDegrees: headingErrorDegrees,
+      zoomLevel: zoomLevel,
     );
-  }
-
-  /// ズームレベルによる距離補正を適用する
-  ///
-  /// ズームレベルが 1.0 未満の場合は補正なし (1.0 に切り上げる)。
-  double _applyZoomCorrection(double distanceMeters, double zoomLevel) {
-    final effectiveZoom = zoomLevel.clamp(1.0, double.infinity);
-    return distanceMeters / effectiveZoom;
   }
 
   PhotoJudgeRank _resolveRank({
     required double distanceErrorMeters,
     required double? headingErrorDegrees,
   }) {
-    if (_matches(
-      distanceErrorMeters,
-      headingErrorDegrees,
-      _excellentDistanceThresholdMeters,
-      _excellentHeadingThresholdDegrees,
-    )) {
-      return PhotoJudgeRank.excellent;
+    if (headingErrorDegrees != null &&
+        headingErrorDegrees.abs() > photoJudgeHeadingLimitDegrees) {
+      return PhotoJudgeRank.miss;
     }
-    if (_matches(
-      distanceErrorMeters,
-      headingErrorDegrees,
-      _goodDistanceThresholdMeters,
-      _goodHeadingThresholdDegrees,
-    )) {
-      return PhotoJudgeRank.good;
-    }
-    if (_matches(
-      distanceErrorMeters,
-      headingErrorDegrees,
-      _fairDistanceThresholdMeters,
-      _fairHeadingThresholdDegrees,
-    )) {
-      return PhotoJudgeRank.fair;
+    for (final rank in PhotoJudgeRank.values) {
+      final limit = rank.distanceLimitMeters;
+      if (limit == null || distanceErrorMeters <= limit) {
+        return rank;
+      }
     }
     return PhotoJudgeRank.miss;
-  }
-
-  bool _matches(
-    double distanceErrorMeters,
-    double? headingErrorDegrees,
-    double distanceThreshold,
-    double headingThreshold,
-  ) {
-    if (distanceErrorMeters > distanceThreshold) {
-      return false;
-    }
-    if (headingErrorDegrees == null) {
-      return true;
-    }
-    return headingErrorDegrees.abs() <= headingThreshold;
   }
 
   /// 方角誤差を符号付きで返す

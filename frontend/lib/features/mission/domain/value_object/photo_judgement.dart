@@ -28,6 +28,9 @@ abstract class PhotoJudgement with _$PhotoJudgement {
 
     /// 撮影したときの向き (度)
     double? capturedHeading,
+
+    /// 撮影したときのズームの倍率 (共有されていなければ null)
+    double? zoomLevel,
   }) = _PhotoJudgement;
 
   /// JSON から [PhotoJudgement] を生成する
@@ -47,6 +50,7 @@ abstract class PhotoJudgement with _$PhotoJudgement {
       headingErrorDegrees: checkpoint.headingErrorDegrees,
       guessPosition: checkpoint.guessPosition,
       capturedHeading: checkpoint.capturedHeading,
+      zoomLevel: checkpoint.zoomLevel,
     );
   }
 }

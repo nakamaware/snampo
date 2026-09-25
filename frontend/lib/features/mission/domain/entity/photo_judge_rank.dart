@@ -29,3 +29,26 @@ extension PhotoJudgeRankLabel on PhotoJudgeRank {
     }
   }
 }
+
+/// 向きのずれの上限 (度)。これを超えてずれると、距離によらず [PhotoJudgeRank.miss]
+const photoJudgeHeadingLimitDegrees = 90.0;
+
+/// 判定ごとの距離の上限
+extension PhotoJudgeRankLimit on PhotoJudgeRank {
+  /// この判定になる距離の上限 (m。ズームの倍率で割ったあとの距離と比べる)
+  ///
+  /// [PhotoJudgeRank.miss] には上限がないので null。
+  double? get distanceLimitMeters => switch (this) {
+    PhotoJudgeRank.excellent => 12,
+    PhotoJudgeRank.good => 25,
+    PhotoJudgeRank.fair => 50,
+    PhotoJudgeRank.miss => null,
+  };
+}
+
+/// ズームを考えに入れた距離 (m)
+///
+/// N 倍にズームすると被写体が N 倍近く見えるので、実際の距離を倍率で割る。
+/// 倍率がない (古いデータ) か 1 倍未満なら、実際の距離のまま。
+double effectiveDistanceMeters(double distanceMeters, double? zoomLevel) =>
+    distanceMeters / (zoomLevel ?? 1).clamp(1.0, double.infinity);

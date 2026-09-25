@@ -483,6 +483,7 @@ Future<void> _captureSpot(
               judgeRank: judgeResult.rank,
               distanceErrorMeters: judgeResult.distanceErrorMeters,
               headingErrorDegrees: judgeResult.headingErrorDegrees,
+              zoomLevel: judgeResult.zoomLevel,
             );
         if (checkpoint == null) {
           return false;

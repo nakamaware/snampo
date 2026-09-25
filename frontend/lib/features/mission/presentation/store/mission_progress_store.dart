@@ -64,6 +64,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     required PhotoJudgeRank judgeRank,
     required double distanceErrorMeters,
     required double? headingErrorDegrees,
+    required double zoomLevel,
   }) async {
     final current = state.value;
     if (current == null) return null;
@@ -80,6 +81,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
       judgeRank: judgeRank,
       distanceErrorMeters: distanceErrorMeters,
       headingErrorDegrees: headingErrorDegrees,
+      zoomLevel: zoomLevel,
     );
 
     final latest = state.value;

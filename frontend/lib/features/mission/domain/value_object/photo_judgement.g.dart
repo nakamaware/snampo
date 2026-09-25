@@ -15,6 +15,7 @@ _PhotoJudgement _$PhotoJudgementFromJson(Map<String, dynamic> json) =>
         json['guessPosition'] as Map<String, dynamic>?,
       ),
       capturedHeading: (json['capturedHeading'] as num?)?.toDouble(),
+      zoomLevel: (json['zoomLevel'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$PhotoJudgementToJson(_PhotoJudgement instance) =>
@@ -26,4 +27,5 @@ Map<String, dynamic> _$PhotoJudgementToJson(_PhotoJudgement instance) =>
         instance.guessPosition,
       ),
       'capturedHeading': instance.capturedHeading,
+      'zoomLevel': instance.zoomLevel,
     };

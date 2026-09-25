@@ -18,6 +18,7 @@ _CheckpointProgress _$CheckpointProgressFromJson(Map<String, dynamic> json) =>
       judgeRank: const PhotoJudgeRankConverter().fromJson(
         json['judgeRank'] as String?,
       ),
+      zoomLevel: (json['zoomLevel'] as num?)?.toDouble(),
       achievedAt:
           json['achievedAt'] == null
               ? null
@@ -40,6 +41,7 @@ Map<String, dynamic> _$CheckpointProgressToJson(_CheckpointProgress instance) =>
       'distanceErrorMeters': instance.distanceErrorMeters,
       'headingErrorDegrees': instance.headingErrorDegrees,
       'judgeRank': const PhotoJudgeRankConverter().toJson(instance.judgeRank),
+      'zoomLevel': instance.zoomLevel,
       'achievedAt': instance.achievedAt?.toIso8601String(),
       'discovererUid': instance.discovererUid,
       'discovererNickname': instance.discovererNickname,

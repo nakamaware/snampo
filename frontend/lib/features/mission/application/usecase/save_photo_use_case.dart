@@ -25,6 +25,7 @@ class SavePhotoUseCase {
     required PhotoJudgeRank judgeRank,
     required double distanceErrorMeters,
     required double? headingErrorDegrees,
+    required double zoomLevel,
   }) async {
     final savedPath = await _photoStorage.savePhoto(
       tempPhotoPath,
@@ -38,6 +39,7 @@ class SavePhotoUseCase {
       distanceErrorMeters: distanceErrorMeters,
       headingErrorDegrees: headingErrorDegrees,
       judgeRank: judgeRank,
+      zoomLevel: zoomLevel,
       achievedAt: DateTime.now(),
     );
   }
