@@ -1,14 +1,21 @@
 /// [start] から [end] までの経過時間を日本語の表記にする
-String formatMissionDuration(DateTime start, DateTime end) {
+///
+/// [omitSeconds] なら秒を省く (一覧など。1 分未満なら秒を出す)。
+String formatMissionDuration(
+  DateTime start,
+  DateTime end, {
+  bool omitSeconds = false,
+}) {
   final d = end.difference(start);
   final hours = d.inHours;
   final minutes = d.inMinutes.remainder(60);
   final seconds = d.inSeconds.remainder(60);
+  final secondsText = omitSeconds ? '' : '$seconds秒';
   if (hours > 0) {
-    return '$hours時間$minutes分$seconds秒';
+    return '$hours時間$minutes分$secondsText';
   }
   if (minutes > 0) {
-    return '$minutes分$seconds秒';
+    return '$minutes分$secondsText';
   }
   return '$seconds秒';
 }

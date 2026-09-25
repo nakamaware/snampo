@@ -12,6 +12,7 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/presentation/hook/use_histories.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/mission/presentation/component/judge_rank_badge.dart';
+import 'package:snampo/features/mission/presentation/util/mission_format_util.dart';
 
 /// 完了ミッション履歴の一覧
 class HistoryPage extends HookConsumerWidget {
@@ -139,7 +140,7 @@ class _HistoryListTile extends ConsumerWidget {
     final summary = [
       '$found/${record.spots.length} 発見',
       if (endedAt != null)
-        formatMissionDurationShort(record.startedAt, endedAt),
+        formatMissionDuration(record.startedAt, endedAt, omitSeconds: true),
     ].join(' · ');
 
     return Dismissible(

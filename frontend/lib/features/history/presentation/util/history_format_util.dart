@@ -34,17 +34,3 @@ String formatHistoryDate(DateTime dateTime) {
 /// 一覧の月の見出し (`2026年9月`)
 String formatHistoryMonth(DateTime dateTime) =>
     '${dateTime.year}年${dateTime.month}月';
-
-/// 一覧に出す、かかった時間 (秒を省く。1 分未満なら秒)
-String formatMissionDurationShort(DateTime start, DateTime end) {
-  final d = end.difference(start);
-  final hours = d.inHours;
-  final minutes = d.inMinutes.remainder(60);
-  if (hours > 0) {
-    return '$hours時間$minutes分';
-  }
-  if (minutes > 0) {
-    return '$minutes分';
-  }
-  return '${d.inSeconds}秒';
-}
