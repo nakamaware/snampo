@@ -79,6 +79,14 @@ class _PhotoCompareViewerState extends State<PhotoCompareViewer> {
   final _transformation = TransformationController();
   Offset _doubleTapPosition = Offset.zero;
 
+  /// 拡大していないときに、1 本指で下へ引いた量 (閉じる操作)
+  double _dismissDrag = 0;
+  bool _dismissing = false;
+
+  /// これより下へ引いて離すと閉じる
+  static const _dismissDistance = 120.0;
+  static const _dismissVelocity = 900.0;
+
   @override
   void dispose() {
     _transformation.dispose();
@@ -97,11 +105,44 @@ class _PhotoCompareViewerState extends State<PhotoCompareViewer> {
       ..setTranslationRaw(-p.dx * (scale - 1), -p.dy * (scale - 1), 0);
   }
 
+  bool get _isZoomed => _transformation.value.getMaxScaleOnAxis() > 1.01;
+
+  void _onInteractionStart(ScaleStartDetails details) {
+    _dismissing = details.pointerCount == 1 && !_isZoomed;
+  }
+
+  void _onInteractionUpdate(ScaleUpdateDetails details) {
+    if (!_dismissing) return;
+    if (details.pointerCount != 1) {
+      // 2 本指になったら拡大の操作なので、閉じる操作はやめる
+      setState(() {
+        _dismissing = false;
+        _dismissDrag = 0;
+      });
+      return;
+    }
+    setState(() {
+      _dismissDrag = math.max(0, _dismissDrag + details.focalPointDelta.dy);
+    });
+  }
+
+  void _onInteractionEnd(ScaleEndDetails details) {
+    if (!_dismissing) return;
+    _dismissing = false;
+    if (_dismissDrag > _dismissDistance ||
+        details.velocity.pixelsPerSecond.dy > _dismissVelocity) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    setState(() => _dismissDrag = 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final photo = widget.photo;
+    final fade = (_dismissDrag / 400).clamp(0.0, 0.6);
     return Scaffold(
-      backgroundColor: const Color(0xFF0E100E),
+      backgroundColor: const Color(0xFF0E100E).withValues(alpha: 1 - fade),
       body: SafeArea(
         child: Column(
           children: [
@@ -115,29 +156,34 @@ class _PhotoCompareViewerState extends State<PhotoCompareViewer> {
                     constraints.maxWidth - 32,
                     (constraints.maxHeight - gap * (count - 1)) / count,
                   );
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _Frame(
-                        size: side,
-                        photo: widget.reference,
-                        transformation: _transformation,
-                        onDoubleTapDown:
-                            (d) => _doubleTapPosition = d.localPosition,
-                        onDoubleTap: _toggleZoom,
-                      ),
-                      if (photo != null) ...[
-                        const SizedBox(height: gap),
-                        _Frame(
-                          size: side,
-                          photo: photo,
-                          transformation: _transformation,
-                          onDoubleTapDown:
-                              (d) => _doubleTapPosition = d.localPosition,
-                          onDoubleTap: _toggleZoom,
-                        ),
+                  Widget frame(ComparePhoto p) => _Frame(
+                    size: side,
+                    photo: p,
+                    transformation: _transformation,
+                    onDoubleTapDown:
+                        (d) => _doubleTapPosition = d.localPosition,
+                    onDoubleTap: _toggleZoom,
+                    onInteractionStart: _onInteractionStart,
+                    onInteractionUpdate: _onInteractionUpdate,
+                    onInteractionEnd: _onInteractionEnd,
+                  );
+                  return AnimatedContainer(
+                    duration:
+                        _dismissing
+                            ? Duration.zero
+                            : const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    transform: Matrix4.translationValues(0, _dismissDrag, 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        frame(widget.reference),
+                        if (photo != null) ...[
+                          const SizedBox(height: gap),
+                          frame(photo),
+                        ],
                       ],
-                    ],
+                    ),
                   );
                 },
               ),
@@ -145,7 +191,9 @@ class _PhotoCompareViewerState extends State<PhotoCompareViewer> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                photo == null ? 'ダブルタップで拡大' : 'ダブルタップで2枚とも拡大',
+                photo == null
+                    ? 'ダブルタップで拡大 · 下にスワイプで閉じる'
+                    : 'ダブルタップで2枚とも拡大 · 下にスワイプで閉じる',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8A9486)),
@@ -211,6 +259,9 @@ class _Frame extends StatelessWidget {
     required this.transformation,
     required this.onDoubleTapDown,
     required this.onDoubleTap,
+    required this.onInteractionStart,
+    required this.onInteractionUpdate,
+    required this.onInteractionEnd,
   });
 
   final double size;
@@ -218,6 +269,9 @@ class _Frame extends StatelessWidget {
   final TransformationController transformation;
   final GestureTapDownCallback onDoubleTapDown;
   final VoidCallback onDoubleTap;
+  final GestureScaleStartCallback onInteractionStart;
+  final GestureScaleUpdateCallback onInteractionUpdate;
+  final GestureScaleEndCallback onInteractionEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -241,6 +295,9 @@ class _Frame extends StatelessWidget {
               onDoubleTap: onDoubleTap,
               child: InteractiveViewer(
                 transformationController: transformation,
+                onInteractionStart: onInteractionStart,
+                onInteractionUpdate: onInteractionUpdate,
+                onInteractionEnd: onInteractionEnd,
                 maxScale: 5,
                 child: SizedBox.expand(
                   child:

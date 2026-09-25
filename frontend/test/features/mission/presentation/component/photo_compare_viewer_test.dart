@@ -71,5 +71,36 @@ void main() {
       expect(find.text('見本'), findsOneWidget);
       expect(_viewers(tester), hasLength(1));
     });
+
+    testWidgets('拡大していなければ、下へスワイプすると閉じる', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder:
+                (context) => TextButton(
+                  onPressed:
+                      () => PhotoCompareViewer.open(
+                        context,
+                        title: '谷中ぎんざ',
+                        caption: 'SPOT 2 / 5',
+                        reference: const ComparePhoto(label: '見本', image: null),
+                      ),
+                  child: const Text('開く'),
+                ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('開く'));
+      await tester.pumpAndSettle();
+
+      // 少しだけ引いて離すと、閉じずに戻る
+      await tester.drag(find.byType(InteractiveViewer), const Offset(0, 40));
+      await tester.pumpAndSettle();
+      expect(find.byType(PhotoCompareViewer), findsOneWidget);
+
+      await tester.drag(find.byType(InteractiveViewer), const Offset(0, 300));
+      await tester.pumpAndSettle();
+      expect(find.byType(PhotoCompareViewer), findsNothing);
+    });
   });
 }
