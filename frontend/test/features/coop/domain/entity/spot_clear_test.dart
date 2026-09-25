@@ -32,6 +32,18 @@ void main() {
       expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['a']);
     });
 
+    test('新しく反映する発見者のサムネを、前に取得できなかったサムネより先に取得する', () {
+      final plan = planClearSync(
+        clears: [clear('a', 'x'), clear('b', 'y'), clear('c', 'z')],
+        local: {
+          spot('a'): const LocalClearState(discovererUid: 'x', hasThumb: false),
+          spot('b'): const LocalClearState(discovererUid: 'y', hasThumb: true),
+        },
+      );
+
+      expect(plan.thumbsToFetch.map((c) => c.spotId.value), ['c', 'a']);
+    });
+
     test('全部そろっていれば何もしない', () {
       final plan = planClearSync(
         clears: [clear('a', 'x', thumbPath: 'p')],

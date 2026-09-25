@@ -61,7 +61,7 @@ abstract class ClearSyncPlan with _$ClearSyncPlan {
     /// 発見者を端末に反映するクリア
     required List<SpotClear> discoverersToApply,
 
-    /// サムネを取得するクリア
+    /// サムネを取得するクリア (新しく反映する発見者のものが先)
     required List<SpotClear> thumbsToFetch,
   }) = _ClearSyncPlan;
 }
@@ -69,23 +69,26 @@ abstract class ClearSyncPlan with _$ClearSyncPlan {
 /// サーバの [clears] と端末の状態 [local] (spotId ごと) を比べ、不足分を返す
 ///
 /// 基本方針は「サーバ (`clears`) が正で、端末は差分を取りにいく」。
+/// サムネは、新しく反映する発見者のものを、前に取得できなかったものより先に取得する
+/// (取り直しで、新しい発見を画面に出すのを待たせないため)。
 ClearSyncPlan planClearSync({
   required List<SpotClear> clears,
   required Map<SpotId, LocalClearState> local,
 }) {
   final discoverers = <SpotClear>[];
-  final thumbs = <SpotClear>[];
+  final retryThumbs = <SpotClear>[];
   for (final clear in clears) {
     final state = local[clear.spotId];
     if (state?.discovererUid != clear.clearedBy) {
       discoverers.add(clear);
-    }
-    final hasThumb = state?.discovererUid == clear.clearedBy && state!.hasThumb;
-    if (!hasThumb) {
-      thumbs.add(clear);
+    } else if (!state!.hasThumb) {
+      retryThumbs.add(clear);
     }
   }
-  return ClearSyncPlan(discoverersToApply: discoverers, thumbsToFetch: thumbs);
+  return ClearSyncPlan(
+    discoverersToApply: discoverers,
+    thumbsToFetch: [...discoverers, ...retryThumbs],
+  );
 }
 
 /// すべてのクリアについて、発見者のサムネが端末にそろったか

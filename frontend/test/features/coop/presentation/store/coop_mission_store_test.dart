@@ -460,6 +460,32 @@ void main() {
         expect(opened?.discovererThumbPath, isNotNull);
       });
 
+      test('その場で届いた発見のスポットの結果画面は、ほかのスポットのサムネの取り直しを待たずに開く', () async {
+        await seedFourSpotHistory(histories);
+        // a のサムネは取得できなかった (次の同期で取り直す)
+        storage.thumbDownloadError = Exception('offline');
+        await receive([clear('a', 'other')], isUpToDate: false);
+        await receive([clear('a', 'other')], isUpToDate: true);
+        storage.thumbDownloadError = null;
+
+        // a のサムネの取り直しは、電波が弱く終わらない
+        storage.thumbDownloadGates[clear('a', 'other').thumbPath] =
+            Completer<void>();
+        clears.add((
+          clears: [clear('a', 'other'), clear('c', 'other')],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+
+        expect(state().discovery?.spotIndex, 2);
+        final opened =
+            container
+                .read(missionProgressStoreProvider(MissionSessionKind.coop))
+                .value!
+                .checkpoints[2];
+        expect(opened?.discovererThumbPath, isNotNull);
+      });
+
       test('その場で届いた最後のスポットの発見は、ルームの終了に合わせて開く', () async {
         await receive([
           clear('a', 'other'),
