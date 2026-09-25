@@ -6,6 +6,7 @@ import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/features/coop/application/usecase/finish_if_all_cleared_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -270,6 +271,87 @@ void main() {
           expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
           expect(checkpoints()[2]?.userPhotoPath, '/c.jpg');
         });
+      });
+    });
+
+    group('全スポットのクリアでの終了', () {
+      late StreamController<SpotClearsSnapshot> clears;
+      late FakeRoomRepository rooms;
+      late ProviderContainer container;
+
+      setUp(() async {
+        clears = StreamController<SpotClearsSnapshot>();
+        addTearDown(clears.close);
+        rooms = FakeRoomRepository();
+        final playing = fourSpotRoom();
+        rooms.rooms[code] = playing;
+        container = ProviderContainer(
+          overrides: [
+            coopRoomProvider(code).overrideWith((ref) => Stream.value(playing)),
+            coopClearsProvider(code).overrideWith((ref) => clears.stream),
+            coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
+            missionProgressStoreProvider.overrideWith(_FourSpotProgress.new),
+            persistedMissionProvider.overrideWith(FourSpotMission.new),
+            getCoopSignedInUidUseCaseProvider.overrideWithValue(
+              FakeSignedInUid(),
+            ),
+            prepareCoopMissionUseCaseProvider.overrideWithValue(
+              FakePrepareFourSpots(),
+            ),
+            roomRepositoryProvider.overrideWithValue(rooms),
+            // 遊べる期限内にする
+            finishIfAllClearedUseCaseProvider.overrideWithValue(
+              FinishIfAllClearedUseCase(rooms, now: () => createdAt),
+            ),
+            coopStorageProvider.overrideWithValue(FakeCoopStorage()),
+            historyRepositoryProvider.overrideWithValue(
+              FakeHistoryRepository(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        container.listen(coopMissionStoreProvider(code), (_, __) {});
+        await pumpEventQueue();
+        expect(container.read(coopMissionStoreProvider(code)).isReady, isTrue);
+      });
+
+      /// 全スポットのクリアを受け取り、反映し終えるまで待つ
+      Future<void> receiveAllCleared() async {
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+            clear('d', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .clearsSynced
+            .timeout(const Duration(seconds: 1));
+      }
+
+      test('finished への更新がサーバに届くのを待たずに、反映を終える', () async {
+        // オフラインや電波が弱いと、更新はサーバに届くまで終わらない
+        final sent = Completer<void>();
+        rooms.finishGate = sent;
+
+        await receiveAllCleared();
+        expect(rooms.rooms[code]!.status, RoomStatus.playing);
+
+        sent.complete();
+        await pumpEventQueue();
+        expect(rooms.rooms[code]!.status, RoomStatus.finished);
+      });
+
+      test('finished への更新が拒否されても、反映を終える', () async {
+        rooms.rejectFinish = true;
+
+        await receiveAllCleared();
+
+        expect(rooms.rooms[code]!.status, RoomStatus.playing);
       });
     });
 

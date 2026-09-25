@@ -40,6 +40,12 @@ class FakeRoomRepository implements IRoomRepository {
   /// true なら createClear を Rules の拒否として失敗させる (ルームが終わったあとなど)
   bool rejectClears = false;
 
+  /// null 以外なら finish はこの Future を待つ (オフラインの送信待ちの再現)
+  Completer<void>? finishGate;
+
+  /// true なら finish を Rules の拒否として失敗させる (抜けたあとなど)
+  bool rejectFinish = false;
+
   DateTime now = DateTime.utc(2026, 9, 23, 10);
 
   @override
@@ -146,6 +152,10 @@ class FakeRoomRepository implements IRoomRepository {
 
   @override
   Future<void> finish(RoomCode code, FinishReason reason) async {
+    await finishGate?.future;
+    if (rejectFinish) {
+      throw const CoopPermissionDeniedException();
+    }
     rooms[code] = rooms[code]!.copyWith(
       status: RoomStatus.finished,
       finishReason: reason,

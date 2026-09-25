@@ -387,7 +387,19 @@ class CoopMissionStore extends _$CoopMissionStore {
       }
       final room = _room;
       if (room != null) {
-        await ref.read(finishIfAllClearedUseCaseProvider)(room, clears);
+        // 完了は待たない (オフラインや電波が弱いと、サーバに届くまで終わらず、後の反映や
+        // それを待つ画面の遷移を止めてしまう。送信は SDK が溜めておき、復帰したときに送る)。
+        // 拒否されたら (抜けたあとなど) 記録だけする。次の反映でもう一度試し、ほかのメンバーが
+        // 書いてもよい。履歴の確定は、終了がルームの通知で届いてからの反映で行う
+        unawaited(
+          ref.read(finishIfAllClearedUseCaseProvider)(room, clears).catchError((
+            Object e,
+            StackTrace st,
+          ) {
+            log('ルームを終了にできなかった', error: e, stackTrace: st, name: 'CoopMission');
+            return false;
+          }),
+        );
         await ref.read(finalizeCoopHistoryUseCaseProvider)(
           roomCode: roomCode,
           room: room,
