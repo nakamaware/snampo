@@ -19,6 +19,7 @@ class HomePage extends ConsumerWidget {
     );
     final hasSavedMission = savedMissionAsync.value != null;
     final coopSession = ref.watch(coopSessionStoreProvider).value;
+    final hasContinue = coopSession != null || hasSavedMission;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -31,20 +32,19 @@ class HomePage extends ConsumerWidget {
                 child: Column(
                   children: [
                     SizedBox(
-                      width: 230,
+                      width: hasContinue ? 180 : 230,
                       child: Image.asset(
                         'images/snampo.png',
                         fit: BoxFit.contain,
                       ),
                     ),
-                    const SizedBox(height: 40),
-                    if (coopSession != null) ...[
-                      BackToRoomButton(roomCode: coopSession.roomCode),
-                      const SizedBox(height: 10),
-                    ],
-                    if (hasSavedMission) ...[
-                      const ResumeButton(),
-                      const SizedBox(height: 10),
+                    SizedBox(height: hasContinue ? 28 : 40),
+                    if (hasContinue) ...[
+                      ContinueCard(
+                        roomCode: coopSession?.roomCode,
+                        hasSavedMission: hasSavedMission,
+                      ),
+                      const SizedBox(height: 24),
                     ],
                     const SizedBox(
                       width: _playButtonWidth,
@@ -116,62 +116,102 @@ class _PlayButton extends StatelessWidget {
   }
 }
 
-/// 保存されたミッションを再開するボタン
-class ResumeButton extends StatelessWidget {
-  /// [ResumeButton] を作成する
-  const ResumeButton({super.key});
+/// 続きのカード (協力プレイ中のルームと、ソロの続き)
+///
+/// ルームがもう終わっていれば (結果を見る前に閉じた場合)、「結果を見る」として結果画面を開く。
+/// 結果画面の「ホームへ戻る」で、ルームの行は消える。
+class ContinueCard extends ConsumerWidget {
+  /// [ContinueCard] を作成する
+  const ContinueCard({
+    required this.roomCode,
+    required this.hasSavedMission,
+    super.key,
+  });
+
+  /// 参加中のルームのコード (参加していなければ null)
+  final RoomCode? roomCode;
+
+  /// ソロの続きがあるか
+  final bool hasSavedMission;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onSecondary,
-    );
+    final colors = theme.colorScheme;
+    final roomCode = this.roomCode;
+    final room =
+        roomCode == null ? null : ref.watch(coopRoomProvider(roomCode)).value;
+    final hasEnded = room != null && room.hasEnded(DateTime.now());
 
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.secondary,
-        foregroundColor: theme.colorScheme.onSecondary,
-      ),
-      onPressed: () => context.push('/mission'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('再開 (ソロ)', style: style),
+    return SizedBox(
+      width: _playButtonWidth,
+      child: Card.filled(
+        margin: EdgeInsets.zero,
+        color: colors.secondaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text(
+                'つづきがあります',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (roomCode != null)
+              _ContinueTile(
+                icon: Icons.group,
+                label: hasEnded ? 'ルーム $roomCode の結果を見る' : 'ルーム $roomCode に戻る',
+                path: hasEnded ? '/coop/result' : '/coop/lobby',
+              ),
+            if (roomCode != null && hasSavedMission)
+              Divider(
+                height: 1,
+                indent: 16,
+                endIndent: 16,
+                color: colors.onSecondaryContainer.withValues(alpha: 0.12),
+              ),
+            if (hasSavedMission)
+              const _ContinueTile(
+                icon: Icons.person,
+                label: 'ソロの続きをする',
+                path: '/mission',
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 協力プレイ中のルームに戻るボタン (アプリのキルや電波断のあと)
-///
-/// ルームがもう終わっていれば (結果を見る前に閉じた場合)、「結果を見る」として結果画面を開く。
-/// 結果画面の「ホームへ戻る」で、このボタンは消える。
-class BackToRoomButton extends ConsumerWidget {
-  /// [BackToRoomButton] を作成する
-  const BackToRoomButton({required this.roomCode, super.key});
+/// 続きのカードの 1 行
+class _ContinueTile extends StatelessWidget {
+  const _ContinueTile({
+    required this.icon,
+    required this.label,
+    required this.path,
+  });
 
-  /// 参加中のルームのコード
-  final RoomCode roomCode;
+  final IconData icon;
+  final String label;
+
+  /// 押したときに開く画面
+  final String path;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final room = ref.watch(coopRoomProvider(roomCode)).value;
-    final hasEnded = room != null && room.hasEnded(DateTime.now());
-    final style = theme.textTheme.headlineMedium!.copyWith(
-      color: theme.colorScheme.onSecondary,
-    );
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.secondary,
-        foregroundColor: theme.colorScheme.onSecondary,
-      ),
-      onPressed: () => context.push(hasEnded ? '/coop/result' : '/coop/lobby'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text(hasEnded ? '結果を見る' : 'ルームに戻る', style: style),
-      ),
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(icon, color: colors.secondary),
+      title: Text(label),
+      trailing: const Icon(Icons.chevron_right),
+      textColor: colors.onSecondaryContainer,
+      iconColor: colors.onSurfaceVariant,
+      onTap: () => context.push(path),
     );
   }
 }
