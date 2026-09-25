@@ -19,38 +19,99 @@ class HomePage extends ConsumerWidget {
     );
     final hasSavedMission = savedMissionAsync.value != null;
     final coopSession = ref.watch(coopSessionStoreProvider).value;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: Image.asset('images/snampo.png', fit: BoxFit.contain),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 230,
+                      child: Image.asset(
+                        'images/snampo.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    if (coopSession != null) ...[
+                      BackToRoomButton(roomCode: coopSession.roomCode),
+                      const SizedBox(height: 10),
+                    ],
+                    if (hasSavedMission) ...[
+                      const ResumeButton(),
+                      const SizedBox(height: 10),
+                    ],
+                    const SizedBox(
+                      width: _playButtonWidth,
+                      child: Column(
+                        spacing: 12,
+                        children: [
+                          _PlayButton(
+                            label: 'ひとりで',
+                            icon: Icons.person,
+                            path: '/setup',
+                          ),
+                          _PlayButton(
+                            label: 'みんなで',
+                            icon: Icons.group,
+                            path: '/coop',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        textStyle: theme.textTheme.titleMedium,
+                      ),
+                      onPressed: () => context.push('/history'),
+                      icon: const Icon(Icons.history),
+                      label: const Text('履歴を見る'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                if (coopSession != null) ...[
-                  BackToRoomButton(roomCode: coopSession.roomCode),
-                  const SizedBox(height: 10),
-                ],
-                if (hasSavedMission) ...[
-                  const ResumeButton(),
-                  const SizedBox(height: 10),
-                ],
-                const StartButton(),
-                const SizedBox(height: 10),
-                const CoopButton(),
-                const SizedBox(height: 10),
-                const HistoryButton(),
-              ],
+              ),
             ),
-          ),
-          const Positioned(top: 48, right: 12, child: SettingsIconButton()),
-        ],
+            const Positioned(top: 4, right: 4, child: SettingsIconButton()),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// 「ひとりで」「みんなで」ボタンの幅
+const double _playButtonWidth = 296;
+
+/// 新しく遊び始めるボタン (「ひとりで」「みんなで」で同じ大きさ)
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({
+    required this.label,
+    required this.icon,
+    required this.path,
+  });
+
+  final String label;
+  final IconData icon;
+
+  /// 押したときに開く画面
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(64),
+        textStyle: Theme.of(context).textTheme.titleLarge,
+      ),
+      onPressed: () => context.push(path),
+      icon: Icon(icon, size: 26),
+      label: Text(label),
     );
   }
 }
@@ -115,32 +176,6 @@ class BackToRoomButton extends ConsumerWidget {
   }
 }
 
-/// 「みんなで」 (協力プレイ) ボタン
-class CoopButton extends StatelessWidget {
-  /// [CoopButton] を作成する
-  const CoopButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.headlineMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-      ),
-      onPressed: () => context.push('/coop'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('みんなで', style: style),
-      ),
-    );
-  }
-}
-
 /// 設定画面を開くアイコン
 class SettingsIconButton extends StatelessWidget {
   /// [SettingsIconButton] を作成する
@@ -153,64 +188,6 @@ class SettingsIconButton extends StatelessWidget {
       color: Theme.of(context).colorScheme.primary,
       tooltip: '設定',
       onPressed: () => context.push('/settings'),
-    );
-  }
-}
-
-/// 「ひとりで」 (ソロ) ボタンウィジェット
-class StartButton extends StatelessWidget {
-  /// StartButtonのコンストラクタ
-  const StartButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.headlineMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, //ボタンの背景色
-        foregroundColor: theme.colorScheme.onPrimary,
-      ),
-      onPressed: () {
-        context.push('/setup');
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('ひとりで', style: style),
-      ),
-    );
-  }
-}
-
-/// 履歴ボタンウィジェット
-class HistoryButton extends StatelessWidget {
-  /// HistoryButtonのコンストラクタ
-  const HistoryButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-        foregroundColor: theme.colorScheme.onPrimary,
-        shape: RoundedRectangleBorder(
-          // 形を変えるか否か
-          borderRadius: BorderRadius.circular(10), // 角の丸み
-        ),
-      ),
-      onPressed: () => context.push('/history'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('履歴', style: style),
-      ),
     );
   }
 }
