@@ -391,7 +391,8 @@ class CoopMissionStore extends _$CoopMissionStore {
           // 発見者を反映した時点で知らせる
           isFirstStep = false;
           final event = await _announceNewDiscoveries(snapshot);
-          if (event != null && clears.length >= _spots.length) {
+          final room = _room;
+          if (event != null && room != null && isAllCleared(room, clears)) {
             // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が
             // 最後のスポットを開く (サムネの取得を待たずに出す)
             state = state.copyWith(finalDiscovery: event);
