@@ -20,7 +20,7 @@ import '../coop_store_fakes.dart';
 
 /// 他の人がその場で最後のスポット (GOAL) を発見した状態のストア
 ///
-/// `clears` の反映は [synced] が終わるまで終わらない。
+/// 最後のスポットの反映 (発見者とサムネ) は [synced] が終わるまで終わらない。
 class _FinalDiscoveryStore extends CoopMissionStore {
   _FinalDiscoveryStore(this.synced);
 
@@ -37,7 +37,7 @@ class _FinalDiscoveryStore extends CoopMissionStore {
   );
 
   @override
-  Future<void> get clearsSynced => synced.future;
+  Future<void> get finalSpotSynced => synced.future;
 
   /// 他の人がその場でスポットを発見した (その前のスポットの反映が終わった)
   void discover(CoopDiscoveryEvent discovery) {
@@ -60,7 +60,7 @@ void main() {
           finishedAt: finishedAt,
         );
 
-    /// Mission 画面を開く ([roomUpdates] でルームを、[synced] で `clears` の反映を進める)
+    /// Mission 画面を開く ([roomUpdates] でルームを、[synced] で最後のスポットの反映を進める)
     Future<void> openMission(WidgetTester tester) async {
       // 待ち合わせはテストの中で作る (テストの時計で進めるため)
       roomUpdates = StreamController<Room>();
@@ -164,7 +164,7 @@ void main() {
       expect(find.text('result'), findsOneWidget);
     });
 
-    testWidgets('clears の反映が終わらなくても (サムネの取得中など)、待ち続けずに最後のスポットを開く', (
+    testWidgets('最後のスポットの反映が終わらなくても (サムネの取得中など)、待ち続けずに最後のスポットを開く', (
       tester,
     ) async {
       await openMission(tester);

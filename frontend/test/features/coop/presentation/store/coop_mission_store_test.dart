@@ -594,6 +594,103 @@ void main() {
         expect(last?.discovererThumbPath, isNull);
       });
 
+      test('最後のスポットは、ほかのスポットのサムネの取り直しを待たずに、そのスポットのサムネの取得を試し終えたら開ける', () async {
+        await seedFourSpotHistory(histories);
+        // a, b, c のサムネは取得できなかった (次の同期で取り直す)
+        storage.thumbDownloadError = Exception('offline');
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: false);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: true);
+
+        // a, b, c のサムネの取り直しは電波が弱く終わらず、d のサムネは取得できる
+        storage
+          ..thumbDownloadError = null
+          ..thumbDownloadGate = Completer<void>()
+          ..thumbDownloadGates[clear('d', 'other').thumbPath] =
+              (Completer<void>()..complete());
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+            clear('d', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .finalSpotSynced
+            .timeout(const Duration(seconds: 1));
+        expect(state().finalDiscovery?.spotIndex, 3);
+        final last =
+            container
+                .read(missionProgressStoreProvider(MissionSessionKind.coop))
+                .value!
+                .checkpoints[3];
+        expect(last?.discovererThumbPath, isNotNull);
+      });
+
+      test('前の反映がほかのスポットのサムネの取り直しを続けていても、それを待たずに最後のスポットの発見を出す', () async {
+        await seedFourSpotHistory(histories);
+        // a と b のサムネは取得できなかった (次の同期で取り直す)
+        storage.thumbDownloadError = Exception('offline');
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+        ], isUpToDate: false);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+        ], isUpToDate: true);
+        storage.thumbDownloadError = null;
+
+        // c がその場で発見され、その反映は a と b のサムネの取り直しを続ける (電波が弱い)
+        final retryA = Completer<void>();
+        storage.thumbDownloadGates[clear('a', 'other').thumbPath] = retryA;
+        storage.thumbDownloadGates[clear('b', 'other').thumbPath] =
+            Completer<void>();
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+        expect(state().discovery?.spotIndex, 2);
+
+        // その間に、最後のスポットが発見される
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+            clear('d', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+        // 取り直している途中の 1 枚が終わる (b の取り直しは終わらないまま)
+        retryA.complete();
+        await pumpEventQueue();
+
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .finalSpotSynced
+            .timeout(const Duration(seconds: 1));
+        expect(state().finalDiscovery?.spotIndex, 3);
+      });
+
       test('ルームに戻ったときに追いついた最後のスポットの発見では、最後のスポットの結果画面を開かない', () async {
         // Home の「ルームに戻る」は、端末に残っていた (まだ終わっていない) ルームから開く
         await receive([
@@ -611,6 +708,11 @@ void main() {
 
         expect(state().finalDiscovery, isNull);
         expect(state().notice, isNull);
+        // 開かないので、Mission 画面を待たせない
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .finalSpotSynced
+            .timeout(const Duration(seconds: 1));
       });
 
       test('電波が戻ったときに届いた発見は、バナーだけにして結果画面を開かない', () async {

@@ -209,6 +209,16 @@ class CoopMissionStore extends _$CoopMissionStore {
   /// ここまでに受け取った `clears` を、履歴と進捗に反映し終えるまで待つ
   Future<void> get clearsSynced => _clearSync;
 
+  final _finalSpotSynced = Completer<void>();
+
+  /// 全スポットがクリアされた `clears` を反映し、最後のスポットを開く用意ができるまで待つ
+  ///
+  /// 発見者を進捗に反映し、他の人がその場で最後のスポットを発見したなら
+  /// ([CoopMissionState.finalDiscovery])、そのスポットのサムネの取得を試し終える
+  /// (取得できなかった場合や時間切れを含む) まで。ほかのスポットのサムネの取り直しや、
+  /// そのあとの反映は待たない。
+  Future<void> get finalSpotSynced => _finalSpotSynced.future;
+
   /// `clears` の反映を順番に行う (前の反映が終わってから次を始める)
   void _syncClears() {
     _clearSync = _clearSync.then((_) => _onClears(_latestClears));
@@ -372,9 +382,11 @@ class CoopMissionStore extends _$CoopMissionStore {
       await _resolveUnsharedCaptures(snapshot);
     }
     final clears = snapshot.clears;
+    // 全スポットがクリアされた clears か (最初の途中経過で決める)
+    var isAllClearedClears = false;
     try {
       // 発見者を先に進捗に反映して知らせ、サムネは取得できたものから進捗に反映する。
-      // 最後のスポットは、Mission 画面がこの反映を待ちきれなければ反映できた分で開くため。
+      // 最後のスポットは、Mission 画面がそのサムネを待ちきれなければ反映できた分で開くため。
       // 途中経過は必ず 1 つ以上流れる ([SyncCoopClearsUseCase.syncInSteps])
       late CoopClearSyncResult result;
       var isFirstStep = true;
@@ -382,6 +394,9 @@ class CoopMissionStore extends _$CoopMissionStore {
       // (開いた結果画面は、あとから届いたサムネに変わらないため。取得できなければ
       // プレースホルダ)。ほかのスポットのサムネの取り直しは待たない
       CoopDiscoveryEvent? pendingDiscovery;
+      // 最後のスポットも同じく、そのスポットのサムネの取得を試し終えるまで Mission 画面に
+      // 待ってもらう ([finalSpotSynced])
+      CoopDiscoveryEvent? pendingFinalDiscovery;
       await for (final step in ref
           .read(syncCoopClearsUseCaseProvider)
           .syncInSteps(roomCode, clears)) {
@@ -392,10 +407,12 @@ class CoopMissionStore extends _$CoopMissionStore {
           isFirstStep = false;
           final event = await _announceNewDiscoveries(snapshot);
           final room = _room;
-          if (event != null && room != null && isAllCleared(room, clears)) {
+          isAllClearedClears = room != null && isAllCleared(room, clears);
+          if (event != null && isAllClearedClears) {
             // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が
-            // 最後のスポットを開く (サムネの取得を待たずに出す)
+            // 最後のスポットを開く (サムネの取得を待ちきれなくても開けるよう、先に出す)
             state = state.copyWith(finalDiscovery: event);
+            pendingFinalDiscovery = event;
           } else {
             pendingDiscovery = event;
           }
@@ -406,6 +423,20 @@ class CoopMissionStore extends _$CoopMissionStore {
             _hasTriedThumb(step, pendingDiscovery)) {
           state = state.copyWith(discovery: pendingDiscovery);
           pendingDiscovery = null;
+        }
+        if (pendingFinalDiscovery != null &&
+            _hasTriedThumb(step, pendingFinalDiscovery)) {
+          pendingFinalDiscovery = null;
+        }
+        if (isAllClearedClears && pendingFinalDiscovery == null) {
+          _markFinalSpotSynced();
+        }
+        if (pendingDiscovery == null &&
+            pendingFinalDiscovery == null &&
+            !identical(snapshot, _latestClears)) {
+          // 新しい clears が届いた。残りのサムネの取り直しはその反映に任せ、新しい発見
+          // (最後のスポットなど) を出すのを遅らせない
+          break;
         }
       }
       if (pendingDiscovery != null) {
@@ -424,7 +455,14 @@ class CoopMissionStore extends _$CoopMissionStore {
       }
     } on Object catch (e, st) {
       log('クリアの反映に失敗した', error: e, stackTrace: st, name: 'CoopMission');
+    } finally {
+      // 最後のスポットのサムネの取得を試さずに終わっても、Mission 画面を待たせ続けない
+      if (isAllClearedClears) _markFinalSpotSynced();
     }
+  }
+
+  void _markFinalSpotSynced() {
+    if (!_finalSpotSynced.isCompleted) _finalSpotSynced.complete();
   }
 
   /// 全スポットがクリアされていれば、ルームを finished にする
