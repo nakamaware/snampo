@@ -118,6 +118,9 @@ class CoopMissionStore extends _$CoopMissionStore {
   ///
   /// [settleUnsharedCaptures] が、`clears` の反映 (サムネの取得など) を待たずに返すため。
   var _capturesResolved = Completer<void>();
+
+  /// 最後のスポットを開く用意ができたときに完了する ([finalSpotSynced])
+  final _finalSpotSynced = Completer<void>();
   SpotClearsSnapshot _latestClears = (clears: const [], isUpToDate: false);
   Future<void> _clearSync = Future.value();
 
@@ -218,8 +221,6 @@ class CoopMissionStore extends _$CoopMissionStore {
   /// [settleUnsharedCaptures] で、必要なところまでだけ待つ)。
   @visibleForTesting
   Future<void> get clearsSynced => _clearSync;
-
-  final _finalSpotSynced = Completer<void>();
 
   /// 全スポットがクリアされた `clears` を反映し、最後のスポットを開く用意ができるまで待つ
   ///
