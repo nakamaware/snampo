@@ -53,7 +53,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
 
   @override
   Widget wrapBody(BuildContext context, Widget body) =>
-      _CoopMissionEffects(roomCode: roomCode, child: body);
+      CoopMissionEffects(roomCode: roomCode, child: body);
 
   @override
   List<Widget> topActions(BuildContext context) => [
@@ -134,8 +134,16 @@ class _CoopMissionPageExtension extends MissionPageExtension {
 const _finalSpotCloseLabel = '結果を見る';
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
-class _CoopMissionEffects extends HookConsumerWidget {
-  const _CoopMissionEffects({required this.roomCode, required this.child});
+///
+/// 地図を含む Mission 画面なしで遷移を確かめられるよう、テストに公開する。
+@visibleForTesting
+class CoopMissionEffects extends HookConsumerWidget {
+  /// [CoopMissionEffects] を作成する
+  const CoopMissionEffects({
+    required this.roomCode,
+    required this.child,
+    super.key,
+  });
 
   /// ルームコード
   final RoomCode roomCode;
@@ -231,12 +239,12 @@ class _CoopMissionEffects extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     RoomCode roomCode,
-    Room room,
+    FinishReason? finishReason,
     ObjectRef<bool> finalSpotShown,
     ObjectRef<bool> showingSpot,
   ) async {
     if (showingSpot.value) return;
-    if (room.finishReason != FinishReason.allCleared || finalSpotShown.value) {
+    if (finishReason != FinishReason.allCleared || finalSpotShown.value) {
       context.go('/coop/result');
       return;
     }
@@ -305,17 +313,21 @@ class _CoopMissionEffects extends HookConsumerWidget {
       });
 
     // finished になったら全員が結果画面へ移る。撮影中やスポットの結果画面を見ている間は
-    // 割り込まず、Mission 画面が前面に戻った時点で移る
-    final finishedRoom = ref.watch(
+    // 割り込まず、Mission 画面が前面に戻った時点で移る。
+    // 終了したことと理由だけを見る (finished を書いた端末には、あとからサーバで確定した
+    // 終了日時が届く。それで反応し直すと、最後のスポットを開く前に結果画面へ移ってしまう)
+    final finished = ref.watch(
       coopRoomProvider(roomCode).select((room) {
         final value = room.value;
-        return value?.status == RoomStatus.finished ? value : null;
+        return value?.status == RoomStatus.finished
+            ? (reason: value?.finishReason)
+            : null;
       }),
     );
     final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
     final finalSpotShown = useRef(false);
     useEffect(() {
-      if (finishedRoom == null || !isCurrent) return null;
+      if (finished == null || !isCurrent) return null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // 撮影した人は、カメラを閉じた直後にスポットの結果画面を開く。その間に移らないよう、
         // 次のフレームでも前面にあるときだけ移る
@@ -325,7 +337,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
               context,
               ref,
               roomCode,
-              finishedRoom,
+              finished.reason,
               finalSpotShown,
               showingSpot,
             ),
@@ -333,7 +345,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
         }
       });
       return null;
-    }, [finishedRoom, isCurrent]);
+    }, [finished, isCurrent]);
 
     // 遊べる期限を過ぎると誰も finished にできないので、期限切れとして結果画面へ移る
     final expiresAt = ref.watch(
