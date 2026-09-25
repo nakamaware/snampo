@@ -117,7 +117,7 @@ class ResultPage extends ConsumerWidget {
                                           totalCheckpointCount: points.length,
                                           missionPoint: points[index],
                                           checkpoint: checkpoint!,
-                                          fromResultPage: true,
+                                          fromSummary: true,
                                           isDestinationMode: isDestinationMode,
                                         ),
                                       ),
