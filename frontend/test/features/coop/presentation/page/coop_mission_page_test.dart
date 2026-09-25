@@ -7,7 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/coop/presentation/page/coop_mission_page.dart';
+import 'package:snampo/features/coop/presentation/component/coop_mission_effects.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
