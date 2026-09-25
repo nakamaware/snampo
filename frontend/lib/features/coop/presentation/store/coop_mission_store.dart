@@ -381,7 +381,14 @@ class CoopMissionStore extends _$CoopMissionStore {
           .syncInSteps(roomCode, clears)) {
         _applyDiscoveriesToProgress(step.discoveries);
         if (result == null) {
-          discovery = await _announceNewDiscoveries(snapshot);
+          final event = await _announceNewDiscoveries(snapshot);
+          if (event != null && clears.length >= _spots.length) {
+            // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が
+            // 最後のスポットを開く (サムネの取得を待たずに出す)
+            state = state.copyWith(finalDiscovery: event);
+          } else {
+            discovery = event;
+          }
         }
         result = step;
       }
@@ -431,8 +438,6 @@ class CoopMissionStore extends _$CoopMissionStore {
   ///   最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
   ///   届くので、サーバの最初の値までを「追いつくまで」とする
   /// - その場で 1 件だけ届いた発見は、バナーを出し、そのスポットの結果画面へ移るイベントを返す
-  ///   (サムネを取得し終えてから出す)。最後のスポットなら、ルームの終了に合わせて Mission 画面が
-  ///   開くので、返さずにすぐ [CoopMissionState.finalDiscovery] に出す
   /// - 電波が戻ったときに届いた発見 (前の値がキャッシュ) や、一度に複数届いた発見は、
   ///   バナーだけにする (複数なら 1 つにまとめる)
   Future<CoopDiscoveryEvent?> _announceNewDiscoveries(
@@ -473,17 +478,11 @@ class CoopMissionStore extends _$CoopMissionStore {
     if (!snapshot.isUpToDate || wasStale) {
       return null;
     }
-    final event = CoopDiscoveryEvent(
+    return CoopDiscoveryEvent(
       id: ++_discoveryId,
       spotIndex: index,
       discovererName: name,
     );
-    if (clears.length < spots.length) {
-      return event;
-    }
-    // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
-    state = state.copyWith(finalDiscovery: event);
-    return null;
   }
 
   /// 撮影して採点したスポットをクリアにする
