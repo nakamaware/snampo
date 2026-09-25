@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/radius.dart';
@@ -67,7 +68,7 @@ void main() {
     });
   });
 
-  group('MissionHistory.playEndedAt', () {
+  group('MissionHistory', () {
     final start = DateTime(2026, 9, 25, 4, 39);
     MissionHistory history(DateTime completedAt, List<DateTime?> achieved) =>
         MissionHistory(
@@ -88,6 +89,10 @@ void main() {
               ),
           ],
         );
+
+    test('協力プレイの情報がなければソロ', () {
+      expect(history(start, const []).sessionKind, MissionSessionKind.solo);
+    });
 
     test('終わった時刻があれば、それを使う', () {
       final end = start.add(const Duration(minutes: 30));

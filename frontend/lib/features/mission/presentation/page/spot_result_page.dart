@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
@@ -28,7 +29,7 @@ class SpotResultPageArgs {
     this.discovererDisplayName,
     this.closeLabel,
     this.referenceImagePath,
-    this.isCoop = false,
+    this.kind = MissionSessionKind.solo,
   });
 
   /// Spot のインデックス
@@ -62,10 +63,10 @@ class SpotResultPageArgs {
   /// 見本の画像のパス (履歴から開くとき。null なら [missionPoint] の画像を使う)
   final String? referenceImagePath;
 
-  /// 協力プレイのスポットか (写真に撮った人の名札を付ける)
+  /// ミッションのセッション種別 (協力プレイでは、写真に撮った人の名札を付ける)
   ///
   /// 撮った直後は発見の共有が終わっておらず、進捗に発見者がまだないので、これで判断する。
-  final bool isCoop;
+  final MissionSessionKind kind;
 }
 
 /// Spot単位の採点結果画面
@@ -124,7 +125,8 @@ class SpotResultPage extends StatelessWidget {
     final ownerLabel =
         isOthersDiscovery
             ? (discovererName ?? '発見者')
-            : args.isCoop || checkpoint.discovererUid != null
+            : args.kind == MissionSessionKind.coop ||
+                checkpoint.discovererUid != null
             ? 'あなた'
             : null;
     final pointName =

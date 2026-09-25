@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -33,7 +34,7 @@ SpotResultPageArgs _args(
   bool fromSummary = false,
   String? closeLabel,
   String? discovererDisplayName,
-  bool isCoop = false,
+  MissionSessionKind kind = MissionSessionKind.solo,
 }) => SpotResultPageArgs(
   spotIndex: 1,
   totalCheckpointCount: 5,
@@ -42,7 +43,7 @@ SpotResultPageArgs _args(
   fromSummary: fromSummary,
   closeLabel: closeLabel,
   discovererDisplayName: discovererDisplayName,
-  isCoop: isCoop,
+  kind: kind,
 );
 
 void main() {
@@ -61,7 +62,7 @@ void main() {
     });
 
     testWidgets('協力プレイでは、共有が終わる前でも自分の写真に「あなた」と付ける', (tester) async {
-      await _pump(tester, _args(_ownCapture, isCoop: true));
+      await _pump(tester, _args(_ownCapture, kind: MissionSessionKind.coop));
 
       expect(find.text('あなた'), findsOneWidget);
     });

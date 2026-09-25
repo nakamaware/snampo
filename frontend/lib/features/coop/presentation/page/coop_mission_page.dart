@@ -177,7 +177,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
       missionPoint: mission.spots[index],
       checkpoint: checkpoint,
       isDestinationMode: mission.radius == null,
-      isCoop: true,
+      kind: MissionSessionKind.coop,
       discovererDisplayName: discovererDisplayName,
       closeLabel: closeLabel,
     );

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
@@ -24,6 +25,10 @@ abstract class MissionHistory with _$MissionHistory {
   }) = _MissionHistory;
 
   const MissionHistory._();
+
+  /// 遊んだときのセッション種別 (協力プレイの情報があれば協力プレイ)
+  MissionSessionKind get sessionKind =>
+      coop == null ? MissionSessionKind.solo : MissionSessionKind.coop;
 
   /// 遊び終わった時刻 (遊んだ時間の計算に使う)
   ///
