@@ -10,7 +10,6 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/presentation/component/camera_shoot_layout.dart';
-import 'package:snampo/features/mission/presentation/component/photo_confirm_dialog.dart';
 
 /// カメラページの引数
 class CameraPageArgs {
@@ -75,7 +74,10 @@ class _CameraPageState extends State<CameraPage> {
   int _activePointers = 0;
   bool _isSettingZoomLevel = false;
   double? _queuedZoomLevel;
-  bool _isCapturing = false;
+  bool _isBusy = false;
+
+  /// 確認中の撮った写真 (null ならプレビューを出す)
+  XFile? _capturedFile;
 
   @override
   void initState() {
@@ -252,44 +254,103 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   Widget build(BuildContext context) {
+    final capturedFile = _capturedFile;
+
+    return PopScope(
+      canPop: capturedFile == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_isBusy) _retake();
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: SafeArea(
+            child:
+                capturedFile == null
+                    ? _buildShooting()
+                    : _buildReview(capturedFile),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShooting() {
     final controller = _controller;
     final isReady = _isInitialized && controller != null;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: CameraShootLayout(
-            title: widget.args.title,
-            referenceImage: _referenceImage,
-            viewfinder:
-                isReady
-                    ? _buildPreview(controller)
-                    : const Center(child: CircularProgressIndicator()),
-            controls: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isReady)
-                  _ZoomChips(
-                    minZoomLevel: _minZoomLevel,
-                    maxZoomLevel: _maxZoomLevel,
-                    currentZoomLevel: _currentZoomLevel,
-                    onSelected: (value) {
-                      setState(() => _currentZoomLevel = value);
-                      _baseZoomLevel = value;
-                      _setZoomLevel(value);
-                    },
-                  ),
-                const SizedBox(height: 16),
-                _ShutterButton(
-                  onPressed:
-                      isReady && !_isCapturing ? _onShutterPressed : null,
-                ),
-              ],
+    return CameraShootLayout(
+      title: widget.args.title,
+      referenceImage: _referenceImage,
+      viewfinder:
+          isReady
+              ? _buildPreview(controller)
+              : const Center(child: CircularProgressIndicator()),
+      controls: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isReady)
+            _ZoomChips(
+              minZoomLevel: _minZoomLevel,
+              maxZoomLevel: _maxZoomLevel,
+              currentZoomLevel: _currentZoomLevel,
+              onSelected: (value) {
+                setState(() => _currentZoomLevel = value);
+                _baseZoomLevel = value;
+                _setZoomLevel(value);
+              },
             ),
+          const SizedBox(height: 16),
+          _ShutterButton(
+            onPressed:
+                isReady && !_isBusy
+                    ? () => _runWithErrorDialog(_takePhoto)
+                    : null,
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  /// 撮った写真を、プレビューと同じ場所・大きさの正方形で見本と見比べる
+  Widget _buildReview(XFile file) {
+    return CameraShootLayout(
+      title: 'この写真で採点しますか？',
+      referenceImage: _referenceImage,
+      referenceHint: '見本と見比べてください',
+      onBack: _isBusy ? () {} : _retake,
+      viewfinder: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(File(file.path), fit: BoxFit.cover),
+          const Positioned(
+            left: 8,
+            top: 8,
+            child: CameraImageLabel(label: 'あなたの写真'),
+          ),
+        ],
+      ),
+      controls: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton(
+            onPressed: _isBusy ? null : _retake,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Colors.white54),
+              minimumSize: const Size(120, 48),
+            ),
+            child: const Text('撮り直す'),
+          ),
+          const SizedBox(width: 16),
+          FilledButton(
+            onPressed:
+                _isBusy ? null : () => _runWithErrorDialog(() => _submit(file)),
+            style: FilledButton.styleFrom(minimumSize: const Size(120, 48)),
+            child: const Text('採点する'),
+          ),
+        ],
       ),
     );
   }
@@ -342,10 +403,11 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 
-  Future<void> _onShutterPressed() async {
-    setState(() => _isCapturing = true);
+  /// [action] を実行し、失敗したら理由をダイアログで出す (その間は操作させない)
+  Future<void> _runWithErrorDialog(Future<void> Function() action) async {
+    setState(() => _isBusy = true);
     try {
-      await _handleCapture(context);
+      await action();
     } on PhotoRejectedException catch (e) {
       if (!mounted) return;
       await _showErrorDialog(e.message);
@@ -359,7 +421,7 @@ class _CameraPageState extends State<CameraPage> {
       if (!mounted) return;
       await _showErrorDialog('写真の撮影に失敗しました。');
     } finally {
-      if (mounted) setState(() => _isCapturing = false);
+      if (mounted) setState(() => _isBusy = false);
     }
   }
 
@@ -405,34 +467,27 @@ class _CameraPageState extends State<CameraPage> {
     return XFile(path);
   }
 
-  Future<void> _handleCapture(BuildContext context) async {
+  /// 撮影して、確認のために撮った写真を出す
+  Future<void> _takePhoto() async {
     final rawFile = await _controller!.takePicture();
     final file = await _cropToSquare(rawFile);
-    if (!context.mounted) {
-      return;
-    }
-
+    if (!mounted) return;
     await _controller!.pausePreview();
+    if (!mounted) return;
+    setState(() => _capturedFile = file);
+  }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (_) => PhotoConfirmDialog(
-            args: PhotoConfirmDialogArgs(
-              referenceImageBase64: widget.args.referenceImageBase64,
-              capturedPhotoPath: file.path,
-            ),
-          ),
-    );
-    if (confirmed != true || !context.mounted) {
-      await _controller!.resumePreview();
-      return;
-    }
+  /// 確認をやめて、プレビューに戻る
+  Future<void> _retake() async {
+    setState(() => _capturedFile = null);
+    await _controller?.resumePreview();
+  }
 
+  /// 撮った写真で採点する。受け付けられたらカメラ画面を閉じる
+  Future<void> _submit(XFile file) async {
     final rootNavigator = Navigator.of(context, rootNavigator: true);
     var loadingVisible = false;
-    var shouldResumePreview = true;
+    var isAccepted = false;
 
     try {
       loadingVisible = true;
@@ -470,30 +525,22 @@ class _CameraPageState extends State<CameraPage> {
         ),
       );
 
-      final isAccepted = await widget.args.onPhotoAccepted(
-        file,
-        _currentZoomLevel,
-      );
+      isAccepted = await widget.args.onPhotoAccepted(file, _currentZoomLevel);
 
       if (rootNavigator.mounted) {
         rootNavigator.pop();
         loadingVisible = false;
       }
 
-      if (!isAccepted) {
-        return;
-      }
-
-      shouldResumePreview = false;
-      if (mounted) {
+      if (isAccepted && mounted) {
         Navigator.of(context).pop();
       }
     } finally {
       if (loadingVisible && rootNavigator.mounted) {
         rootNavigator.pop();
       }
-      if (shouldResumePreview && mounted) {
-        await _controller!.resumePreview();
+      if (!isAccepted && mounted) {
+        await _retake();
       }
     }
   }

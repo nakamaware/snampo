@@ -14,6 +14,7 @@ class CameraShootLayout extends StatefulWidget {
     required this.referenceImage,
     required this.viewfinder,
     required this.controls,
+    this.referenceHint = '見本と同じ場所・向きで撮ってください',
     this.onBack,
     super.key,
   });
@@ -38,6 +39,9 @@ class CameraShootLayout extends StatefulWidget {
 
   /// ファインダーの下の操作
   final Widget controls;
+
+  /// 見本の横に出す説明 (見本を上に出すときだけ)
+  final String referenceHint;
 
   /// 左上の戻るボタンを押したとき。null なら前の画面へ戻る
   final VoidCallback? onBack;
@@ -100,7 +104,7 @@ class _CameraShootLayoutState extends State<CameraShootLayout> {
                         const SizedBox(width: 12),
                         SizedBox(
                           width: width * 0.34,
-                          child: const _ReferenceHint(),
+                          child: _ReferenceHint(text: widget.referenceHint),
                         ),
                       ],
                     ),
@@ -242,7 +246,9 @@ class _ReferenceTile extends StatelessWidget {
 }
 
 class _ReferenceHint extends StatelessWidget {
-  const _ReferenceHint();
+  const _ReferenceHint({required this.text});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +257,7 @@ class _ReferenceHint extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('見本と同じ場所・向きで撮ってください', style: style?.copyWith(color: Colors.white)),
+        Text(text, style: style?.copyWith(color: Colors.white)),
         const SizedBox(height: 4),
         Text('タップで拡大', style: style?.copyWith(color: Colors.white60)),
       ],
