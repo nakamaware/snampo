@@ -27,9 +27,12 @@ class SyncCoopClearsUseCase {
   SyncCoopClearsUseCase({
     required ICoopStorage storage,
     required IHistoryRepository histories,
-    this.thumbTimeout = const Duration(seconds: 10),
+    this.thumbTimeout = defaultThumbTimeout,
   }) : _storage = storage,
        _histories = histories;
+
+  /// [thumbTimeout] の既定値
+  static const defaultThumbTimeout = Duration(seconds: 10);
 
   final ICoopStorage _storage;
   final IHistoryRepository _histories;

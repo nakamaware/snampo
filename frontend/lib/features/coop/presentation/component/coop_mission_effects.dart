@@ -17,7 +17,7 @@ import 'package:snampo/features/mission/presentation/store/persisted_mission_pro
 const finalSpotCloseLabel = '結果を見る';
 
 /// 最後のスポットの結果画面を開く前に、`clears` の反映を待つ時間
-const _finalSpotSyncWait = Duration(seconds: 10);
+const _finalSpotSyncTimeout = Duration(seconds: 10);
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
 ///
@@ -137,7 +137,7 @@ class CoopMissionEffects extends HookConsumerWidget {
     // 発見者とサムネを進捗に反映し終えてから開く。反映が終わらなければ (電波が弱く、
     // サムネの取得が終わらないなど) 待ち続けず、反映できた分で開く
     final store = ref.read(coopMissionStoreProvider(roomCode).notifier);
-    await store.clearsSynced.timeout(_finalSpotSyncWait, onTimeout: () {});
+    await store.clearsSynced.timeout(_finalSpotSyncTimeout, onTimeout: () {});
     if (!context.mounted) return;
     final discovery =
         ref.read(coopMissionStoreProvider(roomCode)).finalDiscovery;

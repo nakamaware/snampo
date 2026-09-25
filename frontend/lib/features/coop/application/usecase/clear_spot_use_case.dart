@@ -61,12 +61,15 @@ class ClearSpotUseCase {
     required IRoomRepository rooms,
     required IHistoryRepository histories,
     DateTime Function()? now,
-    this.shareTimeout = const Duration(seconds: 30),
+    this.shareTimeout = defaultShareTimeout,
   }) : _thumbnails = thumbnails,
        _storage = storage,
        _rooms = rooms,
        _histories = histories,
        _now = now ?? DateTime.now;
+
+  /// [shareTimeout] の既定値
+  static const defaultShareTimeout = Duration(seconds: 30);
 
   final IThumbnailService _thumbnails;
   final ICoopStorage _storage;

@@ -23,9 +23,12 @@ class ResolveUnsharedCapturesUseCase {
   ResolveUnsharedCapturesUseCase({
     required IRoomRepository rooms,
     required IHistoryRepository histories,
-    this.fetchTimeout = const Duration(seconds: 10),
+    this.fetchTimeout = defaultFetchTimeout,
   }) : _rooms = rooms,
        _histories = histories;
+
+  /// [fetchTimeout] の既定値
+  static const defaultFetchTimeout = Duration(seconds: 10);
 
   final IRoomRepository _rooms;
   final IHistoryRepository _histories;

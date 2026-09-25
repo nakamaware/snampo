@@ -294,18 +294,24 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
+  /// [settleUnsharedCaptures] で、撮影の扱いを決めるのを待つ時間 (20 秒)
+  ///
+  /// サーバからクリアを読むのを待つ時間 ([ResolveUnsharedCapturesUseCase.fetchTimeout])
+  /// より長くする。ミッションの用意や前の反映を待ってから読むので、短いと、読めるのに
+  /// その前に時間切れになってしまう。そのため読む待ちの時間から決める。
+  static final settleTimeout =
+      ResolveUnsharedCapturesUseCase.defaultFetchTimeout * 2;
+
   /// 結果画面で進捗を片付けてよいか (共有の途中で終了した撮影の扱いを決め終えたか)
   ///
   /// 決める撮影がなければ、すぐに true を返す (サムネの取得など、ほかの反映は待たない)。
-  /// あれば、ミッションの用意や撮影の扱いがまだならここで済ませる。[timeout] までに
-  /// 決められなければ (サーバから読めない、前の反映が終わらないなど) false を返す。
-  /// 片付けると、サーバに届いていた撮影の写真まで消してしまうため。
-  Future<bool> settleUnsharedCaptures({
-    Duration timeout = const Duration(seconds: 20),
-  }) async {
+  /// あれば、ミッションの用意や撮影の扱いがまだならここで済ませる。[timeout] (既定は
+  /// [settleTimeout]) までに決められなければ (サーバから読めない、前の反映が終わらないなど)
+  /// false を返す。片付けると、サーバに届いていた撮影の写真まで消してしまうため。
+  Future<bool> settleUnsharedCaptures({Duration? timeout}) async {
     if (!_hasUnsettledCaptures) return true;
     return _settleUnsharedCaptures().timeout(
-      timeout,
+      timeout ?? settleTimeout,
       onTimeout: () {
         log('未共有の撮影の扱いを時間内に決められなかった', name: 'CoopMission');
         return false;
