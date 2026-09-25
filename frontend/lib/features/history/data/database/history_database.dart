@@ -173,22 +173,31 @@ class HistoryDatabase extends _$HistoryDatabase {
   @override
   int get schemaVersion => 5;
 
+  /// [table] に列 [definition] (「名前 型 ...」) を足す。同じ名前の列がすでにあれば何もしない
+  Future<void> _addColumnIfMissing(String table, String definition) async {
+    final name = definition.split(' ').first;
+    final columns = await customSelect('PRAGMA table_info($table)').get();
+    if (columns.any((column) => column.read<String>('name') == name)) {
+      return;
+    }
+    await customStatement('ALTER TABLE $table ADD COLUMN $definition');
+  }
+
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
     },
+    // 列を足すときは、すでにあれば飛ばす。移行の途中でアプリが落ちたときや、古いアプリで
+    // 開き直して版だけが戻ったとき (列は残る) に、同じ列を足して開けなくならないように
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
-        await customStatement('''
-ALTER TABLE mission_histories ADD COLUMN mode TEXT NOT NULL DEFAULT 'random'
-''');
-        await customStatement(
-          'ALTER TABLE mission_histories ADD COLUMN destination_lat REAL',
+        await _addColumnIfMissing(
+          'mission_histories',
+          "mode TEXT NOT NULL DEFAULT 'random'",
         );
-        await customStatement(
-          'ALTER TABLE mission_histories ADD COLUMN destination_lng REAL',
-        );
+        await _addColumnIfMissing('mission_histories', 'destination_lat REAL');
+        await _addColumnIfMissing('mission_histories', 'destination_lng REAL');
         await customStatement('''
 UPDATE mission_histories SET mode = 'destination'
 WHERE radius_meters IS NULL
@@ -206,34 +215,22 @@ UPDATE mission_histories SET destination_lat = (
 ''');
       }
       if (from < 3) {
-        await customStatement('ALTER TABLE history_spots ADD COLUMN name TEXT');
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN genre TEXT',
+        await _addColumnIfMissing('history_spots', 'name TEXT');
+        await _addColumnIfMissing('history_spots', 'genre TEXT');
+        await _addColumnIfMissing('history_spots', 'google_maps_url TEXT');
+        await _addColumnIfMissing('history_spots', 'reference_heading REAL');
+        await _addColumnIfMissing('history_spots', 'judge_rank TEXT');
+        await _addColumnIfMissing(
+          'history_spots',
+          'distance_error_meters REAL',
         );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN google_maps_url TEXT',
+        await _addColumnIfMissing(
+          'history_spots',
+          'heading_error_degrees REAL',
         );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN reference_heading REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN judge_rank TEXT',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN distance_error_meters REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN heading_error_degrees REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN guess_lat REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN guess_lng REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN captured_heading REAL',
-        );
+        await _addColumnIfMissing('history_spots', 'guess_lat REAL');
+        await _addColumnIfMissing('history_spots', 'guess_lng REAL');
+        await _addColumnIfMissing('history_spots', 'captured_heading REAL');
       }
       if (from < 4) {
         for (final column in [
@@ -244,9 +241,7 @@ UPDATE mission_histories SET destination_lat = (
           'coop_expires_at INTEGER',
           'coop_delete_at INTEGER',
         ]) {
-          await customStatement(
-            'ALTER TABLE mission_histories ADD COLUMN $column',
-          );
+          await _addColumnIfMissing('mission_histories', column);
         }
         for (final column in [
           'spot_id TEXT',
@@ -255,7 +250,7 @@ UPDATE mission_histories SET destination_lat = (
           'discoverer_thumb_path TEXT',
           'is_cleared INTEGER NOT NULL DEFAULT 1',
         ]) {
-          await customStatement('ALTER TABLE history_spots ADD COLUMN $column');
+          await _addColumnIfMissing('history_spots', column);
         }
       }
       if (from < 5) {
@@ -267,7 +262,7 @@ UPDATE mission_histories SET destination_lat = (
           'discoverer_guess_lng REAL',
           'discoverer_captured_heading REAL',
         ]) {
-          await customStatement('ALTER TABLE history_spots ADD COLUMN $column');
+          await _addColumnIfMissing('history_spots', column);
         }
       }
     },
