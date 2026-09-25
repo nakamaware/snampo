@@ -374,13 +374,17 @@ class CoopMissionStore extends _$CoopMissionStore {
     try {
       // 発見者を先に進捗に反映して知らせ、サムネは取得できたものから進捗に反映する。
       // 最後のスポットは、Mission 画面がこの反映を待ちきれなければ反映できた分で開くため
-      CoopClearSyncResult? result;
+      // 途中経過は必ず 1 つ以上流れる ([SyncCoopClearsUseCase.syncInSteps])
+      late CoopClearSyncResult result;
+      var isFirstStep = true;
       CoopDiscoveryEvent? discovery;
       await for (final step in ref
           .read(syncCoopClearsUseCaseProvider)
           .syncInSteps(roomCode, clears)) {
         _applyDiscoveriesToProgress(step.discoveries);
-        if (result == null) {
+        if (isFirstStep) {
+          // 発見者を反映した時点で知らせる
+          isFirstStep = false;
           final event = await _announceNewDiscoveries(snapshot);
           if (event != null && clears.length >= _spots.length) {
             // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が
@@ -392,7 +396,6 @@ class CoopMissionStore extends _$CoopMissionStore {
         }
         result = step;
       }
-      if (result == null) return;
       // その場で開くスポットの結果画面は、サムネを取得し終えてから開く
       // (開いた結果画面は、あとから届いたサムネに変わらないため)
       if (discovery != null) {
