@@ -48,7 +48,6 @@ class HomePage extends ConsumerWidget {
               ],
             ),
           ),
-          const Positioned(bottom: 20, right: 20, child: InfoIconButton()),
           const Positioned(top: 48, right: 12, child: SettingsIconButton()),
         ],
       ),
@@ -212,25 +211,6 @@ class HistoryButton extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Text('履歴', style: style),
       ),
-    );
-  }
-}
-
-/// ライセンスのアイコンウィジェット
-class InfoIconButton extends StatelessWidget {
-  /// InfoIconButtonのコンストラクタ
-  const InfoIconButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return IconButton(
-      icon: const Icon(Icons.info),
-      color: theme.colorScheme.primary,
-      onPressed: () {
-        showLicensePage(context: context);
-      },
     );
   }
 }

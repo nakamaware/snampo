@@ -8,7 +8,7 @@ import 'package:snampo/core/di/firebase_provider.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
-/// 設定画面 (ニックネーム / dev ビルドだけ App Check のデバッグトークン)
+/// 設定画面 (ニックネーム / ライセンス / dev ビルドだけ App Check のデバッグトークン)
 class SettingsPage extends HookConsumerWidget {
   /// [SettingsPage] を作成する
   const SettingsPage({super.key});
@@ -54,6 +54,14 @@ class SettingsPage extends HookConsumerWidget {
               },
               child: const Text('保存'),
             ),
+          ),
+          const Divider(height: 48),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.info_outline),
+            title: const Text('ライセンス'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showLicensePage(context: context),
           ),
           if (Env.flavor != 'prod') ...[
             const Divider(height: 48),
