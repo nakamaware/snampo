@@ -165,6 +165,68 @@ void main() {
     });
   });
 
+  group('MissionProgressEntity.withCapture', () {
+    final startedAt = DateTime(2024);
+    final discoveredAt = DateTime(2024, 1, 2);
+    final roomCode = RoomCode.tryParse('ABCD23')!;
+    final capture = CheckpointProgress(
+      userPhotoPath: '/mine.jpg',
+      judgeRank: PhotoJudgeRank.good,
+      distanceErrorMeters: 20,
+      achievedAt: DateTime(2024, 1, 3),
+    );
+
+    test('未挑戦のスポットには、撮影の記録をそのまま入れる', () {
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        checkpoints: const [null, null],
+      );
+
+      expect(entity.withCapture(1, capture).checkpoints, [null, capture]);
+    });
+
+    test('発見者がいれば、発見者の情報 (採点を含む) と発見日時を残す', () {
+      const judgement = PhotoJudgement(
+        rank: PhotoJudgeRank.fair,
+        distanceErrorMeters: 30,
+        zoomLevel: 2,
+      );
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        roomCode: roomCode,
+        checkpoints: [
+          CheckpointProgress(
+            achievedAt: discoveredAt,
+            discovererUid: 'other',
+            discovererNickname: 'じろう',
+            discovererThumbPath: '/thumb.jpg',
+            discovererJudgement: judgement,
+          ),
+        ],
+      );
+
+      expect(
+        entity.withCapture(0, capture).checkpoints.single,
+        capture.copyWith(
+          achievedAt: discoveredAt,
+          discovererUid: 'other',
+          discovererNickname: 'じろう',
+          discovererThumbPath: '/thumb.jpg',
+          discovererJudgement: judgement,
+        ),
+      );
+    });
+
+    test('範囲外のインデックスなら何も変えない', () {
+      final entity = MissionProgressEntity(
+        startedAt: startedAt,
+        checkpoints: const [null],
+      );
+
+      expect(entity.withCapture(1, capture), same(entity));
+    });
+  });
+
   group('MissionProgressEntity.withoutCapture', () {
     final startedAt = DateTime(2024);
     final roomCode = RoomCode.tryParse('ABCD23')!;

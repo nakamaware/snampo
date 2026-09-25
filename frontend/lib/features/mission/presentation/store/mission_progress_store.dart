@@ -99,17 +99,9 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
       return null;
     }
 
-    final previous = latest.checkpoints[index];
-    final merged = checkpoint.copyWith(
-      discovererUid: previous?.discovererUid,
-      discovererNickname: previous?.discovererNickname,
-      discovererThumbPath: previous?.discovererThumbPath,
-      achievedAt: previous?.achievedAt ?? checkpoint.achievedAt,
-    );
-    final updated = List<CheckpointProgress?>.from(latest.checkpoints);
-    updated[index] = merged;
-    state = AsyncValue.data(latest.copyWith(checkpoints: updated));
-    return merged;
+    final next = latest.withCapture(index, checkpoint);
+    state = AsyncValue.data(next);
+    return next.checkpoints[index];
   }
 
   /// [index] の撮影の記録 (自分の写真と採点) を捨てる (写真のファイルも消す)

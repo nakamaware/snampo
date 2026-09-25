@@ -58,6 +58,23 @@ abstract class CheckpointProgress with _$CheckpointProgress {
   factory CheckpointProgress.fromJson(Map<String, dynamic> json) =>
       _$CheckpointProgressFromJson(json);
 
+  /// [source] の協力プレイの発見者の情報 (発見者の 4 項目と発見日時) を引き継いだ進捗
+  ///
+  /// [source] に発見者がいなければ、そのまま返す。発見者の項目を 1 か所で扱い、
+  /// 自分の撮影の記録と入れ替えるときに一部 (採点など) を落とさないようにする。
+  CheckpointProgress withDiscovererOf(CheckpointProgress? source) {
+    if (source?.discovererUid == null) {
+      return this;
+    }
+    return copyWith(
+      achievedAt: source!.achievedAt ?? achievedAt,
+      discovererUid: source.discovererUid,
+      discovererNickname: source.discovererNickname,
+      discovererThumbPath: source.discovererThumbPath,
+      discovererJudgement: source.discovererJudgement,
+    );
+  }
+
   /// 自分の撮影の採点 (採点していなければ null)
   PhotoJudgement? get judgement {
     final rank = judgeRank;
@@ -145,13 +162,20 @@ abstract class MissionProgressEntity with _$MissionProgressEntity {
     updated[index] =
         current?.discovererUid == null
             ? null
-            : CheckpointProgress(
-              achievedAt: current!.achievedAt,
-              discovererUid: current.discovererUid,
-              discovererNickname: current.discovererNickname,
-              discovererThumbPath: current.discovererThumbPath,
-              discovererJudgement: current.discovererJudgement,
-            );
+            : const CheckpointProgress().withDiscovererOf(current);
+    return copyWith(checkpoints: updated);
+  }
+
+  /// [index] に撮影の記録 [capture] を入れた進捗を返す
+  ///
+  /// 協力プレイで既に発見者がいれば、発見者の情報 (採点を含む) と発見日時は残す。
+  /// [index] が範囲外なら何も変えない。
+  MissionProgressEntity withCapture(int index, CheckpointProgress capture) {
+    if (index < 0 || index >= checkpoints.length) {
+      return this;
+    }
+    final updated = List<CheckpointProgress?>.from(checkpoints);
+    updated[index] = capture.withDiscovererOf(checkpoints[index]);
     return copyWith(checkpoints: updated);
   }
 
