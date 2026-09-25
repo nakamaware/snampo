@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
-import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 
 part 'photo_judgement.freezed.dart';
 part 'photo_judgement.g.dart';
@@ -36,23 +35,6 @@ abstract class PhotoJudgement with _$PhotoJudgement {
   /// JSON から [PhotoJudgement] を生成する
   factory PhotoJudgement.fromJson(Map<String, dynamic> json) =>
       _$PhotoJudgementFromJson(json);
-
-  /// 撮影して採点したチェックポイントの採点 (採点していなければ null)
-  static PhotoJudgement? ofCheckpoint(CheckpointProgress checkpoint) {
-    final rank = checkpoint.judgeRank;
-    final distance = checkpoint.distanceErrorMeters;
-    if (rank == null || distance == null) {
-      return null;
-    }
-    return PhotoJudgement(
-      rank: rank,
-      distanceErrorMeters: distance,
-      headingErrorDegrees: checkpoint.headingErrorDegrees,
-      guessPosition: checkpoint.guessPosition,
-      capturedHeading: checkpoint.capturedHeading,
-      zoomLevel: checkpoint.zoomLevel,
-    );
-  }
 }
 
 PhotoJudgeRank _rankFromJson(String json) =>

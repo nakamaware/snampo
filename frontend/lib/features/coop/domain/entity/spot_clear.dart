@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/spot_id.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 part 'spot_clear.freezed.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/mission/presentation/component/judge_distance_bar.dart';
 
 Future<double> _markerFraction(WidgetTester tester, double meters) async {

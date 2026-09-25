@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/mission/application/usecase/judge_photo_use_case.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
 final _target = ImageCoordinate(
   coordinate: Coordinate(latitude: 35, longitude: 139),

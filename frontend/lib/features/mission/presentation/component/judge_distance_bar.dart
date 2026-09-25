@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/mission/presentation/component/judge_rank_badge.dart';
 
 /// 判定の区切り (12 / 25 / 50 m) の上に、スポットまでの距離の印を置くバー

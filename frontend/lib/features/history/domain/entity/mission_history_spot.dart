@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/spot_id.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 part 'mission_history_spot.freezed.dart';
 

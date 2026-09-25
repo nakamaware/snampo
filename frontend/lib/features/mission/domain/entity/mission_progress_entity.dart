@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/room_code.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 part 'mission_progress_entity.freezed.dart';
 part 'mission_progress_entity.g.dart';
@@ -52,9 +52,28 @@ abstract class CheckpointProgress with _$CheckpointProgress {
     PhotoJudgement? discovererJudgement,
   }) = _CheckpointProgress;
 
+  const CheckpointProgress._();
+
   /// JSON から [CheckpointProgress] を生成する
   factory CheckpointProgress.fromJson(Map<String, dynamic> json) =>
       _$CheckpointProgressFromJson(json);
+
+  /// 自分の撮影の採点 (採点していなければ null)
+  PhotoJudgement? get judgement {
+    final rank = judgeRank;
+    final distance = distanceErrorMeters;
+    if (rank == null || distance == null) {
+      return null;
+    }
+    return PhotoJudgement(
+      rank: rank,
+      distanceErrorMeters: distance,
+      headingErrorDegrees: headingErrorDegrees,
+      guessPosition: guessPosition,
+      capturedHeading: capturedHeading,
+      zoomLevel: zoomLevel,
+    );
+  }
 }
 
 PhotoJudgement? _judgementFromJson(Map<String, dynamic>? json) =>
@@ -62,52 +81,6 @@ PhotoJudgement? _judgementFromJson(Map<String, dynamic>? json) =>
 
 Map<String, dynamic>? _judgementToJson(PhotoJudgement? judgement) =>
     judgement?.toJson();
-
-/// Coordinate? の JSON 変換
-///
-/// nullable な [Coordinate] を JSON と相互変換する
-class NullableCoordinateConverter
-    implements JsonConverter<Coordinate?, Map<String, dynamic>?> {
-  /// [NullableCoordinateConverter] を作成する
-  const NullableCoordinateConverter();
-
-  @override
-  Coordinate? fromJson(Map<String, dynamic>? json) =>
-      json == null ? null : const CoordinateConverter().fromJson(json);
-
-  @override
-  Map<String, dynamic>? toJson(Coordinate? object) =>
-      object == null ? null : const CoordinateConverter().toJson(object);
-}
-
-/// PhotoJudgeRank? の JSON 変換
-///
-/// 旧バージョンで永続化された未知の値 `retry` は [PhotoJudgeRank.miss] として
-/// 復元する (未知の enum 名で `$enumDecodeNullable` が例外を投げるのを防ぐ)。
-class PhotoJudgeRankConverter
-    implements JsonConverter<PhotoJudgeRank?, String?> {
-  /// [PhotoJudgeRankConverter] を作成する
-  const PhotoJudgeRankConverter();
-
-  @override
-  PhotoJudgeRank? fromJson(String? json) {
-    if (json == null) {
-      return null;
-    }
-    if (json == 'retry') {
-      return PhotoJudgeRank.miss;
-    }
-    for (final rank in PhotoJudgeRank.values) {
-      if (rank.name == json) {
-        return rank;
-      }
-    }
-    return null;
-  }
-
-  @override
-  String? toJson(PhotoJudgeRank? object) => object?.name;
-}
 
 /// 協力プレイで、あるスポットを発見した人
 typedef CoopDiscovery =

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
@@ -17,7 +18,6 @@ import 'package:snampo/features/history/domain/entity/mission_history_spot.dart'
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// メモリ上のルームリポジトリ
 class FakeRoomRepository implements IRoomRepository {

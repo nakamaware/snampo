@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/features/coop/data/mapper/room_mapper.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 void main() {
   group('RoomMapper の採点 (judgement)', () {

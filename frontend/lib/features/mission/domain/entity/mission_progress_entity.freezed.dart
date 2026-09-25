@@ -243,8 +243,8 @@ return $default(_that.guessPosition,_that.userPhotoPath,_that.capturedHeading,_t
 /// @nodoc
 @JsonSerializable()
 
-class _CheckpointProgress implements CheckpointProgress {
-  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.capturedHeading, this.distanceErrorMeters, this.headingErrorDegrees, @PhotoJudgeRankConverter() this.judgeRank, this.zoomLevel, this.achievedAt, this.discovererUid, this.discovererNickname, this.discovererThumbPath, @JsonKey(fromJson: _judgementFromJson, toJson: _judgementToJson) this.discovererJudgement});
+class _CheckpointProgress extends CheckpointProgress {
+  const _CheckpointProgress({@NullableCoordinateConverter() this.guessPosition, this.userPhotoPath, this.capturedHeading, this.distanceErrorMeters, this.headingErrorDegrees, @PhotoJudgeRankConverter() this.judgeRank, this.zoomLevel, this.achievedAt, this.discovererUid, this.discovererNickname, this.discovererThumbPath, @JsonKey(fromJson: _judgementFromJson, toJson: _judgementToJson) this.discovererJudgement}): super._();
   factory _CheckpointProgress.fromJson(Map<String, dynamic> json) => _$CheckpointProgressFromJson(json);
 
 /// 撮影時の位置

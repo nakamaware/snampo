@@ -1,6 +1,6 @@
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
 /// [dateTime] を `yyyy/MM/dd HH:mm` 形式にフォーマットする
 String formatCompletedDate(DateTime dateTime) {

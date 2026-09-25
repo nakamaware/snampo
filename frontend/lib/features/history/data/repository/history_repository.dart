@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:drift/drift.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
@@ -14,7 +15,6 @@ import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 import 'package:uuid/uuid.dart';
 
 /// Drift 上の履歴 CRUD

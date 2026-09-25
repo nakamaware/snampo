@@ -1,10 +1,10 @@
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 final createdAt = DateTime.utc(2026, 9, 23, 10);
 

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 import '../../domain/entity/coop_fixtures.dart' as fx;
 import '../coop_fakes.dart';

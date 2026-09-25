@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 void main() {
   group('CheckpointProgress.fromJson', () {
@@ -250,14 +250,13 @@ void main() {
   );
 
   group('PhotoJudgement', () {
-    test('ofCheckpoint は、ズームの倍率も採点に含める', () {
-      final judgement = PhotoJudgement.ofCheckpoint(
-        const CheckpointProgress(
-          judgeRank: PhotoJudgeRank.good,
-          distanceErrorMeters: 30,
-          zoomLevel: 2,
-        ),
+    test('CheckpointProgress.judgement は、ズームの倍率も採点に含める', () {
+      const checkpoint = CheckpointProgress(
+        judgeRank: PhotoJudgeRank.good,
+        distanceErrorMeters: 30,
+        zoomLevel: 2,
       );
+      final judgement = checkpoint.judgement;
 
       expect(judgement?.zoomLevel, 2);
       expect(PhotoJudgement.fromJson(judgement!.toJson()).zoomLevel, 2);

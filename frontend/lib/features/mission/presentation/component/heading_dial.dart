@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 
 /// 見本の向き (真上の点線) と撮った向き (針) を、左右 90 度の半円で見せる
 ///

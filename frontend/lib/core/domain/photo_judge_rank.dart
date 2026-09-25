@@ -1,3 +1,5 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 /// 写真採点の4段階評価
 enum PhotoJudgeRank {
   /// とてもよい
@@ -52,3 +54,32 @@ extension PhotoJudgeRankLimit on PhotoJudgeRank {
 /// 倍率がない (古いデータ) か 1 倍未満なら、実際の距離のまま。
 double effectiveDistanceMeters(double distanceMeters, double? zoomLevel) =>
     distanceMeters / (zoomLevel ?? 1).clamp(1.0, double.infinity);
+
+/// PhotoJudgeRank? の JSON 変換
+///
+/// 旧バージョンで永続化された未知の値 `retry` は [PhotoJudgeRank.miss] として
+/// 復元する (未知の enum 名で `$enumDecodeNullable` が例外を投げるのを防ぐ)。
+class PhotoJudgeRankConverter
+    implements JsonConverter<PhotoJudgeRank?, String?> {
+  /// [PhotoJudgeRankConverter] を作成する
+  const PhotoJudgeRankConverter();
+
+  @override
+  PhotoJudgeRank? fromJson(String? json) {
+    if (json == null) {
+      return null;
+    }
+    if (json == 'retry') {
+      return PhotoJudgeRank.miss;
+    }
+    for (final rank in PhotoJudgeRank.values) {
+      if (rank.name == json) {
+        return rank;
+      }
+    }
+    return null;
+  }
+
+  @override
+  String? toJson(PhotoJudgeRank? object) => object?.name;
+}

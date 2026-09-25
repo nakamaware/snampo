@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 
 /// 判定ごとの色 (テーマの緑に合わせた 4 色)
 ///

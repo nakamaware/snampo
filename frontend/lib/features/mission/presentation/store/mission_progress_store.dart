@@ -3,11 +3,11 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
 part 'mission_progress_store.g.dart';
 

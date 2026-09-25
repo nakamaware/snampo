@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/coop_storage.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -9,7 +10,6 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// スポットのクリアの結果
 sealed class ClearSpotResult {
@@ -89,7 +89,7 @@ class ClearSpotUseCase {
         checkpoint.userPhotoPath ?? (throw ArgumentError('写真がありません'));
     final localThumbPath = await _thumbnails.createThumbnail(photoPath);
     // 他の人も同じ結果を見られるよう、採点も一緒に共有する
-    final judgement = PhotoJudgement.ofCheckpoint(checkpoint);
+    final judgement = checkpoint.judgement;
     final CreateClearResult result;
     var abandoned = false;
     try {

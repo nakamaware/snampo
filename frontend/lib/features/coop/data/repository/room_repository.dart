@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/interface/room_repository.dart';
@@ -7,7 +8,6 @@ import 'package:snampo/features/coop/data/mapper/room_mapper.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
 
 /// Firestore 上のルーム
 class RoomRepository implements IRoomRepository {

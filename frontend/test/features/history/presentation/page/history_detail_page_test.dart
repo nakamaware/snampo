@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
@@ -13,7 +14,6 @@ import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/presentation/component/photo_compare_viewer.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 

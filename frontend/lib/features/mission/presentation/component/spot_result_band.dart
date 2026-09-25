@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/features/mission/presentation/component/expand_photo_icon.dart';
 import 'package:snampo/features/mission/presentation/component/judge_rank_badge.dart';
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';

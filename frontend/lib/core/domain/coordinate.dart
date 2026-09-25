@@ -25,6 +25,23 @@ class CoordinateConverter
   };
 }
 
+/// Coordinate? の JSON 変換
+///
+/// nullable な [Coordinate] を JSON と相互変換する
+class NullableCoordinateConverter
+    implements JsonConverter<Coordinate?, Map<String, dynamic>?> {
+  /// [NullableCoordinateConverter] を作成する
+  const NullableCoordinateConverter();
+
+  @override
+  Coordinate? fromJson(Map<String, dynamic>? json) =>
+      json == null ? null : const CoordinateConverter().fromJson(json);
+
+  @override
+  Map<String, dynamic>? toJson(Coordinate? object) =>
+      object == null ? null : const CoordinateConverter().toJson(object);
+}
+
 /// 座標値オブジェクト
 @Freezed(copyWith: false)
 abstract class Coordinate with _$Coordinate {
