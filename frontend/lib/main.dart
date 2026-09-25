@@ -20,7 +20,7 @@ void main() async {
       overrides: [
         // 履歴画面を開いたときに、協力プレイの履歴も同期する
         historySyncProvider.overrideWith(
-          (ref) => ref.watch(coopHistorySyncProvider.future),
+          (ref) => ref.read(syncCoopHistoryIfSignedInUseCaseProvider)(),
         ),
       ],
       child: const MyApp(),

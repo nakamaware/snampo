@@ -179,9 +179,3 @@ SyncCoopHistoryIfSignedInUseCase syncCoopHistoryIfSignedInUseCase(Ref ref) =>
       signedInUid: ref.read(getCoopSignedInUidUseCaseProvider),
       syncHistory: ref.read(syncCoopHistoryUseCaseProvider),
     );
-
-/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
-/// ([SyncCoopHistoryIfSignedInUseCase])
-@riverpod
-Future<void> coopHistorySync(Ref ref) =>
-    ref.read(syncCoopHistoryIfSignedInUseCaseProvider)();
