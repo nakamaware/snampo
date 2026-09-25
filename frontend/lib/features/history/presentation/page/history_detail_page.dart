@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/discoverer_rank.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
