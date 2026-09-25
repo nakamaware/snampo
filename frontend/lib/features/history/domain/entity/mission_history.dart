@@ -22,4 +22,21 @@ abstract class MissionHistory with _$MissionHistory {
     /// 協力プレイの情報 (ソロでは null)
     CoopHistoryInfo? coop,
   }) = _MissionHistory;
+
+  const MissionHistory._();
+
+  /// 遊び終わった時刻 (遊んだ時間の計算に使う)
+  ///
+  /// 協力プレイの途中の履歴は、終わった時刻 ([completedAt]) がまだ
+  /// 始めた時刻と同じなので、最後に発見した時刻を使う。発見がなければ null。
+  DateTime? get playEndedAt {
+    if (completedAt.isAfter(startedAt)) return completedAt;
+    final achieved = [
+      for (final spot in spots)
+        if (spot.achievedAt case final at?) at,
+    ];
+    return achieved.isEmpty
+        ? null
+        : achieved.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
 }

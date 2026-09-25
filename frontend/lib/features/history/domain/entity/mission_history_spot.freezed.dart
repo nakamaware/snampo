@@ -245,9 +245,9 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// @nodoc
 
 
-class _MissionHistorySpot implements MissionHistorySpot {
-  const _MissionHistorySpot({required this.coordinate, required this.sortOrder, required this.isDestination, required this.streetViewImagePath, this.userPhotoPath, this.achievedAt, this.name, this.genre, this.googleMapsUrl, this.referenceHeading, this.judgeRank, this.distanceErrorMeters, this.headingErrorDegrees, this.guessPosition, this.capturedHeading, this.zoomLevel, this.spotId, this.discovererUid, this.discovererNickname, this.discovererThumbPath, this.discovererJudgement, this.isCleared = true});
-
+class _MissionHistorySpot extends MissionHistorySpot {
+  const _MissionHistorySpot({required this.coordinate, required this.sortOrder, required this.isDestination, required this.streetViewImagePath, this.userPhotoPath, this.achievedAt, this.name, this.genre, this.googleMapsUrl, this.referenceHeading, this.judgeRank, this.distanceErrorMeters, this.headingErrorDegrees, this.guessPosition, this.capturedHeading, this.zoomLevel, this.spotId, this.discovererUid, this.discovererNickname, this.discovererThumbPath, this.discovererJudgement, this.isCleared = true}): super._();
+  
 
 @override final  Coordinate coordinate;
 @override final  int sortOrder;

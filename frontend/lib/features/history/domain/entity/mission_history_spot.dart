@@ -48,4 +48,20 @@ abstract class MissionHistorySpot with _$MissionHistorySpot {
     /// クリア済みか (協力プレイの途中終了では未クリアのスポットがある)
     @Default(true) bool isCleared,
   }) = _MissionHistorySpot;
+
+  const MissionHistorySpot._();
+
+  /// 出す写真のパス
+  ///
+  /// 自分が撮っていれば自分の写真、撮っていなければ協力プレイの発見者のサムネ。
+  /// 未クリアのスポットには出さない。
+  String? get shownPhotoPath =>
+      isCleared ? userPhotoPath ?? discovererThumbPath : null;
+
+  /// 出す判定
+  ///
+  /// 自分が撮っていれば自分の判定、撮っていなければ協力プレイの発見者の判定。
+  /// 未クリアのスポットには出さない。
+  PhotoJudgeRank? get shownRank =>
+      isCleared ? judgeRank ?? discovererJudgement?.rank : null;
 }

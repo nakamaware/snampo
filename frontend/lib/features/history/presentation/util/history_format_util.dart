@@ -1,5 +1,3 @@
-import 'package:snampo/core/domain/photo_judge_rank.dart';
-import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 
 /// [dateTime] を `yyyy/MM/dd HH:mm` 形式にフォーマットする
@@ -49,36 +47,4 @@ String formatMissionDurationShort(DateTime start, DateTime end) {
     return '$minutes分';
   }
   return '${d.inSeconds}秒';
-}
-
-/// 履歴のスポットに出す写真と判定
-///
-/// 自分が撮っていれば自分のもの、撮っていなければ協力プレイの発見者のもの。
-/// 未クリアのスポットには出さない。
-extension HistorySpotShown on MissionHistorySpot {
-  /// 出す写真のパス
-  String? get shownPhotoPath =>
-      isCleared ? userPhotoPath ?? discovererThumbPath : null;
-
-  /// 出す判定
-  PhotoJudgeRank? get shownRank =>
-      isCleared ? judgeRank ?? discovererJudgement?.rank : null;
-}
-
-/// 遊んだ時間の計算に使う時刻
-extension MissionHistoryPlayTime on MissionHistory {
-  /// 遊び終わった時刻
-  ///
-  /// 協力プレイの途中の履歴は、終わった時刻 ([MissionHistory.completedAt]) がまだ
-  /// 始めた時刻と同じなので、最後に発見した時刻を使う。発見がなければ null。
-  DateTime? get playEndedAt {
-    if (completedAt.isAfter(startedAt)) return completedAt;
-    final achieved = [
-      for (final spot in spots)
-        if (spot.achievedAt case final at?) at,
-    ];
-    return achieved.isEmpty
-        ? null
-        : achieved.reduce((a, b) => a.isAfter(b) ? a : b);
-  }
 }
