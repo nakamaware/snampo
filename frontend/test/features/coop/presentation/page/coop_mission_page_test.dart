@@ -154,5 +154,21 @@ void main() {
 
       expect(find.text('result'), findsOneWidget);
     });
+
+    testWidgets('clears の反映が終わらなくても (サムネの取得中など)、待ち続けずに最後のスポットを開く', (
+      tester,
+    ) async {
+      await openMission(tester);
+
+      roomUpdates.add(finishedRoom(finishedAt: DateTime.now()));
+      await tester.pumpAndSettle();
+      expect(find.text('spot 3 · 結果を見る'), findsNothing);
+
+      // 反映は終わらないまま、時間が経つ
+      await tester.pump(const Duration(seconds: 15));
+      await tester.pumpAndSettle();
+
+      expect(find.text('spot 3 · 結果を見る'), findsOneWidget);
+    });
   });
 }
