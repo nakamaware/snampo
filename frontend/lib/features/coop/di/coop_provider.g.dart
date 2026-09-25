@@ -828,7 +828,7 @@ final class ResolveUnsharedCapturesUseCaseProvider
 }
 
 String _$resolveUnsharedCapturesUseCaseHash() =>
-    r'3f0d96dd0dd2b186da2cf88c4448efa406b2a96a';
+    r'5d94e8fd19ecfd9c6c22a3dacccd7bd90c71b841';
 
 /// 全スポットがクリアされていれば finished にするユースケース
 

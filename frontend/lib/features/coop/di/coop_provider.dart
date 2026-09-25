@@ -136,7 +136,10 @@ ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
 /// 共有の途中でアプリが終了した撮影の扱いを決めるユースケース
 @riverpod
 ResolveUnsharedCapturesUseCase resolveUnsharedCapturesUseCase(Ref ref) =>
-    ResolveUnsharedCapturesUseCase(rooms: ref.read(roomRepositoryProvider));
+    ResolveUnsharedCapturesUseCase(
+      rooms: ref.read(roomRepositoryProvider),
+      histories: ref.read(historyRepositoryProvider),
+    );
 
 /// 全スポットがクリアされていれば finished にするユースケース
 @riverpod
