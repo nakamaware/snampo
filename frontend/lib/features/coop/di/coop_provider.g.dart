@@ -1096,26 +1096,76 @@ final class SyncCoopHistoryUseCaseProvider
 String _$syncCoopHistoryUseCaseHash() =>
     r'd91f38814a4020be7c4eb459b9f62ed03c01e38a';
 
+/// サインイン済みなら、未確定の協力プレイ履歴を同期するユースケース
+
+@ProviderFor(syncCoopHistoryIfSignedInUseCase)
+final syncCoopHistoryIfSignedInUseCaseProvider =
+    SyncCoopHistoryIfSignedInUseCaseProvider._();
+
+/// サインイン済みなら、未確定の協力プレイ履歴を同期するユースケース
+
+final class SyncCoopHistoryIfSignedInUseCaseProvider
+    extends
+        $FunctionalProvider<
+          SyncCoopHistoryIfSignedInUseCase,
+          SyncCoopHistoryIfSignedInUseCase,
+          SyncCoopHistoryIfSignedInUseCase
+        >
+    with $Provider<SyncCoopHistoryIfSignedInUseCase> {
+  /// サインイン済みなら、未確定の協力プレイ履歴を同期するユースケース
+  SyncCoopHistoryIfSignedInUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncCoopHistoryIfSignedInUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncCoopHistoryIfSignedInUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncCoopHistoryIfSignedInUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SyncCoopHistoryIfSignedInUseCase create(Ref ref) {
+    return syncCoopHistoryIfSignedInUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncCoopHistoryIfSignedInUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncCoopHistoryIfSignedInUseCase>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$syncCoopHistoryIfSignedInUseCaseHash() =>
+    r'f2b7e0cdf995f644662de5da2d7ad07e33ee6978';
+
 /// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
-///
-/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
-/// 端末では何もせず、手元の履歴だけを表示する。
+/// ([SyncCoopHistoryIfSignedInUseCase])
 
 @ProviderFor(coopHistorySync)
 final coopHistorySyncProvider = CoopHistorySyncProvider._();
 
 /// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
-///
-/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
-/// 端末では何もせず、手元の履歴だけを表示する。
+/// ([SyncCoopHistoryIfSignedInUseCase])
 
 final class CoopHistorySyncProvider
     extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
     with $FutureModifier<void>, $FutureProvider<void> {
   /// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
-  ///
-  /// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
-  /// 端末では何もせず、手元の履歴だけを表示する。
+  /// ([SyncCoopHistoryIfSignedInUseCase])
   CoopHistorySyncProvider._()
     : super(
         from: null,
@@ -1141,4 +1191,4 @@ final class CoopHistorySyncProvider
   }
 }
 
-String _$coopHistorySyncHash() => r'e197a4a28d29343c3aa7e2898a11717f139ea786';
+String _$coopHistorySyncHash() => r'f815c960714cdd16f2d774677ebf19a9689af3ea';

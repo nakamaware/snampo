@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -21,6 +19,7 @@ import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_us
 import 'package:snampo/features/coop/application/usecase/resolve_unshared_captures_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/sync_coop_history_if_signed_in_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_history_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/update_room_settings_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/upsert_coop_history_use_case.dart';
@@ -173,18 +172,16 @@ SyncCoopHistoryUseCase syncCoopHistoryUseCase(Ref ref) =>
       finalize: ref.read(finalizeCoopHistoryUseCaseProvider),
     );
 
-/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
-///
-/// サインインの再試行はしない (未サインインなら同期しない)。オフラインや協力プレイを使えない
-/// 端末では何もせず、手元の履歴だけを表示する。
+/// サインイン済みなら、未確定の協力プレイ履歴を同期するユースケース
 @riverpod
-Future<void> coopHistorySync(Ref ref) async {
-  try {
-    if (await ref.read(getCoopSignedInUidUseCaseProvider)() == null) {
-      return;
-    }
-    await ref.read(syncCoopHistoryUseCaseProvider)();
-  } on Object catch (e) {
-    log('協力プレイ履歴の同期をスキップした: $e', name: 'CoopHistorySync');
-  }
-}
+SyncCoopHistoryIfSignedInUseCase syncCoopHistoryIfSignedInUseCase(Ref ref) =>
+    SyncCoopHistoryIfSignedInUseCase(
+      signedInUid: ref.read(getCoopSignedInUidUseCaseProvider),
+      syncHistory: ref.read(syncCoopHistoryUseCaseProvider),
+    );
+
+/// 履歴画面を開いたときに、未確定の協力プレイ履歴を同期する
+/// ([SyncCoopHistoryIfSignedInUseCase])
+@riverpod
+Future<void> coopHistorySync(Ref ref) =>
+    ref.read(syncCoopHistoryIfSignedInUseCaseProvider)();
