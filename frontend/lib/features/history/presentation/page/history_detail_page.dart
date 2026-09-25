@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
-import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
+import 'package:snampo/features/history/presentation/component/history_photo_thumbnail.dart';
 import 'package:snampo/features/history/presentation/hook/use_history_detail.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
@@ -413,100 +412,8 @@ class _PhotoColumn extends StatelessWidget {
       children: [
         Text(label),
         const SizedBox(height: 4),
-        _PhotoThumbnail(path: path),
+        HistoryPhotoThumbnail(path: path),
       ],
-    );
-  }
-}
-
-/// 写真のサムネイル
-class _PhotoThumbnail extends StatelessWidget {
-  const _PhotoThumbnail({this.path});
-
-  final String? path;
-
-  static const _height = 120.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final resolvedPath = path;
-
-    if (resolvedPath != null && resolvedPath.isNotEmpty) {
-      final file = File(resolvedPath);
-      final media = MediaQuery.of(context);
-      final dpr = media.devicePixelRatio;
-      final cacheHeight = (_height * dpr).round();
-      // List 12+12, Card 12+12, 列間 12 としたときの 1 列の論理幅
-      final logicalThumbWidth = (media.size.width - 60) / 2;
-      final cacheWidth = (logicalThumbWidth * dpr).round();
-      Widget thumbnailError(BuildContext _, Object __, StackTrace? ___) {
-        return SizedBox(
-          height: _height,
-          width: double.infinity,
-          child: Center(
-            child: Icon(
-              Icons.image_not_supported_outlined,
-              color: theme.colorScheme.outline,
-              size: 40,
-            ),
-          ),
-        );
-      }
-
-      return Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                fullscreenDialog: true,
-                builder:
-                    (_) => HistoryFullscreenImageViewer(
-                      child: Image.file(
-                        file,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.image_not_supported_outlined,
-                              color: Colors.white54,
-                              size: 64,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-              ),
-            );
-          },
-          child: Image.file(
-            file,
-            height: _height,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            cacheHeight: cacheHeight,
-            cacheWidth: cacheWidth,
-            errorBuilder: thumbnailError,
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      height: _height,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: theme.colorScheme.outline,
-        size: 40,
-      ),
     );
   }
 }
