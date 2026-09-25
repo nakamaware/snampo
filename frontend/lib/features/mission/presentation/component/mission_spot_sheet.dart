@@ -114,10 +114,9 @@ class MissionSpotSheet extends HookWidget {
       viewportFraction: _viewportFraction(width),
       keys: [width],
     );
-    final rowKeys = useMemoized(
-      () => List.generate(spots.length, (_) => GlobalKey()),
-      [spots.length],
-    );
+    final contentScrollController = useRef<ScrollController?>(null);
+    // 番号タップでの移動中は、スクロール位置から番号を上書きしない
+    final listScrollLocked = useRef(false);
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
@@ -151,6 +150,7 @@ class MissionSpotSheet extends HookWidget {
         }
 
         Future<void> goToSpot(int index) async {
+          final changed = currentPage.value != index;
           currentPage.value = index;
           if (layout == MissionSheetLayout.carousel) {
             await Future.wait([
@@ -164,15 +164,17 @@ class MissionSpotSheet extends HookWidget {
             ]);
             return;
           }
-          await expand();
-          final rowContext = rowKeys[index].currentContext;
-          if (rowContext != null && rowContext.mounted) {
-            await Scrollable.ensureVisible(
-              rowContext,
-              duration: _pageAnimationDuration,
-              curve: Curves.easeOutCubic,
-              alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          // カードをめくったときと同じ手応え
+          if (changed) HapticFeedback.selectionClick();
+          listScrollLocked.value = true;
+          try {
+            await expand();
+            await _revealListRow(
+              index: index,
+              controller: contentScrollController.value,
             );
+          } finally {
+            listScrollLocked.value = false;
           }
         }
 
@@ -197,8 +199,7 @@ class MissionSpotSheet extends HookWidget {
         final header = _SheetHeader(
           spots: spots,
           layout: layout,
-          currentIndex:
-              layout == MissionSheetLayout.carousel ? currentPage.value : null,
+          currentIndex: currentPage.value,
           showPlayResultButton: showPlayResultButton,
           onShowPlayResult: onShowPlayResult,
           onLayoutChanged: onLayoutChanged,
@@ -213,6 +214,7 @@ class MissionSpotSheet extends HookWidget {
           maxChildSize: maxSize,
           snap: true,
           builder: (context, scrollController) {
+            contentScrollController.value = scrollController;
             return Material(
               color: colorScheme.surfaceContainerLow,
               elevation: 3,
@@ -221,78 +223,97 @@ class MissionSpotSheet extends HookWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
               clipBehavior: Clip.antiAlias,
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  // リストをスクロールしても、見出し (進み具合) は上に留める
-                  PinnedHeaderSliver(
-                    child: ColoredBox(
-                      color: colorScheme.surfaceContainerLow,
-                      child: _SizeReporter(
-                        onHeight: onHeaderHeight,
-                        child: header,
-                      ),
-                    ),
-                  ),
-                  // 下端の余白: 閉じているときだけ見出しの下に置き、開くと 0 にする
-                  SliverToBoxAdapter(
-                    child: ListenableBuilder(
-                      listenable: sheetController,
-                      builder: (context, _) {
-                        final openness =
-                            sheetController.isAttached && maxSize > minSize
-                                ? ((sheetController.size - minSize) /
-                                        (maxSize - minSize))
-                                    .clamp(0.0, 1.0)
-                                : 0.0;
-                        return SizedBox(height: bottomInset * (1 - openness));
-                      },
-                    ),
-                  ),
-                  if (layout == MissionSheetLayout.carousel)
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        // 開いたときにシートへちょうど収まる高さ
-                        height: math.max(
-                          available * maxSize - headerHeight.value,
-                          _minCarouselHeight,
-                        ),
-                        child: _SpotCarousel(
-                          spots: spots,
-                          controller: pageController,
-                          capturingIndex: capturingIndex,
-                          bottomPadding: 16 + bottomInset,
-                          onPageChanged: (index) => currentPage.value = index,
-                          onCapture: onCapture,
-                          onShowResult: onShowResult,
+              child: NotificationListener<ScrollUpdateNotification>(
+                onNotification: (notification) {
+                  if (layout != MissionSheetLayout.list ||
+                      listScrollLocked.value) {
+                    return false;
+                  }
+                  if (notification.depth != 0 ||
+                      notification.metrics.axis != Axis.vertical) {
+                    return false;
+                  }
+                  final index = _listIndexForOffset(
+                    notification.metrics.pixels,
+                    spots.length,
+                  );
+                  if (index == currentPage.value) return false;
+                  currentPage.value = index;
+                  HapticFeedback.selectionClick();
+                  return false;
+                },
+                child: CustomScrollView(
+                  controller: scrollController,
+                  slivers: [
+                    // リストをスクロールしても、見出し (進み具合) は上に留める
+                    PinnedHeaderSliver(
+                      child: ColoredBox(
+                        color: colorScheme.surfaceContainerLow,
+                        child: _SizeReporter(
+                          onHeight: onHeaderHeight,
+                          child: header,
                         ),
                       ),
-                    )
-                  else ...[
-                    SliverList.separated(
-                      itemCount: spots.length,
-                      itemBuilder:
-                          (context, index) => _SpotListRow(
-                            key: rowKeys[index],
-                            index: index,
-                            spot: spots[index],
-                            isCapturing: capturingIndex == index,
-                            onCapture: () => onCapture(index),
-                            onShowResult: () => onShowResult(index),
-                          ),
-                      separatorBuilder:
-                          (context, _) => Divider(
-                            height: 1,
-                            indent: 16,
-                            endIndent: 16,
-                            color: colorScheme.outlineVariant,
-                          ),
                     ),
+                    // 下端の余白: 閉じているときだけ見出しの下に置き、開くと 0 にする
                     SliverToBoxAdapter(
-                      child: SizedBox(height: 16 + bottomInset),
+                      child: ListenableBuilder(
+                        listenable: sheetController,
+                        builder: (context, _) {
+                          final openness =
+                              sheetController.isAttached && maxSize > minSize
+                                  ? ((sheetController.size - minSize) /
+                                          (maxSize - minSize))
+                                      .clamp(0.0, 1.0)
+                                  : 0.0;
+                          return SizedBox(height: bottomInset * (1 - openness));
+                        },
+                      ),
                     ),
+                    if (layout == MissionSheetLayout.carousel)
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          // 開いたときにシートへちょうど収まる高さ
+                          height: math.max(
+                            available * maxSize - headerHeight.value,
+                            _minCarouselHeight,
+                          ),
+                          child: _SpotCarousel(
+                            spots: spots,
+                            controller: pageController,
+                            capturingIndex: capturingIndex,
+                            bottomPadding: 16 + bottomInset,
+                            onPageChanged: (index) => currentPage.value = index,
+                            onCapture: onCapture,
+                            onShowResult: onShowResult,
+                          ),
+                        ),
+                      )
+                    else ...[
+                      SliverList.separated(
+                        itemCount: spots.length,
+                        itemBuilder:
+                            (context, index) => _SpotListRow(
+                              index: index,
+                              spot: spots[index],
+                              isCapturing: capturingIndex == index,
+                              onCapture: () => onCapture(index),
+                              onShowResult: () => onShowResult(index),
+                            ),
+                        separatorBuilder:
+                            (context, _) => Divider(
+                              height: 1,
+                              indent: 16,
+                              endIndent: 16,
+                              color: colorScheme.outlineVariant,
+                            ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: 16 + bottomInset),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             );
           },
@@ -316,6 +337,39 @@ const _cardGap = 12.0;
 
 const _sheetAnimationDuration = Duration(milliseconds: 250);
 const _pageAnimationDuration = Duration(milliseconds: 350);
+
+/// リスト 1 行の高さ (上下余白 10 + 見本 64)
+const _listRowExtent = 84.0;
+
+/// リスト行の区切り
+const _listSeparatorExtent = 1.0;
+
+/// 行の先頭から次の行の先頭まで
+const _listRowStride = _listRowExtent + _listSeparatorExtent;
+
+/// スクロール位置 [pixels] で、見出しのすぐ下に来ている行
+int _listIndexForOffset(double pixels, int count) {
+  if (count <= 1) return 0;
+  return (pixels / _listRowStride).round().clamp(0, count - 1);
+}
+
+/// リストの [index] 行を、見出しのすぐ下へスクロールする
+///
+/// 見出しはピン留めなので、行の高さ分だけ中身を動かせばその行が先頭に来る。
+/// 末尾の行は、それ以上動けない位置で止まる。
+Future<void> _revealListRow({
+  required int index,
+  required ScrollController? controller,
+}) async {
+  if (controller == null || !controller.hasClients) return;
+  final position = controller.position;
+  final target = index * _listRowStride;
+  await position.animateTo(
+    target.clamp(position.minScrollExtent, position.maxScrollExtent),
+    duration: _pageAnimationDuration,
+    curve: Curves.easeOutCubic,
+  );
+}
 
 /// 左右に隣のカードが少し見える、1 ページの幅の割合
 double _viewportFraction(double width) =>
@@ -1113,7 +1167,6 @@ class _SpotListRow extends StatelessWidget {
     required this.isCapturing,
     required this.onCapture,
     required this.onShowResult,
-    super.key,
   });
 
   final int index;

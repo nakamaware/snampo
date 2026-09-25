@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -205,6 +207,79 @@ void main() {
 
       expect(find.text('Spot 3'), findsWidgets);
       expect(find.text('撮影する'), findsWidgets);
+    });
+
+    testWidgets('リスト表示でチップを押すと、その行が先頭に来る', (tester) async {
+      await _pump(
+        tester,
+        spots: [for (var i = 0; i < 12; i++) _todo],
+        layout: MissionSheetLayout.list,
+      );
+
+      await tester.tap(find.bySemanticsLabel('Spot 7 未発見'));
+      await tester.pumpAndSettle();
+
+      final row = find.text('Spot 7');
+      expect(row, findsOneWidget);
+      final chipsBottom =
+          tester
+              .getBottomLeft(
+                find.bySemanticsLabel(RegExp(r'Spot \d+ 未発見')).first,
+              )
+              .dy;
+      final rowTop = tester.getTopLeft(row).dy;
+      // 見出しの下余白と、行の中で文字が中央にある分だけ、文字はチップより下に来る
+      expect(rowTop, greaterThanOrEqualTo(chipsBottom - 1));
+      expect(rowTop, lessThan(chipsBottom + 40));
+      expect(find.text('Spot 1'), findsNothing);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel('Spot 7 未発見'))
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
+    });
+
+    testWidgets('リストをスクロールすると、先頭の行の番号が選ばれる', (tester) async {
+      await _pump(
+        tester,
+        spots: [for (var i = 0; i < 12; i++) _todo],
+        layout: MissionSheetLayout.list,
+      );
+      await _open(tester);
+
+      await tester.timedDrag(
+        find.byType(CustomScrollView),
+        const Offset(0, -400),
+        const Duration(seconds: 1),
+      );
+      await tester.pumpAndSettle();
+
+      final chipsBottom =
+          tester
+              .getBottomLeft(
+                find.bySemanticsLabel(RegExp(r'Spot \d+ 未発見')).first,
+              )
+              .dy;
+      String? topLabel;
+      var topDy = double.infinity;
+      for (var i = 1; i <= 12; i++) {
+        final row = find.text('Spot $i');
+        if (row.evaluate().isEmpty) continue;
+        final dy = tester.getTopLeft(row).dy;
+        if (dy < chipsBottom - 1 || dy >= topDy) continue;
+        topDy = dy;
+        topLabel = 'Spot $i 未発見';
+      }
+      expect(topLabel, isNotNull);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel(topLabel!))
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
     });
 
     testWidgets('協力プレイの発見者は「発見: 名前」と表示する', (tester) async {
