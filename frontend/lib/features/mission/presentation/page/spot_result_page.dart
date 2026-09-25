@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
-import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/genre_label.dart';
@@ -15,6 +14,7 @@ import 'package:snampo/features/mission/presentation/component/judge_rank_badge.
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
 import 'package:snampo/features/mission/presentation/component/photo_compare_viewer.dart';
 import 'package:snampo/features/mission/presentation/component/spot_result_map.dart';
+import 'package:snampo/features/mission/presentation/util/mission_format_util.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// SpotResultPage の引数
@@ -169,10 +169,10 @@ class SpotResultPage extends StatelessWidget {
                   rank: rank,
                   pointName: pointName,
                   chips: [
-                    if (isOthersDiscovery && rank != null)
-                      '$discovererNameの採点'
-                    else if (isOthersDiscovery)
-                      discovererLabel(discovererName, isCleared: true),
+                    if (discovererName != null && isOthersDiscovery)
+                      rank != null
+                          ? '$discovererNameの採点'
+                          : '発見: $discovererName',
                     if (rank == PhotoJudgeRank.miss) '発見済み',
                   ],
                   photo: _PhotoWithReference(
@@ -194,15 +194,18 @@ class SpotResultPage extends StatelessWidget {
                           rank: rank,
                         ),
                         const SizedBox(height: 18),
-                        const Divider(height: 1),
-                        const SizedBox(height: 18),
-                        _HeadingSection(
-                          headingErrorDegrees: headingErrorDegrees,
-                          rank: rank,
-                          isOthersDiscovery: isOthersDiscovery,
-                          discovererName: discovererName,
-                        ),
-                        const SizedBox(height: 18),
+                        // 向きを取れない端末では、向きのずれは出さない
+                        if (headingErrorDegrees != null) ...[
+                          const Divider(height: 1),
+                          const SizedBox(height: 18),
+                          _HeadingSection(
+                            headingErrorDegrees: headingErrorDegrees,
+                            rank: rank,
+                            isOthersDiscovery: isOthersDiscovery,
+                            discovererName: discovererName,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
                       ],
                       SizedBox(
                         height: 170,
@@ -297,14 +300,6 @@ class SpotResultPage extends StatelessWidget {
       }
     }
   }
-}
-
-/// 向きのずれの表示 (「右に12.3度」など)
-String formatHeadingErrorText(double degrees) {
-  final abs = degrees.abs();
-  if (abs < 0.05) return 'JUST!';
-  final formatted = abs.toStringAsFixed(1);
-  return degrees > 0 ? '右に$formatted度' : '左に$formatted度';
 }
 
 /// 判定の色で塗った上の帯 (判定・場所の名前・写真)
@@ -439,7 +434,8 @@ class _PhotoWithReferenceState extends State<_PhotoWithReference> {
     final large = showReferenceLarge ? widget.reference : widget.photo;
     final small = showReferenceLarge ? widget.photo : widget.reference;
     final largeLabel = showReferenceLarge ? '見本' : widget.ownerLabel;
-    final smallLabel = showReferenceLarge ? (widget.ownerLabel ?? 'あなた') : '見本';
+    // ソロでは自分の写真に名札を付けない
+    final smallLabel = showReferenceLarge ? widget.ownerLabel : '見本';
 
     return Stack(
       clipBehavior: Clip.none,
@@ -502,25 +498,26 @@ class _PhotoWithReferenceState extends State<_PhotoWithReference> {
                       fit: StackFit.expand,
                       children: [
                         _SquareImage(image: small),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: ColoredBox(
-                            color: Colors.black54,
-                            child: Text(
-                              smallLabel,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                height: 1.6,
+                        if (smallLabel != null)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: ColoredBox(
+                              color: Colors.black54,
+                              child: Text(
+                                smallLabel,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  height: 1.6,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -648,7 +645,7 @@ class _HeadingSection extends StatelessWidget {
     required this.discovererName,
   });
 
-  final double? headingErrorDegrees;
+  final double headingErrorDegrees;
   final PhotoJudgeRank rank;
   final bool isOthersDiscovery;
   final String? discovererName;
@@ -660,15 +657,6 @@ class _HeadingSection extends StatelessWidget {
       color: theme.colorScheme.onSurfaceVariant,
     );
     final heading = headingErrorDegrees;
-    if (heading == null) {
-      return Row(
-        children: [
-          Text('向きのずれ', style: muted),
-          const Spacer(),
-          Text('取得できませんでした', style: theme.textTheme.bodyMedium),
-        ],
-      );
-    }
     final owner = isOthersDiscovery ? '${discovererName ?? '発見者'}の' : 'あなたの';
     final needleColor =
         heading.abs() > photoJudgeHeadingLimitDegrees

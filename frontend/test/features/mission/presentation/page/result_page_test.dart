@@ -34,6 +34,16 @@ class _Mission extends PersistedMission {
   );
 }
 
+class _DestinationMission extends PersistedMission {
+  @override
+  Future<MissionEntity?> build(MissionSessionKind kind) async => MissionEntity(
+    departure: Coordinate(latitude: 35, longitude: 139),
+    waypoints: [_spot('湯島天満宮'), _spot('旧岩崎邸庭園')],
+    destination: _spot('上野駅 公園口'),
+    overviewPolyline: 'p',
+  );
+}
+
 class _Progress extends MissionProgressStoreNotifier {
   @override
   Future<MissionProgressEntity?> build(MissionSessionKind kind) async =>
@@ -59,7 +69,10 @@ class _Progress extends MissionProgressStoreNotifier {
       );
 }
 
-Future<void> _pump(WidgetTester tester) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  PersistedMission Function() mission = _Mission.new,
+}) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
@@ -77,7 +90,7 @@ Future<void> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        persistedMissionProvider.overrideWith(_Mission.new),
+        persistedMissionProvider.overrideWith(mission),
         missionProgressStoreProvider.overrideWith(_Progress.new),
       ],
       child: MaterialApp.router(routerConfig: router),
@@ -95,6 +108,12 @@ void main() {
       expect(find.textContaining('スポット発見'), findsOneWidget);
       expect(find.text('58分12秒 · 半径 1000 m'), findsOneWidget);
       expect(find.text('○ 未発見 1'), findsOneWidget);
+    });
+
+    testWidgets('目的地指定では、設定に目的地の名前を出す', (tester) async {
+      await _pump(tester, mission: _DestinationMission.new);
+
+      expect(find.text('58分12秒 · 目的地指定 · 上野駅 公園口'), findsOneWidget);
     });
 
     testWidgets('スポットごとに、番号と名前を出す。ソロでは撮った人の名札を付けない', (tester) async {

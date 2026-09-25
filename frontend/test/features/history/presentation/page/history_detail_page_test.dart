@@ -132,6 +132,25 @@ void main() {
       expect(find.text('SPOT 1 · 発見: ぽんず'), findsOneWidget);
     });
 
+    testWidgets('発見者のサムネが届いていないスポットを「未発見」とは出さない', (tester) async {
+      final history = _history();
+      await _pump(
+        tester,
+        history.copyWith(
+          spots: [
+            history.spots.first.copyWith(
+              userPhotoPath: null,
+              discovererUid: 'other',
+              discovererNickname: 'みさき',
+            ),
+          ],
+        ),
+      );
+
+      expect(find.text('未発見'), findsNothing);
+      expect(find.text('Good'), findsWidgets);
+    });
+
     testWidgets('写真をタップすると、見本と上下に並べた全画面を開く', (tester) async {
       await _pump(tester, _history());
 

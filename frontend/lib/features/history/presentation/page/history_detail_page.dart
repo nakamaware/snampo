@@ -21,6 +21,7 @@ import 'package:snampo/features/mission/presentation/component/map_top_bar.dart'
 import 'package:snampo/features/mission/presentation/component/mission_recap.dart';
 import 'package:snampo/features/mission/presentation/component/photo_compare_viewer.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
+import 'package:snampo/features/mission/presentation/util/mission_format_util.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// 1 件の履歴の詳細
@@ -339,7 +340,8 @@ class _SpotBlock extends StatelessWidget {
             Expanded(
               child:
                   photo == null
-                      ? const _MissingPhoto()
+                      // 協力プレイで、発見者のサムネがまだ届いていないこともある
+                      ? _MissingPhoto(isCleared: spot.isCleared)
                       : _Photo(
                         image: photo,
                         label: ownerLabel ?? 'あなた',
@@ -504,11 +506,29 @@ class _Photo extends StatelessWidget {
 }
 
 class _MissingPhoto extends StatelessWidget {
-  const _MissingPhoto();
+  const _MissingPhoto({required this.isCleared});
+
+  /// 発見済みなら、写真がないだけなので「未発見」とは出さない
+  final bool isCleared;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (isCleared) {
+      return AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: theme.colorScheme.outline,
+          ),
+        ),
+      );
+    }
     return AspectRatio(
       aspectRatio: 1,
       child: DecoratedBox(

@@ -12,3 +12,11 @@ String formatMissionDuration(DateTime start, DateTime end) {
   }
   return '$seconds秒';
 }
+
+/// 向きのずれの表示 (「右に12.3度」など)
+String formatHeadingErrorText(double degrees) {
+  final abs = degrees.abs();
+  if (abs < 0.05) return 'JUST!';
+  final formatted = abs.toStringAsFixed(1);
+  return degrees > 0 ? '右に$formatted度' : '左に$formatted度';
+}

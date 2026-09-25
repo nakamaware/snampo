@@ -257,7 +257,10 @@ class _ResultBody extends StatelessWidget {
           progress.startedAt,
           achieved.reduce((a, b) => a.isAfter(b) ? a : b),
         ),
-      if (radius != null) '半径 ${radius.meters} m' else '目的地指定',
+      if (radius != null)
+        '半径 ${radius.meters} m'
+      else
+        '目的地指定 · ${mission.destination.name ?? '指定したゴール地点'}',
     ].join(' · ');
   }
 

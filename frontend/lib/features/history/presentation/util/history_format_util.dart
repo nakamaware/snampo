@@ -1,9 +1,6 @@
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
-export 'package:snampo/features/mission/presentation/util/mission_format_util.dart'
-    show formatMissionDuration;
-
 /// [dateTime] を `yyyy/MM/dd HH:mm` 形式にフォーマットする
 String formatCompletedDate(DateTime dateTime) {
   final y = dateTime.year;

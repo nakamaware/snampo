@@ -86,6 +86,22 @@ void main() {
       expect(find.byType(FilledButton), findsNothing);
     });
 
+    testWidgets('向きを取れなかったら、向きのずれは出さない', (tester) async {
+      await _pump(
+        tester,
+        _args(
+          const CheckpointProgress(
+            userPhotoPath: '/not/found.jpg',
+            judgeRank: PhotoJudgeRank.good,
+            distanceErrorMeters: 18.6,
+          ),
+        ),
+      );
+
+      expect(find.text('向きのずれ'), findsNothing);
+      expect(find.textContaining('取得できませんでした'), findsNothing);
+    });
+
     testWidgets('Miss には「発見済み」を添える', (tester) async {
       await _pump(
         tester,
