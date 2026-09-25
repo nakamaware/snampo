@@ -212,6 +212,11 @@ class CoopMissionStore extends _$CoopMissionStore {
   }
 
   /// ここまでに受け取った `clears` を、履歴と進捗に反映し終えるまで待つ
+  ///
+  /// テストで、順番に行う反映 (サムネの取得や履歴の確定を含む) の完了を待つためのもの。
+  /// 画面は待たない (Mission 画面は [finalSpotSynced]、結果画面は
+  /// [settleUnsharedCaptures] で、必要なところまでだけ待つ)。
+  @visibleForTesting
   Future<void> get clearsSynced => _clearSync;
 
   final _finalSpotSynced = Completer<void>();
