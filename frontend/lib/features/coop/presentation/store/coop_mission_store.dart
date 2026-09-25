@@ -99,7 +99,14 @@ class CoopMissionStore extends _$CoopMissionStore {
       ..listen(coopRoomProvider(roomCode), (_, next) {
         final room = next.value;
         if (room != null) {
-          unawaited(_onRoom(room));
+          // ルームがすでに届いていると (ホームの「ルームに戻る」や、抜けたあとの入り直し)、
+          // build の途中で呼ばれる。作り直しの build の間は state に前の値 (isReady: true)
+          // が残っていて用意を飛ばしてしまうので、build が終わってから扱う
+          unawaited(
+            Future.microtask(() async {
+              if (ref.mounted) await _onRoom(room);
+            }),
+          );
         }
       }, fireImmediately: true)
       ..listen(coopClearsProvider(roomCode), (_, next) {
@@ -207,9 +214,7 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// バンドルを取得してミッションを端末に用意する (済んでいれば何もしない)
   Future<void> _prepare(Room room) async {
-    // ルームがすでに届いていると (ホームの「ルームに戻る」など)、build の途中で呼ばれ、
-    // state がまだない。そのときは未準備として扱う
-    if ((stateOrNull?.isReady ?? false) || _preparing) {
+    if (state.isReady || _preparing) {
       return;
     }
     _preparing = true;
