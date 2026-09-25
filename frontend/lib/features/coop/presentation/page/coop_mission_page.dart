@@ -150,7 +150,6 @@ class _CoopMissionEffects extends HookConsumerWidget {
     WidgetRef ref,
     int index, {
     required String? discovererDisplayName,
-    bool Function(CheckpointProgress checkpoint)? where,
     String? closeLabel,
   }) {
     final mission =
@@ -168,7 +167,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
       return null;
     }
     final checkpoint = checkpoints[index];
-    if (checkpoint == null || !(where?.call(checkpoint) ?? true)) {
+    if (checkpoint == null) {
       return null;
     }
     return SpotResultPageArgs(
@@ -264,11 +263,10 @@ class _CoopMissionEffects extends HookConsumerWidget {
             for (final m in members) (uid: m.uid, nickname: m.nickname),
           ])[last.clearedBy] ??
           last.nickname,
-      // 自分で撮影した (結果を見た) スポットなら開かない
-      where: (checkpoint) => checkpoint.userPhotoPath == null,
       closeLabel: _finalSpotCloseLabel,
     );
-    if (args == null) {
+    // 自分で撮影した (結果を見た) スポットなら開かない
+    if (args == null || args.checkpoint.userPhotoPath != null) {
       context.go('/coop/result');
       return;
     }
