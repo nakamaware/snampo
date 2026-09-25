@@ -774,6 +774,62 @@ final class ClearSpotUseCaseProvider
 
 String _$clearSpotUseCaseHash() => r'f3c0a6f3595715d928f1d8808b6840b9ae2b2a25';
 
+/// 共有の途中でアプリが終了した撮影の扱いを決めるユースケース
+
+@ProviderFor(resolveUnsharedCapturesUseCase)
+final resolveUnsharedCapturesUseCaseProvider =
+    ResolveUnsharedCapturesUseCaseProvider._();
+
+/// 共有の途中でアプリが終了した撮影の扱いを決めるユースケース
+
+final class ResolveUnsharedCapturesUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ResolveUnsharedCapturesUseCase,
+          ResolveUnsharedCapturesUseCase,
+          ResolveUnsharedCapturesUseCase
+        >
+    with $Provider<ResolveUnsharedCapturesUseCase> {
+  /// 共有の途中でアプリが終了した撮影の扱いを決めるユースケース
+  ResolveUnsharedCapturesUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'resolveUnsharedCapturesUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$resolveUnsharedCapturesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ResolveUnsharedCapturesUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ResolveUnsharedCapturesUseCase create(Ref ref) {
+    return resolveUnsharedCapturesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResolveUnsharedCapturesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResolveUnsharedCapturesUseCase>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$resolveUnsharedCapturesUseCaseHash() =>
+    r'3f0d96dd0dd2b186da2cf88c4448efa406b2a96a';
+
 /// 全スポットがクリアされていれば finished にするユースケース
 
 @ProviderFor(finishIfAllClearedUseCase)

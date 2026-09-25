@@ -18,6 +18,7 @@ import 'package:snampo/features/coop/application/usecase/get_coop_signed_in_uid_
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/leave_room_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/resolve_unshared_captures_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_history_use_case.dart';
@@ -131,6 +132,11 @@ ClearSpotUseCase clearSpotUseCase(Ref ref) => ClearSpotUseCase(
   rooms: ref.read(roomRepositoryProvider),
   histories: ref.read(historyRepositoryProvider),
 );
+
+/// 共有の途中でアプリが終了した撮影の扱いを決めるユースケース
+@riverpod
+ResolveUnsharedCapturesUseCase resolveUnsharedCapturesUseCase(Ref ref) =>
+    ResolveUnsharedCapturesUseCase(rooms: ref.read(roomRepositoryProvider));
 
 /// 全スポットがクリアされていれば finished にするユースケース
 @riverpod

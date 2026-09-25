@@ -9,6 +9,7 @@ import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/resolve_unshared_captures_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
@@ -406,26 +407,30 @@ class CoopMissionStore extends _$CoopMissionStore {
   ///
   /// 共有の結果を待たずに終わっているので、共有できなかった扱いにする
   /// (もう一度撮影できるようにする)。ミッションを端末に用意した直後に呼ぶ。
-  ///
-  /// サーバにそのスポットのクリアがあれば (共有は届いていて、同期の前に終了した。先着に
-  /// 負けた場合を含む) 捨てない。発見者はこのあとの同期で付く。`clears` を読めなければ、
-  /// 判断できないので何もしない。
+  /// サーバにそのスポットのクリアがあれば捨てない ([ResolveUnsharedCapturesUseCase])。
   Future<void> _discardUnsharedCaptures() async {
     final progress = await ref.read(
       missionProgressStoreProvider(MissionSessionKind.coop).future,
     );
     final indexes = [...?progress?.unsharedCaptureIndexes];
-    if (indexes.isEmpty) return;
-    final List<SpotClear> clears;
-    try {
-      clears = await ref.read(coopClearsProvider(roomCode).future);
-    } on Object catch (e) {
-      log('未共有の撮影を確かめられなかった: $e', name: 'CoopMission');
-      return;
-    }
-    final clearedSpotIds = {for (final clear in clears) clear.spotId};
+    if (progress == null || indexes.isEmpty) return;
+    final captures = <SpotId, CheckpointProgress>{};
     for (final index in indexes) {
-      if (!clearedSpotIds.contains(_spotIdAt(index))) {
+      final spotId = _spotIdAt(index);
+      final checkpoint = progress.checkpoints[index];
+      if (spotId == null || checkpoint == null) {
+        // 共有できないスポットの撮影は捨てる
+        await _discardCapture(index);
+      } else {
+        captures[spotId] = checkpoint;
+      }
+    }
+    final discard = await ref.read(resolveUnsharedCapturesUseCaseProvider)(
+      roomCode,
+      captures,
+    );
+    for (final index in indexes) {
+      if (discard.contains(_spotIdAt(index))) {
         await _discardCapture(index);
       }
     }
