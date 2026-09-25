@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/photo_judge_rank.dart';
 import 'package:snampo/core/domain/photo_judgement.dart';
@@ -68,6 +70,27 @@ void main() {
     final result = await syncClears(fx.code, [fx.clear('a', 'x')]);
 
     expect(histories.histories[fx.code]!.spots[0].discovererUid, 'x');
+    expect(result.hasAllThumbs, isFalse);
+  });
+
+  test('サムネの取得が時間内に終わらなければ、取得できなかった扱いにして先へ進む', () async {
+    // 電波が弱く、サムネの取得が終わらない
+    storage.thumbDownloadGate = Completer<void>();
+    syncClears = SyncCoopClearsUseCase(
+      storage: storage,
+      histories: histories,
+      thumbTimeout: const Duration(milliseconds: 10),
+    );
+
+    final result = await syncClears(fx.code, [
+      fx.clear('a', 'x'),
+      fx.clear('b', 'y'),
+    ]).timeout(const Duration(seconds: 1));
+
+    final spots = histories.histories[fx.code]!.spots;
+    expect(spots[0].discovererUid, 'x');
+    expect(spots[1].discovererUid, 'y');
+    expect(spots[0].discovererThumbPath, isNull);
     expect(result.hasAllThumbs, isFalse);
   });
 

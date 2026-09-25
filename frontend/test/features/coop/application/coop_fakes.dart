@@ -204,6 +204,9 @@ class FakeCoopStorage implements ICoopStorage {
 
   /// null 以外なら uploadThumb はこの Future を待つ
   Completer<void>? thumbUploadGate;
+
+  /// null 以外なら downloadThumb はこの Future を待つ
+  Completer<void>? thumbDownloadGate;
   Exception? thumbUploadError;
   Exception? thumbDownloadError;
   Exception? bundleUploadError;
@@ -247,6 +250,7 @@ class FakeCoopStorage implements ICoopStorage {
 
   @override
   Future<String> downloadThumb(String thumbPath) async {
+    await thumbDownloadGate?.future;
     if (thumbDownloadError != null) {
       throw thumbDownloadError!;
     }

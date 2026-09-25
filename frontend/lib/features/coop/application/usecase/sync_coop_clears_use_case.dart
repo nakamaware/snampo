@@ -27,11 +27,18 @@ class SyncCoopClearsUseCase {
   SyncCoopClearsUseCase({
     required ICoopStorage storage,
     required IHistoryRepository histories,
+    this.thumbTimeout = const Duration(seconds: 10),
   }) : _storage = storage,
        _histories = histories;
 
   final ICoopStorage _storage;
   final IHistoryRepository _histories;
+
+  /// サムネ 1 枚の取得を待つ時間
+  ///
+  /// 電波が弱いと Storage の取得は再試行を続けて終わらないことがある。反映は順番に行うので、
+  /// 1 枚の取得で後の反映 (結果画面へ移る前の待ち合わせなど) を止め続けないため。
+  final Duration thumbTimeout;
 
   /// 反映する (履歴がなければ何もしない)
   Future<CoopClearSyncResult> call(
@@ -55,14 +62,16 @@ class SyncCoopClearsUseCase {
     }
     for (final clear in plan.thumbsToFetch) {
       try {
-        final downloaded = await _storage.downloadThumb(clear.thumbPath);
+        final downloaded = await _storage
+            .downloadThumb(clear.thumbPath)
+            .timeout(thumbTimeout);
         await _histories.saveCoopThumb(
           roomCode: roomCode,
           spotId: clear.spotId,
           sourcePath: downloaded,
         );
       } on Object catch (e) {
-        // 次の同期で取り直す
+        // 時間切れも含め、次の同期で取り直す
         log('サムネの取得に失敗した: $e', name: 'SyncCoopClears');
       }
     }
