@@ -446,7 +446,7 @@ class CoopMissionStore extends _$CoopMissionStore {
         }
         if (pendingDiscovery == null &&
             pendingFinalDiscovery == null &&
-            !identical(snapshot, _latestClears)) {
+            _isSuperseded(snapshot)) {
           // 新しい clears が届いた。残りのサムネの取り直しはその反映に任せ、新しい発見
           // (最後のスポットなど) を出すのを遅らせない
           break;
@@ -473,6 +473,10 @@ class CoopMissionStore extends _$CoopMissionStore {
       if (isAllClearedClears) _markFinalSpotSynced();
     }
   }
+
+  /// [snapshot] のあとに、新しい `clears` が届いたか
+  bool _isSuperseded(SpotClearsSnapshot snapshot) =>
+      !identical(snapshot, _latestClears);
 
   void _markFinalSpotSynced() {
     if (!_finalSpotSynced.isCompleted) _finalSpotSynced.complete();
