@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 
 import 'coop_fixtures.dart';

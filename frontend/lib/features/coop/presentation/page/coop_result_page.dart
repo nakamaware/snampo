@@ -4,7 +4,6 @@ import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/domain/entity/coop_checkpoint.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
-import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';

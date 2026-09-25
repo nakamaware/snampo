@@ -62,7 +62,15 @@ class HistoryPage extends HookConsumerWidget {
                   if (isFirstOfMonth) _MonthHeader(month),
                   _HistoryListTile(
                     record: record,
-                    onTap: () => context.push('/history/${record.id}'),
+                    onTap: () async {
+                      // 詳細で削除したら、一覧からも外す
+                      final removed = await context.push<bool>(
+                        '/history/${record.id}',
+                      );
+                      if (removed ?? false) {
+                        removedIds.value = {...removedIds.value, record.id};
+                      }
+                    },
                     onRemoved: (id) {
                       removedIds.value = {...removedIds.value, id};
                     },
