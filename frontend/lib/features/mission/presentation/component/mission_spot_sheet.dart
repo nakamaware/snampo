@@ -149,7 +149,7 @@ class MissionSpotSheet extends HookWidget {
           );
         }
 
-        // 見出しの上下スワイプは、リストの位置に関係なくシートの高さだけを変える
+        // 取っ手とタイトル行の上下スワイプは、リストの位置に関係なくシートの高さだけを変える
         void dragSheet(double deltaY) {
           if (!sheetController.isAttached || available <= 0) return;
           sheetController.jumpTo(
@@ -470,76 +470,101 @@ class _SheetHeader extends StatelessWidget {
       );
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      onVerticalDragUpdate: (details) => onVerticalDrag(details.delta.dy),
-      onVerticalDragEnd:
-          (details) => onVerticalDragEnd(details.primaryVelocity ?? 0),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 12),
-        child: Column(
-          children: [
-            Container(
-              width: 32,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  // 狭い幅では、進み具合を優先してタイトルを省略する
-                  Flexible(
-                    child: Text(
-                      'ミッション',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge,
-                    ),
+    return Column(
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          onVerticalDragUpdate: (details) => onVerticalDrag(details.delta.dy),
+          onVerticalDragEnd:
+              (details) => onVerticalDragEnd(details.primaryVelocity ?? 0),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    color: colorScheme.onSurfaceVariant,
-                    tooltip: isCarousel ? 'リストで表示' : 'カードで表示',
-                    icon: Icon(
-                      isCarousel
-                          ? Icons.view_list_outlined
-                          : Icons.view_carousel_outlined,
-                    ),
-                    onPressed:
-                        () => onLayoutChanged(
-                          isCarousel
-                              ? MissionSheetLayout.list
-                              : MissionSheetLayout.carousel,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      // 狭い幅では、進み具合を優先してタイトルを省略する
+                      Flexible(
+                        child: Text(
+                          'ミッション',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge,
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        color: colorScheme.onSurfaceVariant,
+                        tooltip: isCarousel ? 'リストで表示' : 'カードで表示',
+                        icon: Icon(
+                          isCarousel
+                              ? Icons.view_list_outlined
+                              : Icons.view_carousel_outlined,
+                        ),
+                        onPressed:
+                            () => onLayoutChanged(
+                              isCarousel
+                                  ? MissionSheetLayout.list
+                                  : MissionSheetLayout.carousel,
+                            ),
+                      ),
+                      const Spacer(),
+                      trailing,
+                    ],
                   ),
-                  const Spacer(),
-                  trailing,
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            _SpotChips(
-              spots: spots,
-              currentIndex: currentIndex,
-              onTap: onTapSpot,
-            ),
-          ],
+          ),
         ),
-      ),
+        // チップとその上下の空きは、タップも縦ドラッグもシートの高さに使わない。
+        // ここで縦ドラッグを消費しないと、中身が上端のときシートが動いてしまう。
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragUpdate: _holdSheetStill,
+          onVerticalDragEnd: _holdSheetStillEnd,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                _SpotChips(
+                  spots: spots,
+                  currentIndex: currentIndex,
+                  onTap: onTapSpot,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
+/// チップ帯の縦ドラッグは、シートの高さも中身のスクロールも変えない
+void _holdSheetStill(DragUpdateDetails _) {}
+
+/// [_holdSheetStill] のドラッグを終わらせる
+void _holdSheetStillEnd(DragEndDetails _) {}
+
 /// スポットごとの進み具合のチップ
 ///
 /// 等分して「Spot n」→ 等分して番号だけ → 固定幅で横スクロール、の順に詰める。
+/// 見た目の間隔は空けたまま、その隙間は左右のチップの当たり判定に含める。
 class _SpotChips extends HookWidget {
   const _SpotChips({
     required this.spots,
@@ -583,11 +608,18 @@ class _SpotChips extends HookWidget {
       return null;
     }, [currentIndex]);
 
+    /// チップの間の見た目の隙間を、左右の当たり判定で半分ずつ持つ
+    EdgeInsets hitPadding(int index) => EdgeInsets.only(
+      left: index == 0 ? 0 : _gap / 2,
+      right: index == count - 1 ? 0 : _gap / 2,
+    );
+
     Widget chip(int index, {required bool showLabel}) => _SpotChip(
       index: index,
       isCleared: spots[index].isCleared,
       isCurrent: index == currentIndex,
       showLabel: showLabel,
+      hitPadding: hitPadding(index),
       onTap: () => onTap(index),
     );
 
@@ -605,12 +637,10 @@ class _SpotChips extends HookWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (var i = 0; i < count; i++) ...[
-                    if (i > 0) const SizedBox(width: _gap),
+                  for (var i = 0; i < count; i++)
                     Expanded(
                       child: chip(i, showLabel: perChip >= _labeledMinWidth),
                     ),
-                  ],
                 ],
               ),
             );
@@ -628,19 +658,20 @@ class _SpotChips extends HookWidget {
                   ],
                   stops: [0, 0.05, 0.95, 1],
                 ).createShader(bounds),
-            child: ListView.separated(
+            child: ListView.builder(
               controller: scrollController,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
               ),
               itemCount: count,
-              separatorBuilder: (_, __) => const SizedBox(width: _gap),
-              itemBuilder:
-                  (context, index) => SizedBox(
-                    width: _numberWidth,
-                    child: chip(index, showLabel: false),
-                  ),
+              itemBuilder: (context, index) {
+                final padding = hitPadding(index);
+                return SizedBox(
+                  width: _numberWidth + padding.horizontal,
+                  child: chip(index, showLabel: false),
+                );
+              },
             ),
           );
         },
@@ -659,6 +690,7 @@ class _SpotChip extends HookWidget {
     required this.isCurrent,
     required this.showLabel,
     required this.onTap,
+    this.hitPadding = EdgeInsets.zero,
   });
 
   final int index;
@@ -666,6 +698,9 @@ class _SpotChip extends HookWidget {
   final bool isCurrent;
   final bool showLabel;
   final VoidCallback onTap;
+
+  /// 見た目の外側まで広げる当たり判定 (チップ間の隙間)
+  final EdgeInsets hitPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -717,39 +752,46 @@ class _SpotChip extends HookWidget {
       onTap: onTap,
       label: 'Spot ${index + 1} ${isCleared ? 'クリア' : '未発見'}',
       excludeSemantics: true,
-      child: Material(
-        color: colorScheme.secondaryContainer.withValues(alpha: fill),
-        shape: shape,
-        child: InkWell(
-          customBorder: shape,
-          onTap: onTap,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 未クリアは文字だけ。空の丸はラジオや「正解」に見える
-              if (shownCleared) ...[
-                Transform.scale(
-                  scale: Curves.easeOutBack.transform(progress),
-                  child: Icon(
-                    Icons.check,
-                    size: 16,
-                    color: colorScheme.primary,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: hitPadding,
+          child: Material(
+            color: colorScheme.secondaryContainer.withValues(alpha: fill),
+            shape: shape,
+            child: InkWell(
+              customBorder: shape,
+              onTap: onTap,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 未クリアは文字だけ。空の丸はラジオや「正解」に見える
+                  if (shownCleared) ...[
+                    Transform.scale(
+                      scale: Curves.easeOutBack.transform(progress),
+                      child: Icon(
+                        Icons.check,
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Flexible(
+                    child: Text(
+                      showLabel ? 'Spot ${index + 1}' : '${index + 1}',
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontSize: 13,
+                        color: foreground,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-              ],
-              Flexible(
-                child: Text(
-                  showLabel ? 'Spot ${index + 1}' : '${index + 1}',
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontSize: 13,
-                    color: foreground,
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

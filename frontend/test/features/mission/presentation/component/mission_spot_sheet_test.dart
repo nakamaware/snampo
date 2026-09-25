@@ -268,6 +268,88 @@ void main() {
       expect(controller.offset, parked);
     });
 
+    testWidgets('チップの隙間をタップすると、近いスポットが選ばれシートは閉じない', (tester) async {
+      for (final count in const [3, 20]) {
+        // 同じテスト内で作り直すときは、前のシートの状態を残さない
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _pump(tester, spots: [for (var i = 0; i < count; i++) _todo]);
+        await _open(tester);
+        final sheet = find.byType(CustomScrollView);
+        final opened = tester.getSize(sheet).height;
+        final left = tester.getRect(find.bySemanticsLabel('Spot 1 未発見'));
+        final right = tester.getRect(find.bySemanticsLabel('Spot 2 未発見'));
+        // 見た目の隙間の中点は境目なので、右のチップ側へ寄せる
+        final boundary = (left.right + right.left) / 2;
+
+        await tester.tapAt(Offset(boundary + 2, left.center.dy));
+        await tester.pumpAndSettle();
+
+        expect(tester.getSize(sheet).height, opened, reason: '$count スポット');
+        expect(
+          tester
+              .getSemantics(find.bySemanticsLabel('Spot 2 未発見'))
+              .flagsCollection
+              .isSelected,
+          Tristate.isTrue,
+          reason: '$count スポット',
+        );
+      }
+    });
+
+    testWidgets('タイトルとチップの間をタップしても、シートも選択も変わらない', (tester) async {
+      await _pump(tester, spots: const [_todo, _todo, _todo]);
+      await _open(tester);
+      final sheet = find.byType(CustomScrollView);
+      final opened = tester.getSize(sheet).height;
+      final chipsTop =
+          tester.getTopLeft(find.bySemanticsLabel('Spot 1 未発見')).dy;
+
+      await tester.tapAt(Offset(200, chipsTop - 4));
+      await tester.pumpAndSettle();
+
+      expect(tester.getSize(sheet).height, opened);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel('Spot 1 未発見'))
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
+    });
+
+    testWidgets('チップを縦にドラッグしても、シートの大きさとリストの位置は変わらない', (tester) async {
+      await _pump(
+        tester,
+        spots: [for (var i = 0; i < 12; i++) _todo],
+        layout: MissionSheetLayout.list,
+      );
+      await _open(tester);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+
+      final sheet = find.byType(CustomScrollView);
+      final controller = tester.widget<CustomScrollView>(sheet).controller!;
+      final parked = controller.offset;
+      final opened = tester.getSize(sheet).height;
+      expect(parked, greaterThan(100));
+
+      // リストをずらすと見ている番号が変わり、端のチップは画面の外へ寄る
+      Offset? chipCenter;
+      for (var i = 1; i <= 12; i++) {
+        final center = tester.getCenter(find.bySemanticsLabel('Spot $i 未発見'));
+        if (center.dx >= 8 && center.dx <= 385) {
+          chipCenter = center;
+          break;
+        }
+      }
+      expect(chipCenter, isNotNull);
+      await tester.dragFrom(chipCenter!, const Offset(0, 400));
+      await tester.pumpAndSettle();
+
+      expect(tester.getSize(sheet).height, opened);
+      expect(controller.offset, parked);
+    });
+
     testWidgets('リストをスクロールすると、先頭の行の番号が選ばれる', (tester) async {
       await _pump(
         tester,
