@@ -66,6 +66,10 @@ class CoopResultPage extends HookConsumerWidget {
   }
 }
 
+/// 共有の途中で終了した撮影を確かめられず、結果を残したときの表示
+const _unsettledCapturesMessage =
+    '撮影を確かめられなかったため、結果を残しました。電波の良い場所で、ホームから開き直してください';
+
 class _CoopResultPageExtension extends ResultPageExtension {
   const _CoopResultPageExtension({
     required this.roomCode,
@@ -142,12 +146,14 @@ class _CoopResultPageExtension extends ResultPageExtension {
   /// 共有の途中で終了した撮影の扱いを決め終えていれば片付けてよい
   /// (決められなければ、サーバに届いていた撮影の写真を消さないよう片付けない)
   @override
-  Future<bool> canClearProgress(WidgetRef ref) async {
+  Future<String?> keepProgressReason(WidgetRef ref) async {
     final roomCode = this.roomCode;
-    if (roomCode == null) return true;
-    return ref
-        .read(coopMissionStoreProvider(roomCode).notifier)
-        .settleUnsharedCaptures();
+    if (roomCode == null) return null;
+    final settled =
+        await ref
+            .read(coopMissionStoreProvider(roomCode).notifier)
+            .settleUnsharedCaptures();
+    return settled ? null : _unsettledCapturesMessage;
   }
 
   /// 端末の「ルームに戻る」を消す (履歴の同期は続く)

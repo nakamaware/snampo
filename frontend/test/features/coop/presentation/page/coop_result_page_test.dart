@@ -62,7 +62,10 @@ void main() {
       final router = GoRouter(
         initialLocation: '/coop/result',
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const Scaffold(body: Text('home')),
+          ),
           GoRoute(
             path: '/coop/result',
             builder: (_, _) => const CoopResultPage(),
@@ -221,6 +224,7 @@ void main() {
       expect(photos.deleted, isNot(contains('/b.jpg')));
       expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
       expect(find.text('home'), findsOneWidget);
+      expect(find.textContaining('結果を残しました'), findsOneWidget);
     });
   });
 }

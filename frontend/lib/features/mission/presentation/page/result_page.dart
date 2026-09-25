@@ -122,14 +122,12 @@ class ResultPage extends HookConsumerWidget {
     final progressStore = ref.read(missionProgressStoreProvider(kind).notifier);
     final persistedMission = ref.read(persistedMissionProvider(kind).notifier);
 
-    if (!await _extension.canClearProgress(ref)) {
+    if (await _extension.keepProgressReason(ref) case final reason?) {
       // 片付けずにホームへ戻る (ホームから、もう一度この結果画面を開ける)
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('撮影を確かめられなかったため、結果を残しました。電波の良い場所で、ホームから開き直してください'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(reason)));
         context.go('/');
       }
       return;
@@ -651,10 +649,10 @@ abstract class ResultPageExtension {
   String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
       checkpoint?.userPhotoPath;
 
-  /// 「ホームへ戻る」で、その種別の枠を片付けてよいか
+  /// 「ホームへ戻る」で、その種別の枠を片付けずに残す理由 (片付けてよければ null)
   ///
-  /// false なら片付けず ([onFinish] も呼ばず) にホームへ戻る。
-  Future<bool> canClearProgress(WidgetRef ref) async => true;
+  /// 理由があれば、それを表示して、片付けず ([onFinish] も呼ばず) にホームへ戻る。
+  Future<String?> keepProgressReason(WidgetRef ref) async => null;
 
   /// 「ホームへ戻る」で、その種別の枠を片付けたあとに呼ぶ
   Future<void> onFinish(WidgetRef ref) async {}
