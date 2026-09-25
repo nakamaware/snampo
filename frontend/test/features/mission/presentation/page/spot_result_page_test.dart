@@ -33,6 +33,7 @@ SpotResultPageArgs _args(
   bool fromSummary = false,
   String? closeLabel,
   String? discovererDisplayName,
+  bool isCoop = false,
 }) => SpotResultPageArgs(
   spotIndex: 1,
   totalCheckpointCount: 5,
@@ -41,6 +42,7 @@ SpotResultPageArgs _args(
   fromSummary: fromSummary,
   closeLabel: closeLabel,
   discovererDisplayName: discovererDisplayName,
+  isCoop: isCoop,
 );
 
 void main() {
@@ -56,6 +58,12 @@ void main() {
       expect(find.byType(JudgeDistanceBar), findsOneWidget);
       // ソロでは写真に名札を付けない
       expect(find.text('あなた'), findsNothing);
+    });
+
+    testWidgets('協力プレイでは、共有が終わる前でも自分の写真に「あなた」と付ける', (tester) async {
+      await _pump(tester, _args(_ownCapture, isCoop: true));
+
+      expect(find.text('あなた'), findsOneWidget);
     });
 
     testWidgets('ズームして撮ったら、倍率で割った距離で判定したことを出す', (tester) async {

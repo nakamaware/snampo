@@ -427,6 +427,7 @@ class SnapView extends HookConsumerWidget {
             missionPoint: missionSpots[index],
             checkpoint: checkpoint,
             isDestinationMode: isDestinationMode,
+            isCoop: params.kind == MissionSessionKind.coop,
           ),
         );
       },
@@ -510,6 +511,7 @@ Future<void> _captureSpot(
           checkpoint: checkpoint,
           isDestinationMode: isDestinationMode,
           closeLabel: extension?.spotResultCloseLabel(ref, index: spotIndex),
+          isCoop: kind == MissionSessionKind.coop,
         );
         return true;
       },

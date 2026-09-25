@@ -61,6 +61,7 @@ class ResultPage extends ConsumerWidget {
               progress: progress,
               extension: _extension,
               onFinish: () => _finishPlay(context, ref),
+              isCoop: kind == MissionSessionKind.coop,
             );
           },
           loading:
@@ -118,9 +119,11 @@ class _ResultBody extends StatelessWidget {
     required this.progress,
     required this.extension,
     required this.onFinish,
+    required this.isCoop,
   });
 
   final MissionEntity mission;
+  final bool isCoop;
   final MissionProgressEntity progress;
   final ResultPageExtension extension;
   final VoidCallback onFinish;
@@ -158,6 +161,7 @@ class _ResultBody extends StatelessWidget {
             fromSummary: true,
             isDestinationMode: isDestinationMode,
             discovererDisplayName: extension.discovererName(checkpoint),
+            isCoop: isCoop,
           ),
         );
         return;

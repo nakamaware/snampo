@@ -180,6 +180,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
         missionPoint: mission.spots[index],
         checkpoint: checkpoint,
         isDestinationMode: mission.radius == null,
+        isCoop: true,
         discovererDisplayName: discovery.discovererName,
       ),
     );
@@ -235,6 +236,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
         missionPoint: mission.spots[index],
         checkpoint: checkpoint,
         isDestinationMode: mission.radius == null,
+        isCoop: true,
         discovererDisplayName:
             displayNicknames([
               for (final m in members) (uid: m.uid, nickname: m.nickname),

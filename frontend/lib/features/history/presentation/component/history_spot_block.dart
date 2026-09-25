@@ -193,6 +193,7 @@ class HistorySpotBlock extends StatelessWidget {
         isDestinationMode: record.settings is MissionSettingsDestination,
         discovererDisplayName: discovererName,
         referenceImagePath: spot.streetViewImagePath,
+        isCoop: record.coop != null,
       ),
     );
   }

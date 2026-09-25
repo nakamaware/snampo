@@ -28,6 +28,7 @@ class SpotResultPageArgs {
     this.discovererDisplayName,
     this.closeLabel,
     this.referenceImagePath,
+    this.isCoop = false,
   });
 
   /// Spot のインデックス
@@ -60,6 +61,11 @@ class SpotResultPageArgs {
 
   /// 見本の画像のパス (履歴から開くとき。null なら [missionPoint] の画像を使う)
   final String? referenceImagePath;
+
+  /// 協力プレイのスポットか (写真に撮った人の名札を付ける)
+  ///
+  /// 撮った直後は発見の共有が終わっておらず、進捗に発見者がまだないので、これで判断する。
+  final bool isCoop;
 }
 
 /// Spot単位の採点結果画面
@@ -118,7 +124,7 @@ class SpotResultPage extends StatelessWidget {
     final ownerLabel =
         isOthersDiscovery
             ? (discovererName ?? '発見者')
-            : checkpoint.discovererUid != null
+            : args.isCoop || checkpoint.discovererUid != null
             ? 'あなた'
             : null;
     final pointName =
