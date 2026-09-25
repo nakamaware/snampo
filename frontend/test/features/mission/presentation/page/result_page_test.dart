@@ -44,6 +44,18 @@ class _DestinationMission extends PersistedMission {
   );
 }
 
+/// 7 スポット (3 列になる)。最後の 2 つは未発見
+class _ManySpotsMission extends PersistedMission {
+  @override
+  Future<MissionEntity?> build(MissionSessionKind kind) async => MissionEntity(
+    departure: Coordinate(latitude: 35, longitude: 139),
+    waypoints: [for (var i = 1; i <= 6; i++) _spot('スポット$i')],
+    destination: _spot('ゴール'),
+    overviewPolyline: 'p',
+    radius: Radius(meters: 1000),
+  );
+}
+
 class _Progress extends MissionProgressStoreNotifier {
   @override
   Future<MissionProgressEntity?> build(MissionSessionKind kind) async =>
@@ -108,6 +120,14 @@ void main() {
       expect(find.textContaining('スポット発見'), findsOneWidget);
       expect(find.text('58分12秒 · 半径 1000 m'), findsOneWidget);
       expect(find.text('○ 未発見 1'), findsOneWidget);
+    });
+
+    testWidgets('スポットが 7 つ以上なら 3 列にし、未発見には札を重ねる', (tester) async {
+      await _pump(tester, mission: _ManySpotsMission.new);
+
+      // 進捗は 3 スポット分しかないので、4 番目からは未発見
+      expect(find.text('未発見'), findsNWidgets(5));
+      expect(find.text('スポット1'), findsNothing);
     });
 
     testWidgets('目的地指定では、設定に目的地の名前を出す', (tester) async {

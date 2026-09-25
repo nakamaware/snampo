@@ -433,8 +433,10 @@ class _CompactSpotTile extends StatelessWidget {
               children: [
                 if (spot.found)
                   _TileImage(path: spot.thumbnailPath)
-                else
+                else ...[
                   _MissingSpotImage(reference: spot.reference),
+                  const Center(child: _MissingChip(compact: true)),
+                ],
                 Positioned(
                   left: 5,
                   top: 5,
@@ -539,7 +541,10 @@ class _MissingSpotImage extends StatelessWidget {
 }
 
 class _MissingChip extends StatelessWidget {
-  const _MissingChip();
+  const _MissingChip({this.compact = false});
+
+  /// 3 列の小さい写真に重ねるか (小さくする)
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -551,12 +556,16 @@ class _MissingChip extends StatelessWidget {
         border: Border.all(color: theme.colorScheme.outlineVariant, width: 1.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 7 : 10,
+          vertical: compact ? 1 : 3,
+        ),
         child: Text(
           '未発見',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: (compact
+                  ? theme.textTheme.labelSmall
+                  : theme.textTheme.labelMedium)
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ),
     );
