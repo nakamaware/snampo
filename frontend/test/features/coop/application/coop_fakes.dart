@@ -34,6 +34,9 @@ class FakeRoomRepository implements IRoomRepository {
   /// null 以外なら createClear はこの Future を待つ (オフラインの送信待ちの再現)
   Completer<void>? createClearGate;
 
+  /// null 以外なら fetchClears はこの Future を待つ (電波が弱く、返事が来ない状態の再現)
+  Completer<void>? fetchClearsGate;
+
   /// true なら createClear を Rules の拒否として失敗させる (ルームが終わったあとなど)
   bool rejectClears = false;
 
@@ -181,6 +184,7 @@ class FakeRoomRepository implements IRoomRepository {
 
   @override
   Future<List<SpotClear>> fetchClears(RoomCode code) async {
+    await fetchClearsGate?.future;
     if (offline) {
       throw StateError('offline');
     }

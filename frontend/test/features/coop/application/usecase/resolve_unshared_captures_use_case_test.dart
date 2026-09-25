@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/coop/application/usecase/resolve_unshared_captures_use_case.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -58,6 +60,20 @@ void main() {
 
   test('サーバからクリアを読めなければ (オフラインなど)、判断できないので捨てない', () async {
     rooms.offline = true;
+
+    final discard = await useCase(fx.code, {fx.spot('a'): capture});
+
+    expect(discard, isNull);
+    expect(photoInHistory('a'), isNull);
+  });
+
+  test('サーバから返事が来なければ (電波が弱いなど)、時間切れで判断できないとする', () async {
+    rooms.fetchClearsGate = Completer<void>();
+    useCase = ResolveUnsharedCapturesUseCase(
+      rooms: rooms,
+      histories: histories,
+      fetchTimeout: const Duration(milliseconds: 10),
+    );
 
     final discard = await useCase(fx.code, {fx.spot('a'): capture});
 

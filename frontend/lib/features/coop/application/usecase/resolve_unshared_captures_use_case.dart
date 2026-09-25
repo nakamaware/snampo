@@ -14,8 +14,8 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 /// (共有は届いていて、同期の前に終了した。先着に負けた場合を含む) 捨てない。
 ///
 /// クリアは監視のキャッシュではなく、サーバから読む (キャッシュが古いと、届いていた共有の
-/// 撮影を捨ててしまうため)。サーバから読めなければ、判断できないので何も捨てない
-/// (呼び出し側は、サーバの最新の値が届いたときに決め直す)。
+/// 撮影を捨ててしまうため)。サーバから読めなければ (時間内に返事が来ない場合を含む)、
+/// 判断できないので何も捨てない (呼び出し側は、サーバの最新の値が届いたときに決め直す)。
 ///
 /// 捨てない撮影は、自分の写真と採点を履歴に残す (共有のあと、履歴に残す前に終了しているため)。
 class ResolveUnsharedCapturesUseCase {
@@ -23,16 +23,20 @@ class ResolveUnsharedCapturesUseCase {
   ResolveUnsharedCapturesUseCase({
     required IRoomRepository rooms,
     required IHistoryRepository histories,
+    this.fetchTimeout = const Duration(seconds: 10),
   }) : _rooms = rooms,
        _histories = histories;
 
   final IRoomRepository _rooms;
   final IHistoryRepository _histories;
 
+  /// サーバからクリアを読むのを待つ時間 (電波が弱いときに、待たせ続けないため)
+  final Duration fetchTimeout;
+
   /// [captures] (スポット ID ごとの撮影) のうち、捨てる撮影のスポット ID を返す
   ///
   /// [upToDateClears] は、サーバの最新の値と確かめられた `clears` (監視で届いたもの)。
-  /// あればサーバから読み直さない。判断できなければ (サーバから読めない) null を返す。
+  /// あればサーバから読み直さない。判断できなければ (サーバから読めない、時間切れ) null を返す。
   Future<Set<SpotId>?> call(
     RoomCode roomCode,
     Map<SpotId, CheckpointProgress> captures, {
@@ -45,7 +49,8 @@ class ResolveUnsharedCapturesUseCase {
     try {
       clearedSpotIds = {
         for (final clear
-            in upToDateClears ?? await _rooms.fetchClears(roomCode))
+            in upToDateClears ??
+                await _rooms.fetchClears(roomCode).timeout(fetchTimeout))
           clear.spotId,
       };
     } on Object catch (e) {

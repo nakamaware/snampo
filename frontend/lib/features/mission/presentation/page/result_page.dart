@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
@@ -23,7 +24,7 @@ import 'package:snampo/features/mission/presentation/util/mission_format_util.da
 ///
 /// 上にまとめ (発見数・時間・判定の内訳)、その下にスポットの写真を並べる。
 /// 協力プレイなどのモードは、[ResultPageExtension] で部品を差し込む。
-class ResultPage extends ConsumerWidget {
+class ResultPage extends HookConsumerWidget {
   /// ResultPageのコンストラクタ
   const ResultPage({
     this.kind = MissionSessionKind.solo,
@@ -46,6 +47,8 @@ class ResultPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 「ホームへ戻る」を押してから、ホームへ移るまでの間か (押し直しを受け付けない)
+    final finishing = useState(false);
     final missionAsync = ref.watch(persistedMissionProvider(kind));
     final progressAsync = ref.watch(missionProgressStoreProvider(kind));
 
@@ -60,7 +63,10 @@ class ResultPage extends ConsumerWidget {
               mission: mission,
               progress: progress,
               extension: _extension,
-              onFinish: () => _finishPlay(context, ref),
+              onFinish:
+                  finishing.value
+                      ? null
+                      : () => _finishPlay(context, ref, finishing),
               kind: kind,
             );
           },
@@ -95,7 +101,24 @@ class ResultPage extends ConsumerWidget {
   }
 
   /// 片付ける対象は、その種別の枠だけにする
-  Future<void> _finishPlay(BuildContext context, WidgetRef ref) async {
+  ///
+  /// 片付けてよいかを確かめる間 (通信することがある) は [finishing] を true にする。
+  Future<void> _finishPlay(
+    BuildContext context,
+    WidgetRef ref,
+    ValueNotifier<bool> finishing,
+  ) async {
+    finishing.value = true;
+    try {
+      await _clearAndGoHome(context, ref);
+    } on Object {
+      // ホームへ移れなかったので、もう一度押せるようにする
+      if (context.mounted) finishing.value = false;
+      rethrow;
+    }
+  }
+
+  Future<void> _clearAndGoHome(BuildContext context, WidgetRef ref) async {
     final progressStore = ref.read(missionProgressStoreProvider(kind).notifier);
     final persistedMission = ref.read(persistedMissionProvider(kind).notifier);
 
@@ -139,7 +162,9 @@ class _ResultBody extends StatelessWidget {
   final MissionSessionKind kind;
   final MissionProgressEntity progress;
   final ResultPageExtension extension;
-  final VoidCallback onFinish;
+
+  /// 「ホームへ戻る」を押したとき (null ならホームへ移っている途中で、押せない)
+  final VoidCallback? onFinish;
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +256,13 @@ class _ResultBody extends StatelessWidget {
               minimumSize: const Size.fromHeight(52),
             ),
             onPressed: onFinish,
-            child: const Text('ホームへ戻る'),
+            child:
+                onFinish == null
+                    ? const SizedBox.square(
+                      dimension: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                    : const Text('ホームへ戻る'),
           ),
         ),
       ),

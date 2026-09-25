@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -157,6 +159,44 @@ void main() {
             .value,
         isNull,
       );
+    });
+
+    testWidgets('撮影を確かめている間は、ホームへ戻るボタンを押せず、確かめていることを表示する', (tester) async {
+      await openFromHome(
+        tester,
+        progress: MissionProgressEntity(
+          startedAt: createdAt,
+          roomCode: code,
+          checkpoints: const [
+            null,
+            CheckpointProgress(userPhotoPath: '/b.jpg'),
+            null,
+            null,
+          ],
+        ),
+        serverClears: [clear('b', 'me')],
+        online: false,
+      );
+      // 電波が戻ったが弱く、サーバからの返事がなかなか来ない
+      final reply = Completer<void>();
+      rooms
+        ..offline = false
+        ..fetchClearsGate = reply;
+
+      await tester.tap(find.text('ホームへ戻る'));
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+
+      reply.complete();
+      await tester.pumpAndSettle();
+
+      expect(histories.histories[code]!.spots[1].userPhotoPath, '/b.jpg');
+      expect(find.text('home'), findsOneWidget);
     });
 
     testWidgets('共有の途中で終了した撮影を確かめられなければ、片付けずにホームへ戻る (写真を消さない)', (tester) async {
