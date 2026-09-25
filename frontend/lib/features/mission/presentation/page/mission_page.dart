@@ -7,6 +7,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/config.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
@@ -16,6 +17,7 @@ import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
+import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
@@ -94,11 +96,6 @@ class MissionPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
-    final theme = Theme.of(context);
-    // 主役は地図とシートなので、タイトルは本文より一段大きい程度にする
-    final textStyle = (theme.textTheme.titleMedium ?? const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary, fontSize: 18);
-
     // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
     // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
     //
@@ -155,18 +152,10 @@ class MissionPage extends HookConsumerWidget {
       loading: () => const MissionLoadingView(),
       error: (error, stackTrace) {
         log('error: $error');
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('On MISSION', style: textStyle),
-            centerTitle: true,
-            backgroundColor: theme.colorScheme.primary,
-          ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [const Text('エラーが発生しました'), Text('$error')],
-            ),
-          ),
+        return MissionErrorView(
+          onRetry: () => ref.invalidate(missionStoreProvider(_params)),
+          detail: Env.isDev ? '$error' : null,
+          actions: extension?.topActions(context) ?? const [],
         );
       },
     );
