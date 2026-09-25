@@ -357,7 +357,7 @@ stateDiagram-v2
 |---|---|---|---|---|
 | `rooms/{code}` | メンバーまたはホスト。入室前の存在確認 (`get`) は認証済みなら可 | 認証済みで `hostId == auth.uid`。create-only で、期限の値は作成時刻から計算した値と一致すること | ホストのみ、遊べる期限内。変更できるフィールドは `status`、`settings`、`missionRef`、`spotIds`、`generationError`、`finishReason`、`startedAt`、`finishedAt`。例外として、全スポットがクリアされたときは抜けていないメンバーも `playing` → `finished` (`allCleared`) に更新できる | 不可 |
 | `members/{uid}` | メンバー | 本人 (`uid == auth.uid`) のみ。遊べる期限内 | 本人のみ。`nickname` と `leftAt` だけ変更できる | 不可 |
-| `clears/{spotId}` | メンバー | 抜けていない (`leftAt` のない) メンバーで、`status == playing` かつ遊べる期限内。`clearedBy == auth.uid`。`spotId` が `spotIds` に含まれていること。`thumbPath` は必須。`judgement` は任意で、書いた項目だけ型と範囲を確認する | 不可 | 不可 |
+| `clears/{spotId}` | メンバー | 抜けていない (`leftAt` のない) メンバーで、`status == playing` かつ遊べる期限内。`clearedBy == auth.uid`。`spotId` が `spotIds` に含まれていること。`thumbPath` は必須で、自分がそのスポットに上げたサムネのパス (`rooms/{code}/thumbs/{spotId}/{auth.uid}.jpg`。`{spotId}` の `geo:` の `:` と `,` は `~` にしたもの) であること。`judgement` は任意で、書いた項目だけ型と範囲を確認する | 不可 | 不可 |
 
 - 「全スポットがクリアされたときはメンバーも `finished` にできる」の「全スポットがクリアされたか」は、Rules では検証しない
   - スポットは最大 26 件あり、Rules が 1 回に参照できるドキュメント数の上限を超えるため
@@ -391,7 +391,7 @@ stateDiagram-v2
     - ルーム本体は 7.1 のとおり、入室前の存在確認のため認証済みなら `get` できる (一覧の取得はできない)
   - `clears` は 2 回目の作成 (上書き) ができない (先着勝ち)
   - 他人の `uid` を `clearedBy` にして書けない
-  - `thumbPath` のないクリアは作成できない。作成したクリアは誰も変更できない
+  - `thumbPath` のないクリアや、自分がそのスポットに上げたサムネ以外のパスのクリアは作成できない。作成したクリアは誰も変更できない
   - `judgement` は正しい形なら書ける。判定の値や数値の範囲がおかしいもの、余計な項目があるものは書けない
   - 遊べる期限を過ぎたルームには書けない。保持期限内なら読める
   - `status` と `settings` の変更はホストだけ (全スポットがクリアされたときの `finished` は例外)

@@ -13,7 +13,7 @@ import {
   Timestamp,
   updateDoc,
 } from "firebase/firestore";
-import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import {
   HOST,
@@ -64,12 +64,22 @@ function newRoom(hostId: string, createdAtMs = Date.now()) {
   };
 }
 
-function newClear(uid: string, deleteAt: Timestamp, extra: object = {}) {
+/** アプリがサムネを上げる Storage のパス (geo: の `:` と `,` は `~` にする。SpotId.pathSegment) */
+function thumbPath(spotId: string, uid: string, code = ROOM) {
+  return `rooms/${code}/thumbs/${spotId.replace(":", "~").replace(",", "~")}/${uid}.jpg`;
+}
+
+function newClear(
+  uid: string,
+  deleteAt: Timestamp,
+  extra: object = {},
+  spotId = SPOT_PLACE,
+) {
   return {
     clearedBy: uid,
     nickname: uid,
     clearedAt: serverTimestamp(),
-    thumbPath: `rooms/${ROOM}/thumbs/${SPOT_PLACE}/${uid}.jpg`,
+    thumbPath: thumbPath(spotId, uid),
     deleteAt,
     ...extra,
   };
@@ -251,7 +261,12 @@ describe("clears", () => {
 
   test("geo: のスポット ID でもクリアを作成できる", async () => {
     const { deleteAt } = await seedRoom(env);
-    await assertSucceeds(setDoc(clearRef(MEMBER, SPOT_GEO), newClear(MEMBER, deleteAt)));
+    await assertSucceeds(
+      setDoc(clearRef(MEMBER, SPOT_GEO), newClear(MEMBER, deleteAt, {}, SPOT_GEO)),
+    );
+    expect(thumbPath(SPOT_GEO, MEMBER)).toBe(
+      `rooms/${ROOM}/thumbs/geo~35.681236~139.767125/${MEMBER}.jpg`,
+    );
   });
 
   test("2 回目の作成 (上書き) はできない (先着勝ち)", async () => {
@@ -289,6 +304,31 @@ describe("clears", () => {
     await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt, { thumbPath: null })));
     const { thumbPath: _, ...withoutThumb } = newClear(MEMBER, deleteAt);
     await assertFails(setDoc(clearRef(MEMBER), withoutThumb));
+  });
+
+  test("thumbPath は、そのスポットの自分のサムネのパスでなければ作成できない", async () => {
+    const { deleteAt } = await seedRoom(env);
+    const invalid = [
+      thumbPath(SPOT_PLACE, HOST),
+      thumbPath(SPOT_GEO, MEMBER),
+      thumbPath(SPOT_PLACE, MEMBER, "WXYZ89"),
+      `rooms/${ROOM}/mission/bundle.json`,
+      `https://example.com/${MEMBER}.jpg`,
+      "",
+      1,
+    ];
+    for (const path of invalid) {
+      await assertFails(setDoc(clearRef(MEMBER), newClear(MEMBER, deleteAt, { thumbPath: path })));
+    }
+    // geo: のスポットは、`:` と `,` を `~` にしたパス (エンコードしていないパスは不可)
+    await assertFails(
+      setDoc(
+        clearRef(MEMBER, SPOT_GEO),
+        newClear(MEMBER, deleteAt, {
+          thumbPath: `rooms/${ROOM}/thumbs/${SPOT_GEO}/${MEMBER}.jpg`,
+        }),
+      ),
+    );
   });
 
   test("発見者の採点 (judgement) を一緒に書ける", async () => {
@@ -376,7 +416,7 @@ describe("遊べる期限", () => {
         clearedBy: MEMBER,
         nickname: MEMBER,
         clearedAt: Timestamp.now(),
-        thumbPath: `rooms/${ROOM}/thumbs/${SPOT_PLACE}/${MEMBER}.jpg`,
+        thumbPath: thumbPath(SPOT_PLACE, MEMBER),
         deleteAt: Timestamp.now(),
       });
     });
