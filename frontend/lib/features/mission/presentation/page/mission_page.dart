@@ -462,6 +462,7 @@ Future<void> _captureSpot(
   await router.push<void>(
     '/camera',
     extra: CameraPageArgs(
+      title: 'Spot ${spotIndex + 1}',
       referenceImageBase64: missionPoint.imageBase64,
       loadingMessage: extension?.captureLoadingMessage ?? '採点中...',
       onPhotoAccepted: (capturedFile, zoomLevel) async {

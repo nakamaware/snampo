@@ -1,22 +1,29 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
+import 'package:snampo/features/mission/presentation/component/camera_shoot_layout.dart';
 import 'package:snampo/features/mission/presentation/component/photo_confirm_dialog.dart';
 
 /// カメラページの引数
 class CameraPageArgs {
   /// CameraPageArgsのコンストラクタ
   const CameraPageArgs({
+    required this.title,
     required this.referenceImageBase64,
     required this.onPhotoAccepted,
     this.loadingMessage = '採点中...',
   });
+
+  /// 上に出すタイトル (例: Spot 2)
+  final String title;
 
   /// 正解画像の base64 文字列
   final String referenceImageBase64;
@@ -56,6 +63,9 @@ class CameraPage extends StatefulWidget {
 }
 
 class _CameraPageState extends State<CameraPage> {
+  late final _referenceImage = MemoryImage(
+    base64Decode(widget.args.referenceImageBase64),
+  );
   CameraController? _controller;
   bool _isInitialized = false;
   double _minZoomLevel = 1;
@@ -65,6 +75,7 @@ class _CameraPageState extends State<CameraPage> {
   int _activePointers = 0;
   bool _isSettingZoomLevel = false;
   double? _queuedZoomLevel;
+  bool _isCapturing = false;
 
   @override
   void initState() {
@@ -241,142 +252,115 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized || _controller == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    final controller = _controller;
+    final isReady = _isInitialized && controller != null;
 
-    final theme = Theme.of(context);
-    final textStyle = (theme.textTheme.displaySmall ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
-    // FAB (56dp) + FAB margin (16dp) + safe area + gap (16dp)
-    final sliderBottom = MediaQuery.paddingOf(context).bottom + 56 + 16 + 16;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Take SNAP', style: textStyle),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-      ),
-      body: Listener(
-        onPointerDown: _handlePointerDown,
-        onPointerUp: _handlePointerUp,
-        onPointerCancel: _handlePointerCancel,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onScaleStart: _handleScaleStart,
-          onScaleUpdate: _handleScaleUpdate,
-          onScaleEnd: _handleScaleEnd,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const ColoredBox(color: Colors.black),
-              // カメラプレビューを正方形に制限して表示
-              Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: ClipRect(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: 1,
-                        height: _controller!.value.aspectRatio,
-                        child: CameraPreview(_controller!),
-                      ),
-                    ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: CameraShootLayout(
+            title: widget.args.title,
+            referenceImage: _referenceImage,
+            viewfinder:
+                isReady
+                    ? _buildPreview(controller)
+                    : const Center(child: CircularProgressIndicator()),
+            controls: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isReady)
+                  _ZoomChips(
+                    minZoomLevel: _minZoomLevel,
+                    maxZoomLevel: _maxZoomLevel,
+                    currentZoomLevel: _currentZoomLevel,
+                    onSelected: (value) {
+                      setState(() => _currentZoomLevel = value);
+                      _baseZoomLevel = value;
+                      _setZoomLevel(value);
+                    },
                   ),
+                const SizedBox(height: 16),
+                _ShutterButton(
+                  onPressed:
+                      isReady && !_isCapturing ? _onShutterPressed : null,
                 ),
-              ),
-              Positioned(
-                top: 16,
-                right: 16,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      '${_currentZoomLevel.toStringAsFixed(1)}x',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: sliderBottom,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.zoom_out,
-                        color: Colors.white70,
-                        size: 20,
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: _currentZoomLevel.clamp(
-                            _minZoomLevel,
-                            _maxZoomLevel,
-                          ),
-                          min: _minZoomLevel,
-                          max: _maxZoomLevel,
-                          onChanged: (value) {
-                            setState(() => _currentZoomLevel = value);
-                            _setZoomLevel(value);
-                          },
-                          activeColor: Colors.white,
-                          inactiveColor: Colors.white38,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.zoom_in,
-                        color: Colors.white70,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          try {
-            await _handleCapture(context);
-          } on PhotoRejectedException catch (e) {
-            if (!context.mounted) return;
-            await _showErrorDialog(e.message);
-          } on LocationUnavailableException {
-            if (!context.mounted) return;
-            await _showErrorDialog(
-              '現在地を取得できなかったため、採点できませんでした。'
-              '端末の位置情報をオンにして、もう一度撮影してください。',
-            );
-          } catch (e) {
-            if (!context.mounted) return;
-            await _showErrorDialog('写真の撮影に失敗しました。');
-          }
-        },
-        child: const Icon(Icons.camera_alt),
-      ),
-      // 撮影ボタンの位置を中央に設定
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+  }
+
+  /// ピンチでズームできる、正方形に切り取ったプレビュー
+  Widget _buildPreview(CameraController controller) {
+    return Listener(
+      onPointerDown: _handlePointerDown,
+      onPointerUp: _handlePointerUp,
+      onPointerCancel: _handlePointerCancel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onScaleStart: _handleScaleStart,
+        onScaleUpdate: _handleScaleUpdate,
+        onScaleEnd: _handleScaleEnd,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: 1,
+                height: controller.value.aspectRatio,
+                child: CameraPreview(controller),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    '${_currentZoomLevel.toStringAsFixed(1)}x',
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onShutterPressed() async {
+    setState(() => _isCapturing = true);
+    try {
+      await _handleCapture(context);
+    } on PhotoRejectedException catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog(e.message);
+    } on LocationUnavailableException {
+      if (!mounted) return;
+      await _showErrorDialog(
+        '現在地を取得できなかったため、採点できませんでした。'
+        '端末の位置情報をオンにして、もう一度撮影してください。',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog('写真の撮影に失敗しました。');
+    } finally {
+      if (mounted) setState(() => _isCapturing = false);
+    }
   }
 
   Future<XFile> _cropToSquare(XFile original) async {
@@ -512,5 +496,121 @@ class _CameraPageState extends State<CameraPage> {
         await _controller!.resumePreview();
       }
     }
+  }
+}
+
+/// ズームの倍率を選ぶボタン (1x・2x・4x のうち、カメラが対応するもの)
+///
+/// 2x に届かないカメラでは、1x と最大の倍率を出す。
+/// ピンチで間の倍率にもできる。そのときはどのボタンも選ばない。
+class _ZoomChips extends StatelessWidget {
+  const _ZoomChips({
+    required this.minZoomLevel,
+    required this.maxZoomLevel,
+    required this.currentZoomLevel,
+    required this.onSelected,
+  });
+
+  final double minZoomLevel;
+  final double maxZoomLevel;
+  final double currentZoomLevel;
+  final ValueChanged<double> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final levels = [
+      for (final level in const [1.0, 2.0, 4.0])
+        if (level >= minZoomLevel && level <= maxZoomLevel) level,
+    ];
+    if (levels.length == 1 && maxZoomLevel >= 1.2) levels.add(maxZoomLevel);
+    if (levels.length < 2) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final level in levels)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _ZoomChip(
+              label: '${_formatZoomLevel(level)}x',
+              isSelected: (currentZoomLevel - level).abs() < 0.05,
+              onPressed: () => onSelected(level),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// 整数ならそのまま (2)、そうでなければ小数 1 桁 (1.5)
+String _formatZoomLevel(double level) =>
+    level == level.roundToDouble()
+        ? level.toStringAsFixed(0)
+        : level.toStringAsFixed(1);
+
+class _ZoomChip extends StatelessWidget {
+  const _ZoomChip({
+    required this.label,
+    required this.isSelected,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      selected: isSelected,
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          minimumSize: const Size.square(40),
+          fixedSize: const Size.square(40),
+          padding: EdgeInsets.zero,
+          shape: const CircleBorder(),
+          backgroundColor: isSelected ? Colors.white : Colors.white12,
+          foregroundColor: isSelected ? Colors.black : Colors.white,
+          textStyle: Theme.of(context).textTheme.labelMedium,
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+/// 白い丸のシャッターボタン
+class _ShutterButton extends StatelessWidget {
+  const _ShutterButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = onPressed != null;
+    return Semantics(
+      button: true,
+      enabled: isEnabled,
+      label: '撮影',
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: 76,
+          height: 76,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isEnabled ? Colors.white : Colors.white38,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
