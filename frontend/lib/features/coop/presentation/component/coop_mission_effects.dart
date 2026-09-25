@@ -19,7 +19,7 @@ const finalSpotCloseLabel = '結果を見る';
 /// 最後のスポットの結果画面を開く前に、その発見者とサムネの反映を待つ時間
 const _finalSpotSyncTimeout = Duration(seconds: 10);
 
-/// 最後のスポットの結果画面を開いたか
+/// 最後のスポットの結果画面を開くまでの段階 (まだ開いていない・待ち合わせ中・開いた)
 enum _FinalSpotPhase {
   /// まだ開いていない (待ち合わせのあとに開けなかった場合を含む)
   notOpened,
