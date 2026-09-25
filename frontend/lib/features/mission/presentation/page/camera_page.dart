@@ -506,7 +506,8 @@ class _CameraPageState extends State<CameraPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         LoadingAnimationWidget.staggeredDotsWave(
-                          color: Colors.blue,
+                          // 黒い背景でも見えるよう、アプリの緑の明るい方を使う
+                          color: Theme.of(context).colorScheme.inversePrimary,
                           size: 100,
                         ),
                         const SizedBox(height: 16),
