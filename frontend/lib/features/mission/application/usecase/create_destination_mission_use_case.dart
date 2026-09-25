@@ -18,10 +18,11 @@ class CreateDestinationMissionUseCase {
   ///
   /// [destination] は目的地の座標
   Future<MissionEntity> call(Coordinate destination) async {
-    try {
-      // 現在位置を取得
-      final currentLocation = await _locationService.getCurrentPosition();
+    // 現在位置を取得 (取れなければ、画面で位置情報の案内を出せるよう
+    // LocationUnavailableException をそのまま投げる)
+    final currentLocation = await _locationService.getCurrentPosition();
 
+    try {
       // ミッション情報を取得
       final missionInfo = await _repository.createDestinationMission(
         currentLocation: currentLocation,

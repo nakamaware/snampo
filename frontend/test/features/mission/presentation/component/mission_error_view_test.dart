@@ -30,4 +30,15 @@ void main() {
     );
     expect(find.text('DioException'), findsNothing);
   });
+
+  testWidgets('現在地を取得できなかったときは、位置情報をオンにするよう案内する', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MissionErrorView(onRetry: () {}, locationUnavailable: true),
+      ),
+    );
+
+    expect(find.text('端末の位置情報をオンにして、\nもう一度お試しください'), findsOneWidget);
+    expect(find.text('電波の良い場所で、もう一度お試しください'), findsNothing);
+  });
 }

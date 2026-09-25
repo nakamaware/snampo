@@ -13,6 +13,7 @@ import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
@@ -156,6 +157,7 @@ class MissionPage extends HookConsumerWidget {
         log('error: $error');
         return MissionErrorView(
           onRetry: () => ref.invalidate(missionStoreProvider(_params)),
+          locationUnavailable: error is LocationUnavailableException,
           detail: Env.isDev ? '$error' : null,
           actions: extension?.topActions(context) ?? const [],
         );

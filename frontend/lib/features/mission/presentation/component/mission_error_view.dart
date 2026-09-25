@@ -9,6 +9,7 @@ class MissionErrorView extends StatelessWidget {
   /// [MissionErrorView] を作成する
   const MissionErrorView({
     required this.onRetry,
+    this.locationUnavailable = false,
     this.detail,
     this.actions = const [],
     super.key,
@@ -16,6 +17,9 @@ class MissionErrorView extends StatelessWidget {
 
   /// もう一度読み込む
   final VoidCallback onRetry;
+
+  /// 現在地を取得できなかったか (位置情報をオンにする案内を出す)
+  final bool locationUnavailable;
 
   /// エラーの詳細 (開発用。null なら出さない)
   final String? detail;
@@ -47,7 +51,9 @@ class MissionErrorView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.cloud_off_outlined,
+                      locationUnavailable
+                          ? Icons.location_off_outlined
+                          : Icons.cloud_off_outlined,
                       size: 56,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -59,7 +65,9 @@ class MissionErrorView extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '電波の良い場所で、もう一度お試しください',
+                      locationUnavailable
+                          ? '端末の位置情報をオンにして、\nもう一度お試しください'
+                          : '電波の良い場所で、もう一度お試しください',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
