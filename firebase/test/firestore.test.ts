@@ -304,6 +304,7 @@ describe("clears", () => {
             guessLatitude: 35.68,
             guessLongitude: 139.76,
             capturedHeading: 270,
+            zoomLevel: 2,
           },
         }),
       ),
@@ -331,6 +332,9 @@ describe("clears", () => {
       { rank: "good", distanceErrorMeters: 1, guessLatitude: 35 },
       { rank: "good", distanceErrorMeters: 1, guessLatitude: 91, guessLongitude: 139 },
       { rank: "good", distanceErrorMeters: 1, capturedHeading: 400 },
+      { rank: "good", distanceErrorMeters: 1, zoomLevel: 0 },
+      { rank: "good", distanceErrorMeters: 1, zoomLevel: 101 },
+      { rank: "good", distanceErrorMeters: 1, zoomLevel: "2" },
       { rank: "good", distanceErrorMeters: 1, photoUrl: "https://example.com" },
       "good",
     ];

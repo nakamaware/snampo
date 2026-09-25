@@ -13,6 +13,7 @@ void main() {
         headingErrorDegrees: 12,
         guessPosition: Coordinate(latitude: 35.68, longitude: 139.76),
         capturedHeading: 270,
+        zoomLevel: 2,
       );
 
       final data = RoomMapper.judgementToFirestore(judgement);
@@ -24,6 +25,7 @@ void main() {
         'guessLatitude': 35.68,
         'guessLongitude': 139.76,
         'capturedHeading': 270,
+        'zoomLevel': 2,
       });
       expect(RoomMapper.judgementFromFirestore(data), judgement);
     });

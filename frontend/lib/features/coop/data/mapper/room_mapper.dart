@@ -128,6 +128,7 @@ class RoomMapper {
     },
     if (judgement.capturedHeading case final heading?)
       'capturedHeading': heading,
+    if (judgement.zoomLevel case final zoom?) 'zoomLevel': zoom,
   };
 
   /// クリアの `judgement` を [PhotoJudgement] にする (なければ、読めなければ null)
@@ -151,6 +152,7 @@ class RoomMapper {
               ? Coordinate(latitude: lat.toDouble(), longitude: lng.toDouble())
               : null,
       capturedHeading: (value['capturedHeading'] as num?)?.toDouble(),
+      zoomLevel: (value['zoomLevel'] as num?)?.toDouble(),
     );
   }
 }
