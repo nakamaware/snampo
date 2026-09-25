@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// [PhotoCompareViewer] に並べる写真
 class ComparePhoto {
@@ -141,65 +142,69 @@ class _PhotoCompareViewerState extends State<PhotoCompareViewer> {
   Widget build(BuildContext context) {
     final photo = widget.photo;
     final fade = (_dismissDrag / 400).clamp(0.0, 0.6);
-    return Scaffold(
-      backgroundColor: const Color(0xFF0E100E).withValues(alpha: 1 - fade),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _Header(title: widget.title, caption: widget.caption),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  const gap = 8.0;
-                  final count = photo == null ? 1 : 2;
-                  final side = math.min(
-                    constraints.maxWidth - 32,
-                    (constraints.maxHeight - gap * (count - 1)) / count,
-                  );
-                  Widget frame(ComparePhoto p) => _Frame(
-                    size: side,
-                    photo: p,
-                    transformation: _transformation,
-                    onDoubleTapDown:
-                        (d) => _doubleTapPosition = d.localPosition,
-                    onDoubleTap: _toggleZoom,
-                    onInteractionStart: _onInteractionStart,
-                    onInteractionUpdate: _onInteractionUpdate,
-                    onInteractionEnd: _onInteractionEnd,
-                  );
-                  return AnimatedContainer(
-                    duration:
-                        _dismissing
-                            ? Duration.zero
-                            : const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    transform: Matrix4.translationValues(0, _dismissDrag, 0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        frame(widget.reference),
-                        if (photo != null) ...[
-                          const SizedBox(height: gap),
-                          frame(photo),
+    // 黒い背景でもステータスバーのアイコンが見えるよう、明るい色にする
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0E100E).withValues(alpha: 1 - fade),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _Header(title: widget.title, caption: widget.caption),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    const gap = 8.0;
+                    final count = photo == null ? 1 : 2;
+                    final side = math.min(
+                      constraints.maxWidth - 32,
+                      (constraints.maxHeight - gap * (count - 1)) / count,
+                    );
+                    Widget frame(ComparePhoto p) => _Frame(
+                      size: side,
+                      photo: p,
+                      transformation: _transformation,
+                      onDoubleTapDown:
+                          (d) => _doubleTapPosition = d.localPosition,
+                      onDoubleTap: _toggleZoom,
+                      onInteractionStart: _onInteractionStart,
+                      onInteractionUpdate: _onInteractionUpdate,
+                      onInteractionEnd: _onInteractionEnd,
+                    );
+                    return AnimatedContainer(
+                      duration:
+                          _dismissing
+                              ? Duration.zero
+                              : const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      transform: Matrix4.translationValues(0, _dismissDrag, 0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          frame(widget.reference),
+                          if (photo != null) ...[
+                            const SizedBox(height: gap),
+                            frame(photo),
+                          ],
                         ],
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                photo == null
-                    ? 'ダブルタップで拡大 · 下にスワイプで閉じる'
-                    : 'ダブルタップで2枚とも拡大 · 下にスワイプで閉じる',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8A9486)),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  photo == null
+                      ? 'ダブルタップで拡大 · 下にスワイプで閉じる'
+                      : 'ダブルタップで2枚とも拡大 · 下にスワイプで閉じる',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF8A9486),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
