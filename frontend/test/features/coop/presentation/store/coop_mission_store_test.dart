@@ -275,11 +275,15 @@ void main() {
 
     group('他の人の発見のお知らせ', () {
       late StreamController<SpotClearsSnapshot> clears;
+      late FakeCoopStorage storage;
+      late FakeHistoryRepository histories;
       late ProviderContainer container;
 
       setUp(() async {
         clears = StreamController<SpotClearsSnapshot>();
         addTearDown(clears.close);
+        storage = FakeCoopStorage();
+        histories = FakeHistoryRepository();
         final rooms = FakeRoomRepository();
         final playing = fourSpotRoom();
         rooms.rooms[code] = playing;
@@ -297,10 +301,8 @@ void main() {
               FakePrepareFourSpots(),
             ),
             roomRepositoryProvider.overrideWithValue(rooms),
-            coopStorageProvider.overrideWithValue(FakeCoopStorage()),
-            historyRepositoryProvider.overrideWithValue(
-              FakeHistoryRepository(),
-            ),
+            coopStorageProvider.overrideWithValue(storage),
+            historyRepositoryProvider.overrideWithValue(histories),
           ],
         );
         addTearDown(container.dispose);
@@ -347,6 +349,35 @@ void main() {
         expect(state().discovery?.spotIndex, 2);
       });
 
+      test('その場で届いた発見のスポットの結果画面は、サムネを取得し終えてから開く', () async {
+        await seedFourSpotHistory(histories);
+        await receive([clear('a', 'other')], isUpToDate: false);
+        await receive([clear('a', 'other')], isUpToDate: true);
+
+        final thumb = Completer<void>();
+        storage.thumbDownloadGate = thumb;
+        clears.add((
+          clears: [clear('a', 'other'), clear('c', 'other')],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+        expect(state().notice?.message, 'otherさんがスポット 3を発見!');
+        expect(state().discovery, isNull);
+
+        thumb.complete();
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .clearsSynced;
+
+        expect(state().discovery?.spotIndex, 2);
+        final opened =
+            container
+                .read(missionProgressStoreProvider(MissionSessionKind.coop))
+                .value!
+                .checkpoints[2];
+        expect(opened?.discovererThumbPath, isNotNull);
+      });
+
       test('その場で届いた最後のスポットの発見は、ルームの終了に合わせて開く', () async {
         await receive([
           clear('a', 'other'),
@@ -366,6 +397,43 @@ void main() {
 
         expect(state().finalDiscovery?.spotIndex, 3);
         expect(state().discovery, isNull);
+      });
+
+      test('最後のスポットのサムネの取得が終わらなくても、発見者を進捗に反映して最後のスポットを開けるようにする', () async {
+        await seedFourSpotHistory(histories);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: false);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: true);
+
+        // 電波が弱く、最後のスポットのサムネの取得が終わらない
+        storage.thumbDownloadGate = Completer<void>();
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+            clear('d', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+
+        // Mission 画面は反映を待ちきれず、ここまでに反映できた分で開く (サムネはプレースホルダ)
+        expect(state().finalDiscovery?.spotIndex, 3);
+        final last =
+            container
+                .read(missionProgressStoreProvider(MissionSessionKind.coop))
+                .value!
+                .checkpoints[3];
+        expect(last?.discovererUid, 'other');
+        expect(last?.discovererThumbPath, isNull);
       });
 
       test('ルームに戻ったときに追いついた最後のスポットの発見では、最後のスポットの結果画面を開かない', () async {

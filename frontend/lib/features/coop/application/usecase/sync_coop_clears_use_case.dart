@@ -41,13 +41,22 @@ class SyncCoopClearsUseCase {
   final Duration thumbTimeout;
 
   /// 反映する (履歴がなければ何もしない)
-  Future<CoopClearSyncResult> call(
+  Future<CoopClearSyncResult> call(RoomCode roomCode, List<SpotClear> clears) =>
+      syncInSteps(roomCode, clears).last;
+
+  /// 反映し、途中経過を流す (履歴がなければ、何もせずに空の結果を 1 つだけ流す)
+  ///
+  /// 発見者を反映した時点と、サムネを 1 枚取得するごとに、その時点の結果を流す。
+  /// 最後に流すのが反映し終えた結果。サムネの取得を待たずに、発見者を先に画面へ
+  /// 出せるようにするため (電波が弱いとサムネの取得は [thumbTimeout] まで終わらない)。
+  Stream<CoopClearSyncResult> syncInSteps(
     RoomCode roomCode,
     List<SpotClear> clears,
-  ) async {
+  ) async* {
     final history = await _histories.getCoopHistory(roomCode);
     if (history == null) {
-      return (hasAllThumbs: false, discoveries: <SpotId, CoopDiscovery>{});
+      yield (hasAllThumbs: false, discoveries: <SpotId, CoopDiscovery>{});
+      return;
     }
     final plan = planClearSync(clears: clears, local: _localStates(history));
     for (final clear in plan.discoverersToApply) {
@@ -60,6 +69,7 @@ class SyncCoopClearsUseCase {
         judgement: clear.judgement,
       );
     }
+    yield await _result(roomCode, clears, fallback: history);
     for (final clear in plan.thumbsToFetch) {
       try {
         final downloaded = await _storage
@@ -73,9 +83,19 @@ class SyncCoopClearsUseCase {
       } on Object catch (e) {
         // 時間切れも含め、次の同期で取り直す
         log('サムネの取得に失敗した: $e', name: 'SyncCoopClears');
+        continue;
       }
+      yield await _result(roomCode, clears, fallback: history);
     }
-    final synced = await _histories.getCoopHistory(roomCode) ?? history;
+  }
+
+  /// 履歴に反映済みの結果
+  Future<CoopClearSyncResult> _result(
+    RoomCode roomCode,
+    List<SpotClear> clears, {
+    required MissionHistory fallback,
+  }) async {
+    final synced = await _histories.getCoopHistory(roomCode) ?? fallback;
     return (
       hasAllThumbs: hasAllClearThumbs(
         clears: clears,

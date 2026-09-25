@@ -10,6 +10,7 @@ import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/coop/application/usecase/clear_spot_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/resolve_unshared_captures_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
@@ -365,12 +366,25 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
     final clears = snapshot.clears;
     try {
-      final result = await ref.read(syncCoopClearsUseCaseProvider)(
-        roomCode,
-        clears,
-      );
-      _applyDiscoveriesToProgress(result.discoveries);
-      await _announceNewDiscoveries(snapshot);
+      // 発見者を先に進捗に反映して知らせ、サムネは取得できたものから進捗に反映する。
+      // 最後のスポットは、Mission 画面がこの反映を待ちきれなければ反映できた分で開くため
+      CoopClearSyncResult? result;
+      CoopDiscoveryEvent? discovery;
+      await for (final step in ref
+          .read(syncCoopClearsUseCaseProvider)
+          .syncInSteps(roomCode, clears)) {
+        _applyDiscoveriesToProgress(step.discoveries);
+        if (result == null) {
+          discovery = await _announceNewDiscoveries(snapshot);
+        }
+        result = step;
+      }
+      if (result == null) return;
+      // その場で開くスポットの結果画面は、サムネを取得し終えてから開く
+      // (開いた結果画面は、あとから届いたサムネに変わらないため)
+      if (discovery != null) {
+        state = state.copyWith(discovery: discovery);
+      }
       final room = _room;
       if (room != null) {
         await ref.read(finishIfAllClearedUseCaseProvider)(room, clears);
@@ -398,10 +412,14 @@ class CoopMissionStore extends _$CoopMissionStore {
   /// - ルームに戻ったとき (途中参加・復帰) に追いついた発見は、何も知らせない。
   ///   最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
   ///   届くので、サーバの最初の値までを「追いつくまで」とする
-  /// - その場で 1 件だけ届いた発見は、バナーを出し、そのスポットの結果画面へ移るイベントを出す
+  /// - その場で 1 件だけ届いた発見は、バナーを出し、そのスポットの結果画面へ移るイベントを返す
+  ///   (サムネを取得し終えてから出す)。最後のスポットなら、ルームの終了に合わせて Mission 画面が
+  ///   開くので、返さずにすぐ [CoopMissionState.finalDiscovery] に出す
   /// - 電波が戻ったときに届いた発見 (前の値がキャッシュ) や、一度に複数届いた発見は、
   ///   バナーだけにする (複数なら 1 つにまとめる)
-  Future<void> _announceNewDiscoveries(SpotClearsSnapshot snapshot) async {
+  Future<CoopDiscoveryEvent?> _announceNewDiscoveries(
+    SpotClearsSnapshot snapshot,
+  ) async {
     final clears = snapshot.clears;
     final known = _knownClearedSpotIds;
     _knownClearedSpotIds = clears.map((c) => c.spotId).toSet();
@@ -412,7 +430,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       _hasBeenStale = false;
     }
     if (isRejoining) {
-      return;
+      return null;
     }
     final uid = await _uid();
     final spots = _spots;
@@ -424,29 +442,30 @@ class CoopMissionStore extends _$CoopMissionStore {
             (index: index, clear: clear),
     ];
     if (found.isEmpty) {
-      return;
+      return null;
     }
     if (found.length > 1) {
       _notify('他のメンバーが ${found.length} か所のスポットを発見!');
-      return;
+      return null;
     }
     final (:index, :clear) = found.single;
     final name = _displayName(clear.clearedBy, clear.nickname);
     final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
     _notify('$nameさんが$labelを発見!');
     if (!snapshot.isUpToDate || wasStale) {
-      return;
+      return null;
     }
     final event = CoopDiscoveryEvent(
       id: ++_discoveryId,
       spotIndex: index,
       discovererName: name,
     );
+    if (clears.length < spots.length) {
+      return event;
+    }
     // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
-    state =
-        clears.length >= spots.length
-            ? state.copyWith(finalDiscovery: event)
-            : state.copyWith(discovery: event);
+    state = state.copyWith(finalDiscovery: event);
+    return null;
   }
 
   /// 撮影して採点したスポットをクリアにする

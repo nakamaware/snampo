@@ -94,6 +94,44 @@ void main() {
     expect(result.hasAllThumbs, isFalse);
   });
 
+  test('途中経過として、サムネの取得を待たずに、発見者を反映した結果を先に流す', () async {
+    // 電波が弱く、サムネの取得が終わらない
+    storage.thumbDownloadGate = Completer<void>();
+
+    final first = await syncClears
+        .syncInSteps(fx.code, [fx.clear('a', 'x')])
+        .first
+        .timeout(const Duration(seconds: 1));
+
+    expect(first.discoveries[fx.spot('a')]!.uid, 'x');
+    expect(first.discoveries[fx.spot('a')]!.thumbPath, isNull);
+    expect(first.hasAllThumbs, isFalse);
+  });
+
+  test('途中経過として、サムネを取得するごとに反映した結果を流し、最後に反映し終えた結果を流す', () async {
+    final steps =
+        await syncClears.syncInSteps(fx.code, [
+          fx.clear('a', 'x'),
+          fx.clear('b', 'y'),
+        ]).toList();
+
+    expect(
+      [
+        for (final step in steps)
+          [
+            for (final id in ['a', 'b'])
+              step.discoveries[fx.spot(id)]?.thumbPath,
+          ],
+      ],
+      [
+        [null, null],
+        ['history:/tmp/download/1.jpg', null],
+        ['history:/tmp/download/1.jpg', 'history:/tmp/download/2.jpg'],
+      ],
+    );
+    expect(steps.last.hasAllThumbs, isTrue);
+  });
+
   test('取得済みのサムネは取り直さない', () async {
     final clears = [
       fx.clear('a', 'x', thumbPath: 'rooms/ABCD23/thumbs/a/x.jpg'),
