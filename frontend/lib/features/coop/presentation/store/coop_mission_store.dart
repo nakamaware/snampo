@@ -113,6 +113,11 @@ class CoopMissionStore extends _$CoopMissionStore {
   /// 共有の途中でアプリが終了した撮影のうち、捨てるかをまだ決められていないものの番号
   /// (ルームに戻ったときにサーバの `clears` を読めなかった)
   var _unresolvedCaptureIndexes = <int>{};
+
+  /// [_unresolvedCaptureIndexes] を決め終えたときに完了する (用意するたびに作り直す)
+  ///
+  /// [settleUnsharedCaptures] が、`clears` の反映 (サムネの取得など) を待たずに返すため。
+  var _capturesResolved = Completer<void>();
   SpotClearsSnapshot _latestClears = (clears: const [], isUpToDate: false);
   Future<void> _clearSync = Future.value();
 
@@ -289,12 +294,14 @@ class CoopMissionStore extends _$CoopMissionStore {
             .read(persistedMissionProvider(MissionSessionKind.coop).notifier)
             .setMission(mission);
       }
+      _capturesResolved = Completer<void>();
       _unresolvedCaptureIndexes = {
         ...?ref
             .read(missionProgressStoreProvider(MissionSessionKind.coop))
             .value
             ?.unsharedCaptureIndexes,
       };
+      if (_unresolvedCaptureIndexes.isEmpty) _markCapturesResolved();
       state = state.copyWith(isReady: true, prepareError: null);
       _enqueueResolveUnsharedCaptures();
       _syncClears();
@@ -350,7 +357,8 @@ class CoopMissionStore extends _$CoopMissionStore {
       return false;
     }
     _enqueueResolveUnsharedCaptures();
-    await _clearSync;
+    // 決め終えたら返す。前の反映のサムネの取得など、撮影の扱いに関わらない反映は待たない
+    await Future.any([_clearSync, _capturesResolved.future]);
     return _unresolvedCaptureIndexes.isEmpty;
   }
 
@@ -663,10 +671,15 @@ class CoopMissionStore extends _$CoopMissionStore {
         await _discardCapture(indexOf[spotId]!);
       }
       // 捨て終えてから決め終えた扱いにする (捨てている途中で進捗を片付けないため)
-      _unresolvedCaptureIndexes = {};
+      _markCapturesResolved();
     } on Object catch (e, st) {
       log('未共有の撮影の扱いを決められなかった', error: e, stackTrace: st, name: 'CoopMission');
     }
+  }
+
+  void _markCapturesResolved() {
+    _unresolvedCaptureIndexes = {};
+    if (!_capturesResolved.isCompleted) _capturesResolved.complete();
   }
 
   /// 共有できなかった撮影を捨てる (誰もクリアしていない扱いに戻し、撮影できるようにする)

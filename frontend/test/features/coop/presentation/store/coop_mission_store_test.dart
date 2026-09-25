@@ -256,6 +256,33 @@ void main() {
           expect(settled, isTrue);
         });
 
+        test('ルームに戻った直後でも、撮影の扱いを決め終えたら、ほかのサムネの取得を待たずに片付けてよいと返す', () async {
+          // ルームに戻ると先にキャッシュの clears が届くが、電波が弱くサムネの取得が終わらない
+          storage.thumbDownloadGate = Completer<void>();
+          clears.add((clears: [clear('a', 'other')], isUpToDate: false));
+          container.listen(coopRoomProvider(code), (_, __) {});
+          await container.read(coopRoomProvider(code).future);
+          container.listen(
+            missionProgressStoreProvider(MissionSessionKind.coop),
+            (_, __) {},
+          );
+          await container.read(
+            missionProgressStoreProvider(MissionSessionKind.coop).future,
+          );
+          container.listen(coopMissionStoreProvider(code), (_, __) {});
+
+          // ミッションの用意の前に、結果画面の「ホームへ戻る」が押される
+          final settled = await container
+              .read(coopMissionStoreProvider(code).notifier)
+              .settleUnsharedCaptures()
+              .timeout(const Duration(seconds: 1));
+
+          expect(settled, isTrue);
+          // サーバにクリアのない c は捨て、届いていた b は残す
+          expect(checkpoints()[2], isNull);
+          expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
+        });
+
         test('時間内に撮影の扱いを決められなければ、片付けないと返す', () async {
           rooms.offline = true;
           await start();
