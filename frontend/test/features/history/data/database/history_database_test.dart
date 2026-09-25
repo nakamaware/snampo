@@ -32,18 +32,27 @@ const _v4SpotColumns = [
   'is_cleared',
 ];
 
+/// 列の定義 (`PRAGMA table_info` の名前・型・NOT NULL・既定値)
+typedef _Column =
+    ({String name, String type, bool notNull, String? defaultValue});
+
 void main() {
   late File file;
 
   /// 新しく作った DB の列 (テーブルごと)
-  late Map<String, List<String>> freshColumns;
+  late Map<String, List<_Column>> freshColumns;
 
-  Future<List<String>> columns(HistoryDatabase db, String table) async => [
+  Future<List<_Column>> columns(HistoryDatabase db, String table) async => [
     for (final row in await db.customSelect('PRAGMA table_info($table)').get())
-      row.read<String>('name'),
+      (
+        name: row.read<String>('name'),
+        type: row.read<String>('type'),
+        notNull: row.read<int>('notnull') == 1,
+        defaultValue: row.read<String?>('dflt_value'),
+      ),
   ];
 
-  Future<Map<String, List<String>>> allColumns(HistoryDatabase db) async => {
+  Future<Map<String, List<_Column>>> allColumns(HistoryDatabase db) async => {
     for (final table in ['mission_histories', 'history_spots'])
       table: await columns(db, table),
   };
@@ -86,38 +95,42 @@ void main() {
   };
 
   group('HistoryDatabase の移行', () {
-    test('v3 の DB を、1 回の移行で今の版の列にする (履歴は残り、クリア済みになる)', () async {
-      final db = await reopen(
-        asV3(
-          statements: [
-            '''
+    test(
+      'v3 の DB を、1 回の移行で今の版の列 (型・NOT NULL・既定値も) にする (履歴は残り、クリア済みになる)',
+      () async {
+        final db = await reopen(
+          asV3(
+            statements: [
+              '''
 INSERT INTO mission_histories
   (id, completed_at, started_at, departure_lat, departure_lng, overview_polyline, radius_meters)
 VALUES ('h1', 2, 1, 35, 139, 'p', 1000)
 ''',
-            '''
+              '''
 INSERT INTO history_spots
   (history_id, sort_order, is_destination, lat, lng, street_view_image_path)
 VALUES ('h1', 0, 1, 35, 139, '/sv.jpg')
 ''',
-          ],
-        ),
-      );
+            ],
+          ),
+        );
 
-      final version = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(version.data.values.single, 4);
-      expect(await allColumns(db), freshColumns);
-      final spot =
-          await db
-              .customSelect('SELECT is_cleared FROM history_spots')
-              .getSingle();
-      expect(spot.read<int>('is_cleared'), 1);
-      final history =
-          await db
-              .customSelect('SELECT mode FROM mission_histories')
-              .getSingle();
-      expect(history.read<String>('mode'), 'random');
-    });
+        final version =
+            await db.customSelect('PRAGMA user_version').getSingle();
+        expect(version.data.values.single, 4);
+        expect(await allColumns(db), freshColumns);
+        final spot =
+            await db
+                .customSelect('SELECT is_cleared FROM history_spots')
+                .getSingle();
+        expect(spot.read<int>('is_cleared'), 1);
+        final history =
+            await db
+                .customSelect('SELECT mode FROM mission_histories')
+                .getSingle();
+        expect(history.read<String>('mode'), 'random');
+      },
+    );
 
     test('版だけが古く、列はすでにある DB も開ける (古いアプリで開き直したときなど)', () async {
       final db = await reopen((raw) {
