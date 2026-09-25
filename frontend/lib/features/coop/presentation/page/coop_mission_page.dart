@@ -134,7 +134,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
 }
 
 /// 最後のスポットの結果画面の、閉じるボタンの文言
-const _finalSpotCloseLabel = 'プレイ結果を見る';
+const _finalSpotCloseLabel = '結果を見る';
 
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
 class _CoopMissionEffects extends HookConsumerWidget {
