@@ -277,12 +277,16 @@ void main() {
     group('全スポットのクリアでの終了', () {
       late StreamController<SpotClearsSnapshot> clears;
       late FakeRoomRepository rooms;
+      late FakeCoopStorage storage;
+      late FakeHistoryRepository histories;
       late ProviderContainer container;
 
       setUp(() async {
         clears = StreamController<SpotClearsSnapshot>();
         addTearDown(clears.close);
         rooms = FakeRoomRepository();
+        storage = FakeCoopStorage();
+        histories = FakeHistoryRepository();
         final playing = fourSpotRoom();
         rooms.rooms[code] = playing;
         container = ProviderContainer(
@@ -303,10 +307,8 @@ void main() {
             finishIfAllClearedUseCaseProvider.overrideWithValue(
               FinishIfAllClearedUseCase(rooms, now: () => createdAt),
             ),
-            coopStorageProvider.overrideWithValue(FakeCoopStorage()),
-            historyRepositoryProvider.overrideWithValue(
-              FakeHistoryRepository(),
-            ),
+            coopStorageProvider.overrideWithValue(storage),
+            historyRepositoryProvider.overrideWithValue(histories),
           ],
         );
         addTearDown(container.dispose);
@@ -343,6 +345,25 @@ void main() {
 
         sent.complete();
         await pumpEventQueue();
+        expect(rooms.rooms[code]!.status, RoomStatus.finished);
+      });
+
+      test('サムネの取得を待たずに、finished にする', () async {
+        await seedFourSpotHistory(histories);
+        // 電波が弱く、サムネの取得が終わらない
+        storage.thumbDownloadGate = Completer<void>();
+
+        clears.add((
+          clears: [
+            clear('a', 'other'),
+            clear('b', 'other'),
+            clear('c', 'other'),
+            clear('d', 'other'),
+          ],
+          isUpToDate: true,
+        ));
+        await pumpEventQueue();
+
         expect(rooms.rooms[code]!.status, RoomStatus.finished);
       });
 

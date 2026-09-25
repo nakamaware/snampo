@@ -398,6 +398,8 @@ class CoopMissionStore extends _$CoopMissionStore {
           } else {
             pendingDiscovery = event;
           }
+          // 最後のスポットの発見を出してから、サムネの取得を待たずに終了にする
+          _finishIfAllCleared(clears);
         }
         if (pendingDiscovery != null && _hasThumb(step, pendingDiscovery)) {
           state = state.copyWith(discovery: pendingDiscovery);
@@ -410,19 +412,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       }
       final room = _room;
       if (room != null) {
-        // 完了は待たない (オフラインや電波が弱いと、サーバに届くまで終わらず、後の反映や
-        // それを待つ画面の遷移を止めてしまう。送信は SDK が溜めておき、復帰したときに送る)。
-        // 拒否されたら (抜けたあとなど) 記録だけする。次の反映でもう一度試し、ほかのメンバーが
-        // 書いてもよい。履歴の確定は、終了がルームの通知で届いてからの反映で行う
-        unawaited(
-          ref.read(finishIfAllClearedUseCaseProvider)(room, clears).catchError((
-            Object e,
-            StackTrace st,
-          ) {
-            log('ルームを終了にできなかった', error: e, stackTrace: st, name: 'CoopMission');
-            return false;
-          }),
-        );
+        // 履歴の確定は、終了がルームの通知で届いてからの反映で行う
         await ref.read(finalizeCoopHistoryUseCaseProvider)(
           roomCode: roomCode,
           room: room,
@@ -433,6 +423,26 @@ class CoopMissionStore extends _$CoopMissionStore {
     } on Object catch (e, st) {
       log('クリアの反映に失敗した', error: e, stackTrace: st, name: 'CoopMission');
     }
+  }
+
+  /// 全スポットがクリアされていれば、ルームを finished にする
+  ///
+  /// 完了は待たない (オフラインや電波が弱いと、サーバに届くまで終わらず、後の反映や
+  /// それを待つ画面の遷移を止めてしまう。送信は SDK が溜めておき、復帰したときに送る)。
+  /// 拒否されたら (抜けたあとなど) 記録だけする。次の反映でもう一度試し、ほかのメンバーが
+  /// 書いてもよい。
+  void _finishIfAllCleared(List<SpotClear> clears) {
+    final room = _room;
+    if (room == null) return;
+    unawaited(
+      ref.read(finishIfAllClearedUseCaseProvider)(room, clears).catchError((
+        Object e,
+        StackTrace st,
+      ) {
+        log('ルームを終了にできなかった', error: e, stackTrace: st, name: 'CoopMission');
+        return false;
+      }),
+    );
   }
 
   /// [discovery] のスポットの、発見者のサムネを [synced] で反映済みか
