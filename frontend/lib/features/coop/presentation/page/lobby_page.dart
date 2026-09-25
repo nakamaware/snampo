@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/config.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
@@ -131,7 +132,11 @@ class _Lobby extends HookConsumerWidget {
                 const SizedBox(height: 16),
                 if (room.generationError != null &&
                     room.status == RoomStatus.waiting)
-                  _GenerationErrorCard(isHost: isHost, room: room),
+                  _GenerationErrorCard(
+                    isHost: isHost,
+                    room: room,
+                    showDetail: Env.isDev,
+                  ),
                 if (isStarted && prepareError != null)
                   _PrepareErrorCard(
                     onRetry:
@@ -231,10 +236,17 @@ class _PrepareErrorCard extends StatelessWidget {
 }
 
 class _GenerationErrorCard extends StatelessWidget {
-  const _GenerationErrorCard({required this.isHost, required this.room});
+  const _GenerationErrorCard({
+    required this.isHost,
+    required this.room,
+    required this.showDetail,
+  });
 
   final bool isHost;
   final Room room;
+
+  /// 失敗の詳細を出すか (開発用のビルドだけ。長い例外の文字がそのまま入っている)
+  final bool showDetail;
 
   @override
   Widget build(BuildContext context) {
@@ -246,8 +258,8 @@ class _GenerationErrorCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Text(
           isHost
-              ? 'ミッションの生成に失敗しました。設定を変えて再試行してください。\n'
-                  '(${room.generationError})'
+              ? 'ミッションの生成に失敗しました。設定を変えて再試行してください。'
+                  '${showDetail ? '\n(${room.generationError})' : ''}'
               : 'ミッションの生成に失敗しました。ホストが再試行します。',
           style: TextStyle(color: theme.colorScheme.onErrorContainer),
         ),
