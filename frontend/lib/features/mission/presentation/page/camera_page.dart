@@ -9,6 +9,7 @@ import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/component/camera_shoot_layout.dart';
 
 /// カメラページの引数
@@ -35,18 +36,6 @@ class CameraPageArgs {
 
   /// [onPhotoAccepted] の完了を待つ間に表示する文言
   final String loadingMessage;
-}
-
-/// 撮影を受け付けられなかった ([message] を利用者にそのまま表示する)
-class PhotoRejectedException implements Exception {
-  /// [PhotoRejectedException] を作成する
-  const PhotoRejectedException(this.message);
-
-  /// 利用者に表示する理由
-  final String message;
-
-  @override
-  String toString() => 'PhotoRejectedException($message)';
 }
 
 /// カメラページウィジェット。

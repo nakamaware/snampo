@@ -17,6 +17,7 @@ import 'package:snampo/features/mission/application/interface/location_service.d
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:snampo/features/mission/domain/value_object/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
 import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
