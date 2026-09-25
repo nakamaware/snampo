@@ -111,7 +111,8 @@ class _HistoryDetailBody extends ConsumerWidget {
                     if (coop == null) 'ひとりで' else 'みんなで',
                   ].join(' · '),
                   meta: [
-                    formatMissionDuration(record.startedAt, record.completedAt),
+                    if (record.playEndedAt case final endedAt?)
+                      formatMissionDuration(record.startedAt, endedAt),
                     _settingsLabel(),
                   ].join(' · '),
                   spots: [

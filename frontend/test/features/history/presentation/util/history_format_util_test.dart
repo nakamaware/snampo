@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/radius.dart';
+import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
+import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 import 'package:snampo/features/mission/domain/value_object/photo_judgement.dart';
@@ -81,6 +84,47 @@ void main() {
 
       expect(spot.shownPhotoPath, isNull);
       expect(spot.shownRank, isNull);
+    });
+  });
+
+  group('MissionHistory.playEndedAt', () {
+    final start = DateTime(2026, 9, 25, 4, 39);
+    MissionHistory history(DateTime completedAt, List<DateTime?> achieved) =>
+        MissionHistory(
+          id: 'h',
+          startedAt: start,
+          completedAt: completedAt,
+          departure: Coordinate(latitude: 35, longitude: 139),
+          overviewPolyline: '',
+          settings: MissionSettings.random(radius: Radius(meters: 1000)),
+          spots: [
+            for (final at in achieved)
+              MissionHistorySpot(
+                coordinate: Coordinate(latitude: 35, longitude: 139),
+                sortOrder: 0,
+                isDestination: false,
+                streetViewImagePath: '/sv.jpg',
+                achievedAt: at,
+              ),
+          ],
+        );
+
+    test('終わった時刻があれば、それを使う', () {
+      final end = start.add(const Duration(minutes: 30));
+      expect(history(end, [start]).playEndedAt, end);
+    });
+
+    test('協力プレイの途中 (終わった時刻がまだない) なら、最後の発見の時刻を使う', () {
+      final last = start.add(const Duration(minutes: 12));
+      expect(
+        history(start, [
+          start.add(const Duration(minutes: 5)),
+          last,
+          null,
+        ]).playEndedAt,
+        last,
+      );
+      expect(history(start, [null]).playEndedAt, isNull);
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
 
@@ -62,4 +63,22 @@ extension HistorySpotShown on MissionHistorySpot {
   /// 出す判定
   PhotoJudgeRank? get shownRank =>
       isCleared ? judgeRank ?? discovererJudgement?.rank : null;
+}
+
+/// 遊んだ時間の計算に使う時刻
+extension MissionHistoryPlayTime on MissionHistory {
+  /// 遊び終わった時刻
+  ///
+  /// 協力プレイの途中の履歴は、終わった時刻 ([MissionHistory.completedAt]) がまだ
+  /// 始めた時刻と同じなので、最後に発見した時刻を使う。発見がなければ null。
+  DateTime? get playEndedAt {
+    if (completedAt.isAfter(startedAt)) return completedAt;
+    final achieved = [
+      for (final spot in spots)
+        if (spot.achievedAt case final at?) at,
+    ];
+    return achieved.isEmpty
+        ? null
+        : achieved.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
 }

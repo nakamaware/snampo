@@ -135,10 +135,12 @@ class _HistoryListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final found = record.spots.where((s) => s.isCleared).length;
-    final duration = formatMissionDurationShort(
-      record.startedAt,
-      record.completedAt,
-    );
+    final endedAt = record.playEndedAt;
+    final summary = [
+      '$found/${record.spots.length} 発見',
+      if (endedAt != null)
+        formatMissionDurationShort(record.startedAt, endedAt),
+    ].join(' · ');
 
     return Dismissible(
       key: ValueKey<String>(record.id),
@@ -193,8 +195,7 @@ class _HistoryListTile extends ConsumerWidget {
                               style: theme.textTheme.titleMedium,
                             ),
                             Text(
-                              '$found/${record.spots.length} 発見 · '
-                              '$duration',
+                              summary,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
