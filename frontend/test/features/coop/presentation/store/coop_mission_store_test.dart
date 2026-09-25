@@ -140,6 +140,7 @@ void main() {
     group('共有の途中で終了した撮影', () {
       late StreamController<SpotClearsSnapshot> clears;
       late FakeRoomRepository rooms;
+      late FakeCoopStorage storage;
       late FakeHistoryRepository histories;
       late ProviderContainer container;
 
@@ -163,6 +164,7 @@ void main() {
         rooms.rooms[code] = playing;
         // b の共有はサーバに届いていた
         rooms.clears[code] = {spot('b'): clear('b', 'me')};
+        storage = FakeCoopStorage();
         histories = FakeHistoryRepository();
         await seedFourSpotHistory(histories);
         container = ProviderContainer(
@@ -181,7 +183,7 @@ void main() {
               FakePrepareFourSpots(),
             ),
             roomRepositoryProvider.overrideWithValue(rooms),
-            coopStorageProvider.overrideWithValue(FakeCoopStorage()),
+            coopStorageProvider.overrideWithValue(storage),
             historyRepositoryProvider.overrideWithValue(histories),
             photoStorageProvider.overrideWithValue(FakePhotoStorage()),
           ],
@@ -231,6 +233,43 @@ void main() {
         expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
         expect(checkpoints()[1]?.discovererUid, 'me');
         expect(histories.histories[code]!.spots[1].userPhotoPath, '/b.jpg');
+      });
+
+      group('結果画面の「ホームへ戻る」で進捗を片付けてよいか', () {
+        /// 他の人の発見が届いたが、電波が弱くサムネの取得が終わらない
+        void receiveWithStuckThumb({required bool isUpToDate}) {
+          storage.thumbDownloadGate = Completer<void>();
+          clears.add((clears: [clear('a', 'other')], isUpToDate: isUpToDate));
+        }
+
+        test('撮影の扱いを決め終えていれば、クリアの反映を待たずに片付けてよいと返す', () async {
+          await start();
+          receiveWithStuckThumb(isUpToDate: true);
+          await pumpEventQueue();
+
+          final settled = await container
+              .read(coopMissionStoreProvider(code).notifier)
+              .settleUnsharedCaptures()
+              .timeout(const Duration(seconds: 1));
+
+          expect(settled, isTrue);
+        });
+
+        test('時間内に撮影の扱いを決められなければ、片付けないと返す', () async {
+          rooms.offline = true;
+          await start();
+          receiveWithStuckThumb(isUpToDate: false);
+          await pumpEventQueue();
+
+          final settled = await container
+              .read(coopMissionStoreProvider(code).notifier)
+              .settleUnsharedCaptures(timeout: const Duration(milliseconds: 10))
+              .timeout(const Duration(seconds: 1));
+
+          expect(settled, isFalse);
+          expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
+          expect(checkpoints()[2]?.userPhotoPath, '/c.jpg');
+        });
       });
     });
 

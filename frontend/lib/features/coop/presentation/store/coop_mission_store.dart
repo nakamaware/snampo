@@ -295,20 +295,41 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// 結果画面で進捗を片付けてよいか (共有の途中で終了した撮影の扱いを決め終えたか)
   ///
-  /// ミッションの用意や撮影の扱いがまだなら、ここで済ませる。決められない撮影が残っていれば
-  /// (サーバから読めないなど) false を返す。片付けると、サーバに届いていた撮影の写真まで
-  /// 消してしまうため。
-  Future<bool> settleUnsharedCaptures() async {
+  /// 決める撮影がなければ、すぐに true を返す (サムネの取得など、ほかの反映は待たない)。
+  /// あれば、ミッションの用意や撮影の扱いがまだならここで済ませる。[timeout] までに
+  /// 決められなければ (サーバから読めない、前の反映が終わらないなど) false を返す。
+  /// 片付けると、サーバに届いていた撮影の写真まで消してしまうため。
+  Future<bool> settleUnsharedCaptures({
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    if (!_hasUnsettledCaptures) return true;
+    return _settleUnsharedCaptures().timeout(
+      timeout,
+      onTimeout: () {
+        log('未共有の撮影の扱いを時間内に決められなかった', name: 'CoopMission');
+        return false;
+      },
+    );
+  }
+
+  /// 共有の途中で終了した撮影のうち、扱いを決めていないものがあるか
+  bool get _hasUnsettledCaptures {
+    if (state.isReady) return _unresolvedCaptureIndexes.isNotEmpty;
+    // 用意の前は、端末の進捗から数える (用意のときに、ここから決めるものを作る)
+    final progress =
+        ref.read(missionProgressStoreProvider(MissionSessionKind.coop)).value;
+    return progress?.roomCode == roomCode &&
+        progress!.unsharedCaptureIndexes.isNotEmpty;
+  }
+
+  Future<bool> _settleUnsharedCaptures() async {
     final room = _room;
     if (!state.isReady && room != null) {
       await _prepare(room);
     }
     if (!state.isReady) {
-      // 用意できなければ撮影の扱いを決められないので、決めるものがないときだけ片付けてよい
-      final progress =
-          ref.read(missionProgressStoreProvider(MissionSessionKind.coop)).value;
-      return progress?.roomCode != roomCode ||
-          progress!.unsharedCaptureIndexes.isEmpty;
+      // 用意できなければ撮影の扱いを決められない
+      return false;
     }
     _enqueueResolveUnsharedCaptures();
     await _clearSync;
@@ -529,10 +550,11 @@ class CoopMissionStore extends _$CoopMissionStore {
         upToDateClears: snapshot.isUpToDate ? snapshot.clears : null,
       );
       if (discard == null) return;
-      _unresolvedCaptureIndexes = {};
       for (final spotId in discard) {
         await _discardCapture(indexOf[spotId]!);
       }
+      // 捨て終えてから決め終えた扱いにする (捨てている途中で進捗を片付けないため)
+      _unresolvedCaptureIndexes = {};
     } on Object catch (e, st) {
       log('未共有の撮影の扱いを決められなかった', error: e, stackTrace: st, name: 'CoopMission');
     }
