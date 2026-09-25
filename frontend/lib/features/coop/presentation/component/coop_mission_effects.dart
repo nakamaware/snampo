@@ -92,6 +92,15 @@ class CoopMissionEffects extends HookConsumerWidget {
     }
   }
 
+  /// スポットの結果画面を開いてよいか
+  ///
+  /// Mission 画面が前面にあり、ほかのスポットの結果画面を開いていないときだけ開く
+  /// (撮影中やスポットの結果画面を見ている間は割り込まず、重ねて開かない)。
+  static bool _canShowSpotResult(
+    BuildContext context,
+    ObjectRef<bool> showingSpot,
+  ) => !showingSpot.value && (ModalRoute.of(context)?.isCurrent ?? false);
+
   /// 他の人が発見したスポットの結果画面を開く
   ///
   /// Mission 画面が前面にあるときだけ開く (撮影中やほかのスポットの結果画面を見ている間は
@@ -102,7 +111,7 @@ class CoopMissionEffects extends HookConsumerWidget {
     CoopDiscoveryEvent discovery,
     ObjectRef<bool> showingSpot,
   ) {
-    if (showingSpot.value || !(ModalRoute.of(context)?.isCurrent ?? false)) {
+    if (!_canShowSpotResult(context, showingSpot)) {
       return;
     }
     final args = _spotResultArgs(
@@ -139,7 +148,7 @@ class CoopMissionEffects extends HookConsumerWidget {
     final store = ref.read(coopMissionStoreProvider(roomCode).notifier);
     await store.clearsSynced.timeout(_finalSpotSyncTimeout, onTimeout: () {});
     if (!context.mounted) return;
-    if (showingSpot.value || !(ModalRoute.of(context)?.isCurrent ?? false)) {
+    if (!_canShowSpotResult(context, showingSpot)) {
       // 待っている間に、ほかのスポットの結果画面が開いた (その前のスポットの反映が
       // 終わったなど) か、撮影を始めた。重ねて開かず、Mission 画面が前面に戻ったら開き直す
       finalSpotShown.value = false;
