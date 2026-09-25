@@ -61,7 +61,20 @@ void main() {
 
     final discard = await useCase(fx.code, {fx.spot('a'): capture});
 
-    expect(discard, isEmpty);
+    expect(discard, isNull);
     expect(photoInHistory('a'), isNull);
+  });
+
+  test('サーバの最新の値と確かめられたクリアがあれば、サーバから読み直さずに決める', () async {
+    rooms.offline = true;
+
+    final discard = await useCase(
+      fx.code,
+      {fx.spot('a'): capture, fx.spot('b'): capture},
+      upToDateClears: [fx.clear('a', 'other')],
+    );
+
+    expect(discard, {fx.spot('b')});
+    expect(photoInHistory('a'), '/photos/a.jpg');
   });
 }

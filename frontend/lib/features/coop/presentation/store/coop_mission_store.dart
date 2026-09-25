@@ -94,6 +94,10 @@ class CoopMissionStore extends _$CoopMissionStore {
   var _noticeId = 0;
   var _discoveryId = 0;
   var _preparing = false;
+
+  /// 共有の途中でアプリが終了した撮影のうち、捨てるかをまだ決められていないものの番号
+  /// (ルームに戻ったときにサーバの `clears` を読めなかった)
+  var _unresolvedCaptureIndexes = <int>{};
   SpotClearsSnapshot _latestClears = (clears: const [], isUpToDate: false);
   Future<void> _clearSync = Future.value();
 
@@ -245,8 +249,16 @@ class CoopMissionStore extends _$CoopMissionStore {
             .read(persistedMissionProvider(MissionSessionKind.coop).notifier)
             .setMission(mission);
       }
+      _unresolvedCaptureIndexes = {
+        ...?ref
+            .read(missionProgressStoreProvider(MissionSessionKind.coop))
+            .value
+            ?.unsharedCaptureIndexes,
+      };
       state = state.copyWith(isReady: true, prepareError: null);
-      await _discardUnsharedCaptures();
+      _clearSync = _clearSync.then(
+        (_) => _resolveUnsharedCaptures(_latestClears),
+      );
       _syncClears();
     } on Object catch (e, st) {
       log('ミッションの用意に失敗した', error: e, stackTrace: st, name: 'CoopMission');
@@ -278,6 +290,10 @@ class CoopMissionStore extends _$CoopMissionStore {
   Future<void> _onClears(SpotClearsSnapshot snapshot) async {
     if (!state.isReady) {
       return;
+    }
+    if (snapshot.isUpToDate) {
+      // ルームに戻ったときに決められなかった撮影を、サーバの最新の値で決め直す
+      await _resolveUnsharedCaptures(snapshot);
     }
     final clears = snapshot.clears;
     try {
@@ -414,36 +430,49 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
-  /// 共有の途中でアプリが終了した撮影 (自分の写真はあるが発見者がいない) を捨てる
+  /// 共有の途中でアプリが終了した撮影 (自分の写真はあるが発見者がいない) を、捨てるか決める
   ///
-  /// 共有の結果を待たずに終わっているので、共有できなかった扱いにする
-  /// (もう一度撮影できるようにする)。ミッションを端末に用意した直後に呼ぶ。
-  /// サーバにそのスポットのクリアがあれば捨てない ([ResolveUnsharedCapturesUseCase])。
-  Future<void> _discardUnsharedCaptures() async {
-    final progress = await ref.read(
-      missionProgressStoreProvider(MissionSessionKind.coop).future,
-    );
-    final indexes = [...?progress?.unsharedCaptureIndexes];
-    if (progress == null || indexes.isEmpty) return;
-    final captures = <SpotId, CheckpointProgress>{};
-    for (final index in indexes) {
-      final spotId = _spotIdAt(index);
-      final checkpoint = progress.checkpoints[index];
-      if (spotId == null || checkpoint == null) {
-        // 共有できないスポットの撮影は捨てる
-        await _discardCapture(index);
-      } else {
-        captures[spotId] = checkpoint;
+  /// 共有の結果を待たずに終わっているので、共有できなかった扱いにして捨てる
+  /// (もう一度撮影できるようにする)。サーバにそのスポットのクリアがあれば捨てない
+  /// ([ResolveUnsharedCapturesUseCase])。[clears] がサーバの最新の値ならそれで決め、
+  /// そうでなければサーバから読む。読めなければ決めずに残し、次にサーバの最新の値が
+  /// 届いたときに決め直す。
+  Future<void> _resolveUnsharedCaptures(SpotClearsSnapshot clears) async {
+    if (_unresolvedCaptureIndexes.isEmpty) return;
+    try {
+      final checkpoints =
+          ref
+              .read(missionProgressStoreProvider(MissionSessionKind.coop))
+              .value
+              ?.checkpoints ??
+          const [];
+      final captures = <SpotId, CheckpointProgress>{};
+      final indexOf = <SpotId, int>{};
+      for (final index in _unresolvedCaptureIndexes) {
+        final checkpoint =
+            index < checkpoints.length ? checkpoints[index] : null;
+        if (checkpoint?.userPhotoPath == null) continue;
+        final spotId = _spotIdAt(index);
+        if (spotId == null) {
+          // 共有できないスポットの撮影は捨てる
+          await _discardCapture(index);
+          continue;
+        }
+        captures[spotId] = checkpoint!;
+        indexOf[spotId] = index;
       }
-    }
-    final discard = await ref.read(resolveUnsharedCapturesUseCaseProvider)(
-      roomCode,
-      captures,
-    );
-    for (final index in indexes) {
-      if (discard.contains(_spotIdAt(index))) {
-        await _discardCapture(index);
+      final discard = await ref.read(resolveUnsharedCapturesUseCaseProvider)(
+        roomCode,
+        captures,
+        upToDateClears: clears.isUpToDate ? clears.clears : null,
+      );
+      if (discard == null) return;
+      _unresolvedCaptureIndexes = {};
+      for (final spotId in discard) {
+        await _discardCapture(indexOf[spotId]!);
       }
+    } on Object catch (e, st) {
+      log('未共有の撮影の扱いを決められなかった', error: e, stackTrace: st, name: 'CoopMission');
     }
   }
 

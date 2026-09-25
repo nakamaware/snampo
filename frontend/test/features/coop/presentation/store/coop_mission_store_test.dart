@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:snampo/core/di/photo_storage_provider.dart';
 import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/core/domain/image_coordinate.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/storage/mission_photo_directory.dart';
+import 'package:snampo/core/storage/photo_storage.dart';
 import 'package:snampo/features/coop/application/usecase/get_coop_signed_in_uid_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/prepare_coop_mission_use_case.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
@@ -13,6 +16,7 @@ import 'package:snampo/features/coop/domain/entity/spot_clear.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
@@ -107,6 +111,32 @@ class _FourSpotMission extends PersistedMission {
       _fourSpotMission;
 }
 
+/// [initial] から始まる進捗 (端末の DB を使わない)
+class _ProgressOf extends MissionProgressStoreNotifier {
+  _ProgressOf(this.initial);
+
+  final MissionProgressEntity initial;
+
+  @override
+  Future<MissionProgressEntity?> build(MissionSessionKind kind) async =>
+      initial;
+}
+
+/// 消した写真を記録する
+class _FakePhotoStorage implements IPhotoStorage {
+  final deleted = <String>[];
+
+  @override
+  Future<void> deletePhoto(String path) async => deleted.add(path);
+
+  @override
+  Future<String> savePhoto(
+    String sourcePath,
+    int checkpointIndex, {
+    required MissionPhotoDirectory directory,
+  }) => throw UnimplementedError();
+}
+
 class _FakePrepareFourSpots implements PrepareCoopMissionUseCase {
   @override
   Future<MissionEntity> call(
@@ -169,6 +199,116 @@ void main() {
 
       expect(container.read(coopMissionStoreProvider(code)).isReady, isTrue);
       expect(prepare.calls, 2);
+    });
+
+    group('共有の途中で終了した撮影', () {
+      late StreamController<SpotClearsSnapshot> clears;
+      late FakeRoomRepository rooms;
+      late FakeHistoryRepository histories;
+      late ProviderContainer container;
+
+      /// b と c を撮影したが、共有の結果が付かないまま終了した進捗
+      final unshared = MissionProgressEntity(
+        startedAt: createdAt,
+        roomCode: code,
+        checkpoints: const [
+          null,
+          CheckpointProgress(userPhotoPath: '/b.jpg'),
+          CheckpointProgress(userPhotoPath: '/c.jpg'),
+          null,
+        ],
+      );
+
+      setUp(() async {
+        clears = StreamController<SpotClearsSnapshot>();
+        addTearDown(clears.close);
+        rooms = FakeRoomRepository();
+        final fourSpotRoom = room(spotIds: ['a', 'b', 'c', 'd']);
+        rooms.rooms[code] = fourSpotRoom;
+        // b の共有はサーバに届いていた
+        rooms.clears[code] = {spot('b'): clear('b', 'me')};
+        histories = FakeHistoryRepository();
+        await histories.upsertCoopHistory(
+          mission: _fourSpotMission,
+          startedAt: createdAt,
+          coop: CoopHistoryInfo(
+            roomCode: code,
+            syncState: CoopSyncState.inProgress,
+            isHost: false,
+            members: const [],
+            expiresAt: fourSpotRoom.expiresAt,
+            deleteAt: fourSpotRoom.deleteAt,
+          ),
+        );
+        container = ProviderContainer(
+          overrides: [
+            coopRoomProvider(
+              code,
+            ).overrideWith((ref) => Stream.value(fourSpotRoom)),
+            coopClearsProvider(code).overrideWith((ref) => clears.stream),
+            coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
+            missionProgressStoreProvider.overrideWith(
+              () => _ProgressOf(unshared),
+            ),
+            persistedMissionProvider.overrideWith(_FourSpotMission.new),
+            getCoopSignedInUidUseCaseProvider.overrideWithValue(
+              _FakeSignedInUid(),
+            ),
+            prepareCoopMissionUseCaseProvider.overrideWithValue(
+              _FakePrepareFourSpots(),
+            ),
+            roomRepositoryProvider.overrideWithValue(rooms),
+            coopStorageProvider.overrideWithValue(FakeCoopStorage()),
+            historyRepositoryProvider.overrideWithValue(histories),
+            photoStorageProvider.overrideWithValue(_FakePhotoStorage()),
+          ],
+        );
+        addTearDown(container.dispose);
+      });
+
+      Future<void> start() async {
+        container.listen(coopMissionStoreProvider(code), (_, __) {});
+        await pumpEventQueue();
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .clearsSynced;
+      }
+
+      Future<void> receive(
+        List<SpotClear> list, {
+        required bool isUpToDate,
+      }) async {
+        clears.add((clears: list, isUpToDate: isUpToDate));
+        await pumpEventQueue();
+        await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .clearsSynced;
+      }
+
+      List<CheckpointProgress?> checkpoints() =>
+          container
+              .read(missionProgressStoreProvider(MissionSessionKind.coop))
+              .value!
+              .checkpoints;
+
+      test('クリアを読めなければ捨てず、サーバの最新の値が届いたら決め直す', () async {
+        rooms.offline = true;
+        await start();
+
+        // 判断できないので、どちらも捨てない
+        expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
+        expect(checkpoints()[2]?.userPhotoPath, '/c.jpg');
+
+        // 電波が戻り、サーバの最新の値が届く
+        rooms.offline = false;
+        await receive([clear('b', 'me')], isUpToDate: true);
+
+        // サーバにクリアのない c は捨て、届いていた b は履歴に残す
+        expect(checkpoints()[2], isNull);
+        expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
+        expect(checkpoints()[1]?.discovererUid, 'me');
+        expect(histories.histories[code]!.spots[1].userPhotoPath, '/b.jpg');
+      });
     });
 
     group('他の人の発見のお知らせ', () {
