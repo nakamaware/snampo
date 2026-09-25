@@ -78,7 +78,8 @@ class JudgeDistanceBar extends StatelessWidget {
               ),
               Positioned(
                 key: markerKey,
-                left: width * fraction - 1.5,
+                // 端でも印が切れないよう、バーの内側に収める
+                left: (width * fraction - 1.5).clamp(0, width - 3),
                 top: -4,
                 child: Container(
                   width: 3,
