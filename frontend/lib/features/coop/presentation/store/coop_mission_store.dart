@@ -396,7 +396,7 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
     final clears = snapshot.clears;
     // 全スポットがクリアされた clears か (最初の途中経過で決める)
-    var isAllClearedClears = false;
+    var clearsAllSpots = false;
     try {
       // 発見者を先に進捗に反映して知らせ、サムネは取得できたものから進捗に反映する。
       // 最後のスポットは、Mission 画面がそのサムネを待ちきれなければ反映できた分で開くため。
@@ -420,8 +420,8 @@ class CoopMissionStore extends _$CoopMissionStore {
           isFirstStep = false;
           final event = await _announceNewDiscoveries(snapshot);
           final room = _room;
-          isAllClearedClears = room != null && isAllCleared(room, clears);
-          if (event != null && isAllClearedClears) {
+          clearsAllSpots = room != null && isAllCleared(room, clears);
+          if (event != null && clearsAllSpots) {
             // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が
             // 最後のスポットを開く (サムネの取得を待ちきれなくても開けるよう、先に出す)
             state = state.copyWith(finalDiscovery: event);
@@ -441,7 +441,7 @@ class CoopMissionStore extends _$CoopMissionStore {
             _hasTriedThumb(step, pendingFinalDiscovery)) {
           pendingFinalDiscovery = null;
         }
-        if (isAllClearedClears && pendingFinalDiscovery == null) {
+        if (clearsAllSpots && pendingFinalDiscovery == null) {
           _markFinalSpotSynced();
         }
         if (pendingDiscovery == null &&
@@ -470,7 +470,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       log('クリアの反映に失敗した', error: e, stackTrace: st, name: 'CoopMission');
     } finally {
       // 最後のスポットのサムネの取得を試さずに終わっても、Mission 画面を待たせ続けない
-      if (isAllClearedClears) _markFinalSpotSynced();
+      if (clearsAllSpots) _markFinalSpotSynced();
     }
   }
 
