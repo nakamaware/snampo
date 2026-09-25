@@ -163,6 +163,7 @@ class _TallyBar extends StatelessWidget {
     return SizedBox(
       height: 8,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final (i, decoration) in segments.indexed) ...[
             if (i > 0) const SizedBox(width: 2),
