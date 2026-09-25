@@ -634,7 +634,8 @@ class _SpotChip extends HookWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (shownCleared)
+              // 未クリアは文字だけ。空の丸はラジオや「正解」に見える
+              if (shownCleared) ...[
                 Transform.scale(
                   scale: Curves.easeOutBack.transform(progress),
                   child: Icon(
@@ -642,10 +643,9 @@ class _SpotChip extends HookWidget {
                     size: 16,
                     color: colorScheme.primary,
                   ),
-                )
-              else
-                Icon(Icons.radio_button_unchecked, size: 14, color: foreground),
-              const SizedBox(width: 4),
+                ),
+                const SizedBox(width: 4),
+              ],
               Flexible(
                 child: Text(
                   showLabel ? 'Spot ${index + 1}' : '${index + 1}',
