@@ -143,6 +143,46 @@ class _CoopMissionEffects extends HookConsumerWidget {
   /// 中身
   final Widget child;
 
+  /// [index] 番目のスポットの結果画面の引数
+  ///
+  /// ミッションか、そのスポットの進捗がなければ null。
+  static SpotResultPageArgs? _spotResultArgs(
+    WidgetRef ref,
+    int index, {
+    required String? discovererDisplayName,
+    bool Function(CheckpointProgress checkpoint)? where,
+    String? closeLabel,
+  }) {
+    final mission =
+        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
+    final checkpoints =
+        ref
+            .read(missionProgressStoreProvider(MissionSessionKind.coop))
+            .value
+            ?.checkpoints;
+    if (mission == null ||
+        checkpoints == null ||
+        index < 0 ||
+        index >= mission.spots.length ||
+        index >= checkpoints.length) {
+      return null;
+    }
+    final checkpoint = checkpoints[index];
+    if (checkpoint == null || !(where?.call(checkpoint) ?? true)) {
+      return null;
+    }
+    return SpotResultPageArgs(
+      spotIndex: index,
+      totalCheckpointCount: mission.spots.length,
+      missionPoint: mission.spots[index],
+      checkpoint: checkpoint,
+      isDestinationMode: mission.radius == null,
+      isCoop: true,
+      discovererDisplayName: discovererDisplayName,
+      closeLabel: closeLabel,
+    );
+  }
+
   /// 他の人が発見したスポットの結果画面を開く
   ///
   /// Mission 画面が前面にあるときだけ開く (撮影中などは割り込まず、お知らせだけにする)。
@@ -152,35 +192,14 @@ class _CoopMissionEffects extends HookConsumerWidget {
     CoopDiscoveryEvent discovery,
   ) {
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
-    final mission =
-        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
-    final checkpoints =
-        ref
-            .read(missionProgressStoreProvider(MissionSessionKind.coop))
-            .value
-            ?.checkpoints;
-    final index = discovery.spotIndex;
-    final checkpoint =
-        checkpoints != null && index < checkpoints.length
-            ? checkpoints[index]
-            : null;
-    if (mission == null ||
-        checkpoint == null ||
-        index >= mission.spots.length) {
-      return;
-    }
-    context.push(
-      '/spot-result',
-      extra: SpotResultPageArgs(
-        spotIndex: index,
-        totalCheckpointCount: mission.spots.length,
-        missionPoint: mission.spots[index],
-        checkpoint: checkpoint,
-        isDestinationMode: mission.radius == null,
-        isCoop: true,
-        discovererDisplayName: discovery.discovererName,
-      ),
+    final args = _spotResultArgs(
+      ref,
+      discovery.spotIndex,
+      discovererDisplayName: discovery.discovererName,
     );
+    if (args != null) {
+      context.push('/spot-result', extra: args);
+    }
   }
 
   /// ルームが終わったら、Mission 画面が前面に戻った時点で結果画面へ移る
@@ -206,43 +225,31 @@ class _CoopMissionEffects extends HookConsumerWidget {
         ref.read(coopClearsProvider(roomCode)).value?.clears ?? const [];
     final mission =
         ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
-    final checkpoints =
-        ref
-            .read(missionProgressStoreProvider(MissionSessionKind.coop))
-            .value
-            ?.checkpoints;
-    if (clears.isEmpty || mission == null || checkpoints == null) {
+    if (clears.isEmpty || mission == null) {
       context.go('/coop/result');
       return;
     }
     final last = clears.reduce(
       (a, b) => a.clearedAt.isAfter(b.clearedAt) ? a : b,
     );
-    final index = mission.spots.indexWhere((s) => s.spotId == last.spotId);
-    final checkpoint =
-        index >= 0 && index < checkpoints.length ? checkpoints[index] : null;
-    if (checkpoint == null || checkpoint.userPhotoPath != null) {
+    final members = ref.read(coopMembersProvider(roomCode)).value ?? const [];
+    final args = _spotResultArgs(
+      ref,
+      mission.spots.indexWhere((s) => s.spotId == last.spotId),
+      discovererDisplayName:
+          displayNicknames([
+            for (final m in members) (uid: m.uid, nickname: m.nickname),
+          ])[last.clearedBy] ??
+          last.nickname,
+      // 自分で撮影した (結果を見た) スポットなら開かない
+      where: (checkpoint) => checkpoint.userPhotoPath == null,
+      closeLabel: _finalSpotCloseLabel,
+    );
+    if (args == null) {
       context.go('/coop/result');
       return;
     }
-    final members = ref.read(coopMembersProvider(roomCode)).value ?? const [];
-    await context.push<void>(
-      '/spot-result',
-      extra: SpotResultPageArgs(
-        spotIndex: index,
-        totalCheckpointCount: mission.spots.length,
-        missionPoint: mission.spots[index],
-        checkpoint: checkpoint,
-        isDestinationMode: mission.radius == null,
-        isCoop: true,
-        discovererDisplayName:
-            displayNicknames([
-              for (final m in members) (uid: m.uid, nickname: m.nickname),
-            ])[last.clearedBy] ??
-            last.nickname,
-        closeLabel: _finalSpotCloseLabel,
-      ),
-    );
+    await context.push<void>('/spot-result', extra: args);
   }
 
   /// 期限切れを知らせて結果画面へ移る
