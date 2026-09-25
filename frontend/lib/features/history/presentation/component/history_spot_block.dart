@@ -53,9 +53,7 @@ class HistorySpotBlock extends StatelessWidget {
     final judgement = _judgement();
     final reference = FileImage(File(spot.streetViewImagePath));
     final photo = photoPath == null ? null : FileImage(File(photoPath));
-    final canOpenResult =
-        spot.isCleared &&
-        (spot.userPhotoPath != null || spot.discovererUid != null);
+    final canOpenResult = spot.isCleared && spot.hasResult;
 
     void openViewer() => PhotoCompareViewer.open(
       context,

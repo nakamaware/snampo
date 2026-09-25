@@ -120,10 +120,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
             ?.checkpoints ??
         const [];
     final isLast = checkpoints.indexed.every(
-      (e) =>
-          e.$1 == index ||
-          e.$2?.discovererUid != null ||
-          e.$2?.userPhotoPath != null,
+      (e) => e.$1 == index || (e.$2?.hasResult ?? false),
     );
     return isLast ? _finalSpotCloseLabel : null;
   }

@@ -232,8 +232,7 @@ class _ResultBody extends StatelessWidget {
     required bool isSelectedDestinationGoal,
   }) {
     // 協力プレイで他の人が発見したスポットも、発見者の結果を見られる
-    final found =
-        checkpoint?.userPhotoPath != null || checkpoint?.discovererUid != null;
+    final found = checkpoint?.hasResult ?? false;
     final isGoal = index == mission.spots.length - 1;
     return _ResultSpot(
       title: isGoal ? 'GOAL' : 'SPOT ${index + 1}',

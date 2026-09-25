@@ -51,6 +51,11 @@ abstract class MissionHistorySpot with _$MissionHistorySpot {
 
   const MissionHistorySpot._();
 
+  /// 結果 (自分の撮影か、協力プレイの発見者の撮影) があるか
+  ///
+  /// 協力プレイで他の人が発見したスポットも、発見者の結果を見られる。
+  bool get hasResult => userPhotoPath != null || discovererUid != null;
+
   /// 出す写真のパス
   ///
   /// 自分が撮っていれば自分の写真、撮っていなければ協力プレイの発見者のサムネ。

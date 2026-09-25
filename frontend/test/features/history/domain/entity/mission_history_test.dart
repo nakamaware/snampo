@@ -12,6 +12,7 @@ MissionHistorySpot _spot({
   PhotoJudgeRank? judgeRank,
   String? discovererThumbPath,
   PhotoJudgement? discovererJudgement,
+  String? discovererUid,
   bool isCleared = true,
 }) => MissionHistorySpot(
   coordinate: Coordinate(latitude: 35, longitude: 139),
@@ -22,10 +23,17 @@ MissionHistorySpot _spot({
   judgeRank: judgeRank,
   discovererThumbPath: discovererThumbPath,
   discovererJudgement: discovererJudgement,
+  discovererUid: discovererUid,
   isCleared: isCleared,
 );
 
 void main() {
+  test('MissionHistorySpot.hasResult は、自分の撮影か発見者があれば true', () {
+    expect(_spot(userPhotoPath: '/mine.jpg').hasResult, isTrue);
+    expect(_spot(discovererUid: 'other').hasResult, isTrue);
+    expect(_spot().hasResult, isFalse);
+  });
+
   group('MissionHistorySpot に出す写真と判定', () {
     test('自分の写真と判定があれば、それを使う', () {
       final spot = _spot(

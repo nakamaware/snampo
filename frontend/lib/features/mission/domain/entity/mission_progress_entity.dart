@@ -58,6 +58,11 @@ abstract class CheckpointProgress with _$CheckpointProgress {
   factory CheckpointProgress.fromJson(Map<String, dynamic> json) =>
       _$CheckpointProgressFromJson(json);
 
+  /// 結果 (自分の撮影か、協力プレイの発見者の撮影) があるか
+  ///
+  /// 協力プレイで他の人が発見したスポットも、発見者の結果を見られる。
+  bool get hasResult => userPhotoPath != null || discovererUid != null;
+
   /// [source] の協力プレイの発見者の情報 (発見者の 4 項目と発見日時) を引き継いだ進捗
   ///
   /// [source] に発見者がいなければ、そのまま返す。発見者の項目を 1 か所で扱い、

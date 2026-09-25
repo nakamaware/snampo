@@ -165,6 +165,15 @@ void main() {
     });
   });
 
+  test('CheckpointProgress.hasResult は、自分の撮影か発見者があれば true', () {
+    expect(
+      const CheckpointProgress(userPhotoPath: '/mine.jpg').hasResult,
+      isTrue,
+    );
+    expect(const CheckpointProgress(discovererUid: 'other').hasResult, isTrue);
+    expect(const CheckpointProgress().hasResult, isFalse);
+  });
+
   group('MissionProgressEntity.withCapture', () {
     final startedAt = DateTime(2024);
     final discoveredAt = DateTime(2024, 1, 2);
