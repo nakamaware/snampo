@@ -149,6 +149,32 @@ class MissionSpotSheet extends HookWidget {
           );
         }
 
+        // 見出しの上下スワイプは、リストの位置に関係なくシートの高さだけを変える
+        void dragSheet(double deltaY) {
+          if (!sheetController.isAttached || available <= 0) return;
+          sheetController.jumpTo(
+            (sheetController.size - deltaY / available).clamp(minSize, maxSize),
+          );
+        }
+
+        void settleSheet(double velocityY) {
+          if (!sheetController.isAttached) return;
+          final double target;
+          if (velocityY <= -_sheetFlingSpeed) {
+            target = maxSize;
+          } else if (velocityY >= _sheetFlingSpeed) {
+            target = minSize;
+          } else {
+            final mid = (minSize + maxSize) / 2;
+            target = sheetController.size >= mid ? maxSize : minSize;
+          }
+          sheetController.animateTo(
+            target,
+            duration: _sheetAnimationDuration,
+            curve: Curves.easeOutCubic,
+          );
+        }
+
         Future<void> goToSpot(int index) async {
           final changed = currentPage.value != index;
           currentPage.value = index;
@@ -205,6 +231,8 @@ class MissionSpotSheet extends HookWidget {
           onLayoutChanged: onLayoutChanged,
           onTapSpot: goToSpot,
           onTap: toggleSize,
+          onVerticalDrag: dragSheet,
+          onVerticalDragEnd: settleSheet,
         );
 
         return DraggableScrollableSheet(
@@ -336,6 +364,9 @@ const _cardPeek = 26.0;
 const _cardGap = 12.0;
 
 const _sheetAnimationDuration = Duration(milliseconds: 250);
+
+/// これより速い上下のフリックは、途中の位置に関係なく開くか閉じる
+const _sheetFlingSpeed = 700.0;
 const _pageAnimationDuration = Duration(milliseconds: 350);
 
 /// リスト 1 行の高さ (上下余白 10 + 見本 64)
@@ -386,6 +417,8 @@ class _SheetHeader extends StatelessWidget {
     required this.onLayoutChanged,
     required this.onTapSpot,
     required this.onTap,
+    required this.onVerticalDrag,
+    required this.onVerticalDragEnd,
   });
 
   final List<MissionSheetSpot> spots;
@@ -396,6 +429,8 @@ class _SheetHeader extends StatelessWidget {
   final ValueChanged<MissionSheetLayout> onLayoutChanged;
   final ValueChanged<int> onTapSpot;
   final VoidCallback onTap;
+  final ValueChanged<double> onVerticalDrag;
+  final ValueChanged<double> onVerticalDragEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -438,6 +473,9 @@ class _SheetHeader extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
+      onVerticalDragUpdate: (details) => onVerticalDrag(details.delta.dy),
+      onVerticalDragEnd:
+          (details) => onVerticalDragEnd(details.primaryVelocity ?? 0),
       child: Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 12),
         child: Column(

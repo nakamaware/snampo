@@ -241,6 +241,33 @@ void main() {
       );
     });
 
+    testWidgets('リストの位置を保ったまま、見出しの上下スワイプでシートの大きさを変える', (tester) async {
+      await _pump(
+        tester,
+        spots: [for (var i = 0; i < 12; i++) _todo],
+        layout: MissionSheetLayout.list,
+      );
+      await _open(tester);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+
+      final sheet = find.byType(CustomScrollView);
+      final controller = tester.widget<CustomScrollView>(sheet).controller!;
+      final parked = controller.offset;
+      expect(parked, greaterThan(100));
+
+      await tester.drag(find.text('ミッション'), const Offset(0, 400));
+      await tester.pumpAndSettle();
+      final collapsed = tester.getSize(sheet).height;
+      expect(collapsed, lessThan(200));
+      expect(controller.offset, parked);
+
+      await tester.drag(find.text('ミッション'), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.getSize(sheet).height, greaterThan(collapsed + 200));
+      expect(controller.offset, parked);
+    });
+
     testWidgets('リストをスクロールすると、先頭の行の番号が選ばれる', (tester) async {
       await _pump(
         tester,
