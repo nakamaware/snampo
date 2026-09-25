@@ -19,6 +19,18 @@ const finalSpotCloseLabel = '結果を見る';
 /// 最後のスポットの結果画面を開く前に、`clears` の反映を待つ時間
 const _finalSpotSyncTimeout = Duration(seconds: 10);
 
+/// 最後のスポットの結果画面を開いたか
+enum _FinalSpotPhase {
+  /// まだ開いていない (待ち合わせのあとに開けなかった場合を含む)
+  notOpened,
+
+  /// 開く前の、`clears` の反映の待ち合わせ中
+  waiting,
+
+  /// 開いた (閉じたら結果画面へ移る)
+  opened,
+}
+
 /// 協力プレイの Mission 画面で、ルームの変化に反応する (バナーと結果画面への遷移)
 ///
 /// ミッションの用意に失敗したら、[child] の代わりに再試行の案内を出す。
@@ -129,20 +141,25 @@ class CoopMissionEffects extends HookConsumerWidget {
   /// 他の人がその場で最後のスポットを発見して終わったときは、先にそのスポットの結果画面を
   /// 開き、それを閉じて戻ってきたら結果画面へ移る。ルームに戻ったときに追いついた発見や、
   /// 自分で撮影した (結果を見た) スポットなら開かない。
+  ///
+  /// 開く前の待ち合わせの間に呼ばれたら (ほかのスポットの結果画面を開いて閉じたなど)、
+  /// 何もせず、待ち合わせている方に任せる。
   static Future<void> _onFinished(
     BuildContext context,
     WidgetRef ref,
     RoomCode roomCode,
     FinishReason? finishReason,
-    ObjectRef<bool> finalSpotShown,
+    ObjectRef<_FinalSpotPhase> finalSpot,
     ObjectRef<bool> showingSpot,
   ) async {
     if (showingSpot.value) return;
-    if (finishReason != FinishReason.allCleared || finalSpotShown.value) {
+    if (finishReason != FinishReason.allCleared ||
+        finalSpot.value == _FinalSpotPhase.opened) {
       context.go('/coop/result');
       return;
     }
-    finalSpotShown.value = true;
+    if (finalSpot.value == _FinalSpotPhase.waiting) return;
+    finalSpot.value = _FinalSpotPhase.waiting;
     // 発見者とサムネを進捗に反映し終えてから開く。反映が終わらなければ (電波が弱く、
     // サムネの取得が終わらないなど) 待ち続けず、反映できた分で開く
     final store = ref.read(coopMissionStoreProvider(roomCode).notifier);
@@ -151,9 +168,10 @@ class CoopMissionEffects extends HookConsumerWidget {
     if (!_canShowSpotResult(context, showingSpot)) {
       // 待っている間に、ほかのスポットの結果画面が開いた (その前のスポットの反映が
       // 終わったなど) か、撮影を始めた。重ねて開かず、Mission 画面が前面に戻ったら開き直す
-      finalSpotShown.value = false;
+      finalSpot.value = _FinalSpotPhase.notOpened;
       return;
     }
+    finalSpot.value = _FinalSpotPhase.opened;
     final discovery =
         ref.read(coopMissionStoreProvider(roomCode)).finalDiscovery;
     final args =
@@ -226,7 +244,7 @@ class CoopMissionEffects extends HookConsumerWidget {
       }),
     );
     final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
-    final finalSpotShown = useRef(false);
+    final finalSpot = useRef(_FinalSpotPhase.notOpened);
     useEffect(() {
       if (finished == null || !isCurrent) return null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -239,7 +257,7 @@ class CoopMissionEffects extends HookConsumerWidget {
               ref,
               roomCode,
               finished.reason,
-              finalSpotShown,
+              finalSpot,
               showingSpot,
             ),
           );

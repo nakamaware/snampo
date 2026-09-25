@@ -207,5 +207,35 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('result'), findsOneWidget);
     });
+
+    testWidgets(
+      '最後のスポットを開く前の待ち合わせの間に、その前のスポットの結果画面を開いて閉じても、最後のスポットを開いてから結果画面へ移る',
+      (tester) async {
+        await openMission(tester);
+
+        roomUpdates.add(finishedRoom(finishedAt: DateTime.now()));
+        await tester.pumpAndSettle();
+        // 待ち合わせの間に、その前のスポットの結果画面が開き、それを閉じる
+        store.discover(
+          const CoopDiscoveryEvent(
+            id: 2,
+            spotIndex: 2,
+            discovererName: 'other',
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('spot 2 · null'));
+        await tester.pumpAndSettle();
+        expect(find.text('result'), findsNothing);
+
+        synced.complete();
+        await tester.pumpAndSettle();
+        expect(find.text('spot 3 · 結果を見る'), findsOneWidget);
+
+        await tester.tap(find.text('spot 3 · 結果を見る'));
+        await tester.pumpAndSettle();
+        expect(find.text('result'), findsOneWidget);
+      },
+    );
   });
 }
