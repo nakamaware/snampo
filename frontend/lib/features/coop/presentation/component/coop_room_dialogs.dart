@@ -102,12 +102,12 @@ Future<bool> confirmLeaveCurrentRoom(
 
 /// 確認してからルームを抜け、ホームへ戻る (ロビーと Mission 画面で使う)
 ///
-/// 抜けた時点までの進捗は履歴に残り、履歴の同期も続く。
+/// 抜けたあともルームが終わるまで履歴の同期は続き、ホームの続きのカードから入り直せる。
 Future<void> leaveRoomWithConfirm(BuildContext context, WidgetRef ref) async {
   final confirmed = await showConfirmDialog(
     context,
     title: 'ルームを抜けますか?',
-    content: '抜けた時点までの進捗は履歴に残ります。',
+    content: 'ルームが終わるまでは、\nホームからまた入れます。',
     confirmLabel: '抜ける',
   );
   if (!confirmed) return;

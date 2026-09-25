@@ -60,6 +60,7 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.text('ルームを抜けますか?'), findsOneWidget);
+      expect(find.text('ルームが終わるまでは、\nホームからまた入れます。'), findsOneWidget);
 
       await tester.tap(find.text('キャンセル'));
       await tester.pumpAndSettle();
