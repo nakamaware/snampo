@@ -32,8 +32,8 @@ void main() {
     await db.close();
   });
 
-  /// 開く直前に [breakDb] で DB を崩してから開き、移行を済ませる
-  Future<HistoryDatabase> reopen(void Function(dynamic raw) breakDb) async {
+  /// 開く直前に [breakDb] で DB (sqlite3 の Database) を崩してから開き、移行を済ませる
+  Future<HistoryDatabase> reopen(DatabaseSetup breakDb) async {
     final db = HistoryDatabase(NativeDatabase(file, setup: breakDb));
     addTearDown(db.close);
     // 最初の問い合わせで移行が走る
@@ -50,7 +50,6 @@ void main() {
   group('HistoryDatabase の移行', () {
     test('版だけが古く、列はすでにある DB も開ける (古いアプリで開き直したときなど)', () async {
       final db = await reopen((raw) {
-        // ignore: avoid_dynamic_calls
         raw.execute('PRAGMA user_version = 4');
       });
 
@@ -63,10 +62,8 @@ void main() {
       final db = await reopen((raw) {
         // v5 の列のうち最初の 1 つだけが足された状態 (移行の途中でアプリが落ちた) を作る
         for (final column in _v5Columns.skip(1)) {
-          // ignore: avoid_dynamic_calls
           raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
         }
-        // ignore: avoid_dynamic_calls
         raw.execute('PRAGMA user_version = 4');
       });
 
@@ -76,10 +73,8 @@ void main() {
     test('v5 の DB に、ズームの倍率の列を足す', () async {
       final db = await reopen((raw) {
         for (final column in _v6Columns) {
-          // ignore: avoid_dynamic_calls
           raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
         }
-        // ignore: avoid_dynamic_calls
         raw.execute('PRAGMA user_version = 5');
       });
 
