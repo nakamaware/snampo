@@ -213,6 +213,13 @@ class CoopMissionStore extends _$CoopMissionStore {
     _clearSync = _clearSync.then((_) => _onClears(_latestClears));
   }
 
+  /// 共有の途中で終了した撮影の扱いを、`clears` の反映と同じ順番で決める
+  void _enqueueResolveUnsharedCaptures() {
+    _clearSync = _clearSync.then(
+      (_) => _resolveUnsharedCaptures(_latestClears),
+    );
+  }
+
   Future<void> _onRoom(Room room) async {
     if (room.status == RoomStatus.playing ||
         room.status == RoomStatus.finished) {
@@ -278,9 +285,7 @@ class CoopMissionStore extends _$CoopMissionStore {
             ?.unsharedCaptureIndexes,
       };
       state = state.copyWith(isReady: true, prepareError: null);
-      _clearSync = _clearSync.then(
-        (_) => _resolveUnsharedCaptures(_latestClears),
-      );
+      _enqueueResolveUnsharedCaptures();
       _syncClears();
     } on Object catch (e, st) {
       log('ミッションの用意に失敗した', error: e, stackTrace: st, name: 'CoopMission');
@@ -305,9 +310,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       return progress?.roomCode != roomCode ||
           progress!.unsharedCaptureIndexes.isEmpty;
     }
-    _clearSync = _clearSync.then(
-      (_) => _resolveUnsharedCaptures(_latestClears),
-    );
+    _enqueueResolveUnsharedCaptures();
     await _clearSync;
     return _unresolvedCaptureIndexes.isEmpty;
   }
