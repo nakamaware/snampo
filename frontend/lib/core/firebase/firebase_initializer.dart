@@ -26,6 +26,13 @@ class FirebaseSetup {
   final String? appCheckDebugToken;
 }
 
+/// Firebase の初期化を待つ関数
+///
+/// [retryIfFailed] が true で、前の初期化に失敗していれば、初期化し直す
+/// (「みんなで」を押したときや「再試行」など)。
+typedef FirebaseSetupReader =
+    Future<FirebaseSetup> Function({required bool retryIfFailed});
+
 /// Firebase と App Check を初期化する
 ///
 /// | FLAVOR | Android | iOS |

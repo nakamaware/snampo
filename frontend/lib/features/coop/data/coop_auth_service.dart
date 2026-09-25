@@ -12,8 +12,7 @@ class CoopAuthService implements ICoopAuthService {
   CoopAuthService(this._firebaseSetup);
 
   /// Firebase の初期化を待つ (`retryIfFailed` なら、前の失敗から初期化し直す)
-  final Future<FirebaseSetup> Function({required bool retryIfFailed})
-  _firebaseSetup;
+  final FirebaseSetupReader _firebaseSetup;
 
   static Future<bool> _isOffline() async {
     final results = await Connectivity().checkConnectivity();

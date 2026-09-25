@@ -14,13 +14,6 @@ Future<FirebaseSetup> firebaseSetup(Ref ref) => initializeFirebase();
 
 Duration? _noRetry(int retryCount, Object error) => null;
 
-/// Firebase の初期化を待つ関数
-///
-/// [retryIfFailed] が true で、前の初期化に失敗していれば、初期化し直す
-/// (「みんなで」を押したときや「再試行」など)。
-typedef FirebaseSetupReader =
-    Future<FirebaseSetup> Function({required bool retryIfFailed});
-
 /// Firebase の初期化を待つ ([FirebaseSetupReader])
 @Riverpod(keepAlive: true)
 FirebaseSetupReader firebaseSetupReader(Ref ref) => ({required retryIfFailed}) {
