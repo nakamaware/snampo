@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
-import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/leave_room_pop_scope.dart';
 import 'package:snampo/features/coop/presentation/component/lobby_settings_card.dart';
 import 'package:snampo/features/coop/presentation/component/mission_generating_overlay.dart';
+import 'package:snampo/features/coop/presentation/component/room_info.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
@@ -120,9 +116,9 @@ class _Lobby extends HookConsumerWidget {
             ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _RoomCodeCard(room: room),
+                RoomCodeCard(room: room),
                 const SizedBox(height: 16),
-                _MembersCard(
+                RoomMembersCard(
                   members: members,
                   hostId: room.hostId,
                   myUid: session.uid,
@@ -201,120 +197,6 @@ class _Lobby extends HookConsumerWidget {
         ).showSnackBar(const SnackBar(content: Text('ミッションの生成に失敗しました')));
       }
     }
-  }
-}
-
-class _RoomCodeCard extends StatelessWidget {
-  const _RoomCodeCard({required this.room});
-
-  final Room room;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final code = room.code.value;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text('ルームコード', style: theme.textTheme.labelLarge),
-            SelectableText(
-              code,
-              style: theme.textTheme.displaySmall?.copyWith(letterSpacing: 6),
-            ),
-            const SizedBox(height: 8),
-            QrImageView(
-              data: room.code.toQrPayload(),
-              size: 180,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton.icon(
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: code));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('ルームコードをコピーしました')),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.copy),
-                  label: const Text('コピー'),
-                ),
-                TextButton.icon(
-                  onPressed:
-                      () => SharePlus.instance.share(
-                        ShareParams(text: 'スナんぽで一緒に遊ぼう! ルームコード: $code'),
-                      ),
-                  icon: const Icon(Icons.share),
-                  label: const Text('共有'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MembersCard extends StatelessWidget {
-  const _MembersCard({
-    required this.members,
-    required this.hostId,
-    required this.myUid,
-  });
-
-  final List<RoomMember> members;
-  final String hostId;
-  final String myUid;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // 重複した名前には、表示するときだけ入室順に番号を付ける
-    final names = displayNicknames([
-      for (final m in members) (uid: m.uid, nickname: m.nickname),
-    ]);
-    final activeCount = members.where((m) => !m.hasLeft).length;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'メンバー $activeCount / ${Room.maxActiveMembers} 人',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            for (final member in members)
-              ListTile(
-                dense: true,
-                leading: Icon(
-                  member.uid == hostId ? Icons.star : Icons.person,
-                  color: member.hasLeft ? theme.colorScheme.outline : null,
-                ),
-                title: Text(
-                  [
-                    names[member.uid] ?? member.nickname,
-                    if (member.uid == myUid) '(あなた)',
-                    if (member.hasLeft) '(抜けました)',
-                  ].join(' '),
-                  style:
-                      member.hasLeft
-                          ? TextStyle(color: theme.colorScheme.outline)
-                          : null,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

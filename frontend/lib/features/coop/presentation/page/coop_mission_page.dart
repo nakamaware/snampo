@@ -12,6 +12,7 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/leave_room_pop_scope.dart';
+import 'package:snampo/features/coop/presentation/component/room_info.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
@@ -333,7 +334,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
   }
 }
 
-/// 地図の右上のメニュー (ホストには「途中終了」、全員に「ルームを抜ける」)
+/// 地図の右上のメニュー (全員に「ルーム情報」「ルームを抜ける」、ホストには「途中終了」)
 ///
 /// 「途中終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる。
 class _CoopMissionMenu extends ConsumerWidget {
@@ -355,6 +356,10 @@ class _CoopMissionMenu extends ConsumerWidget {
       tooltip: 'メニュー',
       itemBuilder:
           (_) => [
+            PopupMenuItem(
+              onTap: () => showRoomInfoSheet(context, roomCode),
+              child: const Text('ルーム情報'),
+            ),
             if (canEnd)
               PopupMenuItem(
                 onTap: () => _endByHostWithConfirm(context, ref, roomCode),
