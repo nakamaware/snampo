@@ -33,8 +33,11 @@ typedef SpotClearsSnapshot =
     ({
       List<SpotClear> clears,
 
-      /// サーバと同期する前の、端末のキャッシュの値か
-      bool isFromCache,
+      /// サーバの最新の値と確かめられたか
+      ///
+      /// false なら、端末に残っていた値 (アプリの起動直後や電波のないとき) で、
+      /// そのあとに届いたクリアを含まないことがある。
+      bool isUpToDate,
     });
 
 /// 端末に反映済みのクリアの状態 (スポットごと)

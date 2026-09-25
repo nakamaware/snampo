@@ -211,9 +211,9 @@ void main() {
 
       Future<void> receive(
         List<SpotClear> list, {
-        required bool isFromCache,
+        required bool isUpToDate,
       }) async {
-        clears.add((clears: list, isFromCache: isFromCache));
+        clears.add((clears: list, isUpToDate: isUpToDate));
         await pumpEventQueue();
         await container
             .read(coopMissionStoreProvider(code).notifier)
@@ -224,24 +224,24 @@ void main() {
           container.read(coopMissionStoreProvider(code));
 
       test('ルームに戻ったとき、アプリを終了していた間の発見は知らせない (キャッシュのあとにサーバの値が届く)', () async {
-        await receive([clear('a', 'other')], isFromCache: true);
+        await receive([clear('a', 'other')], isUpToDate: false);
         // 終了していた間の発見 (b) は、サーバの最初の値で届く
         await receive([
           clear('a', 'other'),
           clear('b', 'other'),
-        ], isFromCache: false);
+        ], isUpToDate: true);
 
         expect(state().notice, isNull);
         expect(state().discovery, isNull);
       });
 
       test('サーバと同期したあとの発見は知らせて、そのスポットの結果画面へ移る', () async {
-        await receive([clear('a', 'other')], isFromCache: true);
-        await receive([clear('a', 'other')], isFromCache: false);
+        await receive([clear('a', 'other')], isUpToDate: false);
+        await receive([clear('a', 'other')], isUpToDate: true);
         await receive([
           clear('a', 'other'),
           clear('c', 'other'),
-        ], isFromCache: false);
+        ], isUpToDate: true);
 
         expect(state().notice?.message, 'otherさんがスポット 3を発見!');
         expect(state().discovery?.spotIndex, 2);

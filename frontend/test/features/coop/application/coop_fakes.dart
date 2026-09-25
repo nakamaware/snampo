@@ -190,7 +190,7 @@ class FakeRoomRepository implements IRoomRepository {
   @override
   Stream<SpotClearsSnapshot> watchClears(RoomCode code) => Stream.value((
     clears: (clears[code] ?? const {}).values.toList(),
-    isFromCache: false,
+    isUpToDate: true,
   ));
 }
 

@@ -170,12 +170,12 @@ final class CoopMembersFamily extends $Family
   String toString() => r'coopMembersProvider';
 }
 
-/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+/// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 
 @ProviderFor(coopClears)
 final coopClearsProvider = CoopClearsFamily._();
 
-/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+/// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 
 final class CoopClearsProvider
     extends
@@ -187,7 +187,7 @@ final class CoopClearsProvider
     with
         $FutureModifier<SpotClearsSnapshot>,
         $StreamProvider<SpotClearsSnapshot> {
-  /// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+  /// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
   CoopClearsProvider._({
     required CoopClearsFamily super.from,
     required RoomCode super.argument,
@@ -234,7 +234,7 @@ final class CoopClearsProvider
 
 String _$coopClearsHash() => r'59515106a24ce1cfaa1ec16e5c565b6fbc3710a9';
 
-/// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+/// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 
 final class CoopClearsFamily extends $Family
     with $FunctionalFamilyOverride<Stream<SpotClearsSnapshot>, RoomCode> {
@@ -247,7 +247,7 @@ final class CoopClearsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+  /// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 
   CoopClearsProvider call(RoomCode roomCode) =>
       CoopClearsProvider._(argument: roomCode, from: this);

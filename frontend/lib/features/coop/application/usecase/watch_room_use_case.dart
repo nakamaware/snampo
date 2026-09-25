@@ -17,6 +17,6 @@ class WatchRoomUseCase {
   /// メンバーを監視する (入室順)
   Stream<List<RoomMember>> members(RoomCode code) => _rooms.watchMembers(code);
 
-  /// クリアを監視する (サーバと同期する前のキャッシュの値かどうかも伝える)
+  /// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
   Stream<SpotClearsSnapshot> clears(RoomCode code) => _rooms.watchClears(code);
 }

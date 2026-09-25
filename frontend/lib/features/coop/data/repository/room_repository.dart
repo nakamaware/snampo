@@ -232,7 +232,7 @@ class RoomRepository implements IRoomRepository {
           for (final doc in snapshot.docs)
             RoomMapper.clearFromFirestore(doc.id, doc.data()),
         ],
-        isFromCache: isFromCache,
+        isUpToDate: !isFromCache,
       );
     }
   }

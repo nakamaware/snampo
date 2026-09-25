@@ -94,7 +94,7 @@ class CoopMissionStore extends _$CoopMissionStore {
   var _noticeId = 0;
   var _discoveryId = 0;
   var _preparing = false;
-  SpotClearsSnapshot _latestClears = (clears: const [], isFromCache: true);
+  SpotClearsSnapshot _latestClears = (clears: const [], isUpToDate: false);
   Future<void> _clearSync = Future.value();
 
   @override
@@ -317,7 +317,7 @@ class CoopMissionStore extends _$CoopMissionStore {
     // 最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
     // 届くので、サーバの最初の値までを「追いつくまで」とする
     final isCatchingUp = known == null || !_hasSyncedWithServer;
-    if (!snapshot.isFromCache) {
+    if (snapshot.isUpToDate) {
       _hasSyncedWithServer = true;
     }
     if (isCatchingUp) {
