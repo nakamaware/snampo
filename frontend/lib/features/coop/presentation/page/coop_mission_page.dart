@@ -11,6 +11,7 @@ import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
+import 'package:snampo/features/coop/presentation/component/leave_room_pop_scope.dart';
 import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
@@ -35,9 +36,11 @@ class CoopMissionPage extends ConsumerWidget {
     if (session == null) {
       return const LobbyPage();
     }
-    return MissionPage.resume(
-      kind: MissionSessionKind.coop,
-      extension: _CoopMissionPageExtension(session.roomCode),
+    return LeaveRoomPopScope(
+      child: MissionPage.resume(
+        kind: MissionSessionKind.coop,
+        extension: _CoopMissionPageExtension(session.roomCode),
+      ),
     );
   }
 }

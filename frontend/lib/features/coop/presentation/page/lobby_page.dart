@@ -12,6 +12,7 @@ import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
+import 'package:snampo/features/coop/presentation/component/leave_room_pop_scope.dart';
 import 'package:snampo/features/coop/presentation/component/lobby_settings_card.dart';
 import 'package:snampo/features/coop/presentation/component/mission_generating_overlay.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
@@ -103,75 +104,80 @@ class _Lobby extends HookConsumerWidget {
     final isStarted =
         room.status == RoomStatus.playing || room.status == RoomStatus.finished;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ロビー'),
-        actions: [
-          TextButton(
-            onPressed: () => leaveRoomWithConfirm(context, ref),
-            child: const Text('ルームを抜ける'),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _RoomCodeCard(room: room),
-              const SizedBox(height: 16),
-              _MembersCard(
-                members: members,
-                hostId: room.hostId,
-                myUid: session.uid,
-              ),
-              const SizedBox(height: 16),
-              LobbySettingsCard(room: room, editable: isHost && !isGenerating),
-              const SizedBox(height: 16),
-              if (room.generationError != null &&
-                  room.status == RoomStatus.waiting)
-                _GenerationErrorCard(isHost: isHost, room: room),
-              if (isStarted && prepareError != null)
-                _PrepareErrorCard(
-                  onRetry:
-                      () =>
-                          ref
-                              .read(coopMissionStoreProvider(code).notifier)
-                              .retryPrepare(),
-                ),
-              if (isHost && !isStarted)
-                FilledButton(
-                  onPressed:
-                      isStartingHere.value
-                          ? null
-                          : () async {
-                            // generating のままなら、前回の生成が途中で止まった
-                            // (ホストのアプリが落ちたなど) 可能性がある。二重に生成しない
-                            // よう、やり直すかを確認する
-                            if (isGenerating &&
-                                !await _confirmRestart(context)) {
-                              return;
-                            }
-                            if (!context.mounted) return;
-                            isStartingHere.value = true;
-                            await _start(context, ref, room);
-                            if (context.mounted) isStartingHere.value = false;
-                          },
-                  child: const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('開始する'),
-                  ),
-                )
-              else if (!isStarted)
-                const Center(child: Text('ホストが開始するのを待っています')),
-            ],
-          ),
-          if ((isGenerating && (!isHost || isStartingHere.value)) ||
-              (isStarted && !isReady && prepareError == null))
-            MissionGeneratingOverlay(
-              message: isGenerating ? 'ミッション生成中' : 'ミッションを受け取っています',
+    return LeaveRoomPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('ロビー'),
+          actions: [
+            TextButton(
+              onPressed: () => leaveRoomWithConfirm(context, ref),
+              child: const Text('ルームを抜ける'),
             ),
-        ],
+          ],
+        ),
+        body: Stack(
+          children: [
+            ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _RoomCodeCard(room: room),
+                const SizedBox(height: 16),
+                _MembersCard(
+                  members: members,
+                  hostId: room.hostId,
+                  myUid: session.uid,
+                ),
+                const SizedBox(height: 16),
+                LobbySettingsCard(
+                  room: room,
+                  editable: isHost && !isGenerating,
+                ),
+                const SizedBox(height: 16),
+                if (room.generationError != null &&
+                    room.status == RoomStatus.waiting)
+                  _GenerationErrorCard(isHost: isHost, room: room),
+                if (isStarted && prepareError != null)
+                  _PrepareErrorCard(
+                    onRetry:
+                        () =>
+                            ref
+                                .read(coopMissionStoreProvider(code).notifier)
+                                .retryPrepare(),
+                  ),
+                if (isHost && !isStarted)
+                  FilledButton(
+                    onPressed:
+                        isStartingHere.value
+                            ? null
+                            : () async {
+                              // generating のままなら、前回の生成が途中で止まった
+                              // (ホストのアプリが落ちたなど) 可能性がある。二重に生成しない
+                              // よう、やり直すかを確認する
+                              if (isGenerating &&
+                                  !await _confirmRestart(context)) {
+                                return;
+                              }
+                              if (!context.mounted) return;
+                              isStartingHere.value = true;
+                              await _start(context, ref, room);
+                              if (context.mounted) isStartingHere.value = false;
+                            },
+                    child: const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('開始する'),
+                    ),
+                  )
+                else if (!isStarted)
+                  const Center(child: Text('ホストが開始するのを待っています')),
+              ],
+            ),
+            if ((isGenerating && (!isHost || isStartingHere.value)) ||
+                (isStarted && !isReady && prepareError == null))
+              MissionGeneratingOverlay(
+                message: isGenerating ? 'ミッション生成中' : 'ミッションを受け取っています',
+              ),
+          ],
+        ),
       ),
     );
   }
