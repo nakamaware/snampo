@@ -129,6 +129,9 @@ class HistorySpots extends Table {
   /// 撮影時の方角 (度)
   RealColumn get capturedHeading => real().nullable()();
 
+  /// 撮影したときのズームの倍率
+  RealColumn get zoomLevel => real().nullable()();
+
   /// スポット ID (place_id / geo URI)。旧データでは null
   TextColumn get spotId => text().nullable()();
 
@@ -159,6 +162,9 @@ class HistorySpots extends Table {
   /// 協力プレイの発見者が撮影したときの方角 (度)
   RealColumn get discovererCapturedHeading => real().nullable()();
 
+  /// 協力プレイの発見者が撮影したときのズームの倍率
+  RealColumn get discovererZoomLevel => real().nullable()();
+
   /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
   IntColumn get isCleared => integer().withDefault(const Constant(1))();
 }
@@ -171,7 +177,7 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// [table] に列 [definition] (「名前 型 ...」) を足す。同じ名前の列がすでにあれば何もしない
   Future<void> _addColumnIfMissing(String table, String definition) async {
@@ -261,6 +267,14 @@ UPDATE mission_histories SET destination_lat = (
           'discoverer_guess_lat REAL',
           'discoverer_guess_lng REAL',
           'discoverer_captured_heading REAL',
+        ]) {
+          await _addColumnIfMissing('history_spots', column);
+        }
+      }
+      if (from < 6) {
+        for (final column in [
+          'zoom_level REAL',
+          'discoverer_zoom_level REAL',
         ]) {
           await _addColumnIfMissing('history_spots', column);
         }

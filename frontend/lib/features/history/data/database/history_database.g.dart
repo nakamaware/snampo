@@ -1237,6 +1237,17 @@ class $HistorySpotsTable extends HistorySpots
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _zoomLevelMeta = const VerificationMeta(
+    'zoomLevel',
+  );
+  @override
+  late final GeneratedColumn<double> zoomLevel = GeneratedColumn<double>(
+    'zoom_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _spotIdMeta = const VerificationMeta('spotId');
   @override
   late final GeneratedColumn<String> spotId = GeneratedColumn<String>(
@@ -1345,6 +1356,17 @@ class $HistorySpotsTable extends HistorySpots
         type: DriftSqlType.double,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _discovererZoomLevelMeta =
+      const VerificationMeta('discovererZoomLevel');
+  @override
+  late final GeneratedColumn<double> discovererZoomLevel =
+      GeneratedColumn<double>(
+        'discoverer_zoom_level',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _isClearedMeta = const VerificationMeta(
     'isCleared',
   );
@@ -1378,6 +1400,7 @@ class $HistorySpotsTable extends HistorySpots
     guessLat,
     guessLng,
     capturedHeading,
+    zoomLevel,
     spotId,
     discovererUid,
     discovererNickname,
@@ -1388,6 +1411,7 @@ class $HistorySpotsTable extends HistorySpots
     discovererGuessLat,
     discovererGuessLng,
     discovererCapturedHeading,
+    discovererZoomLevel,
     isCleared,
   ];
   @override
@@ -1549,6 +1573,12 @@ class $HistorySpotsTable extends HistorySpots
         ),
       );
     }
+    if (data.containsKey('zoom_level')) {
+      context.handle(
+        _zoomLevelMeta,
+        zoomLevel.isAcceptableOrUnknown(data['zoom_level']!, _zoomLevelMeta),
+      );
+    }
     if (data.containsKey('spot_id')) {
       context.handle(
         _spotIdMeta,
@@ -1633,6 +1663,15 @@ class $HistorySpotsTable extends HistorySpots
         discovererCapturedHeading.isAcceptableOrUnknown(
           data['discoverer_captured_heading']!,
           _discovererCapturedHeadingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_zoom_level')) {
+      context.handle(
+        _discovererZoomLevelMeta,
+        discovererZoomLevel.isAcceptableOrUnknown(
+          data['discoverer_zoom_level']!,
+          _discovererZoomLevelMeta,
         ),
       );
     }
@@ -1734,6 +1773,10 @@ class $HistorySpotsTable extends HistorySpots
         DriftSqlType.double,
         data['${effectivePrefix}captured_heading'],
       ),
+      zoomLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}zoom_level'],
+      ),
       spotId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}spot_id'],
@@ -1773,6 +1816,10 @@ class $HistorySpotsTable extends HistorySpots
       discovererCapturedHeading: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}discoverer_captured_heading'],
+      ),
+      discovererZoomLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_zoom_level'],
       ),
       isCleared:
           attachedDatabase.typeMapping.read(
@@ -1848,6 +1895,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 撮影時の方角 (度)
   final double? capturedHeading;
 
+  /// 撮影したときのズームの倍率
+  final double? zoomLevel;
+
   /// スポット ID (place_id / geo URI)。旧データでは null
   final String? spotId;
 
@@ -1878,6 +1928,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 協力プレイの発見者が撮影したときの方角 (度)
   final double? discovererCapturedHeading;
 
+  /// 協力プレイの発見者が撮影したときのズームの倍率
+  final double? discovererZoomLevel;
+
   /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
   final int isCleared;
   const HistorySpotRow({
@@ -1900,6 +1953,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     this.guessLat,
     this.guessLng,
     this.capturedHeading,
+    this.zoomLevel,
     this.spotId,
     this.discovererUid,
     this.discovererNickname,
@@ -1910,6 +1964,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     this.discovererGuessLat,
     this.discovererGuessLng,
     this.discovererCapturedHeading,
+    this.discovererZoomLevel,
     required this.isCleared,
   });
   @override
@@ -1958,6 +2013,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     if (!nullToAbsent || capturedHeading != null) {
       map['captured_heading'] = Variable<double>(capturedHeading);
     }
+    if (!nullToAbsent || zoomLevel != null) {
+      map['zoom_level'] = Variable<double>(zoomLevel);
+    }
     if (!nullToAbsent || spotId != null) {
       map['spot_id'] = Variable<String>(spotId);
     }
@@ -1993,6 +2051,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       map['discoverer_captured_heading'] = Variable<double>(
         discovererCapturedHeading,
       );
+    }
+    if (!nullToAbsent || discovererZoomLevel != null) {
+      map['discoverer_zoom_level'] = Variable<double>(discovererZoomLevel);
     }
     map['is_cleared'] = Variable<int>(isCleared);
     return map;
@@ -2050,6 +2111,10 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           capturedHeading == null && nullToAbsent
               ? const Value.absent()
               : Value(capturedHeading),
+      zoomLevel:
+          zoomLevel == null && nullToAbsent
+              ? const Value.absent()
+              : Value(zoomLevel),
       spotId:
           spotId == null && nullToAbsent ? const Value.absent() : Value(spotId),
       discovererUid:
@@ -2088,6 +2153,10 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           discovererCapturedHeading == null && nullToAbsent
               ? const Value.absent()
               : Value(discovererCapturedHeading),
+      discovererZoomLevel:
+          discovererZoomLevel == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererZoomLevel),
       isCleared: Value(isCleared),
     );
   }
@@ -2123,6 +2192,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       guessLat: serializer.fromJson<double?>(json['guessLat']),
       guessLng: serializer.fromJson<double?>(json['guessLng']),
       capturedHeading: serializer.fromJson<double?>(json['capturedHeading']),
+      zoomLevel: serializer.fromJson<double?>(json['zoomLevel']),
       spotId: serializer.fromJson<String?>(json['spotId']),
       discovererUid: serializer.fromJson<String?>(json['discovererUid']),
       discovererNickname: serializer.fromJson<String?>(
@@ -2148,6 +2218,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       ),
       discovererCapturedHeading: serializer.fromJson<double?>(
         json['discovererCapturedHeading'],
+      ),
+      discovererZoomLevel: serializer.fromJson<double?>(
+        json['discovererZoomLevel'],
       ),
       isCleared: serializer.fromJson<int>(json['isCleared']),
     );
@@ -2175,6 +2248,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'guessLat': serializer.toJson<double?>(guessLat),
       'guessLng': serializer.toJson<double?>(guessLng),
       'capturedHeading': serializer.toJson<double?>(capturedHeading),
+      'zoomLevel': serializer.toJson<double?>(zoomLevel),
       'spotId': serializer.toJson<String?>(spotId),
       'discovererUid': serializer.toJson<String?>(discovererUid),
       'discovererNickname': serializer.toJson<String?>(discovererNickname),
@@ -2191,6 +2265,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'discovererCapturedHeading': serializer.toJson<double?>(
         discovererCapturedHeading,
       ),
+      'discovererZoomLevel': serializer.toJson<double?>(discovererZoomLevel),
       'isCleared': serializer.toJson<int>(isCleared),
     };
   }
@@ -2215,6 +2290,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     Value<double?> guessLat = const Value.absent(),
     Value<double?> guessLng = const Value.absent(),
     Value<double?> capturedHeading = const Value.absent(),
+    Value<double?> zoomLevel = const Value.absent(),
     Value<String?> spotId = const Value.absent(),
     Value<String?> discovererUid = const Value.absent(),
     Value<String?> discovererNickname = const Value.absent(),
@@ -2225,6 +2301,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     Value<double?> discovererGuessLat = const Value.absent(),
     Value<double?> discovererGuessLng = const Value.absent(),
     Value<double?> discovererCapturedHeading = const Value.absent(),
+    Value<double?> discovererZoomLevel = const Value.absent(),
     int? isCleared,
   }) => HistorySpotRow(
     id: id ?? this.id,
@@ -2258,6 +2335,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLng: guessLng.present ? guessLng.value : this.guessLng,
     capturedHeading:
         capturedHeading.present ? capturedHeading.value : this.capturedHeading,
+    zoomLevel: zoomLevel.present ? zoomLevel.value : this.zoomLevel,
     spotId: spotId.present ? spotId.value : this.spotId,
     discovererUid:
         discovererUid.present ? discovererUid.value : this.discovererUid,
@@ -2293,6 +2371,10 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
         discovererCapturedHeading.present
             ? discovererCapturedHeading.value
             : this.discovererCapturedHeading,
+    discovererZoomLevel:
+        discovererZoomLevel.present
+            ? discovererZoomLevel.value
+            : this.discovererZoomLevel,
     isCleared: isCleared ?? this.isCleared,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
@@ -2341,6 +2423,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           data.capturedHeading.present
               ? data.capturedHeading.value
               : this.capturedHeading,
+      zoomLevel: data.zoomLevel.present ? data.zoomLevel.value : this.zoomLevel,
       spotId: data.spotId.present ? data.spotId.value : this.spotId,
       discovererUid:
           data.discovererUid.present
@@ -2378,6 +2461,10 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           data.discovererCapturedHeading.present
               ? data.discovererCapturedHeading.value
               : this.discovererCapturedHeading,
+      discovererZoomLevel:
+          data.discovererZoomLevel.present
+              ? data.discovererZoomLevel.value
+              : this.discovererZoomLevel,
       isCleared: data.isCleared.present ? data.isCleared.value : this.isCleared,
     );
   }
@@ -2404,6 +2491,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
           ..write('capturedHeading: $capturedHeading, ')
+          ..write('zoomLevel: $zoomLevel, ')
           ..write('spotId: $spotId, ')
           ..write('discovererUid: $discovererUid, ')
           ..write('discovererNickname: $discovererNickname, ')
@@ -2418,6 +2506,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('discovererGuessLat: $discovererGuessLat, ')
           ..write('discovererGuessLng: $discovererGuessLng, ')
           ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
+          ..write('discovererZoomLevel: $discovererZoomLevel, ')
           ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
@@ -2444,6 +2533,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLat,
     guessLng,
     capturedHeading,
+    zoomLevel,
     spotId,
     discovererUid,
     discovererNickname,
@@ -2454,6 +2544,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     discovererGuessLat,
     discovererGuessLng,
     discovererCapturedHeading,
+    discovererZoomLevel,
     isCleared,
   ]);
   @override
@@ -2479,6 +2570,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.guessLat == this.guessLat &&
           other.guessLng == this.guessLng &&
           other.capturedHeading == this.capturedHeading &&
+          other.zoomLevel == this.zoomLevel &&
           other.spotId == this.spotId &&
           other.discovererUid == this.discovererUid &&
           other.discovererNickname == this.discovererNickname &&
@@ -2491,6 +2583,7 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.discovererGuessLat == this.discovererGuessLat &&
           other.discovererGuessLng == this.discovererGuessLng &&
           other.discovererCapturedHeading == this.discovererCapturedHeading &&
+          other.discovererZoomLevel == this.discovererZoomLevel &&
           other.isCleared == this.isCleared);
 }
 
@@ -2514,6 +2607,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<double?> guessLat;
   final Value<double?> guessLng;
   final Value<double?> capturedHeading;
+  final Value<double?> zoomLevel;
   final Value<String?> spotId;
   final Value<String?> discovererUid;
   final Value<String?> discovererNickname;
@@ -2524,6 +2618,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<double?> discovererGuessLat;
   final Value<double?> discovererGuessLng;
   final Value<double?> discovererCapturedHeading;
+  final Value<double?> discovererZoomLevel;
   final Value<int> isCleared;
   const HistorySpotsCompanion({
     this.id = const Value.absent(),
@@ -2545,6 +2640,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.zoomLevel = const Value.absent(),
     this.spotId = const Value.absent(),
     this.discovererUid = const Value.absent(),
     this.discovererNickname = const Value.absent(),
@@ -2555,6 +2651,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.discovererGuessLat = const Value.absent(),
     this.discovererGuessLng = const Value.absent(),
     this.discovererCapturedHeading = const Value.absent(),
+    this.discovererZoomLevel = const Value.absent(),
     this.isCleared = const Value.absent(),
   });
   HistorySpotsCompanion.insert({
@@ -2577,6 +2674,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.zoomLevel = const Value.absent(),
     this.spotId = const Value.absent(),
     this.discovererUid = const Value.absent(),
     this.discovererNickname = const Value.absent(),
@@ -2587,6 +2685,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.discovererGuessLat = const Value.absent(),
     this.discovererGuessLng = const Value.absent(),
     this.discovererCapturedHeading = const Value.absent(),
+    this.discovererZoomLevel = const Value.absent(),
     this.isCleared = const Value.absent(),
   }) : historyId = Value(historyId),
        sortOrder = Value(sortOrder),
@@ -2614,6 +2713,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<double>? guessLat,
     Expression<double>? guessLng,
     Expression<double>? capturedHeading,
+    Expression<double>? zoomLevel,
     Expression<String>? spotId,
     Expression<String>? discovererUid,
     Expression<String>? discovererNickname,
@@ -2624,6 +2724,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<double>? discovererGuessLat,
     Expression<double>? discovererGuessLng,
     Expression<double>? discovererCapturedHeading,
+    Expression<double>? discovererZoomLevel,
     Expression<int>? isCleared,
   }) {
     return RawValuesInsertable({
@@ -2649,6 +2750,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       if (guessLat != null) 'guess_lat': guessLat,
       if (guessLng != null) 'guess_lng': guessLng,
       if (capturedHeading != null) 'captured_heading': capturedHeading,
+      if (zoomLevel != null) 'zoom_level': zoomLevel,
       if (spotId != null) 'spot_id': spotId,
       if (discovererUid != null) 'discoverer_uid': discovererUid,
       if (discovererNickname != null) 'discoverer_nickname': discovererNickname,
@@ -2666,6 +2768,8 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
         'discoverer_guess_lng': discovererGuessLng,
       if (discovererCapturedHeading != null)
         'discoverer_captured_heading': discovererCapturedHeading,
+      if (discovererZoomLevel != null)
+        'discoverer_zoom_level': discovererZoomLevel,
       if (isCleared != null) 'is_cleared': isCleared,
     });
   }
@@ -2690,6 +2794,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<double?>? guessLat,
     Value<double?>? guessLng,
     Value<double?>? capturedHeading,
+    Value<double?>? zoomLevel,
     Value<String?>? spotId,
     Value<String?>? discovererUid,
     Value<String?>? discovererNickname,
@@ -2700,6 +2805,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<double?>? discovererGuessLat,
     Value<double?>? discovererGuessLng,
     Value<double?>? discovererCapturedHeading,
+    Value<double?>? discovererZoomLevel,
     Value<int>? isCleared,
   }) {
     return HistorySpotsCompanion(
@@ -2722,6 +2828,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       guessLat: guessLat ?? this.guessLat,
       guessLng: guessLng ?? this.guessLng,
       capturedHeading: capturedHeading ?? this.capturedHeading,
+      zoomLevel: zoomLevel ?? this.zoomLevel,
       spotId: spotId ?? this.spotId,
       discovererUid: discovererUid ?? this.discovererUid,
       discovererNickname: discovererNickname ?? this.discovererNickname,
@@ -2735,6 +2842,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       discovererGuessLng: discovererGuessLng ?? this.discovererGuessLng,
       discovererCapturedHeading:
           discovererCapturedHeading ?? this.discovererCapturedHeading,
+      discovererZoomLevel: discovererZoomLevel ?? this.discovererZoomLevel,
       isCleared: isCleared ?? this.isCleared,
     );
   }
@@ -2805,6 +2913,9 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     if (capturedHeading.present) {
       map['captured_heading'] = Variable<double>(capturedHeading.value);
     }
+    if (zoomLevel.present) {
+      map['zoom_level'] = Variable<double>(zoomLevel.value);
+    }
     if (spotId.present) {
       map['spot_id'] = Variable<String>(spotId.value);
     }
@@ -2845,6 +2956,11 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
         discovererCapturedHeading.value,
       );
     }
+    if (discovererZoomLevel.present) {
+      map['discoverer_zoom_level'] = Variable<double>(
+        discovererZoomLevel.value,
+      );
+    }
     if (isCleared.present) {
       map['is_cleared'] = Variable<int>(isCleared.value);
     }
@@ -2873,6 +2989,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
           ..write('capturedHeading: $capturedHeading, ')
+          ..write('zoomLevel: $zoomLevel, ')
           ..write('spotId: $spotId, ')
           ..write('discovererUid: $discovererUid, ')
           ..write('discovererNickname: $discovererNickname, ')
@@ -2887,6 +3004,7 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('discovererGuessLat: $discovererGuessLat, ')
           ..write('discovererGuessLng: $discovererGuessLng, ')
           ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
+          ..write('discovererZoomLevel: $discovererZoomLevel, ')
           ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
@@ -3501,6 +3619,7 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<double?> zoomLevel,
       Value<String?> spotId,
       Value<String?> discovererUid,
       Value<String?> discovererNickname,
@@ -3511,6 +3630,7 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       Value<double?> discovererGuessLat,
       Value<double?> discovererGuessLng,
       Value<double?> discovererCapturedHeading,
+      Value<double?> discovererZoomLevel,
       Value<int> isCleared,
     });
 typedef $$HistorySpotsTableUpdateCompanionBuilder =
@@ -3534,6 +3654,7 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<double?> zoomLevel,
       Value<String?> spotId,
       Value<String?> discovererUid,
       Value<String?> discovererNickname,
@@ -3544,6 +3665,7 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<double?> discovererGuessLat,
       Value<double?> discovererGuessLng,
       Value<double?> discovererCapturedHeading,
+      Value<double?> discovererZoomLevel,
       Value<int> isCleared,
     });
 
@@ -3671,6 +3793,11 @@ class $$HistorySpotsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get zoomLevel => $composableBuilder(
+    column: $table.zoomLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get spotId => $composableBuilder(
     column: $table.spotId,
     builder: (column) => ColumnFilters(column),
@@ -3718,6 +3845,11 @@ class $$HistorySpotsTableFilterComposer
 
   ColumnFilters<double> get discovererCapturedHeading => $composableBuilder(
     column: $table.discovererCapturedHeading,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3849,6 +3981,11 @@ class $$HistorySpotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get zoomLevel => $composableBuilder(
+    column: $table.zoomLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get spotId => $composableBuilder(
     column: $table.spotId,
     builder: (column) => ColumnOrderings(column),
@@ -3898,6 +4035,11 @@ class $$HistorySpotsTableOrderingComposer
 
   ColumnOrderings<double> get discovererCapturedHeading => $composableBuilder(
     column: $table.discovererCapturedHeading,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4011,6 +4153,9 @@ class $$HistorySpotsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get zoomLevel =>
+      $composableBuilder(column: $table.zoomLevel, builder: (column) => column);
+
   GeneratedColumn<String> get spotId =>
       $composableBuilder(column: $table.spotId, builder: (column) => column);
 
@@ -4058,6 +4203,11 @@ class $$HistorySpotsTableAnnotationComposer
 
   GeneratedColumn<double> get discovererCapturedHeading => $composableBuilder(
     column: $table.discovererCapturedHeading,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
     builder: (column) => column,
   );
 
@@ -4138,6 +4288,7 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<double?> zoomLevel = const Value.absent(),
                 Value<String?> spotId = const Value.absent(),
                 Value<String?> discovererUid = const Value.absent(),
                 Value<String?> discovererNickname = const Value.absent(),
@@ -4150,6 +4301,7 @@ class $$HistorySpotsTableTableManager
                 Value<double?> discovererGuessLat = const Value.absent(),
                 Value<double?> discovererGuessLng = const Value.absent(),
                 Value<double?> discovererCapturedHeading = const Value.absent(),
+                Value<double?> discovererZoomLevel = const Value.absent(),
                 Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion(
                 id: id,
@@ -4171,6 +4323,7 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
                 spotId: spotId,
                 discovererUid: discovererUid,
                 discovererNickname: discovererNickname,
@@ -4181,6 +4334,7 @@ class $$HistorySpotsTableTableManager
                 discovererGuessLat: discovererGuessLat,
                 discovererGuessLng: discovererGuessLng,
                 discovererCapturedHeading: discovererCapturedHeading,
+                discovererZoomLevel: discovererZoomLevel,
                 isCleared: isCleared,
               ),
           createCompanionCallback:
@@ -4204,6 +4358,7 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<double?> zoomLevel = const Value.absent(),
                 Value<String?> spotId = const Value.absent(),
                 Value<String?> discovererUid = const Value.absent(),
                 Value<String?> discovererNickname = const Value.absent(),
@@ -4216,6 +4371,7 @@ class $$HistorySpotsTableTableManager
                 Value<double?> discovererGuessLat = const Value.absent(),
                 Value<double?> discovererGuessLng = const Value.absent(),
                 Value<double?> discovererCapturedHeading = const Value.absent(),
+                Value<double?> discovererZoomLevel = const Value.absent(),
                 Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion.insert(
                 id: id,
@@ -4237,6 +4393,7 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
                 spotId: spotId,
                 discovererUid: discovererUid,
                 discovererNickname: discovererNickname,
@@ -4247,6 +4404,7 @@ class $$HistorySpotsTableTableManager
                 discovererGuessLat: discovererGuessLat,
                 discovererGuessLng: discovererGuessLng,
                 discovererCapturedHeading: discovererCapturedHeading,
+                discovererZoomLevel: discovererZoomLevel,
                 isCleared: isCleared,
               ),
           withReferenceMapper:

@@ -63,6 +63,7 @@ PhotoJudgement? _discovererJudgementFromDb(HistorySpotRow s) {
       lng: s.discovererGuessLng,
     ),
     capturedHeading: s.discovererCapturedHeading,
+    zoomLevel: s.discovererZoomLevel,
   );
 }
 
@@ -141,6 +142,7 @@ MissionHistory missionHistoryFromDriftRows(
                 lng: s.guessLng,
               ),
               capturedHeading: s.capturedHeading,
+              zoomLevel: s.zoomLevel,
               spotId: s.spotId == null ? null : SpotId.parse(s.spotId!),
               discovererUid: s.discovererUid,
               discovererNickname: s.discovererNickname,
@@ -309,6 +311,7 @@ class HistoryFromMissionMapper {
       guessLat: Value(cp?.guessPosition?.latitude),
       guessLng: Value(cp?.guessPosition?.longitude),
       capturedHeading: Value(cp?.capturedHeading),
+      zoomLevel: Value(cp?.zoomLevel),
       spotId: Value(spot.spotId?.value),
       isCleared: Value(isCleared ? 1 : 0),
     );

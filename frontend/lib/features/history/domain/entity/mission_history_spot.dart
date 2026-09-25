@@ -27,6 +27,9 @@ abstract class MissionHistorySpot with _$MissionHistorySpot {
     Coordinate? guessPosition,
     double? capturedHeading,
 
+    /// 撮影したときのズームの倍率 (古い履歴では null)
+    double? zoomLevel,
+
     /// スポット ID (旧データでは null)
     SpotId? spotId,
 

@@ -323,6 +323,7 @@ class HistoryRepository implements IHistoryRepository {
         discovererGuessLat: Value(judgement?.guessPosition?.latitude),
         discovererGuessLng: Value(judgement?.guessPosition?.longitude),
         discovererCapturedHeading: Value(judgement?.capturedHeading),
+        discovererZoomLevel: Value(judgement?.zoomLevel),
         // 発見者が変わった場合 (自分の送信待ちのクリアが拒否されたなど) は前のサムネを外す
         discovererThumbPath:
             discovererChanged ? const Value(null) : const Value.absent(),
@@ -387,6 +388,7 @@ class HistoryRepository implements IHistoryRepository {
         guessLat: Value(checkpoint.guessPosition?.latitude),
         guessLng: Value(checkpoint.guessPosition?.longitude),
         capturedHeading: Value(checkpoint.capturedHeading),
+        zoomLevel: Value(checkpoint.zoomLevel),
       ),
     );
   }

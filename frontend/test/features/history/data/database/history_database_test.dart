@@ -15,6 +15,9 @@ const _v5Columns = [
   'discoverer_captured_heading',
 ];
 
+/// v6 で足した列
+const _v6Columns = ['zoom_level', 'discoverer_zoom_level'];
+
 void main() {
   late File file;
 
@@ -23,7 +26,7 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('history_db_test');
     addTearDown(() => dir.delete(recursive: true));
     file = File('${dir.path}/history.db');
-    // 今の版 (v5) の DB を作っておく
+    // 今の版の DB を作っておく
     final db = HistoryDatabase(NativeDatabase(file));
     await db.customSelect('SELECT 1').get();
     await db.close();
@@ -52,7 +55,7 @@ void main() {
       });
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(version.data.values.single, 5);
+      expect(version.data.values.single, 6);
       expect(await columns(db), containsAll(_v5Columns));
     });
 
@@ -68,6 +71,19 @@ void main() {
       });
 
       expect(await columns(db), containsAll(_v5Columns));
+    });
+
+    test('v5 の DB に、ズームの倍率の列を足す', () async {
+      final db = await reopen((raw) {
+        for (final column in _v6Columns) {
+          // ignore: avoid_dynamic_calls
+          raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
+        }
+        // ignore: avoid_dynamic_calls
+        raw.execute('PRAGMA user_version = 5');
+      });
+
+      expect(await columns(db), containsAll(_v6Columns));
     });
   });
 }
