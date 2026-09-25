@@ -128,7 +128,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     return isLast ? _finalSpotCloseLabel : null;
   }
 
-  /// 全スポットのクリアかホストの途中終了で、全員が結果画面へ自動で遷移する
+  /// 全スポットのクリアかホストのゲーム終了で、全員が結果画面へ自動で遷移する
   @override
   bool get showsResultButton => false;
 }
@@ -334,9 +334,9 @@ class _CoopMissionEffects extends HookConsumerWidget {
   }
 }
 
-/// 地図の右上のメニュー (全員に「ルーム情報」「ルームを抜ける」、ホストには「途中終了」)
+/// 地図の右上のメニュー (全員に「ルーム情報」「ルームを抜ける」、ホストには「ゲーム終了」)
 ///
-/// 「途中終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる。
+/// 「ゲーム終了」は全員のミッションを終える操作なので、押し間違えないようメニューに入れる。
 class _CoopMissionMenu extends ConsumerWidget {
   const _CoopMissionMenu({required this.roomCode});
 
@@ -358,23 +358,42 @@ class _CoopMissionMenu extends ConsumerWidget {
           (_) => [
             PopupMenuItem(
               onTap: () => showRoomInfoSheet(context, roomCode),
-              child: const Text('ルーム情報'),
+              child: const _MenuItemLabel(icon: Icons.qr_code, label: 'ルーム情報'),
+            ),
+            PopupMenuItem(
+              onTap: () => leaveRoomWithConfirm(context, ref),
+              child: const _MenuItemLabel(icon: Icons.logout, label: 'ルームを抜ける'),
             ),
             if (canEnd)
               PopupMenuItem(
                 onTap: () => _endByHostWithConfirm(context, ref, roomCode),
-                child: const Text('途中終了'),
+                child: const _MenuItemLabel(
+                  icon: Icons.flag_outlined,
+                  label: 'ゲーム終了',
+                ),
               ),
-            PopupMenuItem(
-              onTap: () => leaveRoomWithConfirm(context, ref),
-              child: const Text('ルームを抜ける'),
-            ),
           ],
     );
   }
 }
 
-/// 確認してから、ホストとしてミッションを途中終了する
+/// メニューの項目 (アイコンと文言)
+class _MenuItemLabel extends StatelessWidget {
+  const _MenuItemLabel({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)],
+    );
+  }
+}
+
+/// 確認してから、ホストとしてゲームを終了する
 Future<void> _endByHostWithConfirm(
   BuildContext context,
   WidgetRef ref,
@@ -382,8 +401,8 @@ Future<void> _endByHostWithConfirm(
 ) async {
   final confirmed = await showConfirmDialog(
     context,
-    title: 'ミッションを終了しますか?',
-    content: '全員のミッションが終了し、結果画面に移ります。',
+    title: 'ゲームを終了しますか?',
+    content: '全員のゲームが終了し、結果画面に移ります。',
     confirmLabel: '終了する',
   );
   if (!confirmed) return;
