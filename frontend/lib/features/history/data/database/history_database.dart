@@ -177,7 +177,7 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 4;
 
   /// [table] に列 [definition] (「名前 型 ...」) を足す。同じ名前の列がすでにあれば何もしない
   Future<void> _addColumnIfMissing(String table, String definition) async {
@@ -238,6 +238,8 @@ UPDATE mission_histories SET destination_lat = (
         await _addColumnIfMissing('history_spots', 'guess_lng REAL');
         await _addColumnIfMissing('history_spots', 'captured_heading REAL');
       }
+      // 協力プレイ (#249) の列。開発中に 5・6 と版を上げたが、リリースしていないので
+      // 1 つの版にまとめた (列の並びは、新しく作った DB と同じにする)
       if (from < 4) {
         for (final column in [
           'room_code TEXT',
@@ -250,31 +252,19 @@ UPDATE mission_histories SET destination_lat = (
           await _addColumnIfMissing('mission_histories', column);
         }
         for (final column in [
+          'zoom_level REAL',
           'spot_id TEXT',
           'discoverer_uid TEXT',
           'discoverer_nickname TEXT',
           'discoverer_thumb_path TEXT',
-          'is_cleared INTEGER NOT NULL DEFAULT 1',
-        ]) {
-          await _addColumnIfMissing('history_spots', column);
-        }
-      }
-      if (from < 5) {
-        for (final column in [
           'discoverer_judge_rank TEXT',
           'discoverer_distance_error_meters REAL',
           'discoverer_heading_error_degrees REAL',
           'discoverer_guess_lat REAL',
           'discoverer_guess_lng REAL',
           'discoverer_captured_heading REAL',
-        ]) {
-          await _addColumnIfMissing('history_spots', column);
-        }
-      }
-      if (from < 6) {
-        for (final column in [
-          'zoom_level REAL',
           'discoverer_zoom_level REAL',
+          'is_cleared INTEGER NOT NULL DEFAULT 1',
         ]) {
           await _addColumnIfMissing('history_spots', column);
         }

@@ -5,21 +5,48 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 
-/// v5 で足した列
-const _v5Columns = [
+/// v4 で `mission_histories` に足した列
+const _v4HistoryColumns = [
+  'room_code',
+  'coop_sync_state',
+  'coop_is_host',
+  'coop_members',
+  'coop_expires_at',
+  'coop_delete_at',
+];
+
+/// v4 で `history_spots` に足した列
+const _v4SpotColumns = [
+  'zoom_level',
+  'spot_id',
+  'discoverer_uid',
+  'discoverer_nickname',
+  'discoverer_thumb_path',
   'discoverer_judge_rank',
   'discoverer_distance_error_meters',
   'discoverer_heading_error_degrees',
   'discoverer_guess_lat',
   'discoverer_guess_lng',
   'discoverer_captured_heading',
+  'discoverer_zoom_level',
+  'is_cleared',
 ];
-
-/// v6 で足した列
-const _v6Columns = ['zoom_level', 'discoverer_zoom_level'];
 
 void main() {
   late File file;
+
+  /// 新しく作った DB の列 (テーブルごと)
+  late Map<String, List<String>> freshColumns;
+
+  Future<List<String>> columns(HistoryDatabase db, String table) async => [
+    for (final row in await db.customSelect('PRAGMA table_info($table)').get())
+      row.read<String>('name'),
+  ];
+
+  Future<Map<String, List<String>>> allColumns(HistoryDatabase db) async => {
+    for (final table in ['mission_histories', 'history_spots'])
+      table: await columns(db, table),
+  };
 
   setUp(() async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -28,7 +55,7 @@ void main() {
     file = File('${dir.path}/history.db');
     // 今の版の DB を作っておく
     final db = HistoryDatabase(NativeDatabase(file));
-    await db.customSelect('SELECT 1').get();
+    freshColumns = await allColumns(db);
     await db.close();
   });
 
@@ -41,44 +68,72 @@ void main() {
     return db;
   }
 
-  Future<List<String>> columns(HistoryDatabase db) async => [
-    for (final row
-        in await db.customSelect('PRAGMA table_info(history_spots)').get())
-      row.read<String>('name'),
-  ];
+  /// v4 で足した列を落として v3 (main でリリース済みの版) の DB にし、[statements] を実行する
+  ///
+  /// [keepSpotColumns] は、落とさずに残す `history_spots` の列の数 (移行の途中を再現する)。
+  DatabaseSetup asV3({
+    int keepSpotColumns = 0,
+    List<String> statements = const [],
+  }) => (raw) {
+    for (final column in _v4HistoryColumns) {
+      raw.execute('ALTER TABLE mission_histories DROP COLUMN $column');
+    }
+    for (final column in _v4SpotColumns.skip(keepSpotColumns)) {
+      raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
+    }
+    raw.execute('PRAGMA user_version = 3');
+    statements.forEach(raw.execute);
+  };
 
   group('HistoryDatabase の移行', () {
+    test('v3 の DB を、1 回の移行で今の版の列にする (履歴は残り、クリア済みになる)', () async {
+      final db = await reopen(
+        asV3(
+          statements: [
+            '''
+INSERT INTO mission_histories
+  (id, completed_at, started_at, departure_lat, departure_lng, overview_polyline, radius_meters)
+VALUES ('h1', 2, 1, 35, 139, 'p', 1000)
+''',
+            '''
+INSERT INTO history_spots
+  (history_id, sort_order, is_destination, lat, lng, street_view_image_path)
+VALUES ('h1', 0, 1, 35, 139, '/sv.jpg')
+''',
+          ],
+        ),
+      );
+
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data.values.single, 4);
+      expect(await allColumns(db), freshColumns);
+      final spot =
+          await db
+              .customSelect('SELECT is_cleared FROM history_spots')
+              .getSingle();
+      expect(spot.read<int>('is_cleared'), 1);
+      final history =
+          await db
+              .customSelect('SELECT mode FROM mission_histories')
+              .getSingle();
+      expect(history.read<String>('mode'), 'random');
+    });
+
     test('版だけが古く、列はすでにある DB も開ける (古いアプリで開き直したときなど)', () async {
       final db = await reopen((raw) {
-        raw.execute('PRAGMA user_version = 4');
+        raw.execute('PRAGMA user_version = 3');
       });
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(version.data.values.single, 6);
-      expect(await columns(db), containsAll(_v5Columns));
+      expect(version.data.values.single, 4);
+      expect(await allColumns(db), freshColumns);
     });
 
     test('移行が途中で止まった DB も、足りない列を足して開ける', () async {
-      final db = await reopen((raw) {
-        // v5 の列のうち最初の 1 つだけが足された状態 (移行の途中でアプリが落ちた) を作る
-        for (final column in _v5Columns.skip(1)) {
-          raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
-        }
-        raw.execute('PRAGMA user_version = 4');
-      });
+      // 最初の 1 列だけが足された状態 (移行の途中でアプリが落ちた) を作る
+      final db = await reopen(asV3(keepSpotColumns: 1));
 
-      expect(await columns(db), containsAll(_v5Columns));
-    });
-
-    test('v5 の DB に、ズームの倍率の列を足す', () async {
-      final db = await reopen((raw) {
-        for (final column in _v6Columns) {
-          raw.execute('ALTER TABLE history_spots DROP COLUMN $column');
-        }
-        raw.execute('PRAGMA user_version = 5');
-      });
-
-      expect(await columns(db), containsAll(_v6Columns));
+      expect(await allColumns(db), freshColumns);
     });
   });
 }
