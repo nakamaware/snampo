@@ -69,7 +69,10 @@ abstract class CoopMissionState with _$CoopMissionState {
     /// 最新のお知らせ
     CoopNotice? notice,
 
-    /// 最新の、他の人による発見 (最後のスポットは、ルームの終了に合わせて Mission 画面が開く)
+    /// 最新の、他の人がその場で発見したこと (そのスポットの結果画面を開く)
+    ///
+    /// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
+    /// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
     CoopDiscoveryEvent? discovery,
   }) = _CoopMissionState;
 }
@@ -79,7 +82,7 @@ abstract class CoopMissionState with _$CoopMissionState {
 /// ルームと `clears` を監視し、次を行う。
 /// - playing になったら、バンドルを取得してミッションを端末に用意し、履歴を「進行中」で作る
 /// - `clears` の変更を履歴と進捗に反映し (サーバが正)、他の人の発見をバナーで知らせて、
-///   そのスポットの結果画面へ移るためのイベントを出す
+///   その場で届いた発見なら、そのスポットの結果画面へ移るためのイベントを出す
 /// - 全スポットがクリアされたら finished にする (どの端末が書いてもよい)
 /// - 確定の条件 ([shouldFinalizeHistory]) を満たしたら履歴を確定する
 ///   (finished のあとも、サムネを取得するまでは確定しない)
@@ -91,6 +94,9 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// サーバと同期したクリアを 1 度でも反映したか
   var _hasSyncedWithServer = false;
+
+  /// 前に発見を知らせてから、サーバの最新の値でない (電波が切れていた) 値が届いたか
+  var _hasBeenStale = false;
   var _noticeId = 0;
   var _discoveryId = 0;
 
@@ -123,6 +129,7 @@ class CoopMissionStore extends _$CoopMissionStore {
         final snapshot = next.value;
         if (snapshot != null) {
           _latestClears = snapshot;
+          if (!snapshot.isUpToDate) _hasBeenStale = true;
           _syncClears();
         }
       }, fireImmediately: true)
@@ -356,44 +363,58 @@ class CoopMissionStore extends _$CoopMissionStore {
     });
   }
 
+  /// 他の人の新しい発見を知らせる
+  ///
+  /// - ルームに戻ったとき (途中参加・復帰) に追いついた発見は、何も知らせない。
+  ///   最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
+  ///   届くので、サーバの最初の値までを「追いつくまで」とする
+  /// - その場で 1 件だけ届いた発見は、バナーを出し、そのスポットの結果画面へ移るイベントを出す
+  /// - 電波が戻ったときに届いた発見 (前の値がキャッシュ) や、一度に複数届いた発見は、
+  ///   バナーだけにする (複数なら 1 つにまとめる)
   Future<void> _announceNewDiscoveries(SpotClearsSnapshot snapshot) async {
     final clears = snapshot.clears;
     final known = _knownClearedSpotIds;
     _knownClearedSpotIds = clears.map((c) => c.spotId).toSet();
-    // 追いつくまで (途中参加・復帰) の発見は、バナーを出さず結果画面も開かない。
-    // 最初はキャッシュの値が届き、アプリを終了していた間の発見はそのあとのサーバの値で
-    // 届くので、サーバの最初の値までを「追いつくまで」とする
-    final isCatchingUp = known == null || !_hasSyncedWithServer;
+    final isRejoining = known == null || !_hasSyncedWithServer;
+    final wasStale = _hasBeenStale;
     if (snapshot.isUpToDate) {
       _hasSyncedWithServer = true;
+      _hasBeenStale = false;
     }
-    if (isCatchingUp) {
+    if (isRejoining) {
       return;
     }
     final uid = await _uid();
     final spots = _spots;
+    final found = [
+      for (final clear in clears)
+        if (!known.contains(clear.spotId) && clear.clearedBy != uid)
+          if (spots.indexWhere((s) => s.spotId == clear.spotId) case final index
+              when index >= 0)
+            (index: index, clear: clear),
+    ];
+    if (found.isEmpty) {
+      return;
+    }
+    if (found.length > 1) {
+      _notify('他のメンバーが ${found.length} か所のスポットを発見!');
+      return;
+    }
+    final (:index, :clear) = found.single;
+    final name = _displayName(clear.clearedBy, clear.nickname);
+    final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
+    _notify('$nameさんが$labelを発見!');
+    final isRealtime = snapshot.isUpToDate && !wasStale;
     // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
     final allCleared = clears.length >= spots.length;
-    for (final clear in clears) {
-      if (known.contains(clear.spotId) || clear.clearedBy == uid) {
-        continue;
-      }
-      final index = spots.indexWhere((s) => s.spotId == clear.spotId);
-      if (index < 0) {
-        continue;
-      }
-      final name = _displayName(clear.clearedBy, clear.nickname);
-      final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
-      _notify('$nameさんが$labelを発見!');
-      if (!allCleared) {
-        state = state.copyWith(
-          discovery: CoopDiscoveryEvent(
-            id: ++_discoveryId,
-            spotIndex: index,
-            discovererName: name,
-          ),
-        );
-      }
+    if (isRealtime && !allCleared) {
+      state = state.copyWith(
+        discovery: CoopDiscoveryEvent(
+          id: ++_discoveryId,
+          spotIndex: index,
+          discovererName: name,
+        ),
+      );
     }
   }
 

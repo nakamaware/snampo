@@ -307,6 +307,35 @@ void main() {
         expect(state().notice?.message, 'otherさんがスポット 3を発見!');
         expect(state().discovery?.spotIndex, 2);
       });
+
+      test('電波が戻ったときに届いた発見は、バナーだけにして結果画面を開かない', () async {
+        await receive([clear('a', 'other')], isUpToDate: false);
+        await receive([clear('a', 'other')], isUpToDate: true);
+        // 電波が切れて、端末に残っていた値になる
+        await receive([clear('a', 'other')], isUpToDate: false);
+        // 電波が戻り、切れていた間の発見 (c) が届く
+        await receive([
+          clear('a', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: true);
+
+        expect(state().notice?.message, 'otherさんがスポット 3を発見!');
+        expect(state().discovery, isNull);
+      });
+
+      test('一度に複数の発見が届いたら、まとめたバナーを 1 つだけ出し、結果画面を開かない', () async {
+        await receive([clear('a', 'other')], isUpToDate: false);
+        await receive([clear('a', 'other')], isUpToDate: true);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'another'),
+        ], isUpToDate: true);
+
+        expect(state().notice?.message, '他のメンバーが 2 か所のスポットを発見!');
+        expect(state().notice?.id, 1);
+        expect(state().discovery, isNull);
+      });
     });
   });
 }

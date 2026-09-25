@@ -549,7 +549,10 @@ mixin _$CoopMissionState {
  bool get isReady;/// ミッションの用意に失敗した理由
  Object? get prepareError;/// サムネを共有中のスポット (「発見を共有中…」の表示用)
  Set<SpotId> get sharingSpotIds;/// 最新のお知らせ
- CoopNotice? get notice;/// 最新の、他の人による発見 (最後のスポットは、ルームの終了に合わせて Mission 画面が開く)
+ CoopNotice? get notice;/// 最新の、他の人がその場で発見したこと (そのスポットの結果画面を開く)
+///
+/// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
+/// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
  CoopDiscoveryEvent? get discovery;
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
@@ -787,7 +790,10 @@ class _CoopMissionState implements CoopMissionState {
 
 /// 最新のお知らせ
 @override final  CoopNotice? notice;
-/// 最新の、他の人による発見 (最後のスポットは、ルームの終了に合わせて Mission 画面が開く)
+/// 最新の、他の人がその場で発見したこと (そのスポットの結果画面を開く)
+///
+/// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
+/// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
 @override final  CoopDiscoveryEvent? discovery;
 
 /// Create a copy of CoopMissionState

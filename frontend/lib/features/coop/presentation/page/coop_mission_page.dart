@@ -183,22 +183,43 @@ class _CoopMissionEffects extends HookConsumerWidget {
     );
   }
 
+  /// スポットの結果画面を開き、閉じるまで待つ
+  ///
+  /// 開いている間は [showingSpot] を true にする。画面の切り替えは次のフレームなので、
+  /// その間に届いた発見で結果画面を重ねて開かないようにするため。
+  static Future<void> _showSpotResult(
+    BuildContext context,
+    SpotResultPageArgs args,
+    ObjectRef<bool> showingSpot,
+  ) async {
+    showingSpot.value = true;
+    try {
+      await context.push<void>('/spot-result', extra: args);
+    } finally {
+      showingSpot.value = false;
+    }
+  }
+
   /// 他の人が発見したスポットの結果画面を開く
   ///
-  /// Mission 画面が前面にあるときだけ開く (撮影中などは割り込まず、お知らせだけにする)。
+  /// Mission 画面が前面にあるときだけ開く (撮影中やほかのスポットの結果画面を見ている間は
+  /// 割り込まず、お知らせだけにする)。
   static void _openDiscoveredSpot(
     BuildContext context,
     WidgetRef ref,
     CoopDiscoveryEvent discovery,
+    ObjectRef<bool> showingSpot,
   ) {
-    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    if (showingSpot.value || !(ModalRoute.of(context)?.isCurrent ?? false)) {
+      return;
+    }
     final args = _spotResultArgs(
       ref,
       discovery.spotIndex,
       discovererDisplayName: discovery.discovererName,
     );
     if (args != null) {
-      context.push('/spot-result', extra: args);
+      unawaited(_showSpotResult(context, args, showingSpot));
     }
   }
 
@@ -212,7 +233,9 @@ class _CoopMissionEffects extends HookConsumerWidget {
     RoomCode roomCode,
     Room room,
     ObjectRef<bool> finalSpotShown,
+    ObjectRef<bool> showingSpot,
   ) async {
+    if (showingSpot.value) return;
     if (room.finishReason != FinishReason.allCleared || finalSpotShown.value) {
       context.go('/coop/result');
       return;
@@ -249,7 +272,7 @@ class _CoopMissionEffects extends HookConsumerWidget {
       context.go('/coop/result');
       return;
     }
-    await context.push<void>('/spot-result', extra: args);
+    await _showSpotResult(context, args, showingSpot);
   }
 
   /// 期限切れを知らせて結果画面へ移る
@@ -262,6 +285,8 @@ class _CoopMissionEffects extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // スポットの結果画面を開いているか (重ねて開かないため)
+    final showingSpot = useRef(false);
     // ミッションの用意とクリアの同期は、協力プレイ中ずっと動かす
     ref
       ..watch(coopMissionStoreProvider(roomCode).select((_) => null))
@@ -280,12 +305,14 @@ class _CoopMissionEffects extends HookConsumerWidget {
             ),
           );
       })
-      // 他の人が発見したら、全員でそのスポットの結果画面を見る
+      // 他の人がその場で発見したら、全員でそのスポットの結果画面を見る
       ..listen(coopMissionStoreProvider(roomCode).select((s) => s.discovery), (
         _,
         discovery,
       ) {
-        if (discovery != null) _openDiscoveredSpot(context, ref, discovery);
+        if (discovery != null) {
+          _openDiscoveredSpot(context, ref, discovery, showingSpot);
+        }
       });
 
     // finished になったら全員が結果画面へ移る。撮影中やスポットの結果画面を見ている間は
@@ -305,7 +332,14 @@ class _CoopMissionEffects extends HookConsumerWidget {
         // 次のフレームでも前面にあるときだけ移る
         if (context.mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
           unawaited(
-            _onFinished(context, ref, roomCode, finishedRoom, finalSpotShown),
+            _onFinished(
+              context,
+              ref,
+              roomCode,
+              finishedRoom,
+              finalSpotShown,
+              showingSpot,
+            ),
           );
         }
       });
