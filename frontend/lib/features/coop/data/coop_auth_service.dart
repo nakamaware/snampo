@@ -11,7 +11,9 @@ class CoopAuthService implements ICoopAuthService {
   /// [CoopAuthService] を作成する
   CoopAuthService(this._firebaseSetup);
 
-  final Future<FirebaseSetup> Function() _firebaseSetup;
+  /// Firebase の初期化を待つ (`retryIfFailed` なら、前の失敗から初期化し直す)
+  final Future<FirebaseSetup> Function({required bool retryIfFailed})
+  _firebaseSetup;
 
   static Future<bool> _isOffline() async {
     final results = await Connectivity().checkConnectivity();
@@ -21,7 +23,8 @@ class CoopAuthService implements ICoopAuthService {
   @override
   Future<String?> signedInUid() async {
     try {
-      await _firebaseSetup();
+      // 通信しない読み取りなので、初期化に失敗していても初期化し直さない
+      await _firebaseSetup(retryIfFailed: false);
     } on Object {
       return null;
     }
@@ -31,7 +34,8 @@ class CoopAuthService implements ICoopAuthService {
   @override
   Future<String> ensureSignedIn() async {
     try {
-      await _firebaseSetup();
+      // サインインを試すときは、前の初期化に失敗していれば初期化し直す
+      await _firebaseSetup(retryIfFailed: true);
     } on Object catch (e) {
       throw CoopAuthException(
         CoopAuthFailure.other,

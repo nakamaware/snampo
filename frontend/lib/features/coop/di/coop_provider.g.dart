@@ -57,7 +57,7 @@ final class CoopAuthServiceProvider
   }
 }
 
-String _$coopAuthServiceHash() => r'8fe2086826e6b9b403d2020957a01f3592b0189d';
+String _$coopAuthServiceHash() => r'036257f3d377b83f8a47a821ccc3ee52041bb3e3';
 
 /// ルームのリポジトリ (Firebase の初期化後に使う)
 

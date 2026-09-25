@@ -38,7 +38,7 @@ part 'coop_provider.g.dart';
 /// 協力プレイの認証
 @Riverpod(keepAlive: true)
 ICoopAuthService coopAuthService(Ref ref) =>
-    CoopAuthService(() => ref.read(firebaseSetupProvider.future));
+    CoopAuthService(ref.read(firebaseSetupReaderProvider));
 
 /// ルームのリポジトリ (Firebase の初期化後に使う)
 @Riverpod(keepAlive: true)
