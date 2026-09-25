@@ -224,8 +224,9 @@ class _CoopMissionEffects extends HookConsumerWidget {
 
   /// ルームが終わったら、Mission 画面が前面に戻った時点で結果画面へ移る
   ///
-  /// 全スポットのクリアで終わったときは、先に最後に発見されたスポットの結果画面を開き、
-  /// それを閉じて戻ってきたら結果画面へ移る。自分で撮影した (結果を見た) スポットなら開かない。
+  /// 他の人がその場で最後のスポットを発見して終わったときは、先にそのスポットの結果画面を
+  /// 開き、それを閉じて戻ってきたら結果画面へ移る。ルームに戻ったときに追いついた発見や、
+  /// 自分で撮影した (結果を見た) スポットなら開かない。
   static Future<void> _onFinished(
     BuildContext context,
     WidgetRef ref,
@@ -241,30 +242,20 @@ class _CoopMissionEffects extends HookConsumerWidget {
     }
     finalSpotShown.value = true;
     // 発見者とサムネを進捗に反映し終えてから開く
-    await ref.read(coopMissionStoreProvider(roomCode).notifier).clearsSynced;
+    final store = ref.read(coopMissionStoreProvider(roomCode).notifier);
+    await store.clearsSynced;
     if (!context.mounted) return;
-    final clears =
-        ref.read(coopClearsProvider(roomCode)).value?.clears ?? const [];
-    final mission =
-        ref.read(persistedMissionProvider(MissionSessionKind.coop)).value;
-    if (clears.isEmpty || mission == null) {
-      context.go('/coop/result');
-      return;
-    }
-    final last = clears.reduce(
-      (a, b) => a.clearedAt.isAfter(b.clearedAt) ? a : b,
-    );
-    final members = ref.read(coopMembersProvider(roomCode)).value ?? const [];
-    final args = _spotResultArgs(
-      ref,
-      mission.spots.indexWhere((s) => s.spotId == last.spotId),
-      discovererDisplayName:
-          displayNicknames([
-            for (final m in members) (uid: m.uid, nickname: m.nickname),
-          ])[last.clearedBy] ??
-          last.nickname,
-      closeLabel: _finalSpotCloseLabel,
-    );
+    final discovery =
+        ref.read(coopMissionStoreProvider(roomCode)).finalDiscovery;
+    final args =
+        discovery == null
+            ? null
+            : _spotResultArgs(
+              ref,
+              discovery.spotIndex,
+              discovererDisplayName: discovery.discovererName,
+              closeLabel: _finalSpotCloseLabel,
+            );
     // 自分で撮影した (結果を見た) スポットなら開かない
     if (args == null || args.checkpoint.userPhotoPath != null) {
       context.go('/coop/result');

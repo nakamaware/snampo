@@ -308,6 +308,46 @@ void main() {
         expect(state().discovery?.spotIndex, 2);
       });
 
+      test('その場で届いた最後のスポットの発見は、ルームの終了に合わせて開く', () async {
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+        ], isUpToDate: false);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: true);
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+          clear('d', 'other'),
+        ], isUpToDate: true);
+
+        expect(state().finalDiscovery?.spotIndex, 3);
+        expect(state().discovery, isNull);
+      });
+
+      test('ルームに戻ったときに追いついた最後のスポットの発見では、最後のスポットの結果画面を開かない', () async {
+        // Home の「ルームに戻る」は、端末に残っていた (まだ終わっていない) ルームから開く
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+        ], isUpToDate: false);
+        // 終了していた間に、最後のスポットが発見されていた
+        await receive([
+          clear('a', 'other'),
+          clear('b', 'other'),
+          clear('c', 'other'),
+          clear('d', 'other'),
+        ], isUpToDate: true);
+
+        expect(state().finalDiscovery, isNull);
+        expect(state().notice, isNull);
+      });
+
       test('電波が戻ったときに届いた発見は、バナーだけにして結果画面を開かない', () async {
         await receive([clear('a', 'other')], isUpToDate: false);
         await receive([clear('a', 'other')], isUpToDate: true);

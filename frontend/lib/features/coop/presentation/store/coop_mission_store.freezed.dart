@@ -553,7 +553,11 @@ mixin _$CoopMissionState {
 ///
 /// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
 /// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
- CoopDiscoveryEvent? get discovery;
+ CoopDiscoveryEvent? get discovery;/// 他の人がその場で最後のスポットを発見したこと (全スポットがクリアされた)
+///
+/// ルームの終了に合わせて Mission 画面が、このスポットの結果画面を開く。
+/// ルームに戻ったときや電波が戻ったときに追いついた発見では出さない。
+ CoopDiscoveryEvent? get finalDiscovery;
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -564,16 +568,16 @@ $CoopMissionStateCopyWith<CoopMissionState> get copyWith => _$CoopMissionStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoopMissionState&&(identical(other.isReady, isReady) || other.isReady == isReady)&&const DeepCollectionEquality().equals(other.prepareError, prepareError)&&const DeepCollectionEquality().equals(other.sharingSpotIds, sharingSpotIds)&&(identical(other.notice, notice) || other.notice == notice)&&(identical(other.discovery, discovery) || other.discovery == discovery));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoopMissionState&&(identical(other.isReady, isReady) || other.isReady == isReady)&&const DeepCollectionEquality().equals(other.prepareError, prepareError)&&const DeepCollectionEquality().equals(other.sharingSpotIds, sharingSpotIds)&&(identical(other.notice, notice) || other.notice == notice)&&(identical(other.discovery, discovery) || other.discovery == discovery)&&(identical(other.finalDiscovery, finalDiscovery) || other.finalDiscovery == finalDiscovery));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isReady,const DeepCollectionEquality().hash(prepareError),const DeepCollectionEquality().hash(sharingSpotIds),notice,discovery);
+int get hashCode => Object.hash(runtimeType,isReady,const DeepCollectionEquality().hash(prepareError),const DeepCollectionEquality().hash(sharingSpotIds),notice,discovery,finalDiscovery);
 
 @override
 String toString() {
-  return 'CoopMissionState(isReady: $isReady, prepareError: $prepareError, sharingSpotIds: $sharingSpotIds, notice: $notice, discovery: $discovery)';
+  return 'CoopMissionState(isReady: $isReady, prepareError: $prepareError, sharingSpotIds: $sharingSpotIds, notice: $notice, discovery: $discovery, finalDiscovery: $finalDiscovery)';
 }
 
 
@@ -584,11 +588,11 @@ abstract mixin class $CoopMissionStateCopyWith<$Res>  {
   factory $CoopMissionStateCopyWith(CoopMissionState value, $Res Function(CoopMissionState) _then) = _$CoopMissionStateCopyWithImpl;
 @useResult
 $Res call({
- bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice, CoopDiscoveryEvent? discovery
+ bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice, CoopDiscoveryEvent? discovery, CoopDiscoveryEvent? finalDiscovery
 });
 
 
-$CoopNoticeCopyWith<$Res>? get notice;$CoopDiscoveryEventCopyWith<$Res>? get discovery;
+$CoopNoticeCopyWith<$Res>? get notice;$CoopDiscoveryEventCopyWith<$Res>? get discovery;$CoopDiscoveryEventCopyWith<$Res>? get finalDiscovery;
 
 }
 /// @nodoc
@@ -601,12 +605,13 @@ class _$CoopMissionStateCopyWithImpl<$Res>
 
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isReady = null,Object? prepareError = freezed,Object? sharingSpotIds = null,Object? notice = freezed,Object? discovery = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isReady = null,Object? prepareError = freezed,Object? sharingSpotIds = null,Object? notice = freezed,Object? discovery = freezed,Object? finalDiscovery = freezed,}) {
   return _then(_self.copyWith(
 isReady: null == isReady ? _self.isReady : isReady // ignore: cast_nullable_to_non_nullable
 as bool,prepareError: freezed == prepareError ? _self.prepareError : prepareError ,sharingSpotIds: null == sharingSpotIds ? _self.sharingSpotIds : sharingSpotIds // ignore: cast_nullable_to_non_nullable
 as Set<SpotId>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as CoopNotice?,discovery: freezed == discovery ? _self.discovery : discovery // ignore: cast_nullable_to_non_nullable
+as CoopDiscoveryEvent?,finalDiscovery: freezed == finalDiscovery ? _self.finalDiscovery : finalDiscovery // ignore: cast_nullable_to_non_nullable
 as CoopDiscoveryEvent?,
   ));
 }
@@ -633,6 +638,18 @@ $CoopDiscoveryEventCopyWith<$Res>? get discovery {
 
   return $CoopDiscoveryEventCopyWith<$Res>(_self.discovery!, (value) {
     return _then(_self.copyWith(discovery: value));
+  });
+}/// Create a copy of CoopMissionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CoopDiscoveryEventCopyWith<$Res>? get finalDiscovery {
+    if (_self.finalDiscovery == null) {
+    return null;
+  }
+
+  return $CoopDiscoveryEventCopyWith<$Res>(_self.finalDiscovery!, (value) {
+    return _then(_self.copyWith(finalDiscovery: value));
   });
 }
 }
@@ -716,10 +733,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery,  CoopDiscoveryEvent? finalDiscovery)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CoopMissionState() when $default != null:
-return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery);case _:
+return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery,_that.finalDiscovery);case _:
   return orElse();
 
 }
@@ -737,10 +754,10 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery,  CoopDiscoveryEvent? finalDiscovery)  $default,) {final _that = this;
 switch (_that) {
 case _CoopMissionState():
-return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery);case _:
+return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery,_that.finalDiscovery);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -757,10 +774,10 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isReady,  Object? prepareError,  Set<SpotId> sharingSpotIds,  CoopNotice? notice,  CoopDiscoveryEvent? discovery,  CoopDiscoveryEvent? finalDiscovery)?  $default,) {final _that = this;
 switch (_that) {
 case _CoopMissionState() when $default != null:
-return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery);case _:
+return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.notice,_that.discovery,_that.finalDiscovery);case _:
   return null;
 
 }
@@ -772,7 +789,7 @@ return $default(_that.isReady,_that.prepareError,_that.sharingSpotIds,_that.noti
 
 
 class _CoopMissionState implements CoopMissionState {
-  const _CoopMissionState({this.isReady = false, this.prepareError, final  Set<SpotId> sharingSpotIds = const <SpotId>{}, this.notice, this.discovery}): _sharingSpotIds = sharingSpotIds;
+  const _CoopMissionState({this.isReady = false, this.prepareError, final  Set<SpotId> sharingSpotIds = const <SpotId>{}, this.notice, this.discovery, this.finalDiscovery}): _sharingSpotIds = sharingSpotIds;
 
 
 /// ミッションを端末に用意できたか (バンドルの取得と履歴の作成が済んだか)
@@ -795,6 +812,11 @@ class _CoopMissionState implements CoopMissionState {
 /// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
 /// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
 @override final  CoopDiscoveryEvent? discovery;
+/// 他の人がその場で最後のスポットを発見したこと (全スポットがクリアされた)
+///
+/// ルームの終了に合わせて Mission 画面が、このスポットの結果画面を開く。
+/// ルームに戻ったときや電波が戻ったときに追いついた発見では出さない。
+@override final  CoopDiscoveryEvent? finalDiscovery;
 
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
@@ -806,16 +828,16 @@ _$CoopMissionStateCopyWith<_CoopMissionState> get copyWith => __$CoopMissionStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CoopMissionState&&(identical(other.isReady, isReady) || other.isReady == isReady)&&const DeepCollectionEquality().equals(other.prepareError, prepareError)&&const DeepCollectionEquality().equals(other._sharingSpotIds, _sharingSpotIds)&&(identical(other.notice, notice) || other.notice == notice)&&(identical(other.discovery, discovery) || other.discovery == discovery));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CoopMissionState&&(identical(other.isReady, isReady) || other.isReady == isReady)&&const DeepCollectionEquality().equals(other.prepareError, prepareError)&&const DeepCollectionEquality().equals(other._sharingSpotIds, _sharingSpotIds)&&(identical(other.notice, notice) || other.notice == notice)&&(identical(other.discovery, discovery) || other.discovery == discovery)&&(identical(other.finalDiscovery, finalDiscovery) || other.finalDiscovery == finalDiscovery));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isReady,const DeepCollectionEquality().hash(prepareError),const DeepCollectionEquality().hash(_sharingSpotIds),notice,discovery);
+int get hashCode => Object.hash(runtimeType,isReady,const DeepCollectionEquality().hash(prepareError),const DeepCollectionEquality().hash(_sharingSpotIds),notice,discovery,finalDiscovery);
 
 @override
 String toString() {
-  return 'CoopMissionState(isReady: $isReady, prepareError: $prepareError, sharingSpotIds: $sharingSpotIds, notice: $notice, discovery: $discovery)';
+  return 'CoopMissionState(isReady: $isReady, prepareError: $prepareError, sharingSpotIds: $sharingSpotIds, notice: $notice, discovery: $discovery, finalDiscovery: $finalDiscovery)';
 }
 
 
@@ -826,11 +848,11 @@ abstract mixin class _$CoopMissionStateCopyWith<$Res> implements $CoopMissionSta
   factory _$CoopMissionStateCopyWith(_CoopMissionState value, $Res Function(_CoopMissionState) _then) = __$CoopMissionStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice, CoopDiscoveryEvent? discovery
+ bool isReady, Object? prepareError, Set<SpotId> sharingSpotIds, CoopNotice? notice, CoopDiscoveryEvent? discovery, CoopDiscoveryEvent? finalDiscovery
 });
 
 
-@override $CoopNoticeCopyWith<$Res>? get notice;@override $CoopDiscoveryEventCopyWith<$Res>? get discovery;
+@override $CoopNoticeCopyWith<$Res>? get notice;@override $CoopDiscoveryEventCopyWith<$Res>? get discovery;@override $CoopDiscoveryEventCopyWith<$Res>? get finalDiscovery;
 
 }
 /// @nodoc
@@ -843,12 +865,13 @@ class __$CoopMissionStateCopyWithImpl<$Res>
 
 /// Create a copy of CoopMissionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isReady = null,Object? prepareError = freezed,Object? sharingSpotIds = null,Object? notice = freezed,Object? discovery = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isReady = null,Object? prepareError = freezed,Object? sharingSpotIds = null,Object? notice = freezed,Object? discovery = freezed,Object? finalDiscovery = freezed,}) {
   return _then(_CoopMissionState(
 isReady: null == isReady ? _self.isReady : isReady // ignore: cast_nullable_to_non_nullable
 as bool,prepareError: freezed == prepareError ? _self.prepareError : prepareError ,sharingSpotIds: null == sharingSpotIds ? _self._sharingSpotIds : sharingSpotIds // ignore: cast_nullable_to_non_nullable
 as Set<SpotId>,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as CoopNotice?,discovery: freezed == discovery ? _self.discovery : discovery // ignore: cast_nullable_to_non_nullable
+as CoopDiscoveryEvent?,finalDiscovery: freezed == finalDiscovery ? _self.finalDiscovery : finalDiscovery // ignore: cast_nullable_to_non_nullable
 as CoopDiscoveryEvent?,
   ));
 }
@@ -876,6 +899,18 @@ $CoopDiscoveryEventCopyWith<$Res>? get discovery {
 
   return $CoopDiscoveryEventCopyWith<$Res>(_self.discovery!, (value) {
     return _then(_self.copyWith(discovery: value));
+  });
+}/// Create a copy of CoopMissionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CoopDiscoveryEventCopyWith<$Res>? get finalDiscovery {
+    if (_self.finalDiscovery == null) {
+    return null;
+  }
+
+  return $CoopDiscoveryEventCopyWith<$Res>(_self.finalDiscovery!, (value) {
+    return _then(_self.copyWith(finalDiscovery: value));
   });
 }
 }

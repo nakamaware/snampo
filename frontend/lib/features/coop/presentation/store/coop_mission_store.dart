@@ -74,6 +74,12 @@ abstract class CoopMissionState with _$CoopMissionState {
     /// 電波が戻ったときや一度に複数届いた発見では出さない (バナーだけにする)。
     /// 最後のスポットは、ルームの終了に合わせて Mission 画面が開く。
     CoopDiscoveryEvent? discovery,
+
+    /// 他の人がその場で最後のスポットを発見したこと (全スポットがクリアされた)
+    ///
+    /// ルームの終了に合わせて Mission 画面が、このスポットの結果画面を開く。
+    /// ルームに戻ったときや電波が戻ったときに追いついた発見では出さない。
+    CoopDiscoveryEvent? finalDiscovery,
   }) = _CoopMissionState;
 }
 
@@ -404,18 +410,19 @@ class CoopMissionStore extends _$CoopMissionStore {
     final name = _displayName(clear.clearedBy, clear.nickname);
     final label = index == spots.length - 1 ? 'GOAL' : 'スポット ${index + 1}';
     _notify('$nameさんが$labelを発見!');
-    final isRealtime = snapshot.isUpToDate && !wasStale;
-    // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
-    final allCleared = clears.length >= spots.length;
-    if (isRealtime && !allCleared) {
-      state = state.copyWith(
-        discovery: CoopDiscoveryEvent(
-          id: ++_discoveryId,
-          spotIndex: index,
-          discovererName: name,
-        ),
-      );
+    if (!snapshot.isUpToDate || wasStale) {
+      return;
     }
+    final event = CoopDiscoveryEvent(
+      id: ++_discoveryId,
+      spotIndex: index,
+      discovererName: name,
+    );
+    // 全スポットがクリアされたら、ルームの終了に合わせて Mission 画面が最後のスポットを開く
+    state =
+        clears.length >= spots.length
+            ? state.copyWith(finalDiscovery: event)
+            : state.copyWith(discovery: event);
   }
 
   /// 撮影して採点したスポットをクリアにする
