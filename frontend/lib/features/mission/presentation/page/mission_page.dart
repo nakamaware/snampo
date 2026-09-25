@@ -151,6 +151,8 @@ class MissionPage extends HookConsumerWidget {
       },
       loading: () => const MissionLoadingView(),
       error: (error, stackTrace) {
+        // やり直している間も前のエラーが残るので、読み込み中の画面にする
+        if (missionAsyncValue.isLoading) return const MissionLoadingView();
         log('error: $error');
         return MissionErrorView(
           onRetry: () => ref.invalidate(missionStoreProvider(_params)),
