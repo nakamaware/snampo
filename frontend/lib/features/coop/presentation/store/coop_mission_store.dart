@@ -496,10 +496,10 @@ class CoopMissionStore extends _$CoopMissionStore {
   ///
   /// 共有の結果を待たずに終わっているので、共有できなかった扱いにして捨てる
   /// (もう一度撮影できるようにする)。サーバにそのスポットのクリアがあれば捨てない
-  /// ([ResolveUnsharedCapturesUseCase])。[clears] がサーバの最新の値ならそれで決め、
+  /// ([ResolveUnsharedCapturesUseCase])。[snapshot] がサーバの最新の値ならそれで決め、
   /// そうでなければサーバから読む。読めなければ決めずに残し、次にサーバの最新の値が
   /// 届いたときに決め直す。
-  Future<void> _resolveUnsharedCaptures(SpotClearsSnapshot clears) async {
+  Future<void> _resolveUnsharedCaptures(SpotClearsSnapshot snapshot) async {
     if (_unresolvedCaptureIndexes.isEmpty) return;
     try {
       final checkpoints =
@@ -526,7 +526,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       final discard = await ref.read(resolveUnsharedCapturesUseCaseProvider)(
         roomCode,
         captures,
-        upToDateClears: clears.isUpToDate ? clears.clears : null,
+        upToDateClears: snapshot.isUpToDate ? snapshot.clears : null,
       );
       if (discard == null) return;
       _unresolvedCaptureIndexes = {};
