@@ -143,8 +143,8 @@ class _CoopResultPageExtension extends ResultPageExtension {
   String? spotThumbnailPath(CheckpointProgress? checkpoint) =>
       checkpoint?.discovererPhotoPath(myUid: myUid ?? '');
 
-  /// 共有の途中で終了した撮影の扱いを決め終えていれば片付けてよい
-  /// (決められなければ、サーバに届いていた撮影の写真を消さないよう片付けない)
+  /// 共有の途中で終了した撮影の扱いを決められなければ、進捗を残す理由の文言を返す
+  /// (サーバに届いていた撮影の写真を消さないため)。決め終えていれば null (片付けてよい)
   @override
   Future<String?> keepProgressReason(WidgetRef ref) async {
     final roomCode = this.roomCode;

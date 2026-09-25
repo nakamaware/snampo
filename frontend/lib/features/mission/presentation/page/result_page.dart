@@ -100,7 +100,7 @@ class ResultPage extends HookConsumerWidget {
     );
   }
 
-  /// 片付ける対象は、その種別の枠だけにする
+  /// 「ホームへ戻る」を押したとき
   ///
   /// 片付けてよいかを確かめる間 (通信することがある) は [finishing] を true にする。
   Future<void> _finishPlay(
@@ -118,6 +118,9 @@ class ResultPage extends HookConsumerWidget {
     }
   }
 
+  /// 進捗を片付けてホームへ戻る (片付けずに残す理由があれば、それを表示して残す)
+  ///
+  /// 片付ける対象は、その種別の枠だけにする
   Future<void> _clearAndGoHome(BuildContext context, WidgetRef ref) async {
     final progressStore = ref.read(missionProgressStoreProvider(kind).notifier);
     final persistedMission = ref.read(persistedMissionProvider(kind).notifier);
