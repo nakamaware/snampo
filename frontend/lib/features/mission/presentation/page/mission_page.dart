@@ -17,7 +17,6 @@ import 'package:snampo/features/mission/application/interface/location_service.d
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
 import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
@@ -29,6 +28,7 @@ import 'package:snampo/features/mission/presentation/store/mission_progress_stor
 import 'package:snampo/features/mission/presentation/store/mission_sheet_layout_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/mission/presentation/util/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 // 競合解消メモ（main × 再開機能の統合）:

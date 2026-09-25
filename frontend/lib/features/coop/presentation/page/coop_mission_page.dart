@@ -18,11 +18,11 @@ import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart'
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/mission/presentation/util/photo_rejected_exception.dart';
 
 /// 協力プレイの Mission 画面 (端末で進行中のルーム)
 ///
