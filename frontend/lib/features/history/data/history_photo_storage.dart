@@ -23,14 +23,40 @@ class HistoryPhotoStorage {
     required String historyId,
     required int sortOrder,
     required String sourcePath,
+  }) => _copy(
+    sourcePath: sourcePath,
+    fileName: '${historyId}_spot$sortOrder${p.extension(sourcePath)}',
+  );
+
+  /// 協力プレイの発見者のサムネを `{historyId}_thumb{sortOrder}_{時刻}{ext}` としてコピーし、絶対パスを返す
+  ///
+  /// 発見者が変わった場合に古いサムネと区別できるよう、ファイル名に時刻を含める。
+  /// コピー元が存在しない場合は null を返す。
+  Future<String?> copyCoopThumb({
+    required String historyId,
+    required int sortOrder,
+    required String sourcePath,
+  }) {
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    return _copy(
+      sourcePath: sourcePath,
+      fileName:
+          '${historyId}_thumb${sortOrder}_$timestamp${p.extension(sourcePath)}',
+    );
+  }
+
+  /// [sourcePath] を保存用ディレクトリに [fileName] としてコピーし、絶対パスを返す
+  ///
+  /// コピー元が存在しない場合は null を返す。
+  Future<String?> _copy({
+    required String sourcePath,
+    required String fileName,
   }) async {
     final source = File(sourcePath);
     if (!source.existsSync()) {
       return null;
     }
     final dir = await _storageDirectory();
-    final ext = p.extension(sourcePath);
-    final fileName = '${historyId}_spot$sortOrder$ext';
     final dest = File(p.join(dir.path, fileName));
     await source.copy(dest.path);
     return dest.path;

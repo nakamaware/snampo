@@ -1,3 +1,5 @@
+import 'package:snampo/core/storage/mission_photo_directory.dart';
+
 /// 写真ストレージのインターフェース
 ///
 /// 警告を抑制する理由:
@@ -8,7 +10,12 @@ abstract class IPhotoStorage {
   ///
   /// [sourcePath] は保存元の写真ファイルパス
   /// [checkpointIndex] はチェックポイントのインデックス
-  Future<String> savePhoto(String sourcePath, int checkpointIndex);
+  /// [directory] は保存先 (ソロと協力プレイで分ける)
+  Future<String> savePhoto(
+    String sourcePath,
+    int checkpointIndex, {
+    required MissionPhotoDirectory directory,
+  });
 
   /// 写真ファイルを削除する
   ///

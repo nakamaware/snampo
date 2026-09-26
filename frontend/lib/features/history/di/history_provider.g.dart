@@ -158,7 +158,7 @@ final class HistoryPhotoStorageProvider
 }
 
 String _$historyPhotoStorageHash() =>
-    r'a1b2c3d4e5f6789012345678abcdef0123456789';
+    r'568619836698ad4b981db182d3a41d7da389a5ef';
 
 /// 履歴リポジトリ
 
@@ -210,7 +210,7 @@ final class HistoryRepositoryProvider
   }
 }
 
-String _$historyRepositoryHash() => r'f0e5315ec31e3f0f0997c14e81cd28a025b9f818';
+String _$historyRepositoryHash() => r'44bed6a029dbf5353ae78850f38b89cbfa5ca22e';
 
 /// 履歴一覧を取得するユースケース
 
@@ -425,3 +425,50 @@ final class RemoveMissionHistoryUseCaseProvider
 
 String _$removeMissionHistoryUseCaseHash() =>
     r'60e8b77e4f3afaaffa87749e23c335074303f56f';
+
+/// 履歴画面を開いたときに行う、ほかの機能の同期 (協力プレイの履歴など)
+///
+/// 既定では何もしない。ほかの機能に依存しないよう、アプリの組み立て (main.dart) で
+/// 同期の処理を差し込む。失敗しても履歴画面には影響させない (差し込む側で扱う)。
+
+@ProviderFor(historySync)
+final historySyncProvider = HistorySyncProvider._();
+
+/// 履歴画面を開いたときに行う、ほかの機能の同期 (協力プレイの履歴など)
+///
+/// 既定では何もしない。ほかの機能に依存しないよう、アプリの組み立て (main.dart) で
+/// 同期の処理を差し込む。失敗しても履歴画面には影響させない (差し込む側で扱う)。
+
+final class HistorySyncProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  /// 履歴画面を開いたときに行う、ほかの機能の同期 (協力プレイの履歴など)
+  ///
+  /// 既定では何もしない。ほかの機能に依存しないよう、アプリの組み立て (main.dart) で
+  /// 同期の処理を差し込む。失敗しても履歴画面には影響させない (差し込む側で扱う)。
+  HistorySyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'historySyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$historySyncHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return historySync(ref);
+  }
+}
+
+String _$historySyncHash() => r'988dd10d115f8c0a963f5ab7d8e29a74b34782ae';

@@ -214,6 +214,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class _$MissionSettingsRandomCopyWithImpl<$Res>
@@ -231,6 +233,7 @@ radius: null == radius ? _self.radius : radius // ignore: cast_nullable_to_non_n
 as Radius,
   ));
 }
+
 
 }
 
@@ -277,6 +280,8 @@ $Res call({
 });
 
 
+
+
 }
 /// @nodoc
 class _$MissionSettingsDestinationCopyWithImpl<$Res>
@@ -294,6 +299,7 @@ destination: null == destination ? _self.destination : destination // ignore: ca
 as Coordinate,
   ));
 }
+
 
 }
 

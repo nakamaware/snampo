@@ -35,6 +35,7 @@ lib/features/<feature>/
 │   └── value_object/         # 値オブジェクト (*.dart)
 └── presentation/
     ├── hook/                 # カスタムフック: use_<name>.dart
+    ├── component/            # 任意: 画面ではない Widget (画面の部品、ダイアログなど): <name>.dart
     ├── page/                 # 画面: <name>_page.dart
     ├── store/                # Riverpod の Notifier / 生成 Provider 本体 (*.dart, *.g.dart 等)
     └── util/                 # 任意: UI 都合のヘルパ (ドメインルールは置かない)
@@ -53,12 +54,15 @@ lib/features/<feature>/
 
 **presentation レイヤー**
 
-- 含めてよいのは **`hook/`**, **`page/`**, **`store/`**, **`util/`** のみ。**`widget/` など別サブディレクトリは作らない。**
-- **画面およびその画面専用の Widget** はすべて **`page/`** に置く (複数ファイルに分けてよい。命名は `<機能>_<役割>_page.dart` や `*_page.dart` など、既存の `snake_case` に合わせる)。
+- 含めてよいのは **`component/`**, **`hook/`**, **`page/`**, **`store/`**, **`util/`** のみ。**`widget/` など別サブディレクトリは作らない。**
+- **`page/`** には画面 (ルートに対応する Widget) を置く。命名は `<name>_page.dart`。その画面でしか使わない小さな部品は、同じファイルの private な Widget にしてよい。
+- **`component/`** には画面ではない Widget (画面の部品やダイアログなど) を置く。命名は役割どおりの `<name>.dart` とし、`_page` は付けない。
+  - 画面ファイルの private な Widget では収まらないもの (複数の画面から使う、単独で大きいなど) をここに出す。
 
 ### 機能外 (`lib/`)
 
 - **機能を横断するインフラ** (ルーティング、HTTP クライアント、汎用ストレージなど) は **`lib/core/`** に置く。
+- **複数の機能で共有するドメインの概念** (値オブジェクトなど。例: ルームコード、ニックネーム) は **`lib/core/domain/`** に置く。1 つの機能でしか使わないものは、その機能の `domain/` に置く。
 - **`main.dart`**, **`config.dart`** のみルートに置いてよい。ビジネスロジックや画面を `features/` 外に増やさない。
 
 記事の Data / Logic (Use Case) / UI に相当する分離として、上記の **data / domain / application / presentation** を挟み、**di** で Riverpod の配線をまとめる。

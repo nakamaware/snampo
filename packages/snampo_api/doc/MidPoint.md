@@ -8,6 +8,7 @@ import 'package:snampo_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**spotId** | **String** | スポット ID。ランドマークがある地点は Places API の place_id、ない地点 (目的地指定モードの目的地) は geo:{lat},{lng} (小数 6 桁) | 
 **latitude** | **num** |  | 
 **longitude** | **num** |  | 
 **imageLatitude** | **num** |  | [optional] 

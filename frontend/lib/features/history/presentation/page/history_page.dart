@@ -6,10 +6,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
-import 'package:snampo/features/history/presentation/component/history_fullscreen_image_viewer.dart';
+import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/presentation/hook/use_histories.dart';
 import 'package:snampo/features/history/presentation/util/history_format_util.dart';
+import 'package:snampo/features/mission/presentation/component/judge_rank_badge.dart';
+import 'package:snampo/features/mission/presentation/util/mission_format_util.dart';
 
 /// 完了ミッション履歴の一覧
 class HistoryPage extends HookConsumerWidget {
@@ -18,22 +21,15 @@ class HistoryPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final titleTextStyle = (theme.textTheme.displayMedium ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
-
     final historyAsync = useHistories(ref);
     final removedIds = useState<Set<String>>({});
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('履歴', style: titleTextStyle),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
+        title: Text('履歴', style: Theme.of(context).textTheme.headlineSmall),
+        titleSpacing: 0,
         leading: IconButton(
+          tooltip: '戻る',
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             if (context.canPop()) {
@@ -53,16 +49,34 @@ class HistoryPage extends HookConsumerWidget {
             return const _EmptyHistoryView();
           }
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
             itemCount: records.length,
             itemBuilder: (context, index) {
               final record = records[index];
-              return _HistoryListTile(
-                record: record,
-                onTap: () => context.push('/history/${record.id}'),
-                onRemoved: (id) {
-                  removedIds.value = {...removedIds.value, id};
-                },
+              final month = formatHistoryMonth(record.completedAt);
+              final isFirstOfMonth =
+                  index == 0 ||
+                  formatHistoryMonth(records[index - 1].completedAt) != month;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isFirstOfMonth) _MonthHeader(month),
+                  _HistoryListTile(
+                    record: record,
+                    onTap: () async {
+                      // 詳細で削除したら、一覧からも外す
+                      final removed = await context.push<bool>(
+                        '/history/${record.id}',
+                      );
+                      if (removed ?? false) {
+                        removedIds.value = {...removedIds.value, record.id};
+                      }
+                    },
+                    onRemoved: (id) {
+                      removedIds.value = {...removedIds.value, id};
+                    },
+                  ),
+                ],
               );
             },
           );
@@ -121,6 +135,13 @@ class _HistoryListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final found = record.spots.where((s) => s.isCleared).length;
+    final endedAt = record.playEndedAt;
+    final summary = [
+      '$found/${record.spots.length} 発見',
+      if (endedAt != null)
+        formatMissionDuration(record.startedAt, endedAt, omitSeconds: true),
+    ].join(' · ');
 
     return Dismissible(
       key: ValueKey<String>(record.id),
@@ -131,42 +152,79 @@ class _HistoryListTile extends ConsumerWidget {
         if (!context.mounted) return false;
         return _executeRemove(context, ref, showRetryOnFailure: true);
       },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        color: theme.colorScheme.error,
-        child: Icon(Icons.delete, color: theme.colorScheme.onError),
+      background: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.error,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: Icon(Icons.delete, color: theme.colorScheme.onError),
+            ),
+          ),
+        ),
       ),
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                _HistoryThumbnail(path: firstUserPhotoPath(record.spots)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
+          color: theme.colorScheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(18),
+          elevation: 1,
+          shadowColor: Colors.black26,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _PhotoStrip(spots: record.spots),
+                  const SizedBox(height: 10),
+                  Row(
                     children: [
-                      Text(
-                        formatCompletedDate(record.completedAt),
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '所要時間: ${formatMissionDuration(record.startedAt, record.completedAt)}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formatHistoryDate(record.completedAt),
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            Text(
+                              summary,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (record.coop case final coop?) ...[
+                        _Chip(
+                          label: 'みんなで',
+                          background: theme.colorScheme.primaryContainer,
+                          foreground: theme.colorScheme.onPrimaryContainer,
+                        ),
+                        // ほかの人の写真や採点を、まだ取りに行っている途中
+                        if (coop.syncState == CoopSyncState.inProgress) ...[
+                          const SizedBox(width: 6),
+                          _Chip(
+                            label: '同期中',
+                            icon: Icons.sync,
+                            background: theme.colorScheme.surfaceContainerHigh,
+                            foreground: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ],
                     ],
                   ),
-                ),
-                const Icon(Icons.chevron_right),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -227,62 +285,174 @@ class _HistoryListTile extends ConsumerWidget {
   }
 }
 
-/// 履歴のリスト行にあるサムネイル
-class _HistoryThumbnail extends StatelessWidget {
-  const _HistoryThumbnail({this.path});
+/// 月の見出し
+class _MonthHeader extends StatelessWidget {
+  const _MonthHeader(this.month);
 
-  final String? path;
-
-  static const double _size = 72;
+  final String month;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final filePath = path;
-
-    if (filePath == null) return _placeholder(theme);
-
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          if (!File(filePath).existsSync()) return;
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              fullscreenDialog: true,
-              builder:
-                  (_) => HistoryFullscreenImageViewer(
-                    child: Image.file(File(filePath), fit: BoxFit.contain),
-                  ),
-            ),
-          );
-        },
-        child: Image.file(
-          File(filePath),
-          width: _size,
-          height: _size,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _placeholder(theme),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
+      child: Text(
+        month,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          letterSpacing: 0.3,
         ),
       ),
     );
   }
+}
 
-  /// サムネイルのプレースホルダー
-  static Widget _placeholder(ThemeData theme) {
-    return Container(
-      width: _size,
-      height: _size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+/// スポットの写真の帯 (最大 5 枚。多ければ 4 枚と「+N」)
+class _PhotoStrip extends StatelessWidget {
+  const _PhotoStrip({required this.spots});
+
+  final List<MissionHistorySpot> spots;
+
+  static const _slots = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final overflow = spots.length > _slots;
+    final shown = overflow ? spots.take(_slots - 1) : spots;
+    return Row(
+      children: [
+        for (final (i, spot) in shown.indexed) ...[
+          if (i > 0) const SizedBox(width: 4),
+          Expanded(child: _StripPhoto(spot: spot)),
+        ],
+        if (overflow) ...[
+          const SizedBox(width: 4),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    '+${spots.length - (_slots - 1)}',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+        for (var i = shown.length + (overflow ? 1 : 0); i < _slots; i++) ...[
+          const SizedBox(width: 4),
+          const Expanded(child: SizedBox()),
+        ],
+      ],
+    );
+  }
+}
+
+class _StripPhoto extends StatelessWidget {
+  const _StripPhoto({required this.spot});
+
+  final MissionHistorySpot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final path = spot.shownPhotoPath;
+    final rank = spot.shownRank;
+    final placeholder = ColoredBox(color: colorScheme.surfaceContainerHighest);
+    if (!spot.isCleared) {
+      // 見つからなかったスポットは、点線の空き枠にする
+      return AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: colorScheme.outlineVariant, width: 1.5),
+          ),
+        ),
+      );
+    }
+    return AspectRatio(
+      aspectRatio: 1,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (path == null)
+              placeholder
+            else
+              Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                cacheWidth: 160,
+                errorBuilder: (_, _, _) => placeholder,
+              ),
+            if (rank != null)
+              Positioned(
+                right: 4,
+                bottom: 4,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: rank.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: const SizedBox.square(dimension: 9),
+                ),
+              ),
+          ],
+        ),
       ),
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: theme.colorScheme.outline,
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.background,
+    required this.foreground,
+    this.icon,
+  });
+
+  final String label;
+  final Color background;
+  final Color foreground;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon case final icon?) ...[
+              Icon(icon, size: 12, color: foreground),
+              const SizedBox(width: 3),
+            ],
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: foreground),
+            ),
+          ],
+        ),
       ),
     );
   }

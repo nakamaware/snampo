@@ -1,20 +1,26 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 
 part 'persisted_mission_provider.g.dart';
 
 /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class PersistedMission extends _$PersistedMission {
   @override
-  Future<MissionEntity?> build() async {
+  Future<MissionEntity?> build(MissionSessionKind kind) async {
     await persist(ref.watch(storageProvider.future)).future;
     return state.value;
   }
+
+  @override
+  String get key => kind.persistKey('PersistedMission');
 
   /// 現在のミッションを保存する（API 取得成功時など）
   void setMission(MissionEntity mission) {

@@ -1,17 +1,43 @@
 import 'package:go_router/go_router.dart';
+import 'package:snampo/features/coop/presentation/page/coop_entry_page.dart';
+import 'package:snampo/features/coop/presentation/page/coop_mission_page.dart';
+import 'package:snampo/features/coop/presentation/page/coop_result_page.dart';
+import 'package:snampo/features/coop/presentation/page/join_room_page.dart';
+import 'package:snampo/features/coop/presentation/page/lobby_page.dart';
+import 'package:snampo/features/coop/presentation/page/qr_scan_page.dart';
 import 'package:snampo/features/history/presentation/page/history_detail_page.dart';
 import 'package:snampo/features/history/presentation/page/history_page.dart';
 import 'package:snampo/features/home/presentation/page/home_page.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
-import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/page/mission_page.dart';
 import 'package:snampo/features/mission/presentation/page/result_page.dart';
 import 'package:snampo/features/mission/presentation/page/setup_page.dart';
+import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
+import 'package:snampo/features/settings/presentation/page/settings_page.dart';
 
 /// ルーティング設定
 final GoRouter appRouter = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomePage(),
+      // 協力プレイのルームの画面は、ホームの上に積む。「みんなで」の上に積むと、戻ったときに
+      // 下に画面がなく、戻るボタンが消えて Android の戻るでアプリが閉じてしまう
+      routes: [
+        GoRoute(
+          path: 'coop/lobby',
+          builder: (context, state) => const LobbyPage(),
+        ),
+        GoRoute(
+          path: 'coop/mission',
+          builder: (context, state) => const CoopMissionPage(),
+        ),
+        GoRoute(
+          path: 'coop/result',
+          builder: (context, state) => const CoopResultPage(),
+        ),
+      ],
+    ),
     GoRoute(path: '/setup', builder: (context, state) => const SetupPage()),
     GoRoute(
       path: '/mission/random/:radius',
@@ -56,6 +82,27 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/result', builder: (context, state) => const ResultPage()),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsPage(),
+    ),
+    // 協力プレイ (deep link は #270 で扱う)
+    GoRoute(
+      path: '/coop',
+      builder: (context, state) => const CoopEntryPage(),
+      routes: [
+        GoRoute(
+          path: 'join',
+          builder: (context, state) => const JoinRoomPage(),
+          routes: [
+            GoRoute(
+              path: 'scan',
+              builder: (context, state) => const QrScanPage(),
+            ),
+          ],
+        ),
+      ],
+    ),
     GoRoute(
       path: '/history',
       builder: (context, state) => const HistoryPage(),

@@ -77,6 +77,15 @@
       },
       "MidPoint": {
         "properties": {
+          "spot_id": {
+            "type": "string",
+            "title": "Spot Id",
+            "description": "スポット ID。ランドマークがある地点は Places API の place_id、ない地点 (目的地指定モードの目的地) は geo:{lat},{lng} (小数 6 桁)",
+            "examples": [
+              "ChIJC3Cf2PuLGGAROO00ukl8JwA",
+              "geo:35.681236,139.767125"
+            ]
+          },
           "latitude": {
             "type": "number",
             "title": "Latitude"
@@ -165,6 +174,7 @@
         },
         "type": "object",
         "required": [
+          "spot_id",
           "latitude",
           "longitude"
         ],

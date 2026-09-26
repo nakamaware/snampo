@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/radius.dart';
 
 part 'mission_settings.freezed.dart';
 

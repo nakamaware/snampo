@@ -16,6 +16,9 @@ class Env {
     return value;
   }
 
+  /// 開発用のビルドか (エラーの詳細など、開発者向けの表示を出すのに使う)
+  static bool get isDev => flavor != 'prod';
+
   /// APIサーバーのベースURL
   static String get apiBaseUrl {
     const value = String.fromEnvironment('API_BASE_URL');

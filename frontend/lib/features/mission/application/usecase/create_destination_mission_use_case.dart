@@ -1,7 +1,7 @@
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/application/interface/mission_repository.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 目的地指定モードでミッション情報を取得するユースケース
 class CreateDestinationMissionUseCase {
@@ -18,10 +18,11 @@ class CreateDestinationMissionUseCase {
   ///
   /// [destination] は目的地の座標
   Future<MissionEntity> call(Coordinate destination) async {
-    try {
-      // 現在位置を取得
-      final currentLocation = await _locationService.getCurrentPosition();
+    // 現在位置を取得 (取れなければ、画面で位置情報の案内を出せるよう
+    // LocationUnavailableException をそのまま投げる)
+    final currentLocation = await _locationService.getCurrentPosition();
 
+    try {
       // ミッション情報を取得
       final missionInfo = await _repository.createDestinationMission(
         currentLocation: currentLocation,

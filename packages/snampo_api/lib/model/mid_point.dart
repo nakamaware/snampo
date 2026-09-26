@@ -13,6 +13,7 @@ part of openapi.api;
 class MidPoint {
   /// Returns a new [MidPoint] instance.
   MidPoint({
+    required this.spotId,
     required this.latitude,
     required this.longitude,
     this.imageLatitude,
@@ -23,6 +24,9 @@ class MidPoint {
     this.genre,
     this.googleMapsUrl,
   });
+
+  /// スポット ID。ランドマークがある地点は Places API の place_id、ない地点 (目的地指定モードの目的地) は geo:{lat},{lng} (小数 6 桁)
+  String spotId;
 
   num latitude;
 
@@ -44,6 +48,7 @@ class MidPoint {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is MidPoint &&
+    other.spotId == spotId &&
     other.latitude == latitude &&
     other.longitude == longitude &&
     other.imageLatitude == imageLatitude &&
@@ -57,6 +62,7 @@ class MidPoint {
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
+    (spotId.hashCode) +
     (latitude.hashCode) +
     (longitude.hashCode) +
     (imageLatitude == null ? 0 : imageLatitude!.hashCode) +
@@ -68,10 +74,11 @@ class MidPoint {
     (googleMapsUrl == null ? 0 : googleMapsUrl!.hashCode);
 
   @override
-  String toString() => 'MidPoint[latitude=$latitude, longitude=$longitude, imageLatitude=$imageLatitude, imageLongitude=$imageLongitude, imageBase64=$imageBase64, heading=$heading, name=$name, genre=$genre, googleMapsUrl=$googleMapsUrl]';
+  String toString() => 'MidPoint[spotId=$spotId, latitude=$latitude, longitude=$longitude, imageLatitude=$imageLatitude, imageLongitude=$imageLongitude, imageBase64=$imageBase64, heading=$heading, name=$name, genre=$genre, googleMapsUrl=$googleMapsUrl]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+      json[r'spot_id'] = this.spotId;
       json[r'latitude'] = this.latitude;
       json[r'longitude'] = this.longitude;
     if (this.imageLatitude != null) {
@@ -131,6 +138,7 @@ class MidPoint {
       }());
 
       return MidPoint(
+        spotId: mapValueOfType<String>(json, r'spot_id')!,
         latitude: num.parse('${json[r'latitude']}'),
         longitude: num.parse('${json[r'longitude']}'),
         imageLatitude: json[r'image_latitude'] == null
@@ -193,6 +201,7 @@ class MidPoint {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'spot_id',
     'latitude',
     'longitude',
   };

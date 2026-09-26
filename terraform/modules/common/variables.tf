@@ -101,3 +101,9 @@ variable "cloud_run_service_configs" {
 
   default = []
 }
+
+# Firebase に登録する Android アプリの署名証明書の SHA-256 (Play Integrity 用)
+variable "firebase_android_sha256_hashes" {
+  type    = list(string)
+  default = []
+}

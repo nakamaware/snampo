@@ -32,7 +32,10 @@ class MissionHistories extends Table {
   /// 探索半径 (m)。目的地指定モードでは null
   IntColumn get radiusMeters => integer().nullable()();
 
-  /// ミッション開始モード: `random` / `destination`
+  /// ミッション開始モード: `random` / `destination` / `coop`
+  ///
+  /// `coop` のときのミッション設定は [radiusMeters] (random) か
+  /// [destinationLat] / [destinationLng] (destination) から判定する。
   TextColumn get mode => text().withDefault(const Constant('random'))();
 
   /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
@@ -40,6 +43,24 @@ class MissionHistories extends Table {
 
   /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
   RealColumn get destinationLng => real().nullable()();
+
+  /// 協力プレイのルームコード (ソロでは null)。協力プレイの履歴はこれをキーに upsert する
+  TextColumn get roomCode => text().nullable()();
+
+  /// 協力プレイの同期の状態: `inProgress` (進行中) / `finalized` (確定)
+  TextColumn get coopSyncState => text().nullable()();
+
+  /// 自分がホストだったか (1 / 0)
+  IntColumn get coopIsHost => integer().nullable()();
+
+  /// 協力プレイのメンバー一覧 (`[{"uid": ..., "nickname": ...}]` の JSON)
+  TextColumn get coopMembers => text().nullable()();
+
+  /// 協力プレイの遊べる期限 (Unix ms)
+  IntColumn get coopExpiresAt => integer().nullable()();
+
+  /// 協力プレイのデータの保持期限 (Unix ms)
+  IntColumn get coopDeleteAt => integer().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -107,6 +128,45 @@ class HistorySpots extends Table {
 
   /// 撮影時の方角 (度)
   RealColumn get capturedHeading => real().nullable()();
+
+  /// 撮影したときのズームの倍率
+  RealColumn get zoomLevel => real().nullable()();
+
+  /// スポット ID (place_id / geo URI)。旧データでは null
+  TextColumn get spotId => text().nullable()();
+
+  /// 協力プレイの発見者の uid
+  TextColumn get discovererUid => text().nullable()();
+
+  /// 協力プレイの発見者のニックネーム (発見時点)
+  TextColumn get discovererNickname => text().nullable()();
+
+  /// 協力プレイの発見者のサムネのパス
+  TextColumn get discovererThumbPath => text().nullable()();
+
+  /// 協力プレイの発見者の採点ランク (`excellent` / `good` / `fair` / `miss`)
+  TextColumn get discovererJudgeRank => text().nullable()();
+
+  /// 協力プレイの発見者の位置誤差 (m)
+  RealColumn get discovererDistanceErrorMeters => real().nullable()();
+
+  /// 協力プレイの発見者の方角誤差 (度)
+  RealColumn get discovererHeadingErrorDegrees => real().nullable()();
+
+  /// 協力プレイの発見者が撮影した緯度
+  RealColumn get discovererGuessLat => real().nullable()();
+
+  /// 協力プレイの発見者が撮影した経度
+  RealColumn get discovererGuessLng => real().nullable()();
+
+  /// 協力プレイの発見者が撮影したときの方角 (度)
+  RealColumn get discovererCapturedHeading => real().nullable()();
+
+  /// 協力プレイの発見者が撮影したときのズームの倍率
+  RealColumn get discovererZoomLevel => real().nullable()();
+
+  /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
+  IntColumn get isCleared => integer().withDefault(const Constant(1))();
 }
 
 /// 履歴専用 Drift DB (`snampo_history.db`)
@@ -117,24 +177,33 @@ class HistoryDatabase extends _$HistoryDatabase {
     : super(executor ?? openHistoryConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
+
+  /// [table] に列 [definition] (「名前 型 ...」) を足す。同じ名前の列がすでにあれば何もしない
+  Future<void> _addColumnIfMissing(String table, String definition) async {
+    final name = definition.split(' ').first;
+    final columns = await customSelect('PRAGMA table_info($table)').get();
+    if (columns.any((column) => column.read<String>('name') == name)) {
+      return;
+    }
+    await customStatement('ALTER TABLE $table ADD COLUMN $definition');
+  }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
     },
+    // 列を足すときは、すでにあれば飛ばす。移行の途中でアプリが落ちたときや、古いアプリで
+    // 開き直して版だけが戻ったとき (列は残る) に、同じ列を足して開けなくならないように
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
-        await customStatement('''
-ALTER TABLE mission_histories ADD COLUMN mode TEXT NOT NULL DEFAULT 'random'
-''');
-        await customStatement(
-          'ALTER TABLE mission_histories ADD COLUMN destination_lat REAL',
+        await _addColumnIfMissing(
+          'mission_histories',
+          "mode TEXT NOT NULL DEFAULT 'random'",
         );
-        await customStatement(
-          'ALTER TABLE mission_histories ADD COLUMN destination_lng REAL',
-        );
+        await _addColumnIfMissing('mission_histories', 'destination_lat REAL');
+        await _addColumnIfMissing('mission_histories', 'destination_lng REAL');
         await customStatement('''
 UPDATE mission_histories SET mode = 'destination'
 WHERE radius_meters IS NULL
@@ -152,34 +221,53 @@ UPDATE mission_histories SET destination_lat = (
 ''');
       }
       if (from < 3) {
-        await customStatement('ALTER TABLE history_spots ADD COLUMN name TEXT');
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN genre TEXT',
+        await _addColumnIfMissing('history_spots', 'name TEXT');
+        await _addColumnIfMissing('history_spots', 'genre TEXT');
+        await _addColumnIfMissing('history_spots', 'google_maps_url TEXT');
+        await _addColumnIfMissing('history_spots', 'reference_heading REAL');
+        await _addColumnIfMissing('history_spots', 'judge_rank TEXT');
+        await _addColumnIfMissing(
+          'history_spots',
+          'distance_error_meters REAL',
         );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN google_maps_url TEXT',
+        await _addColumnIfMissing(
+          'history_spots',
+          'heading_error_degrees REAL',
         );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN reference_heading REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN judge_rank TEXT',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN distance_error_meters REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN heading_error_degrees REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN guess_lat REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN guess_lng REAL',
-        );
-        await customStatement(
-          'ALTER TABLE history_spots ADD COLUMN captured_heading REAL',
-        );
+        await _addColumnIfMissing('history_spots', 'guess_lat REAL');
+        await _addColumnIfMissing('history_spots', 'guess_lng REAL');
+        await _addColumnIfMissing('history_spots', 'captured_heading REAL');
+      }
+      // 協力プレイ (#249) の列。開発中に 5・6 と版を上げたが、リリースしていないので
+      // 1 つの版にまとめた (列の並びは、新しく作った DB と同じにする)
+      if (from < 4) {
+        for (final column in [
+          'room_code TEXT',
+          'coop_sync_state TEXT',
+          'coop_is_host INTEGER',
+          'coop_members TEXT',
+          'coop_expires_at INTEGER',
+          'coop_delete_at INTEGER',
+        ]) {
+          await _addColumnIfMissing('mission_histories', column);
+        }
+        for (final column in [
+          'zoom_level REAL',
+          'spot_id TEXT',
+          'discoverer_uid TEXT',
+          'discoverer_nickname TEXT',
+          'discoverer_thumb_path TEXT',
+          'discoverer_judge_rank TEXT',
+          'discoverer_distance_error_meters REAL',
+          'discoverer_heading_error_degrees REAL',
+          'discoverer_guess_lat REAL',
+          'discoverer_guess_lng REAL',
+          'discoverer_captured_heading REAL',
+          'discoverer_zoom_level REAL',
+          'is_cleared INTEGER NOT NULL DEFAULT 1',
+        ]) {
+          await _addColumnIfMissing('history_spots', column);
+        }
       }
     },
     beforeOpen: (OpeningDetails details) async {

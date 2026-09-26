@@ -64,3 +64,10 @@ AddMissionHistoryUseCase addMissionHistoryUseCase(Ref ref) {
 RemoveMissionHistoryUseCase removeMissionHistoryUseCase(Ref ref) {
   return RemoveMissionHistoryUseCase(ref.read(historyRepositoryProvider));
 }
+
+/// 履歴画面を開いたときに行う、ほかの機能の同期 (協力プレイの履歴など)
+///
+/// 既定では何もしない。ほかの機能に依存しないよう、アプリの組み立て (main.dart) で
+/// 同期の処理を差し込む。失敗しても履歴画面には影響させない (差し込む側で扱う)。
+@riverpod
+Future<void> historySync(Ref ref) async {}

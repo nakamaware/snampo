@@ -1,5 +1,5 @@
+import 'package:snampo/core/domain/coordinate.dart';
 import 'package:snampo/features/mission/application/interface/location_service.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 /// 現在位置を取得するユースケース
 class GetCurrentPositionUseCase {

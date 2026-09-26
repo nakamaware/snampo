@@ -29,6 +29,14 @@ locals {
     "maps-ios-backend.googleapis.com",
     "maps-android-backend.googleapis.com",
     "maps-backend.googleapis.com",
+    # 協力プレイ用API (Firebase)
+    "firebase.googleapis.com",
+    "identitytoolkit.googleapis.com",
+    "firestore.googleapis.com",
+    "firebasestorage.googleapis.com",
+    "firebaseappcheck.googleapis.com",
+    "firebaserules.googleapis.com",
+    "firebaseinstallations.googleapis.com",
   ]
 }
 
@@ -315,4 +323,57 @@ module "cloud_run_service" {
   service_name    = each.key
   service_account = each.value.service_account
   container_specs = each.value.container_specs
+}
+
+# 協力プレイ用Cloud Storage
+# Always Freeの対象リージョン (us-central1) に作り、作成から7日後に削除する
+locals {
+  coop_bucket_name         = "${var.project_name}-coop"
+  coop_data_retention_days = 7
+}
+
+module "coop_bucket" {
+  source     = "terraform-google-modules/cloud-storage/google"
+  version    = "~> 12.0"
+  depends_on = [module.project_services]
+
+  project_id               = var.project_id
+  names                    = [local.coop_bucket_name]
+  location                 = "us-central1"
+  public_access_prevention = "enforced"
+  lifecycle_rules = [
+    {
+      action    = { type = "Delete" }
+      condition = { age = local.coop_data_retention_days }
+    },
+  ]
+}
+
+# Firebase (協力プレイ)
+locals {
+  # 協力プレイのデータの保持期限 (deleteAt) を過ぎたドキュメントをTTLで削除する
+  default_firestore_ttl_fields = [
+    { collection_group = "rooms", field = "deleteAt" },
+    { collection_group = "members", field = "deleteAt" },
+    { collection_group = "clears", field = "deleteAt" },
+  ]
+  # Security Rulesのソース (リポジトリルートの firebase/ 配下)
+  firebase_rules_dir = "${path.module}/../../../firebase"
+}
+
+module "firebase" {
+  source     = "../gcp/firebase"
+  depends_on = [module.project_services, module.coop_bucket]
+
+  project_id            = var.project_id
+  firestore_location    = var.location
+  storage_bucket        = module.coop_bucket.name
+  app_display_name      = "snampo"
+  android_package_name  = "com.nakamaware.snampo"
+  android_sha256_hashes = var.firebase_android_sha256_hashes
+  apple_bundle_id       = "com.nakamaware.snampo"
+  apple_team_id         = "B263XJUHQS"
+  firestore_ttl_fields  = local.default_firestore_ttl_fields
+  firestore_rules       = file("${local.firebase_rules_dir}/firestore.rules")
+  storage_rules         = file("${local.firebase_rules_dir}/storage.rules")
 }

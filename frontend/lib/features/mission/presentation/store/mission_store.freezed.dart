@@ -122,12 +122,12 @@ return resume(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Radius radius)?  random,TResult Function( Coordinate destination)?  destination,TResult Function()?  resume,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Radius radius)?  random,TResult Function( Coordinate destination)?  destination,TResult Function( MissionSessionKind kind)?  resume,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that.radius);case MissionStoreParamsDestination() when destination != null:
 return destination(_that.destination);case MissionStoreParamsResume() when resume != null:
-return resume();case _:
+return resume(_that.kind);case _:
   return orElse();
 
 }
@@ -145,12 +145,12 @@ return resume();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Radius radius)  random,required TResult Function( Coordinate destination)  destination,required TResult Function()  resume,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Radius radius)  random,required TResult Function( Coordinate destination)  destination,required TResult Function( MissionSessionKind kind)  resume,}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom():
 return random(_that.radius);case MissionStoreParamsDestination():
 return destination(_that.destination);case MissionStoreParamsResume():
-return resume();}
+return resume(_that.kind);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -164,12 +164,12 @@ return resume();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Radius radius)?  random,TResult? Function( Coordinate destination)?  destination,TResult? Function()?  resume,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Radius radius)?  random,TResult? Function( Coordinate destination)?  destination,TResult? Function( MissionSessionKind kind)?  resume,}) {final _that = this;
 switch (_that) {
 case MissionStoreParamsRandom() when random != null:
 return random(_that.radius);case MissionStoreParamsDestination() when destination != null:
 return destination(_that.destination);case MissionStoreParamsResume() when resume != null:
-return resume();case _:
+return resume(_that.kind);case _:
   return null;
 
 }
@@ -182,7 +182,7 @@ return resume();case _:
 
 class MissionStoreParamsRandom implements MissionStoreParams {
   const MissionStoreParamsRandom({required this.radius});
-  
+
 
  final  Radius radius;
 
@@ -248,7 +248,7 @@ as Radius,
 
 class MissionStoreParamsDestination implements MissionStoreParams {
   const MissionStoreParamsDestination({required this.destination});
-  
+
 
  final  Coordinate destination;
 
@@ -313,32 +313,66 @@ as Coordinate,
 
 
 class MissionStoreParamsResume implements MissionStoreParams {
-  const MissionStoreParamsResume();
-  
+  const MissionStoreParamsResume({this.kind = MissionSessionKind.solo});
 
 
+@JsonKey() final  MissionSessionKind kind;
 
+/// Create a copy of MissionStoreParams
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MissionStoreParamsResumeCopyWith<MissionStoreParamsResume> get copyWith => _$MissionStoreParamsResumeCopyWithImpl<MissionStoreParamsResume>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionStoreParamsResume);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionStoreParamsResume&&(identical(other.kind, kind) || other.kind == kind));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,kind);
 
 @override
 String toString() {
-  return 'MissionStoreParams.resume()';
+  return 'MissionStoreParams.resume(kind: $kind)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $MissionStoreParamsResumeCopyWith<$Res> implements $MissionStoreParamsCopyWith<$Res> {
+  factory $MissionStoreParamsResumeCopyWith(MissionStoreParamsResume value, $Res Function(MissionStoreParamsResume) _then) = _$MissionStoreParamsResumeCopyWithImpl;
+@useResult
+$Res call({
+ MissionSessionKind kind
+});
 
 
+
+
+}
+/// @nodoc
+class _$MissionStoreParamsResumeCopyWithImpl<$Res>
+    implements $MissionStoreParamsResumeCopyWith<$Res> {
+  _$MissionStoreParamsResumeCopyWithImpl(this._self, this._then);
+
+  final MissionStoreParamsResume _self;
+  final $Res Function(MissionStoreParamsResume) _then;
+
+/// Create a copy of MissionStoreParams
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? kind = null,}) {
+  return _then(MissionStoreParamsResume(
+kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as MissionSessionKind,
+  ));
+}
+
+
+}
 
 // dart format on

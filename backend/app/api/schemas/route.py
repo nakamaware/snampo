@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from pydantic import BaseModel, Discriminator, Field
 
 from app.application.usecases.route_result_dto import RoutePointDto, RouteResultDto
+from app.domain.services.spot_id_service import build_spot_id
 from app.domain.value_objects.coordinate import Coordinate
 
 
@@ -86,6 +87,13 @@ class Point(BaseModel):
 class MidPoint(BaseModel):
     """中間地点を表すモデル(画像情報を含む)"""
 
+    spot_id: str = Field(
+        description=(
+            "スポット ID。ランドマークがある地点は Places API の place_id、"
+            "ない地点 (目的地指定モードの目的地) は geo:{lat},{lng} (小数 6 桁)"
+        ),
+        examples=["ChIJC3Cf2PuLGGAROO00ukl8JwA", "geo:35.681236,139.767125"],
+    )
     latitude: float
     longitude: float
     image_latitude: float | None = None
@@ -119,6 +127,7 @@ class MidPoint(BaseModel):
         image_data_base64 = base64.b64encode(street_view_image.image_data).decode("utf-8")
 
         return cls(
+            spot_id=build_spot_id(coordinate=coordinate, landmark=landmark),
             latitude=lat,
             longitude=lng,
             image_latitude=image_lat,

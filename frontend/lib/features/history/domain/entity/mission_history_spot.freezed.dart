@@ -14,7 +14,14 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MissionHistorySpot {
 
- Coordinate get coordinate; int get sortOrder; bool get isDestination; String get streetViewImagePath; String? get userPhotoPath; DateTime? get achievedAt; String? get name; String? get genre; String? get googleMapsUrl; double? get referenceHeading; PhotoJudgeRank? get judgeRank; double? get distanceErrorMeters; double? get headingErrorDegrees; Coordinate? get guessPosition; double? get capturedHeading;
+ Coordinate get coordinate; int get sortOrder; bool get isDestination; String get streetViewImagePath; String? get userPhotoPath; DateTime? get achievedAt; String? get name; String? get genre; String? get googleMapsUrl; double? get referenceHeading; PhotoJudgeRank? get judgeRank; double? get distanceErrorMeters; double? get headingErrorDegrees; Coordinate? get guessPosition; double? get capturedHeading;/// 撮影したときのズームの倍率 (古い履歴では null)
+ double? get zoomLevel;/// スポット ID (旧データでは null)
+ SpotId? get spotId;/// 協力プレイの発見者の uid
+ String? get discovererUid;/// 協力プレイの発見者のニックネーム (発見時点)
+ String? get discovererNickname;/// 協力プレイの発見者のサムネのパス (取得できなければ null)
+ String? get discovererThumbPath;/// 協力プレイの発見者の採点 (共有されていなければ null)
+ PhotoJudgement? get discovererJudgement;/// クリア済みか (協力プレイの途中終了では未クリアのスポットがある)
+ bool get isCleared;
 /// Create a copy of MissionHistorySpot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +32,16 @@ $MissionHistorySpotCopyWith<MissionHistorySpot> get copyWith => _$MissionHistory
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionHistorySpot&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isDestination, isDestination) || other.isDestination == isDestination)&&(identical(other.streetViewImagePath, streetViewImagePath) || other.streetViewImagePath == streetViewImagePath)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissionHistorySpot&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isDestination, isDestination) || other.isDestination == isDestination)&&(identical(other.streetViewImagePath, streetViewImagePath) || other.streetViewImagePath == streetViewImagePath)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.zoomLevel, zoomLevel) || other.zoomLevel == zoomLevel)&&(identical(other.spotId, spotId) || other.spotId == spotId)&&(identical(other.discovererUid, discovererUid) || other.discovererUid == discovererUid)&&(identical(other.discovererNickname, discovererNickname) || other.discovererNickname == discovererNickname)&&(identical(other.discovererThumbPath, discovererThumbPath) || other.discovererThumbPath == discovererThumbPath)&&(identical(other.discovererJudgement, discovererJudgement) || other.discovererJudgement == discovererJudgement)&&(identical(other.isCleared, isCleared) || other.isCleared == isCleared));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,coordinate,sortOrder,isDestination,streetViewImagePath,userPhotoPath,achievedAt,name,genre,googleMapsUrl,referenceHeading,judgeRank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading);
+int get hashCode => Object.hashAll([runtimeType,coordinate,sortOrder,isDestination,streetViewImagePath,userPhotoPath,achievedAt,name,genre,googleMapsUrl,referenceHeading,judgeRank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading,zoomLevel,spotId,discovererUid,discovererNickname,discovererThumbPath,discovererJudgement,isCleared]);
 
 @override
 String toString() {
-  return 'MissionHistorySpot(coordinate: $coordinate, sortOrder: $sortOrder, isDestination: $isDestination, streetViewImagePath: $streetViewImagePath, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, referenceHeading: $referenceHeading, judgeRank: $judgeRank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading)';
+  return 'MissionHistorySpot(coordinate: $coordinate, sortOrder: $sortOrder, isDestination: $isDestination, streetViewImagePath: $streetViewImagePath, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, referenceHeading: $referenceHeading, judgeRank: $judgeRank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading, zoomLevel: $zoomLevel, spotId: $spotId, discovererUid: $discovererUid, discovererNickname: $discovererNickname, discovererThumbPath: $discovererThumbPath, discovererJudgement: $discovererJudgement, isCleared: $isCleared)';
 }
 
 
@@ -45,9 +52,11 @@ abstract mixin class $MissionHistorySpotCopyWith<$Res>  {
   factory $MissionHistorySpotCopyWith(MissionHistorySpot value, $Res Function(MissionHistorySpot) _then) = _$MissionHistorySpotCopyWithImpl;
 @useResult
 $Res call({
- Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading
+ Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, double? zoomLevel, SpotId? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, PhotoJudgement? discovererJudgement, bool isCleared
 });
 
+
+$PhotoJudgementCopyWith<$Res>? get discovererJudgement;
 
 }
 /// @nodoc
@@ -60,7 +69,7 @@ class _$MissionHistorySpotCopyWithImpl<$Res>
 
 /// Create a copy of MissionHistorySpot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? coordinate = null,Object? sortOrder = null,Object? isDestination = null,Object? streetViewImagePath = null,Object? userPhotoPath = freezed,Object? achievedAt = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? referenceHeading = freezed,Object? judgeRank = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? coordinate = null,Object? sortOrder = null,Object? isDestination = null,Object? streetViewImagePath = null,Object? userPhotoPath = freezed,Object? achievedAt = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? referenceHeading = freezed,Object? judgeRank = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,Object? zoomLevel = freezed,Object? spotId = freezed,Object? discovererUid = freezed,Object? discovererNickname = freezed,Object? discovererThumbPath = freezed,Object? discovererJudgement = freezed,Object? isCleared = null,}) {
   return _then(_self.copyWith(
 coordinate: null == coordinate ? _self.coordinate : coordinate // ignore: cast_nullable_to_non_nullable
 as Coordinate,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -77,10 +86,29 @@ as PhotoJudgeRank?,distanceErrorMeters: freezed == distanceErrorMeters ? _self.d
 as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,zoomLevel: freezed == zoomLevel ? _self.zoomLevel : zoomLevel // ignore: cast_nullable_to_non_nullable
+as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
+as SpotId?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
+as String?,discovererNickname: freezed == discovererNickname ? _self.discovererNickname : discovererNickname // ignore: cast_nullable_to_non_nullable
+as String?,discovererThumbPath: freezed == discovererThumbPath ? _self.discovererThumbPath : discovererThumbPath // ignore: cast_nullable_to_non_nullable
+as String?,discovererJudgement: freezed == discovererJudgement ? _self.discovererJudgement : discovererJudgement // ignore: cast_nullable_to_non_nullable
+as PhotoJudgement?,isCleared: null == isCleared ? _self.isCleared : isCleared // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
+/// Create a copy of MissionHistorySpot
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PhotoJudgementCopyWith<$Res>? get discovererJudgement {
+    if (_self.discovererJudgement == null) {
+    return null;
+  }
 
+  return $PhotoJudgementCopyWith<$Res>(_self.discovererJudgement!, (value) {
+    return _then(_self.copyWith(discovererJudgement: value));
+  });
+}
 }
 
 
@@ -162,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  PhotoJudgement? discovererJudgement,  bool isCleared)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot() when $default != null:
-return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.discovererJudgement,_that.isCleared);case _:
   return orElse();
 
 }
@@ -183,10 +211,10 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  PhotoJudgement? discovererJudgement,  bool isCleared)  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot():
-return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.discovererJudgement,_that.isCleared);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +231,10 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Coordinate coordinate,  int sortOrder,  bool isDestination,  String streetViewImagePath,  String? userPhotoPath,  DateTime? achievedAt,  String? name,  String? genre,  String? googleMapsUrl,  double? referenceHeading,  PhotoJudgeRank? judgeRank,  double? distanceErrorMeters,  double? headingErrorDegrees,  Coordinate? guessPosition,  double? capturedHeading,  double? zoomLevel,  SpotId? spotId,  String? discovererUid,  String? discovererNickname,  String? discovererThumbPath,  PhotoJudgement? discovererJudgement,  bool isCleared)?  $default,) {final _that = this;
 switch (_that) {
 case _MissionHistorySpot() when $default != null:
-return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading);case _:
+return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.streetViewImagePath,_that.userPhotoPath,_that.achievedAt,_that.name,_that.genre,_that.googleMapsUrl,_that.referenceHeading,_that.judgeRank,_that.distanceErrorMeters,_that.headingErrorDegrees,_that.guessPosition,_that.capturedHeading,_that.zoomLevel,_that.spotId,_that.discovererUid,_that.discovererNickname,_that.discovererThumbPath,_that.discovererJudgement,_that.isCleared);case _:
   return null;
 
 }
@@ -217,9 +245,9 @@ return $default(_that.coordinate,_that.sortOrder,_that.isDestination,_that.stree
 /// @nodoc
 
 
-class _MissionHistorySpot implements MissionHistorySpot {
-  const _MissionHistorySpot({required this.coordinate, required this.sortOrder, required this.isDestination, required this.streetViewImagePath, this.userPhotoPath, this.achievedAt, this.name, this.genre, this.googleMapsUrl, this.referenceHeading, this.judgeRank, this.distanceErrorMeters, this.headingErrorDegrees, this.guessPosition, this.capturedHeading});
-
+class _MissionHistorySpot extends MissionHistorySpot {
+  const _MissionHistorySpot({required this.coordinate, required this.sortOrder, required this.isDestination, required this.streetViewImagePath, this.userPhotoPath, this.achievedAt, this.name, this.genre, this.googleMapsUrl, this.referenceHeading, this.judgeRank, this.distanceErrorMeters, this.headingErrorDegrees, this.guessPosition, this.capturedHeading, this.zoomLevel, this.spotId, this.discovererUid, this.discovererNickname, this.discovererThumbPath, this.discovererJudgement, this.isCleared = true}): super._();
+  
 
 @override final  Coordinate coordinate;
 @override final  int sortOrder;
@@ -236,6 +264,20 @@ class _MissionHistorySpot implements MissionHistorySpot {
 @override final  double? headingErrorDegrees;
 @override final  Coordinate? guessPosition;
 @override final  double? capturedHeading;
+/// 撮影したときのズームの倍率 (古い履歴では null)
+@override final  double? zoomLevel;
+/// スポット ID (旧データでは null)
+@override final  SpotId? spotId;
+/// 協力プレイの発見者の uid
+@override final  String? discovererUid;
+/// 協力プレイの発見者のニックネーム (発見時点)
+@override final  String? discovererNickname;
+/// 協力プレイの発見者のサムネのパス (取得できなければ null)
+@override final  String? discovererThumbPath;
+/// 協力プレイの発見者の採点 (共有されていなければ null)
+@override final  PhotoJudgement? discovererJudgement;
+/// クリア済みか (協力プレイの途中終了では未クリアのスポットがある)
+@override@JsonKey() final  bool isCleared;
 
 /// Create a copy of MissionHistorySpot
 /// with the given fields replaced by the non-null parameter values.
@@ -247,16 +289,16 @@ _$MissionHistorySpotCopyWith<_MissionHistorySpot> get copyWith => __$MissionHist
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MissionHistorySpot&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isDestination, isDestination) || other.isDestination == isDestination)&&(identical(other.streetViewImagePath, streetViewImagePath) || other.streetViewImagePath == streetViewImagePath)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MissionHistorySpot&&(identical(other.coordinate, coordinate) || other.coordinate == coordinate)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isDestination, isDestination) || other.isDestination == isDestination)&&(identical(other.streetViewImagePath, streetViewImagePath) || other.streetViewImagePath == streetViewImagePath)&&(identical(other.userPhotoPath, userPhotoPath) || other.userPhotoPath == userPhotoPath)&&(identical(other.achievedAt, achievedAt) || other.achievedAt == achievedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.genre, genre) || other.genre == genre)&&(identical(other.googleMapsUrl, googleMapsUrl) || other.googleMapsUrl == googleMapsUrl)&&(identical(other.referenceHeading, referenceHeading) || other.referenceHeading == referenceHeading)&&(identical(other.judgeRank, judgeRank) || other.judgeRank == judgeRank)&&(identical(other.distanceErrorMeters, distanceErrorMeters) || other.distanceErrorMeters == distanceErrorMeters)&&(identical(other.headingErrorDegrees, headingErrorDegrees) || other.headingErrorDegrees == headingErrorDegrees)&&(identical(other.guessPosition, guessPosition) || other.guessPosition == guessPosition)&&(identical(other.capturedHeading, capturedHeading) || other.capturedHeading == capturedHeading)&&(identical(other.zoomLevel, zoomLevel) || other.zoomLevel == zoomLevel)&&(identical(other.spotId, spotId) || other.spotId == spotId)&&(identical(other.discovererUid, discovererUid) || other.discovererUid == discovererUid)&&(identical(other.discovererNickname, discovererNickname) || other.discovererNickname == discovererNickname)&&(identical(other.discovererThumbPath, discovererThumbPath) || other.discovererThumbPath == discovererThumbPath)&&(identical(other.discovererJudgement, discovererJudgement) || other.discovererJudgement == discovererJudgement)&&(identical(other.isCleared, isCleared) || other.isCleared == isCleared));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,coordinate,sortOrder,isDestination,streetViewImagePath,userPhotoPath,achievedAt,name,genre,googleMapsUrl,referenceHeading,judgeRank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading);
+int get hashCode => Object.hashAll([runtimeType,coordinate,sortOrder,isDestination,streetViewImagePath,userPhotoPath,achievedAt,name,genre,googleMapsUrl,referenceHeading,judgeRank,distanceErrorMeters,headingErrorDegrees,guessPosition,capturedHeading,zoomLevel,spotId,discovererUid,discovererNickname,discovererThumbPath,discovererJudgement,isCleared]);
 
 @override
 String toString() {
-  return 'MissionHistorySpot(coordinate: $coordinate, sortOrder: $sortOrder, isDestination: $isDestination, streetViewImagePath: $streetViewImagePath, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, referenceHeading: $referenceHeading, judgeRank: $judgeRank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading)';
+  return 'MissionHistorySpot(coordinate: $coordinate, sortOrder: $sortOrder, isDestination: $isDestination, streetViewImagePath: $streetViewImagePath, userPhotoPath: $userPhotoPath, achievedAt: $achievedAt, name: $name, genre: $genre, googleMapsUrl: $googleMapsUrl, referenceHeading: $referenceHeading, judgeRank: $judgeRank, distanceErrorMeters: $distanceErrorMeters, headingErrorDegrees: $headingErrorDegrees, guessPosition: $guessPosition, capturedHeading: $capturedHeading, zoomLevel: $zoomLevel, spotId: $spotId, discovererUid: $discovererUid, discovererNickname: $discovererNickname, discovererThumbPath: $discovererThumbPath, discovererJudgement: $discovererJudgement, isCleared: $isCleared)';
 }
 
 
@@ -267,9 +309,11 @@ abstract mixin class _$MissionHistorySpotCopyWith<$Res> implements $MissionHisto
   factory _$MissionHistorySpotCopyWith(_MissionHistorySpot value, $Res Function(_MissionHistorySpot) _then) = __$MissionHistorySpotCopyWithImpl;
 @override @useResult
 $Res call({
- Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading
+ Coordinate coordinate, int sortOrder, bool isDestination, String streetViewImagePath, String? userPhotoPath, DateTime? achievedAt, String? name, String? genre, String? googleMapsUrl, double? referenceHeading, PhotoJudgeRank? judgeRank, double? distanceErrorMeters, double? headingErrorDegrees, Coordinate? guessPosition, double? capturedHeading, double? zoomLevel, SpotId? spotId, String? discovererUid, String? discovererNickname, String? discovererThumbPath, PhotoJudgement? discovererJudgement, bool isCleared
 });
 
+
+@override $PhotoJudgementCopyWith<$Res>? get discovererJudgement;
 
 }
 /// @nodoc
@@ -282,7 +326,7 @@ class __$MissionHistorySpotCopyWithImpl<$Res>
 
 /// Create a copy of MissionHistorySpot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? coordinate = null,Object? sortOrder = null,Object? isDestination = null,Object? streetViewImagePath = null,Object? userPhotoPath = freezed,Object? achievedAt = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? referenceHeading = freezed,Object? judgeRank = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? coordinate = null,Object? sortOrder = null,Object? isDestination = null,Object? streetViewImagePath = null,Object? userPhotoPath = freezed,Object? achievedAt = freezed,Object? name = freezed,Object? genre = freezed,Object? googleMapsUrl = freezed,Object? referenceHeading = freezed,Object? judgeRank = freezed,Object? distanceErrorMeters = freezed,Object? headingErrorDegrees = freezed,Object? guessPosition = freezed,Object? capturedHeading = freezed,Object? zoomLevel = freezed,Object? spotId = freezed,Object? discovererUid = freezed,Object? discovererNickname = freezed,Object? discovererThumbPath = freezed,Object? discovererJudgement = freezed,Object? isCleared = null,}) {
   return _then(_MissionHistorySpot(
 coordinate: null == coordinate ? _self.coordinate : coordinate // ignore: cast_nullable_to_non_nullable
 as Coordinate,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -299,10 +343,30 @@ as PhotoJudgeRank?,distanceErrorMeters: freezed == distanceErrorMeters ? _self.d
 as double?,headingErrorDegrees: freezed == headingErrorDegrees ? _self.headingErrorDegrees : headingErrorDegrees // ignore: cast_nullable_to_non_nullable
 as double?,guessPosition: freezed == guessPosition ? _self.guessPosition : guessPosition // ignore: cast_nullable_to_non_nullable
 as Coordinate?,capturedHeading: freezed == capturedHeading ? _self.capturedHeading : capturedHeading // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,zoomLevel: freezed == zoomLevel ? _self.zoomLevel : zoomLevel // ignore: cast_nullable_to_non_nullable
+as double?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
+as SpotId?,discovererUid: freezed == discovererUid ? _self.discovererUid : discovererUid // ignore: cast_nullable_to_non_nullable
+as String?,discovererNickname: freezed == discovererNickname ? _self.discovererNickname : discovererNickname // ignore: cast_nullable_to_non_nullable
+as String?,discovererThumbPath: freezed == discovererThumbPath ? _self.discovererThumbPath : discovererThumbPath // ignore: cast_nullable_to_non_nullable
+as String?,discovererJudgement: freezed == discovererJudgement ? _self.discovererJudgement : discovererJudgement // ignore: cast_nullable_to_non_nullable
+as PhotoJudgement?,isCleared: null == isCleared ? _self.isCleared : isCleared // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
+/// Create a copy of MissionHistorySpot
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PhotoJudgementCopyWith<$Res>? get discovererJudgement {
+    if (_self.discovererJudgement == null) {
+    return null;
+  }
+
+  return $PhotoJudgementCopyWith<$Res>(_self.discovererJudgement!, (value) {
+    return _then(_self.copyWith(discovererJudgement: value));
+  });
+}
 }
 
 // dart format on

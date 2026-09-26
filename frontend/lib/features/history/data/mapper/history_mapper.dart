@@ -1,20 +1,29 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
+import 'package:snampo/core/domain/radius.dart';
+import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/history/domain/entity/mission_history_spot.dart';
 import 'package:snampo/features/history/domain/entity/mission_settings.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeRandom = 'random';
 
 /// Drift [MissionHistories.mode] の値
 const String historyModeDestination = 'destination';
+
+/// Drift [MissionHistories.mode] の値 (協力プレイ)
+const String historyModeCoop = 'coop';
 
 PhotoJudgeRank? _judgeRankFromDb(String? value) {
   if (value == null || value.isEmpty) {
@@ -38,6 +47,26 @@ Coordinate? _guessPositionFromDb({required double? lat, required double? lng}) {
   return Coordinate(latitude: lat, longitude: lng);
 }
 
+/// 発見者の採点の列から [PhotoJudgement] を組み立てる (ランクと位置誤差がなければ null)
+PhotoJudgement? _discovererJudgementFromDb(HistorySpotRow s) {
+  final rank = _judgeRankFromDb(s.discovererJudgeRank);
+  final distance = s.discovererDistanceErrorMeters;
+  if (rank == null || distance == null) {
+    return null;
+  }
+  return PhotoJudgement(
+    rank: rank,
+    distanceErrorMeters: distance,
+    headingErrorDegrees: s.discovererHeadingErrorDegrees,
+    guessPosition: _guessPositionFromDb(
+      lat: s.discovererGuessLat,
+      lng: s.discovererGuessLng,
+    ),
+    capturedHeading: s.discovererCapturedHeading,
+    zoomLevel: s.discovererZoomLevel,
+  );
+}
+
 /// Drift 行とスポット一覧から [MissionSettings] を組み立てる
 MissionSettings missionSettingsFromHistoryRow(
   MissionHistoryRow h,
@@ -50,7 +79,13 @@ MissionSettings missionSettingsFromHistoryRow(
     }
     return MissionSettings.random(radius: Radius.internal(meters: meters));
   }
-  if (h.mode == historyModeDestination) {
+  if (h.mode == historyModeCoop) {
+    final meters = h.radiusMeters;
+    if (meters != null) {
+      return MissionSettings.random(radius: Radius.internal(meters: meters));
+    }
+  }
+  if (h.mode == historyModeDestination || h.mode == historyModeCoop) {
     var lat = h.destinationLat;
     var lng = h.destinationLng;
     if (lat == null || lng == null) {
@@ -107,6 +142,13 @@ MissionHistory missionHistoryFromDriftRows(
                 lng: s.guessLng,
               ),
               capturedHeading: s.capturedHeading,
+              zoomLevel: s.zoomLevel,
+              spotId: s.spotId == null ? null : SpotId.parse(s.spotId!),
+              discovererUid: s.discovererUid,
+              discovererNickname: s.discovererNickname,
+              discovererThumbPath: s.discovererThumbPath,
+              discovererJudgement: _discovererJudgementFromDb(s),
+              isCleared: s.isCleared != 0,
             ),
           )
           .toList();
@@ -121,8 +163,50 @@ MissionHistory missionHistoryFromDriftRows(
     overviewPolyline: h.overviewPolyline,
     spots: spots,
     settings: settings,
+    coop: _coopInfoFromRow(h),
   );
 }
+
+CoopHistoryInfo? _coopInfoFromRow(MissionHistoryRow h) {
+  final rawRoomCode = h.roomCode;
+  if (h.mode != historyModeCoop || rawRoomCode == null) {
+    return null;
+  }
+  final roomCode = const RoomCodeConverter().fromJson(rawRoomCode);
+  final expiresAt = h.coopExpiresAt;
+  final deleteAt = h.coopDeleteAt;
+  if (expiresAt == null || deleteAt == null) {
+    throw StateError('履歴 ${h.id} は coop ですが期限がありません');
+  }
+  return CoopHistoryInfo(
+    roomCode: roomCode,
+    syncState: coopSyncStateFromDb(h.coopSyncState),
+    isHost: h.coopIsHost == 1,
+    members: coopMembersFromDb(h.coopMembers),
+    expiresAt: DateTime.fromMillisecondsSinceEpoch(expiresAt, isUtc: true),
+    deleteAt: DateTime.fromMillisecondsSinceEpoch(deleteAt, isUtc: true),
+  );
+}
+
+/// Drift [MissionHistories.coopSyncState] から [CoopSyncState] に変換する
+CoopSyncState coopSyncStateFromDb(String? value) =>
+    value == CoopSyncState.finalized.name
+        ? CoopSyncState.finalized
+        : CoopSyncState.inProgress;
+
+/// Drift [MissionHistories.coopMembers] の JSON からメンバー一覧に変換する
+List<CoopHistoryMember> coopMembersFromDb(String? json) {
+  if (json == null || json.isEmpty) {
+    return const [];
+  }
+  return (jsonDecode(json) as List<dynamic>)
+      .map((e) => CoopHistoryMember.fromJson(e as Map<String, dynamic>))
+      .toList();
+}
+
+/// メンバー一覧を Drift [MissionHistories.coopMembers] の JSON に変換する
+String coopMembersToDb(List<CoopHistoryMember> members) =>
+    jsonEncode(members.map((m) => m.toJson()).toList());
 
 /// 完了ミッション (API 用モデル) から Drift 保存用コンパニオンへ変換する境界
 ///
@@ -132,7 +216,7 @@ class HistoryFromMissionMapper {
 
   /// 経由地のあとに目的地を並べた一覧 (履歴の sortOrder と一致)
   static List<ImageCoordinate> orderedSpots(MissionEntity mission) {
-    return [...mission.waypoints, mission.destination];
+    return mission.spots;
   }
 
   /// Drift `mission_histories` へ挿入する 1 行分
@@ -161,6 +245,41 @@ class HistoryFromMissionMapper {
     );
   }
 
+  /// Drift `mission_histories` へ挿入する協力プレイの 1 行分
+  ///
+  /// 協力プレイの履歴は playing に遷移した時点で「進行中」として作成し、
+  /// その後は roomCode をキーに upsert する。完了日時は開始日時で仮置きする。
+  static MissionHistoriesCompanion coopHistoryRowCompanion({
+    required String id,
+    required MissionEntity mission,
+    required DateTime startedAt,
+    required CoopHistoryInfo coop,
+  }) {
+    final isRandom = mission.radius != null;
+    return MissionHistoriesCompanion.insert(
+      id: id,
+      completedAt: startedAt.millisecondsSinceEpoch,
+      startedAt: startedAt.millisecondsSinceEpoch,
+      departureLat: mission.departure.latitude,
+      departureLng: mission.departure.longitude,
+      overviewPolyline: mission.overviewPolyline,
+      radiusMeters: Value(mission.radius?.meters),
+      mode: const Value(historyModeCoop),
+      destinationLat: Value(
+        isRandom ? null : mission.destination.coordinate.latitude,
+      ),
+      destinationLng: Value(
+        isRandom ? null : mission.destination.coordinate.longitude,
+      ),
+      roomCode: Value(coop.roomCode.value),
+      coopSyncState: Value(coop.syncState.name),
+      coopIsHost: Value(coop.isHost ? 1 : 0),
+      coopMembers: Value(coopMembersToDb(coop.members)),
+      coopExpiresAt: Value(coop.expiresAt.millisecondsSinceEpoch),
+      coopDeleteAt: Value(coop.deleteAt.millisecondsSinceEpoch),
+    );
+  }
+
   /// Drift `history_spots` へ挿入する 1 行分
   static HistorySpotsCompanion spotRowCompanion({
     required String historyId,
@@ -170,6 +289,7 @@ class HistoryFromMissionMapper {
     required String streetViewImagePath,
     CheckpointProgress? checkpointProgress,
     String? userPhotoPath,
+    bool isCleared = true,
   }) {
     final cp = checkpointProgress;
     return HistorySpotsCompanion.insert(
@@ -191,6 +311,9 @@ class HistoryFromMissionMapper {
       guessLat: Value(cp?.guessPosition?.latitude),
       guessLng: Value(cp?.guessPosition?.longitude),
       capturedHeading: Value(cp?.capturedHeading),
+      zoomLevel: Value(cp?.zoomLevel),
+      spotId: Value(spot.spotId?.value),
+      isCleared: Value(isCleared ? 1 : 0),
     );
   }
 }

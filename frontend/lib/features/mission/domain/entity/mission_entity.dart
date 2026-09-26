@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/radius.dart';
 
 part 'mission_entity.freezed.dart';
 part 'mission_entity.g.dart';
@@ -38,6 +38,9 @@ abstract class MissionEntity with _$MissionEntity {
 
   factory MissionEntity.fromJson(Map<String, dynamic> json) =>
       _$MissionEntityFromJson(json);
+
+  /// 経由地のあとに目的地を並べたスポット (最後が目的地。インデックスはスポット番号)
+  List<ImageCoordinate> get spots => [...waypoints, destination];
 }
 
 Map<String, dynamic> _destinationToJson(ImageCoordinate c) => c.toJson();

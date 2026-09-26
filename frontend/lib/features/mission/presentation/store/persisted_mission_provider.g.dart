@@ -9,42 +9,105 @@ part of 'persisted_mission_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 
 @ProviderFor(PersistedMission)
 @JsonPersist()
-final persistedMissionProvider = PersistedMissionProvider._();
+final persistedMissionProvider = PersistedMissionFamily._();
 
 /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 @JsonPersist()
 final class PersistedMissionProvider
     extends $AsyncNotifierProvider<PersistedMission, MissionEntity?> {
   /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
-  PersistedMissionProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'persistedMissionProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  ///
+  /// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+  PersistedMissionProvider._({
+    required PersistedMissionFamily super.from,
+    required MissionSessionKind super.argument,
+  }) : super(
+         retry: null,
+         name: r'persistedMissionProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$persistedMissionHash();
 
+  @override
+  String toString() {
+    return r'persistedMissionProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   PersistedMission create() => PersistedMission();
+
+  @override
+  bool operator ==(Object other) {
+    return other is PersistedMissionProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$persistedMissionHash() => r'5ef1bca589230012e1941e31e62f08fc09bf40a8';
+String _$persistedMissionHash() => r'757b0e891e5886e6e884dad31297b93cd97f79d7';
 
 /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+
+@JsonPersist()
+final class PersistedMissionFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          PersistedMission,
+          AsyncValue<MissionEntity?>,
+          MissionEntity?,
+          FutureOr<MissionEntity?>,
+          MissionSessionKind
+        > {
+  PersistedMissionFamily._()
+    : super(
+        retry: null,
+        name: r'persistedMissionProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  /// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+  ///
+  /// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
+
+  @JsonPersist()
+  PersistedMissionProvider call(MissionSessionKind kind) =>
+      PersistedMissionProvider._(argument: kind, from: this);
+
+  @override
+  String toString() => r'persistedMissionProvider';
+}
+
+/// 再開用に [MissionEntity] を SQLite に永続化するプロバイダー
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 
 @JsonPersist()
 abstract class _$PersistedMissionBase extends $AsyncNotifier<MissionEntity?> {
-  FutureOr<MissionEntity?> build();
+  late final _$args = ref.$arg as MissionSessionKind;
+  MissionSessionKind get kind => _$args;
+
+  FutureOr<MissionEntity?> build(MissionSessionKind kind);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -57,7 +120,7 @@ abstract class _$PersistedMissionBase extends $AsyncNotifier<MissionEntity?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
 
@@ -69,7 +132,9 @@ abstract class _$PersistedMissionBase extends $AsyncNotifier<MissionEntity?> {
 abstract class _$PersistedMission extends _$PersistedMissionBase {
   /// The default key used by [persist].
   String get key {
-    const resolvedKey = "PersistedMission";
+    late final args = kind;
+    late final resolvedKey = 'PersistedMission($args)';
+
     return resolvedKey;
   }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/core/storage/photo_storage.dart';
 
 /// 写真ストレージの実装
@@ -9,6 +10,9 @@ import 'package:snampo/core/storage/photo_storage.dart';
 /// アプリのドキュメントディレクトリ配下の専用サブディレクトリに写真をコピーして永続化する。
 /// カメラ撮影後は一時ディレクトリに保存されるため、アプリ再起動時に削除されないようここにコピーする。
 /// 削除時は保存用ディレクトリ配下のパスのみを対象とし、想定外のパスによる誤削除を防ぐ。
+///
+/// 保存先はソロが `mission_photos/solo/`、協力プレイが `mission_photos/coop/{roomCode}/`。
+/// 以前のバージョンで `mission_photos/` 直下に保存したソロの写真も、そのまま読めて削除できる。
 class PhotoStorageImpl implements IPhotoStorage {
   static const _photoDirectoryName = 'mission_photos';
 
@@ -26,8 +30,16 @@ class PhotoStorageImpl implements IPhotoStorage {
   }
 
   @override
-  Future<String> savePhoto(String sourcePath, int checkpointIndex) async {
-    final dir = await _photoDirectory();
+  Future<String> savePhoto(
+    String sourcePath,
+    int checkpointIndex, {
+    required MissionPhotoDirectory directory,
+  }) async {
+    final root = await _photoDirectory();
+    final dir = Directory(joinAll([root.path, ...directory.segments]));
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
     final ext = extension(sourcePath);
     // ファイル名: snampo_cp{インデックス}_{タイムスタンプ}.{拡張子}
     final timestamp = DateTime.now().millisecondsSinceEpoch;

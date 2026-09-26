@@ -1,27 +1,34 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:snampo/config.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/image_coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/radius.dart';
 import 'package:snampo/features/history/di/history_provider.dart';
+import 'package:snampo/features/mission/application/interface/location_service.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/image_coordinate.dart';
-import 'package:snampo/features/mission/domain/value_object/radius.dart';
+import 'package:snampo/features/mission/presentation/component/map_top_bar.dart';
+import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
+import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
+import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_progress_store.dart';
+import 'package:snampo/features/mission/presentation/store/mission_sheet_layout_store.dart';
 import 'package:snampo/features/mission/presentation/store/mission_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/mission/presentation/util/photo_rejected_exception.dart';
 import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 // 競合解消メモ（main × 再開機能の統合）:
@@ -32,16 +39,23 @@ import 'package:snampo/features/mission/presentation/util/polyline_util.dart';
 
 /// ミッション画面（ルートごとに `MissionStoreParams` が決まる）。
 ///
-/// 次の3モードをすべて提供する。
+/// 次のモードをすべて提供する。
 /// - **半径指定（ランダム）**: コンストラクタ … API が半径内で目的地を決める
 /// - **目的地指定**: `MissionPage.withDestination` … 地図で選んだ座標でルート生成
 /// - **再開**: `MissionPage.resume` … 永続ストアのミッションを復元（API 呼び出しなし）
+///
+/// 協力プレイなどのモードは、[MissionPageExtension] で部品を差し込む
+/// (このページはモードの機能を知らない)。
 class MissionPage extends HookConsumerWidget {
   /// 半径指定（ランダム）モード。
   ///
   /// [radius] は検索半径（メートル）。`/mission/random/:radius` から遷移する想定。
   MissionPage({required int radius, super.key})
-    : _params = MissionStoreParams.random(radius: Radius(meters: radius));
+    : _initialParams = MissionStoreParams.random(
+        radius: Radius(meters: radius),
+      ),
+      kind = MissionSessionKind.solo,
+      extension = null;
 
   /// 目的地指定モード。
   ///
@@ -50,29 +64,40 @@ class MissionPage extends HookConsumerWidget {
     required double destinationLat,
     required double destinationLng,
     super.key,
-  }) : _params = MissionStoreParams.destination(
+  }) : _initialParams = MissionStoreParams.destination(
          destination: Coordinate(
            latitude: destinationLat,
            longitude: destinationLng,
          ),
-       );
+       ),
+       kind = MissionSessionKind.solo,
+       extension = null;
 
   /// ゲーム再開モード（永続化済みミッションの復元）。
-  const MissionPage.resume({super.key})
-    : _params = const MissionStoreParams.resume();
+  ///
+  /// [kind] の保存枠からミッションと進捗を読む。[extension] はモード固有の部品。
+  const MissionPage.resume({
+    this.kind = MissionSessionKind.solo,
+    this.extension,
+    super.key,
+  }) : _initialParams = null;
+
+  /// API から新規に取得するときのパラメータ (再開では null)
+  final MissionStoreParams? _initialParams;
+
+  /// ミッションと進捗の保存枠
+  final MissionSessionKind kind;
+
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   /// ミッションストアのパラメータ
-  final MissionStoreParams _params;
+  MissionStoreParams get _params =>
+      _initialParams ?? MissionStoreParams.resume(kind: kind);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     log('MissionPage build');
-    final theme = Theme.of(context);
-    final textStyle = (theme.textTheme.displaySmall ??
-            theme.textTheme.headlineMedium ??
-            const TextStyle())
-        .copyWith(color: theme.colorScheme.onPrimary);
-
     // ミッション確定時: チェックポイント数を進捗ストアに載せる（旧 HEAD）。
     // これが無いと missionProgressStore.savePhoto が正しく繋がらない。
     //
@@ -83,78 +108,59 @@ class MissionPage extends HookConsumerWidget {
         // 再開時は missionProgressStore が SQLite から復元済みなので、
         // startProgress するとチェックポイントが空に上書きされ写真が消える。
         if (_params is! MissionStoreParamsResume) {
-          // 新規開始前に clearProgress し、捨てる進捗の mission_photos を削除する
+          // 新規開始前に、捨てる進捗の mission_photos を削除してから始める
           // （startProgress だけだとパス参照が失われオーファンが残る）
           final progressNotifier = ref.read(
-            missionProgressStoreProvider.notifier,
+            missionProgressStoreProvider(MissionSessionKind.solo).notifier,
           );
-          final persistedNotifier = ref.read(persistedMissionProvider.notifier);
-          final checkpointCount = mission.waypoints.length + 1;
+          final persistedNotifier = ref.read(
+            persistedMissionProvider(MissionSessionKind.solo).notifier,
+          );
+          final checkpointCount = mission.spots.length;
           Future(() async {
-            // build() の完了を待ってから state を書き換える。
-            // build() と startProgress が並行すると、build() の返り値 (null) が
-            // Riverpod によって遅延適用され startProgress の entity を上書きするため。
-            await ref.read(missionProgressStoreProvider.future);
-            await progressNotifier.clearProgress();
-            progressNotifier.startProgress(checkpointCount);
+            await progressNotifier.restartProgress(checkpointCount);
             persistedNotifier.setMission(mission);
           });
         }
       });
     });
 
+    final extension = this.extension;
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
 
     return missionAsyncValue.when(
       data: (missionInfo) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('On MISSION', style: textStyle),
-            centerTitle: true,
-            backgroundColor: theme.colorScheme.primary,
-          ),
-          body: Stack(
-            children: [
-              MapView(currentLocation: missionInfo.departure, params: _params),
-              SnapView(params: _params),
-            ],
+        final body = Stack(
+          children: [
+            MapView(currentLocation: missionInfo.departure, params: _params),
+            SnapView(params: _params, extension: extension),
+          ],
+        );
+        // AppBar は置かず、地図を画面いっぱいに見せる (見出しはシートの「ミッション」が兼ねる)。
+        // 戻るボタンとモードのボタンは、モードの画面 (準備の失敗など) の上にも出す
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          // 地図の上なので、ステータスバーの文字を濃くする
+          value: SystemUiOverlayStyle.dark,
+          child: Scaffold(
+            body: Stack(
+              children: [
+                extension?.wrapBody(context, body) ?? body,
+                MapTopBar(actions: extension?.topActions(context) ?? const []),
+              ],
+            ),
           ),
         );
       },
-      loading:
-          () => Scaffold(
-            appBar: AppBar(
-              title: Text('On MISSION', style: textStyle),
-              centerTitle: true,
-              backgroundColor: theme.colorScheme.primary,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LoadingAnimationWidget.staggeredDotsWave(
-                    color: Colors.blue,
-                    size: 100,
-                  ),
-                  const Text('NOW LOADING'),
-                ],
-              ),
-            ),
-          ),
+      loading: () => const MissionLoadingView(),
       error: (error, stackTrace) {
+        // やり直している間も前のエラーが残るので、読み込み中の画面にする
+        if (missionAsyncValue.isLoading) return const MissionLoadingView();
         log('error: $error');
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('On MISSION', style: textStyle),
-            centerTitle: true,
-            backgroundColor: theme.colorScheme.primary,
-          ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [const Text('エラーが発生しました'), Text('$error')],
-            ),
-          ),
+        return MissionErrorView(
+          onRetry: () => ref.invalidate(missionStoreProvider(_params)),
+          locationUnavailable: error is LocationUnavailableException,
+          detail: Env.isDev ? '$error' : null,
+          actions: extension?.topActions(context) ?? const [],
         );
       },
     );
@@ -267,6 +273,10 @@ class _MapViewState extends ConsumerState<MapView> {
                 ),
               },
               polylines: _polylines,
+              padding: EdgeInsets.only(
+                top: MediaQuery.paddingOf(context).top + MapTopBar.height,
+                bottom: MediaQuery.paddingOf(context).bottom + 130,
+              ),
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -281,468 +291,235 @@ class _MapViewState extends ConsumerState<MapView> {
   }
 }
 
-/// mission_pageで表示するsnapのメニューウィジェット
-class SnapView extends StatelessWidget {
+/// Mission 画面の、スポットを並べるボトムシート
+class SnapView extends HookConsumerWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.params, super.key});
+  const SnapView({required this.params, this.extension, super.key});
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return DraggableScrollableSheet(
-      // 初期の表示割合
-      initialChildSize: 0.15,
-      // 最小の表示割合
-      minChildSize: 0.15,
-      // snapで止める時の割合
-      snapSizes: const [0.15, 0.6, 1.0],
-      builder: (BuildContext context, ScrollController scrollController) {
-        return ColoredBox(
-          color: theme.colorScheme.surface,
-          child: Stack(
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.9,
-                width: MediaQuery.of(context).size.width,
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 50),
-                      SnapViewState(params: params),
-                    ],
-                  ),
-                ),
-              ),
-              IgnorePointer(
-                child: ColoredBox(
-                  color: theme.colorScheme.surface,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 20, bottom: 20),
-                        height: 10,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// SnapView内でミッション情報を表示するウィジェット
-class SnapViewState extends HookConsumerWidget {
-  /// SnapViewStateウィジェットのコンストラクタ
-  const SnapViewState({required this.params, super.key});
-
-  /// ミッションストアのパラメータ
-  final MissionStoreParams params;
+  /// モード固有の部品 (ソロでは null)
+  final MissionPageExtension? extension;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSubmitting = useState(false);
-    final theme = Theme.of(context);
-    final titleTextStyle = theme.textTheme.displaySmall!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
-    final buttonTextStyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    final missionAsyncValue = ref.watch(missionStoreProvider(params));
-    final progressAsync = ref.watch(missionProgressStoreProvider);
-
-    return missionAsyncValue.when(
-      data: (missionInfo) {
-        // main: 経由地 + 目的地を可変長スポットとして列挙
-        final missionSpots = [
-          ...missionInfo.waypoints,
-          missionInfo.destination,
-        ];
-        final isDestinationMode = missionInfo.radius == null;
-        final allCompleted = progressAsync.maybeWhen(
-          data:
-              (progress) =>
-                  progress != null &&
-                  progress.checkpoints.isNotEmpty &&
-                  progress.checkpoints.every(
-                    (checkpoint) => checkpoint != null,
-                  ),
-          orElse: () => false,
-        );
-
-        return Column(
-          children: [
-            Text('MISSION', style: titleTextStyle),
-            for (var i = 0; i < missionSpots.length; i++)
-              _MissionSpotRow(
-                index: i,
-                missionPoint: missionSpots[i],
-                checkpoint: progressAsync.maybeWhen(
-                  data:
-                      (progress) =>
-                          progress != null &&
-                                  i < progress.checkpoints.length &&
-                                  progress.checkpoints[i] != null
-                              ? progress.checkpoints[i]
-                              : null,
-                  orElse: () => null,
-                ),
-                totalCheckpointCount: missionSpots.length,
-                isDestinationMode: isDestinationMode,
-              ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary, // ボタンの背景色
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  // 形を変えるか否か
-                  borderRadius: BorderRadius.circular(10), // 角の丸み
-                ),
-              ),
-              onPressed:
-                  !allCompleted || isSubmitting.value
-                      ? null
-                      : () async {
-                        isSubmitting.value = true;
-                        try {
-                          final progress = await _resolveCurrentProgress(
-                            ref,
-                            missionInfo,
-                          );
-                          if (progress == null) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('進捗情報を取得できませんでした'),
-                                ),
-                              );
-                            }
-                            return;
-                          }
-                          try {
-                            await ref
-                                .read(addMissionHistoryUseCaseProvider)
-                                .call(mission: missionInfo, progress: progress);
-                          } on Exception {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('履歴の保存に失敗しました')),
-                              );
-                            }
-                            return;
-                          }
-                          if (context.mounted) {
-                            context.go('/result');
-                          }
-                        } finally {
-                          if (context.mounted) {
-                            isSubmitting.value = false;
-                          }
-                        }
-                      },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('プレイ結果', style: buttonTextStyle),
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text('エラーが発生しました: $error')),
-    );
-  }
-}
-
-class _MissionSpotRow extends StatelessWidget {
-  const _MissionSpotRow({
-    required this.index,
-    required this.missionPoint,
-    required this.checkpoint,
-    required this.totalCheckpointCount,
-    required this.isDestinationMode,
-  });
-
-  final int index;
-  final ImageCoordinate missionPoint;
-  final CheckpointProgress? checkpoint;
-  final int totalCheckpointCount;
-  final bool isDestinationMode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('- Spot${index + 1}: '),
-          AnswerImage(imageBase64: missionPoint.imageBase64),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TakeSnap(
-                spotIndex: index,
-                missionPoint: missionPoint,
-                isDestinationMode: isDestinationMode,
-              ),
-              if (checkpoint != null) ...[
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed:
-                      () => context.push(
-                        '/spot-result',
-                        extra: SpotResultPageArgs(
-                          spotIndex: index,
-                          totalCheckpointCount: totalCheckpointCount,
-                          missionPoint: missionPoint,
-                          checkpoint: checkpoint!,
-                          isDestinationMode: isDestinationMode,
-                        ),
-                      ),
-                  child: const Text('結果を見る'),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Base64エンコードされた画像データを表示するウィジェット
-class AnswerImage extends StatelessWidget {
-  /// AnswerImageウィジェットのコンストラクタ
-  ///
-  /// [imageBase64] Base64エンコードされた画像データの文字列
-  const AnswerImage({required this.imageBase64, super.key});
-
-  /// Base64エンコードされた画像データの文字列
-  final String imageBase64;
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUint8 = base64Decode(imageBase64);
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: FittedBox(
-        // child: Image.asset(picture_name),
-        child: Image.memory(
-          imageUint8,
-          width: 150,
-          height: 150,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-}
-
-/// スポットごとの撮影 UI。
-///
-/// - main: カメラ画面へ遷移し `cameraStore` でセッション中プレビュー
-/// - feature（旧 HEAD）: 撮影後 `missionProgressStore.savePhoto` で永続パスを記録
-///   （再開後もプレビュー可能）
-class TakeSnap extends HookConsumerWidget {
-  /// [TakeSnap] ウィジェットを作成する
-  ///
-  /// [spotIndex] は撮影対象スポットのインデックス（0 から連番）
-  const TakeSnap({
-    required this.spotIndex,
-    required this.missionPoint,
-    required this.isDestinationMode,
-    super.key,
-  });
-
-  /// 撮影するスポットのインデックス
-  final int spotIndex;
-
-  /// 撮影対象の地点情報
-  final ImageCoordinate missionPoint;
-
-  /// 目的地指定モードのミッションかどうか
-  final bool isDestinationMode;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isCapturing = useState(false);
-
-    // main: 今セッションで撮った直後のプレビュー用パス
-    final cameraPath = ref.watch(
-      cameraStoreProvider.select((map) => map[spotIndex]),
-    );
-
-    // feature: 再開後は進捗の永続パスで表示。撮り直し中は camera が先に更新されるため camera を優先する
-    final progressAsync = ref.watch(missionProgressStoreProvider);
-    final progressPath = progressAsync.maybeWhen(
-      data: (progress) {
-        if (progress == null || spotIndex >= progress.checkpoints.length) {
-          return null;
-        }
-        return progress.checkpoints[spotIndex]?.userPhotoPath;
-      },
-      orElse: () => null,
-    );
-
-    final displayPath = progressPath ?? cameraPath;
-
-    if (displayPath == null) {
-      return FloatingActionButton(
-        heroTag: 'take_snap_spot_$spotIndex',
-        onPressed:
-            isCapturing.value
-                ? null
-                : () async {
-                  isCapturing.value = true;
-                  try {
-                    await _handleCameraCapture(context, ref);
-                  } finally {
-                    if (context.mounted) isCapturing.value = false;
-                  }
-                },
-        child: const Icon(Icons.add_a_photo),
-      );
+    final capturingIndex = useState<int?>(null);
+    final missionInfo = ref.watch(missionStoreProvider(params)).value;
+    final progress = ref.watch(missionProgressStoreProvider(params.kind)).value;
+    // 今セッションで撮った直後の写真 (進捗に保存されるまでのあいだ使う)
+    final cameraPaths = ref.watch(cameraStoreProvider);
+    final layout = ref.watch(missionSheetLayoutStoreProvider);
+    if (missionInfo == null) {
+      return const SizedBox.shrink();
     }
 
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: SetImage(picture: File(displayPath)),
-    );
-  }
+    final missionSpots = missionInfo.spots;
+    final isDestinationMode = missionInfo.radius == null;
+    final checkpoints = progress?.checkpoints ?? const [];
+    CheckpointProgress? checkpointAt(int index) =>
+        index < checkpoints.length ? checkpoints[index] : null;
+    final allCompleted =
+        checkpoints.isNotEmpty &&
+        checkpoints.every((checkpoint) => checkpoint != null);
 
-  Future<void> _handleCameraCapture(BuildContext context, WidgetRef ref) async {
-    final router = GoRouter.of(context);
-    SpotResultPageArgs? nextSpotResultArgs;
-    await router.push<void>(
-      '/camera',
-      extra: CameraPageArgs(
-        referenceImageBase64: missionPoint.imageBase64,
-        onPhotoAccepted: (capturedFile, zoomLevel) async {
-          final path = capturedFile.path;
-          final currentPosition =
-              await ref.read(getCurrentPositionUseCaseProvider).call();
-          final capturedHeading =
-              await ref.read(getCurrentHeadingUseCaseProvider).call();
-          final judgeResult = ref
-              .read(judgePhotoUseCaseProvider)
-              .call(
-                currentPosition: currentPosition,
-                target: missionPoint,
-                capturedHeading: capturedHeading,
-                zoomLevel: zoomLevel,
-              );
+    final extension = this.extension;
+    final sheetSpots = [
+      for (var i = 0; i < missionSpots.length; i++)
+        () {
+          final checkpoint = checkpointAt(i);
+          final ownPhotoPath = checkpoint?.userPhotoPath ?? cameraPaths[i];
+          final discovererName = extension?.discovererName(
+            ref,
+            checkpoint: checkpoint,
+          );
+          return MissionSheetSpot(
+            referenceImageBase64: missionSpots[i].imageBase64,
+            name: missionSpots[i].name,
+            // 協力プレイで他の人が発見したスポットも、結果 (発見者の写真) を見られる
+            isCleared: checkpoint?.hasResult ?? false,
+            canCapture:
+                ownPhotoPath == null &&
+                (extension?.canCapture(
+                      ref,
+                      spot: missionSpots[i],
+                      checkpoint: checkpoint,
+                    ) ??
+                    true),
+            photoPath: ownPhotoPath ?? checkpoint?.discovererThumbPath,
+            photoOwnerName: ownPhotoPath != null ? 'あなた' : discovererName,
+            discovererName: discovererName,
+          );
+        }(),
+    ];
 
-          final checkpoint = await ref
-              .read(missionProgressStoreProvider.notifier)
-              .completeCheckpoint(
-                index: spotIndex,
-                tempPhotoPath: path,
-                guessPosition: currentPosition,
-                capturedHeading: capturedHeading,
-                judgeRank: judgeResult.rank,
-                distanceErrorMeters: judgeResult.distanceErrorMeters,
-                headingErrorDegrees: judgeResult.headingErrorDegrees,
-              );
-          if (checkpoint == null) {
-            return false;
+    Future<void> showPlayResult() async {
+      isSubmitting.value = true;
+      try {
+        final progress = await _resolveCurrentProgress(
+          ref,
+          missionInfo,
+          params.kind,
+        );
+        if (progress == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('進捗情報を取得できませんでした')));
           }
+          return;
+        }
+        try {
+          await ref
+              .read(addMissionHistoryUseCaseProvider)
+              .call(mission: missionInfo, progress: progress);
+        } on Exception {
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('履歴の保存に失敗しました')));
+          }
+          return;
+        }
+        if (context.mounted) {
+          context.go('/result');
+        }
+      } finally {
+        if (context.mounted) {
+          isSubmitting.value = false;
+        }
+      }
+    }
 
-          ref
-              .read(cameraStoreProvider.notifier)
-              .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
-          nextSpotResultArgs = SpotResultPageArgs(
-            spotIndex: spotIndex,
-            totalCheckpointCount:
-                ref
-                    .read(missionProgressStoreProvider)
-                    .value
-                    ?.checkpoints
-                    .length ??
-                spotIndex + 1,
-            missionPoint: missionPoint,
+    return MissionSpotSheet(
+      spots: sheetSpots,
+      layout: layout,
+      onLayoutChanged:
+          ref.read(missionSheetLayoutStoreProvider.notifier).change,
+      capturingIndex: capturingIndex.value,
+      onCapture: (index) async {
+        if (capturingIndex.value != null) return;
+        capturingIndex.value = index;
+        try {
+          await _captureSpot(
+            context,
+            ref,
+            spotIndex: index,
+            missionPoint: missionSpots[index],
+            isDestinationMode: isDestinationMode,
+            kind: params.kind,
+            extension: extension,
+          );
+        } finally {
+          if (context.mounted) capturingIndex.value = null;
+        }
+      },
+      onShowResult: (index) {
+        final checkpoint = checkpointAt(index);
+        if (checkpoint == null) return;
+        context.push(
+          '/spot-result',
+          extra: SpotResultPageArgs(
+            spotIndex: index,
+            totalCheckpointCount: missionSpots.length,
+            missionPoint: missionSpots[index],
             checkpoint: checkpoint,
             isDestinationMode: isDestinationMode,
-          );
-          return true;
-        },
-      ),
-    );
-    if (!context.mounted || nextSpotResultArgs == null) {
-      return;
-    }
-    await router.push('/spot-result', extra: nextSpotResultArgs);
-  }
-}
-
-/// ファイルから読み込んだ画像を表示するウィジェット
-class SetImage extends StatelessWidget {
-  /// SetImageウィジェットのコンストラクタ
-  ///
-  /// [picture] 表示する画像ファイル
-  const SetImage({
-    // required this.picture_name,
-    required this.picture,
-    super.key,
-  });
-  // final String picture_name;
-  /// 表示する画像ファイル
-  final File picture;
-
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-      // child: Image.asset(picture_name),
-      child: Image.file(picture),
+            kind: params.kind,
+          ),
+        );
+      },
+      showPlayResultButton:
+          (extension?.showsResultButton ?? true) && allCompleted,
+      onShowPlayResult: isSubmitting.value ? null : showPlayResult,
     );
   }
 }
 
-/// アセットから読み込んだ画像を表示するウィジェット
-class SetTestImage extends StatelessWidget {
-  // final File picture;
-  /// SetTestImageウィジェットのコンストラクタ
-  ///
-  /// [picture] 表示する画像のアセットパス
-  const SetTestImage({
-    // required this.picture_name,
-    required this.picture,
-    super.key,
-  });
+/// [spotIndex] 番目のスポットを撮影する。
+///
+/// カメラ画面へ移り、撮影と採点が確定したら `missionProgressStore` に保存して
+/// (再開後もプレビューできる)、スポットの結果画面へ進む。
+Future<void> _captureSpot(
+  BuildContext context,
+  WidgetRef ref, {
+  required int spotIndex,
+  required ImageCoordinate missionPoint,
+  required bool isDestinationMode,
+  required MissionSessionKind kind,
+  required MissionPageExtension? extension,
+}) async {
+  final router = GoRouter.of(context);
+  SpotResultPageArgs? nextSpotResultArgs;
+  await router.push<void>(
+    '/camera',
+    extra: CameraPageArgs(
+      title: 'Spot ${spotIndex + 1}',
+      referenceImageBase64: missionPoint.imageBase64,
+      loadingMessage: extension?.captureLoadingMessage ?? '採点中...',
+      onPhotoAccepted: (capturedFile, zoomLevel) async {
+        final path = capturedFile.path;
+        final currentPosition =
+            await ref.read(getCurrentPositionUseCaseProvider).call();
+        final capturedHeading =
+            await ref.read(getCurrentHeadingUseCaseProvider).call();
+        final judgeResult = ref
+            .read(judgePhotoUseCaseProvider)
+            .call(
+              currentPosition: currentPosition,
+              target: missionPoint,
+              capturedHeading: capturedHeading,
+              zoomLevel: zoomLevel,
+            );
 
-  /// 表示する画像のアセットパス
-  final String picture;
+        final checkpoint = await ref
+            .read(missionProgressStoreProvider(kind).notifier)
+            .completeCheckpoint(
+              index: spotIndex,
+              tempPhotoPath: path,
+              guessPosition: currentPosition,
+              capturedHeading: capturedHeading,
+              judgeRank: judgeResult.rank,
+              distanceErrorMeters: judgeResult.distanceErrorMeters,
+              headingErrorDegrees: judgeResult.headingErrorDegrees,
+              zoomLevel: judgeResult.zoomLevel,
+            );
+        if (checkpoint == null) {
+          return false;
+        }
+        await extension?.onCheckpointCompleted(
+          ref,
+          index: spotIndex,
+          checkpoint: checkpoint,
+        );
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: FittedBox(
-        // child: Image.asset(picture_name),
-        child: Image.asset(picture),
-      ),
-    );
+        ref
+            .read(cameraStoreProvider.notifier)
+            .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
+        nextSpotResultArgs = SpotResultPageArgs(
+          spotIndex: spotIndex,
+          totalCheckpointCount:
+              ref
+                  .read(missionProgressStoreProvider(kind))
+                  .value
+                  ?.checkpoints
+                  .length ??
+              spotIndex + 1,
+          missionPoint: missionPoint,
+          checkpoint: checkpoint,
+          isDestinationMode: isDestinationMode,
+          closeLabel: extension?.spotResultCloseLabel(ref, index: spotIndex),
+          kind: kind,
+        );
+        return true;
+      },
+    ),
+  );
+  if (!context.mounted || nextSpotResultArgs == null) {
+    return;
   }
+  await router.push('/spot-result', extra: nextSpotResultArgs);
 }
 
 /// [missionProgressStoreProvider] から最新の進捗を取得する。
@@ -752,8 +529,9 @@ class SetTestImage extends StatelessWidget {
 Future<MissionProgressEntity?> _resolveCurrentProgress(
   WidgetRef ref,
   MissionEntity missionInfo,
+  MissionSessionKind kind,
 ) async {
-  final snap = ref.read(missionProgressStoreProvider);
+  final snap = ref.read(missionProgressStoreProvider(kind));
   if (snap.hasError) {
     return null;
   }
@@ -763,21 +541,69 @@ Future<MissionProgressEntity?> _resolveCurrentProgress(
   };
   if (progress == null && snap.isLoading) {
     try {
-      progress = await ref.read(missionProgressStoreProvider.future);
+      progress = await ref.read(missionProgressStoreProvider(kind).future);
     } on Object {
       return null;
     }
   }
   if (progress == null) {
-    final checkpointCount = missionInfo.waypoints.length + 1;
+    final checkpointCount = missionInfo.spots.length;
     ref
-        .read(missionProgressStoreProvider.notifier)
+        .read(missionProgressStoreProvider(kind).notifier)
         .startProgress(checkpointCount);
-    final snap2 = ref.read(missionProgressStoreProvider);
+    final snap2 = ref.read(missionProgressStoreProvider(kind));
     progress = switch (snap2) {
       AsyncData(:final value) => value,
       _ => null,
     };
   }
   return progress;
+}
+
+/// Mission 画面にモード (協力プレイなど) ごとの部品を差し込むための口
+///
+/// Mission 画面はモードの機能を知らず、モードの側がこれを実装して渡す。
+abstract class MissionPageExtension {
+  /// [MissionPageExtension] を作成する
+  const MissionPageExtension();
+
+  /// 画面の中身を包む (モード固有のお知らせや画面遷移など)
+  Widget wrapBody(BuildContext context, Widget body) => body;
+
+  /// 地図の右上に並べるボタン
+  List<Widget> topActions(BuildContext context) => const [];
+
+  /// スポットの発見者の表示名 (発見者がいない・ソロなら null)
+  ///
+  /// build の中で呼ぶ。状態の変化で作り直すときは [ref] で watch する。
+  String? discovererName(
+    WidgetRef ref, {
+    required CheckpointProgress? checkpoint,
+  }) => null;
+
+  /// スポットを撮影できるか (build の中で呼ぶ。状態の変化で作り直すときは [ref] で watch する)
+  bool canCapture(
+    WidgetRef ref, {
+    required ImageCoordinate spot,
+    required CheckpointProgress? checkpoint,
+  }) => true;
+
+  /// 撮影と採点が確定したとき
+  ///
+  /// 完了するまで撮影画面のローディングを続け、完了したらスポットの結果画面へ進む。
+  /// 撮影を受け付けられなければ [PhotoRejectedException] を投げる (結果画面へは進まない)。
+  Future<void> onCheckpointCompleted(
+    WidgetRef ref, {
+    required int index,
+    required CheckpointProgress checkpoint,
+  }) async {}
+
+  /// 撮影してから [onCheckpointCompleted] が完了するまでに表示する文言
+  String get captureLoadingMessage => '採点中...';
+
+  /// 撮影した [index] 番目のスポットの結果画面で、閉じるボタンに出す文言 (null なら既定)
+  String? spotResultCloseLabel(WidgetRef ref, {required int index}) => null;
+
+  /// 「プレイ結果」ボタンを表示するか
+  bool get showsResultButton => true;
 }

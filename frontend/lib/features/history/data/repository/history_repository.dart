@@ -3,14 +3,19 @@
 import 'dart:developer';
 
 import 'package:drift/drift.dart';
+import 'package:snampo/core/domain/photo_judgement.dart';
+import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/domain/spot_id.dart';
 import 'package:snampo/features/history/application/interface/history_repository.dart';
 import 'package:snampo/features/history/data/database/history_database.dart';
 import 'package:snampo/features/history/data/history_photo_storage.dart';
 import 'package:snampo/features/history/data/mapper/history_mapper.dart';
 import 'package:snampo/features/history/data/streetview_storage.dart';
+import 'package:snampo/features/history/domain/entity/coop_history_info.dart';
 import 'package:snampo/features/history/domain/entity/mission_history.dart';
 import 'package:snampo/features/mission/domain/entity/mission_entity.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
+import 'package:uuid/uuid.dart';
 
 /// Drift 上の履歴 CRUD
 class HistoryRepository implements IHistoryRepository {
@@ -18,10 +23,12 @@ class HistoryRepository implements IHistoryRepository {
   HistoryRepository(
     this._db,
     this._streetViewStorage,
-    this._historyPhotoStorage,
-  );
+    this._historyPhotoStorage, [
+    Uuid? uuid,
+  ]) : _uuid = uuid ?? const Uuid();
 
   final HistoryDatabase _db;
+  final Uuid _uuid;
   final StreetViewStorage _streetViewStorage;
   final HistoryPhotoStorage _historyPhotoStorage;
 
@@ -124,14 +131,18 @@ class HistoryRepository implements IHistoryRepository {
   @override
   Future<void> deleteHistory(String id) async {
     final spots = _db.historySpots;
-    final userPhotoPaths =
-        await (_db.selectOnly(spots)
-              ..addColumns([spots.userPhotoPath])
-              ..where(
-                spots.historyId.equals(id) & spots.userPhotoPath.isNotNull(),
-              ))
-            .map((row) => row.read(spots.userPhotoPath)!)
-            .get();
+    final userPhotoPaths = await (_db.selectOnly(spots)
+          ..addColumns([spots.userPhotoPath, spots.discovererThumbPath])
+          ..where(spots.historyId.equals(id)))
+        .map(
+          (row) =>
+              [
+                row.read(spots.userPhotoPath),
+                row.read(spots.discovererThumbPath),
+              ].nonNulls,
+        )
+        .get()
+        .then((rows) => rows.expand((paths) => paths).toList());
 
     await _db.transaction(() async {
       await (_db.delete(_db.missionHistories)
@@ -174,7 +185,13 @@ class HistoryRepository implements IHistoryRepository {
     if (limit != null) {
       q.limit(limit, offset: offset);
     }
-    final rows = await q.get();
+    return _toMissionHistories(await q.get());
+  }
+
+  /// 履歴行のスポットを一括で取得して [MissionHistory] にする (行の順序を保つ)
+  Future<List<MissionHistory>> _toMissionHistories(
+    List<MissionHistoryRow> rows,
+  ) async {
     if (rows.isEmpty) {
       return [];
     }
@@ -200,6 +217,225 @@ class HistoryRepository implements IHistoryRepository {
       return null;
     }
     return _rowToMissionHistory(h);
+  }
+
+  @override
+  Future<void> upsertCoopHistory({
+    required MissionEntity mission,
+    required DateTime startedAt,
+    required CoopHistoryInfo coop,
+  }) async {
+    final existing = await _selectCoopRow(coop.roomCode);
+    if (existing != null) {
+      await (_db.update(_db.missionHistories)
+        ..where((t) => t.id.equals(existing.id))).write(
+        MissionHistoriesCompanion(
+          coopMembers: Value(coopMembersToDb(coop.members)),
+        ),
+      );
+      return;
+    }
+
+    final id = _uuid.v4();
+    final spots = HistoryFromMissionMapper.orderedSpots(mission);
+    final createdStreetViewPaths = <String>[];
+    try {
+      await _db.transaction(() async {
+        await _db
+            .into(_db.missionHistories)
+            .insert(
+              HistoryFromMissionMapper.coopHistoryRowCompanion(
+                id: id,
+                mission: mission,
+                startedAt: startedAt,
+                coop: coop,
+              ),
+            );
+        for (var i = 0; i < spots.length; i++) {
+          // ミッション画像は、ルームに入ってダウンロードした時点ですべてローカルに保存する
+          final path = await _streetViewStorage.saveBase64Image(
+            historyId: id,
+            sortOrder: i,
+            imageBase64: spots[i].imageBase64,
+          );
+          createdStreetViewPaths.add(path);
+          await _db
+              .into(_db.historySpots)
+              .insert(
+                HistoryFromMissionMapper.spotRowCompanion(
+                  historyId: id,
+                  sortOrder: i,
+                  isLastSpot: i == spots.length - 1,
+                  spot: spots[i],
+                  streetViewImagePath: path,
+                  isCleared: false,
+                ),
+              );
+        }
+      });
+    } catch (error, stackTrace) {
+      for (final path in createdStreetViewPaths) {
+        try {
+          await _streetViewStorage.delete(path);
+        } catch (cleanupError, cleanupStackTrace) {
+          log(
+            'upsertCoopHistory: failed to cleanup Street View file: $path',
+            error: cleanupError,
+            stackTrace: cleanupStackTrace,
+            name: 'HistoryRepository',
+          );
+        }
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  @override
+  Future<MissionHistory?> getCoopHistory(RoomCode roomCode) async {
+    final row = await _selectCoopRow(roomCode);
+    return row == null ? null : _rowToMissionHistory(row);
+  }
+
+  @override
+  Future<void> applyCoopDiscoverer({
+    required RoomCode roomCode,
+    required SpotId spotId,
+    required String discovererUid,
+    required String discovererNickname,
+    required DateTime clearedAt,
+    required PhotoJudgement? judgement,
+  }) async {
+    final spot = await _selectCoopSpot(roomCode, spotId);
+    if (spot == null) {
+      return;
+    }
+    final discovererChanged = spot.discovererUid != discovererUid;
+    await (_db.update(_db.historySpots)
+      ..where((t) => t.id.equals(spot.id))).write(
+      HistorySpotsCompanion(
+        discovererUid: Value(discovererUid),
+        discovererNickname: Value(discovererNickname),
+        achievedAt: Value(clearedAt.millisecondsSinceEpoch),
+        isCleared: const Value(1),
+        discovererJudgeRank: Value(judgement?.rank.name),
+        discovererDistanceErrorMeters: Value(judgement?.distanceErrorMeters),
+        discovererHeadingErrorDegrees: Value(judgement?.headingErrorDegrees),
+        discovererGuessLat: Value(judgement?.guessPosition?.latitude),
+        discovererGuessLng: Value(judgement?.guessPosition?.longitude),
+        discovererCapturedHeading: Value(judgement?.capturedHeading),
+        discovererZoomLevel: Value(judgement?.zoomLevel),
+        // 発見者が変わった場合 (自分の送信待ちのクリアが拒否されたなど) は前のサムネを外す
+        discovererThumbPath:
+            discovererChanged ? const Value(null) : const Value.absent(),
+      ),
+    );
+    final oldThumb = spot.discovererThumbPath;
+    if (discovererChanged && oldThumb != null) {
+      await _historyPhotoStorage.delete(oldThumb);
+    }
+  }
+
+  @override
+  Future<void> saveCoopThumb({
+    required RoomCode roomCode,
+    required SpotId spotId,
+    required String sourcePath,
+  }) async {
+    final spot = await _selectCoopSpot(roomCode, spotId);
+    if (spot == null) {
+      return;
+    }
+    final path = await _historyPhotoStorage.copyCoopThumb(
+      historyId: spot.historyId,
+      sortOrder: spot.sortOrder,
+      sourcePath: sourcePath,
+    );
+    if (path == null) {
+      return;
+    }
+    await (_db.update(_db.historySpots)..where(
+      (t) => t.id.equals(spot.id),
+    )).write(HistorySpotsCompanion(discovererThumbPath: Value(path)));
+    final oldThumb = spot.discovererThumbPath;
+    if (oldThumb != null && oldThumb != path) {
+      await _historyPhotoStorage.delete(oldThumb);
+    }
+  }
+
+  @override
+  Future<void> saveCoopUserPhoto({
+    required RoomCode roomCode,
+    required SpotId spotId,
+    required CheckpointProgress checkpoint,
+  }) async {
+    final spot = await _selectCoopSpot(roomCode, spotId);
+    final source = checkpoint.userPhotoPath;
+    if (spot == null || source == null) {
+      return;
+    }
+    final path = await _historyPhotoStorage.copyUserPhoto(
+      historyId: spot.historyId,
+      sortOrder: spot.sortOrder,
+      sourcePath: source,
+    );
+    await (_db.update(_db.historySpots)
+      ..where((t) => t.id.equals(spot.id))).write(
+      HistorySpotsCompanion(
+        userPhotoPath: Value(path),
+        judgeRank: Value(checkpoint.judgeRank?.name),
+        distanceErrorMeters: Value(checkpoint.distanceErrorMeters),
+        headingErrorDegrees: Value(checkpoint.headingErrorDegrees),
+        guessLat: Value(checkpoint.guessPosition?.latitude),
+        guessLng: Value(checkpoint.guessPosition?.longitude),
+        capturedHeading: Value(checkpoint.capturedHeading),
+        zoomLevel: Value(checkpoint.zoomLevel),
+      ),
+    );
+  }
+
+  @override
+  Future<void> finalizeCoopHistory(
+    RoomCode roomCode, {
+    required DateTime completedAt,
+  }) async {
+    await (_db.update(_db.missionHistories)
+      ..where((t) => t.roomCode.equals(roomCode.value))).write(
+      MissionHistoriesCompanion(
+        coopSyncState: Value(CoopSyncState.finalized.name),
+        completedAt: Value(completedAt.millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  @override
+  Future<List<MissionHistory>> getInProgressCoopHistories() async {
+    final rows =
+        await (_db.select(_db.missionHistories)..where(
+          (t) =>
+              t.mode.equals(historyModeCoop) &
+              t.coopSyncState.equals(CoopSyncState.inProgress.name),
+        )).get();
+    return _toMissionHistories(rows);
+  }
+
+  Future<MissionHistoryRow?> _selectCoopRow(RoomCode roomCode) =>
+      (_db.select(_db.missionHistories)
+            ..where((t) => t.roomCode.equals(roomCode.value))
+            ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
+            ..limit(1))
+          .getSingleOrNull();
+
+  Future<HistorySpotRow?> _selectCoopSpot(
+    RoomCode roomCode,
+    SpotId spotId,
+  ) async {
+    final history = await _selectCoopRow(roomCode);
+    if (history == null) {
+      return null;
+    }
+    return (_db.select(_db.historySpots)..where(
+      (t) => t.historyId.equals(history.id) & t.spotId.equals(spotId.value),
+    )).getSingleOrNull();
   }
 
   Future<MissionHistory> _rowToMissionHistory(MissionHistoryRow h) async {

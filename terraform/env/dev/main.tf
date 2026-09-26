@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~>7.15.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~>7.15.0"
+    }
   }
 }
 
@@ -15,6 +19,13 @@ locals {
 }
 
 provider "google" {
+  user_project_override = true
+  billing_project       = local.project_id
+  project               = local.project_id
+  region                = "asia-northeast1"
+}
+
+provider "google-beta" {
   user_project_override = true
   billing_project       = local.project_id
   project               = local.project_id
@@ -47,4 +58,8 @@ module "snampo_dev" {
       package_name_prefixes = ["snampo"]
     },
   ]
+}
+
+output "firebase_options" {
+  value = module.snampo_dev.firebase_options
 }

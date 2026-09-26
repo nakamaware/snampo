@@ -116,6 +116,72 @@ class $MissionHistoriesTable extends MissionHistories
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _roomCodeMeta = const VerificationMeta(
+    'roomCode',
+  );
+  @override
+  late final GeneratedColumn<String> roomCode = GeneratedColumn<String>(
+    'room_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopSyncStateMeta = const VerificationMeta(
+    'coopSyncState',
+  );
+  @override
+  late final GeneratedColumn<String> coopSyncState = GeneratedColumn<String>(
+    'coop_sync_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopIsHostMeta = const VerificationMeta(
+    'coopIsHost',
+  );
+  @override
+  late final GeneratedColumn<int> coopIsHost = GeneratedColumn<int>(
+    'coop_is_host',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopMembersMeta = const VerificationMeta(
+    'coopMembers',
+  );
+  @override
+  late final GeneratedColumn<String> coopMembers = GeneratedColumn<String>(
+    'coop_members',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopExpiresAtMeta = const VerificationMeta(
+    'coopExpiresAt',
+  );
+  @override
+  late final GeneratedColumn<int> coopExpiresAt = GeneratedColumn<int>(
+    'coop_expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coopDeleteAtMeta = const VerificationMeta(
+    'coopDeleteAt',
+  );
+  @override
+  late final GeneratedColumn<int> coopDeleteAt = GeneratedColumn<int>(
+    'coop_delete_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -128,6 +194,12 @@ class $MissionHistoriesTable extends MissionHistories
     mode,
     destinationLat,
     destinationLng,
+    roomCode,
+    coopSyncState,
+    coopIsHost,
+    coopMembers,
+    coopExpiresAt,
+    coopDeleteAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -231,6 +303,57 @@ class $MissionHistoriesTable extends MissionHistories
         ),
       );
     }
+    if (data.containsKey('room_code')) {
+      context.handle(
+        _roomCodeMeta,
+        roomCode.isAcceptableOrUnknown(data['room_code']!, _roomCodeMeta),
+      );
+    }
+    if (data.containsKey('coop_sync_state')) {
+      context.handle(
+        _coopSyncStateMeta,
+        coopSyncState.isAcceptableOrUnknown(
+          data['coop_sync_state']!,
+          _coopSyncStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_is_host')) {
+      context.handle(
+        _coopIsHostMeta,
+        coopIsHost.isAcceptableOrUnknown(
+          data['coop_is_host']!,
+          _coopIsHostMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_members')) {
+      context.handle(
+        _coopMembersMeta,
+        coopMembers.isAcceptableOrUnknown(
+          data['coop_members']!,
+          _coopMembersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_expires_at')) {
+      context.handle(
+        _coopExpiresAtMeta,
+        coopExpiresAt.isAcceptableOrUnknown(
+          data['coop_expires_at']!,
+          _coopExpiresAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coop_delete_at')) {
+      context.handle(
+        _coopDeleteAtMeta,
+        coopDeleteAt.isAcceptableOrUnknown(
+          data['coop_delete_at']!,
+          _coopDeleteAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -287,6 +410,30 @@ class $MissionHistoriesTable extends MissionHistories
         DriftSqlType.double,
         data['${effectivePrefix}destination_lng'],
       ),
+      roomCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}room_code'],
+      ),
+      coopSyncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coop_sync_state'],
+      ),
+      coopIsHost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_is_host'],
+      ),
+      coopMembers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coop_members'],
+      ),
+      coopExpiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_expires_at'],
+      ),
+      coopDeleteAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coop_delete_at'],
+      ),
     );
   }
 
@@ -319,7 +466,10 @@ class MissionHistoryRow extends DataClass
   /// 探索半径 (m)。目的地指定モードでは null
   final int? radiusMeters;
 
-  /// ミッション開始モード: `random` / `destination`
+  /// ミッション開始モード: `random` / `destination` / `coop`
+  ///
+  /// `coop` のときのミッション設定は [radiusMeters] (random) か
+  /// [destinationLat] / [destinationLng] (destination) から判定する。
   final String mode;
 
   /// ユーザーが指定した目的地の緯度 (ランダムモードでは null)
@@ -327,6 +477,24 @@ class MissionHistoryRow extends DataClass
 
   /// ユーザーが指定した目的地の経度 (ランダムモードでは null)
   final double? destinationLng;
+
+  /// 協力プレイのルームコード (ソロでは null)。協力プレイの履歴はこれをキーに upsert する
+  final String? roomCode;
+
+  /// 協力プレイの同期の状態: `inProgress` (進行中) / `finalized` (確定)
+  final String? coopSyncState;
+
+  /// 自分がホストだったか (1 / 0)
+  final int? coopIsHost;
+
+  /// 協力プレイのメンバー一覧 (`[{"uid": ..., "nickname": ...}]` の JSON)
+  final String? coopMembers;
+
+  /// 協力プレイの遊べる期限 (Unix ms)
+  final int? coopExpiresAt;
+
+  /// 協力プレイのデータの保持期限 (Unix ms)
+  final int? coopDeleteAt;
   const MissionHistoryRow({
     required this.id,
     required this.completedAt,
@@ -338,6 +506,12 @@ class MissionHistoryRow extends DataClass
     required this.mode,
     this.destinationLat,
     this.destinationLng,
+    this.roomCode,
+    this.coopSyncState,
+    this.coopIsHost,
+    this.coopMembers,
+    this.coopExpiresAt,
+    this.coopDeleteAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -357,6 +531,24 @@ class MissionHistoryRow extends DataClass
     }
     if (!nullToAbsent || destinationLng != null) {
       map['destination_lng'] = Variable<double>(destinationLng);
+    }
+    if (!nullToAbsent || roomCode != null) {
+      map['room_code'] = Variable<String>(roomCode);
+    }
+    if (!nullToAbsent || coopSyncState != null) {
+      map['coop_sync_state'] = Variable<String>(coopSyncState);
+    }
+    if (!nullToAbsent || coopIsHost != null) {
+      map['coop_is_host'] = Variable<int>(coopIsHost);
+    }
+    if (!nullToAbsent || coopMembers != null) {
+      map['coop_members'] = Variable<String>(coopMembers);
+    }
+    if (!nullToAbsent || coopExpiresAt != null) {
+      map['coop_expires_at'] = Variable<int>(coopExpiresAt);
+    }
+    if (!nullToAbsent || coopDeleteAt != null) {
+      map['coop_delete_at'] = Variable<int>(coopDeleteAt);
     }
     return map;
   }
@@ -382,6 +574,30 @@ class MissionHistoryRow extends DataClass
           destinationLng == null && nullToAbsent
               ? const Value.absent()
               : Value(destinationLng),
+      roomCode:
+          roomCode == null && nullToAbsent
+              ? const Value.absent()
+              : Value(roomCode),
+      coopSyncState:
+          coopSyncState == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopSyncState),
+      coopIsHost:
+          coopIsHost == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopIsHost),
+      coopMembers:
+          coopMembers == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopMembers),
+      coopExpiresAt:
+          coopExpiresAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopExpiresAt),
+      coopDeleteAt:
+          coopDeleteAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(coopDeleteAt),
     );
   }
 
@@ -401,6 +617,12 @@ class MissionHistoryRow extends DataClass
       mode: serializer.fromJson<String>(json['mode']),
       destinationLat: serializer.fromJson<double?>(json['destinationLat']),
       destinationLng: serializer.fromJson<double?>(json['destinationLng']),
+      roomCode: serializer.fromJson<String?>(json['roomCode']),
+      coopSyncState: serializer.fromJson<String?>(json['coopSyncState']),
+      coopIsHost: serializer.fromJson<int?>(json['coopIsHost']),
+      coopMembers: serializer.fromJson<String?>(json['coopMembers']),
+      coopExpiresAt: serializer.fromJson<int?>(json['coopExpiresAt']),
+      coopDeleteAt: serializer.fromJson<int?>(json['coopDeleteAt']),
     );
   }
   @override
@@ -417,6 +639,12 @@ class MissionHistoryRow extends DataClass
       'mode': serializer.toJson<String>(mode),
       'destinationLat': serializer.toJson<double?>(destinationLat),
       'destinationLng': serializer.toJson<double?>(destinationLng),
+      'roomCode': serializer.toJson<String?>(roomCode),
+      'coopSyncState': serializer.toJson<String?>(coopSyncState),
+      'coopIsHost': serializer.toJson<int?>(coopIsHost),
+      'coopMembers': serializer.toJson<String?>(coopMembers),
+      'coopExpiresAt': serializer.toJson<int?>(coopExpiresAt),
+      'coopDeleteAt': serializer.toJson<int?>(coopDeleteAt),
     };
   }
 
@@ -431,6 +659,12 @@ class MissionHistoryRow extends DataClass
     String? mode,
     Value<double?> destinationLat = const Value.absent(),
     Value<double?> destinationLng = const Value.absent(),
+    Value<String?> roomCode = const Value.absent(),
+    Value<String?> coopSyncState = const Value.absent(),
+    Value<int?> coopIsHost = const Value.absent(),
+    Value<String?> coopMembers = const Value.absent(),
+    Value<int?> coopExpiresAt = const Value.absent(),
+    Value<int?> coopDeleteAt = const Value.absent(),
   }) => MissionHistoryRow(
     id: id ?? this.id,
     completedAt: completedAt ?? this.completedAt,
@@ -444,6 +678,14 @@ class MissionHistoryRow extends DataClass
         destinationLat.present ? destinationLat.value : this.destinationLat,
     destinationLng:
         destinationLng.present ? destinationLng.value : this.destinationLng,
+    roomCode: roomCode.present ? roomCode.value : this.roomCode,
+    coopSyncState:
+        coopSyncState.present ? coopSyncState.value : this.coopSyncState,
+    coopIsHost: coopIsHost.present ? coopIsHost.value : this.coopIsHost,
+    coopMembers: coopMembers.present ? coopMembers.value : this.coopMembers,
+    coopExpiresAt:
+        coopExpiresAt.present ? coopExpiresAt.value : this.coopExpiresAt,
+    coopDeleteAt: coopDeleteAt.present ? coopDeleteAt.value : this.coopDeleteAt,
   );
   MissionHistoryRow copyWithCompanion(MissionHistoriesCompanion data) {
     return MissionHistoryRow(
@@ -476,6 +718,23 @@ class MissionHistoryRow extends DataClass
           data.destinationLng.present
               ? data.destinationLng.value
               : this.destinationLng,
+      roomCode: data.roomCode.present ? data.roomCode.value : this.roomCode,
+      coopSyncState:
+          data.coopSyncState.present
+              ? data.coopSyncState.value
+              : this.coopSyncState,
+      coopIsHost:
+          data.coopIsHost.present ? data.coopIsHost.value : this.coopIsHost,
+      coopMembers:
+          data.coopMembers.present ? data.coopMembers.value : this.coopMembers,
+      coopExpiresAt:
+          data.coopExpiresAt.present
+              ? data.coopExpiresAt.value
+              : this.coopExpiresAt,
+      coopDeleteAt:
+          data.coopDeleteAt.present
+              ? data.coopDeleteAt.value
+              : this.coopDeleteAt,
     );
   }
 
@@ -491,7 +750,13 @@ class MissionHistoryRow extends DataClass
           ..write('radiusMeters: $radiusMeters, ')
           ..write('mode: $mode, ')
           ..write('destinationLat: $destinationLat, ')
-          ..write('destinationLng: $destinationLng')
+          ..write('destinationLng: $destinationLng, ')
+          ..write('roomCode: $roomCode, ')
+          ..write('coopSyncState: $coopSyncState, ')
+          ..write('coopIsHost: $coopIsHost, ')
+          ..write('coopMembers: $coopMembers, ')
+          ..write('coopExpiresAt: $coopExpiresAt, ')
+          ..write('coopDeleteAt: $coopDeleteAt')
           ..write(')'))
         .toString();
   }
@@ -508,6 +773,12 @@ class MissionHistoryRow extends DataClass
     mode,
     destinationLat,
     destinationLng,
+    roomCode,
+    coopSyncState,
+    coopIsHost,
+    coopMembers,
+    coopExpiresAt,
+    coopDeleteAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -522,7 +793,13 @@ class MissionHistoryRow extends DataClass
           other.radiusMeters == this.radiusMeters &&
           other.mode == this.mode &&
           other.destinationLat == this.destinationLat &&
-          other.destinationLng == this.destinationLng);
+          other.destinationLng == this.destinationLng &&
+          other.roomCode == this.roomCode &&
+          other.coopSyncState == this.coopSyncState &&
+          other.coopIsHost == this.coopIsHost &&
+          other.coopMembers == this.coopMembers &&
+          other.coopExpiresAt == this.coopExpiresAt &&
+          other.coopDeleteAt == this.coopDeleteAt);
 }
 
 class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
@@ -536,6 +813,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
   final Value<String> mode;
   final Value<double?> destinationLat;
   final Value<double?> destinationLng;
+  final Value<String?> roomCode;
+  final Value<String?> coopSyncState;
+  final Value<int?> coopIsHost;
+  final Value<String?> coopMembers;
+  final Value<int?> coopExpiresAt;
+  final Value<int?> coopDeleteAt;
   final Value<int> rowid;
   const MissionHistoriesCompanion({
     this.id = const Value.absent(),
@@ -548,6 +831,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     this.mode = const Value.absent(),
     this.destinationLat = const Value.absent(),
     this.destinationLng = const Value.absent(),
+    this.roomCode = const Value.absent(),
+    this.coopSyncState = const Value.absent(),
+    this.coopIsHost = const Value.absent(),
+    this.coopMembers = const Value.absent(),
+    this.coopExpiresAt = const Value.absent(),
+    this.coopDeleteAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MissionHistoriesCompanion.insert({
@@ -561,6 +850,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     this.mode = const Value.absent(),
     this.destinationLat = const Value.absent(),
     this.destinationLng = const Value.absent(),
+    this.roomCode = const Value.absent(),
+    this.coopSyncState = const Value.absent(),
+    this.coopIsHost = const Value.absent(),
+    this.coopMembers = const Value.absent(),
+    this.coopExpiresAt = const Value.absent(),
+    this.coopDeleteAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        completedAt = Value(completedAt),
@@ -579,6 +874,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Expression<String>? mode,
     Expression<double>? destinationLat,
     Expression<double>? destinationLng,
+    Expression<String>? roomCode,
+    Expression<String>? coopSyncState,
+    Expression<int>? coopIsHost,
+    Expression<String>? coopMembers,
+    Expression<int>? coopExpiresAt,
+    Expression<int>? coopDeleteAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -592,6 +893,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       if (mode != null) 'mode': mode,
       if (destinationLat != null) 'destination_lat': destinationLat,
       if (destinationLng != null) 'destination_lng': destinationLng,
+      if (roomCode != null) 'room_code': roomCode,
+      if (coopSyncState != null) 'coop_sync_state': coopSyncState,
+      if (coopIsHost != null) 'coop_is_host': coopIsHost,
+      if (coopMembers != null) 'coop_members': coopMembers,
+      if (coopExpiresAt != null) 'coop_expires_at': coopExpiresAt,
+      if (coopDeleteAt != null) 'coop_delete_at': coopDeleteAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -607,6 +914,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     Value<String>? mode,
     Value<double?>? destinationLat,
     Value<double?>? destinationLng,
+    Value<String?>? roomCode,
+    Value<String?>? coopSyncState,
+    Value<int?>? coopIsHost,
+    Value<String?>? coopMembers,
+    Value<int?>? coopExpiresAt,
+    Value<int?>? coopDeleteAt,
     Value<int>? rowid,
   }) {
     return MissionHistoriesCompanion(
@@ -620,6 +933,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
       mode: mode ?? this.mode,
       destinationLat: destinationLat ?? this.destinationLat,
       destinationLng: destinationLng ?? this.destinationLng,
+      roomCode: roomCode ?? this.roomCode,
+      coopSyncState: coopSyncState ?? this.coopSyncState,
+      coopIsHost: coopIsHost ?? this.coopIsHost,
+      coopMembers: coopMembers ?? this.coopMembers,
+      coopExpiresAt: coopExpiresAt ?? this.coopExpiresAt,
+      coopDeleteAt: coopDeleteAt ?? this.coopDeleteAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -657,6 +976,24 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
     if (destinationLng.present) {
       map['destination_lng'] = Variable<double>(destinationLng.value);
     }
+    if (roomCode.present) {
+      map['room_code'] = Variable<String>(roomCode.value);
+    }
+    if (coopSyncState.present) {
+      map['coop_sync_state'] = Variable<String>(coopSyncState.value);
+    }
+    if (coopIsHost.present) {
+      map['coop_is_host'] = Variable<int>(coopIsHost.value);
+    }
+    if (coopMembers.present) {
+      map['coop_members'] = Variable<String>(coopMembers.value);
+    }
+    if (coopExpiresAt.present) {
+      map['coop_expires_at'] = Variable<int>(coopExpiresAt.value);
+    }
+    if (coopDeleteAt.present) {
+      map['coop_delete_at'] = Variable<int>(coopDeleteAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -676,6 +1013,12 @@ class MissionHistoriesCompanion extends UpdateCompanion<MissionHistoryRow> {
           ..write('mode: $mode, ')
           ..write('destinationLat: $destinationLat, ')
           ..write('destinationLng: $destinationLng, ')
+          ..write('roomCode: $roomCode, ')
+          ..write('coopSyncState: $coopSyncState, ')
+          ..write('coopIsHost: $coopIsHost, ')
+          ..write('coopMembers: $coopMembers, ')
+          ..write('coopExpiresAt: $coopExpiresAt, ')
+          ..write('coopDeleteAt: $coopDeleteAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -894,6 +1237,148 @@ class $HistorySpotsTable extends HistorySpots
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _zoomLevelMeta = const VerificationMeta(
+    'zoomLevel',
+  );
+  @override
+  late final GeneratedColumn<double> zoomLevel = GeneratedColumn<double>(
+    'zoom_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _spotIdMeta = const VerificationMeta('spotId');
+  @override
+  late final GeneratedColumn<String> spotId = GeneratedColumn<String>(
+    'spot_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discovererUidMeta = const VerificationMeta(
+    'discovererUid',
+  );
+  @override
+  late final GeneratedColumn<String> discovererUid = GeneratedColumn<String>(
+    'discoverer_uid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discovererNicknameMeta =
+      const VerificationMeta('discovererNickname');
+  @override
+  late final GeneratedColumn<String> discovererNickname =
+      GeneratedColumn<String>(
+        'discoverer_nickname',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererThumbPathMeta =
+      const VerificationMeta('discovererThumbPath');
+  @override
+  late final GeneratedColumn<String> discovererThumbPath =
+      GeneratedColumn<String>(
+        'discoverer_thumb_path',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererJudgeRankMeta =
+      const VerificationMeta('discovererJudgeRank');
+  @override
+  late final GeneratedColumn<String> discovererJudgeRank =
+      GeneratedColumn<String>(
+        'discoverer_judge_rank',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererDistanceErrorMetersMeta =
+      const VerificationMeta('discovererDistanceErrorMeters');
+  @override
+  late final GeneratedColumn<double> discovererDistanceErrorMeters =
+      GeneratedColumn<double>(
+        'discoverer_distance_error_meters',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererHeadingErrorDegreesMeta =
+      const VerificationMeta('discovererHeadingErrorDegrees');
+  @override
+  late final GeneratedColumn<double> discovererHeadingErrorDegrees =
+      GeneratedColumn<double>(
+        'discoverer_heading_error_degrees',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererGuessLatMeta =
+      const VerificationMeta('discovererGuessLat');
+  @override
+  late final GeneratedColumn<double> discovererGuessLat =
+      GeneratedColumn<double>(
+        'discoverer_guess_lat',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererGuessLngMeta =
+      const VerificationMeta('discovererGuessLng');
+  @override
+  late final GeneratedColumn<double> discovererGuessLng =
+      GeneratedColumn<double>(
+        'discoverer_guess_lng',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererCapturedHeadingMeta =
+      const VerificationMeta('discovererCapturedHeading');
+  @override
+  late final GeneratedColumn<double> discovererCapturedHeading =
+      GeneratedColumn<double>(
+        'discoverer_captured_heading',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _discovererZoomLevelMeta =
+      const VerificationMeta('discovererZoomLevel');
+  @override
+  late final GeneratedColumn<double> discovererZoomLevel =
+      GeneratedColumn<double>(
+        'discoverer_zoom_level',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _isClearedMeta = const VerificationMeta(
+    'isCleared',
+  );
+  @override
+  late final GeneratedColumn<int> isCleared = GeneratedColumn<int>(
+    'is_cleared',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -915,6 +1400,19 @@ class $HistorySpotsTable extends HistorySpots
     guessLat,
     guessLng,
     capturedHeading,
+    zoomLevel,
+    spotId,
+    discovererUid,
+    discovererNickname,
+    discovererThumbPath,
+    discovererJudgeRank,
+    discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees,
+    discovererGuessLat,
+    discovererGuessLng,
+    discovererCapturedHeading,
+    discovererZoomLevel,
+    isCleared,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1075,6 +1573,114 @@ class $HistorySpotsTable extends HistorySpots
         ),
       );
     }
+    if (data.containsKey('zoom_level')) {
+      context.handle(
+        _zoomLevelMeta,
+        zoomLevel.isAcceptableOrUnknown(data['zoom_level']!, _zoomLevelMeta),
+      );
+    }
+    if (data.containsKey('spot_id')) {
+      context.handle(
+        _spotIdMeta,
+        spotId.isAcceptableOrUnknown(data['spot_id']!, _spotIdMeta),
+      );
+    }
+    if (data.containsKey('discoverer_uid')) {
+      context.handle(
+        _discovererUidMeta,
+        discovererUid.isAcceptableOrUnknown(
+          data['discoverer_uid']!,
+          _discovererUidMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_nickname')) {
+      context.handle(
+        _discovererNicknameMeta,
+        discovererNickname.isAcceptableOrUnknown(
+          data['discoverer_nickname']!,
+          _discovererNicknameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_thumb_path')) {
+      context.handle(
+        _discovererThumbPathMeta,
+        discovererThumbPath.isAcceptableOrUnknown(
+          data['discoverer_thumb_path']!,
+          _discovererThumbPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_judge_rank')) {
+      context.handle(
+        _discovererJudgeRankMeta,
+        discovererJudgeRank.isAcceptableOrUnknown(
+          data['discoverer_judge_rank']!,
+          _discovererJudgeRankMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_distance_error_meters')) {
+      context.handle(
+        _discovererDistanceErrorMetersMeta,
+        discovererDistanceErrorMeters.isAcceptableOrUnknown(
+          data['discoverer_distance_error_meters']!,
+          _discovererDistanceErrorMetersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_heading_error_degrees')) {
+      context.handle(
+        _discovererHeadingErrorDegreesMeta,
+        discovererHeadingErrorDegrees.isAcceptableOrUnknown(
+          data['discoverer_heading_error_degrees']!,
+          _discovererHeadingErrorDegreesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_guess_lat')) {
+      context.handle(
+        _discovererGuessLatMeta,
+        discovererGuessLat.isAcceptableOrUnknown(
+          data['discoverer_guess_lat']!,
+          _discovererGuessLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_guess_lng')) {
+      context.handle(
+        _discovererGuessLngMeta,
+        discovererGuessLng.isAcceptableOrUnknown(
+          data['discoverer_guess_lng']!,
+          _discovererGuessLngMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_captured_heading')) {
+      context.handle(
+        _discovererCapturedHeadingMeta,
+        discovererCapturedHeading.isAcceptableOrUnknown(
+          data['discoverer_captured_heading']!,
+          _discovererCapturedHeadingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discoverer_zoom_level')) {
+      context.handle(
+        _discovererZoomLevelMeta,
+        discovererZoomLevel.isAcceptableOrUnknown(
+          data['discoverer_zoom_level']!,
+          _discovererZoomLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_cleared')) {
+      context.handle(
+        _isClearedMeta,
+        isCleared.isAcceptableOrUnknown(data['is_cleared']!, _isClearedMeta),
+      );
+    }
     return context;
   }
 
@@ -1167,6 +1773,59 @@ class $HistorySpotsTable extends HistorySpots
         DriftSqlType.double,
         data['${effectivePrefix}captured_heading'],
       ),
+      zoomLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}zoom_level'],
+      ),
+      spotId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}spot_id'],
+      ),
+      discovererUid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_uid'],
+      ),
+      discovererNickname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_nickname'],
+      ),
+      discovererThumbPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_thumb_path'],
+      ),
+      discovererJudgeRank: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discoverer_judge_rank'],
+      ),
+      discovererDistanceErrorMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_distance_error_meters'],
+      ),
+      discovererHeadingErrorDegrees: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_heading_error_degrees'],
+      ),
+      discovererGuessLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_guess_lat'],
+      ),
+      discovererGuessLng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_guess_lng'],
+      ),
+      discovererCapturedHeading: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_captured_heading'],
+      ),
+      discovererZoomLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}discoverer_zoom_level'],
+      ),
+      isCleared:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}is_cleared'],
+          )!,
     );
   }
 
@@ -1216,7 +1875,9 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
   /// 正解画像の基準方角 (度)
   final double? referenceHeading;
 
-  /// 採点ランク (`excellent` / `good` / `fair` / `retry`)
+  /// 採点ランク (`excellent` / `good` / `fair` / `miss`)
+  ///
+  /// 旧バージョンで保存された `retry` は読み込み時に `miss` として扱う。
   final String? judgeRank;
 
   /// 位置誤差 (m)
@@ -1233,6 +1894,45 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
 
   /// 撮影時の方角 (度)
   final double? capturedHeading;
+
+  /// 撮影したときのズームの倍率
+  final double? zoomLevel;
+
+  /// スポット ID (place_id / geo URI)。旧データでは null
+  final String? spotId;
+
+  /// 協力プレイの発見者の uid
+  final String? discovererUid;
+
+  /// 協力プレイの発見者のニックネーム (発見時点)
+  final String? discovererNickname;
+
+  /// 協力プレイの発見者のサムネのパス
+  final String? discovererThumbPath;
+
+  /// 協力プレイの発見者の採点ランク (`excellent` / `good` / `fair` / `miss`)
+  final String? discovererJudgeRank;
+
+  /// 協力プレイの発見者の位置誤差 (m)
+  final double? discovererDistanceErrorMeters;
+
+  /// 協力プレイの発見者の方角誤差 (度)
+  final double? discovererHeadingErrorDegrees;
+
+  /// 協力プレイの発見者が撮影した緯度
+  final double? discovererGuessLat;
+
+  /// 協力プレイの発見者が撮影した経度
+  final double? discovererGuessLng;
+
+  /// 協力プレイの発見者が撮影したときの方角 (度)
+  final double? discovererCapturedHeading;
+
+  /// 協力プレイの発見者が撮影したときのズームの倍率
+  final double? discovererZoomLevel;
+
+  /// クリア済みなら 1 (協力プレイの途中終了では未クリアのスポットがある)
+  final int isCleared;
   const HistorySpotRow({
     required this.id,
     required this.historyId,
@@ -1253,6 +1953,19 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     this.guessLat,
     this.guessLng,
     this.capturedHeading,
+    this.zoomLevel,
+    this.spotId,
+    this.discovererUid,
+    this.discovererNickname,
+    this.discovererThumbPath,
+    this.discovererJudgeRank,
+    this.discovererDistanceErrorMeters,
+    this.discovererHeadingErrorDegrees,
+    this.discovererGuessLat,
+    this.discovererGuessLng,
+    this.discovererCapturedHeading,
+    this.discovererZoomLevel,
+    required this.isCleared,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1300,6 +2013,49 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     if (!nullToAbsent || capturedHeading != null) {
       map['captured_heading'] = Variable<double>(capturedHeading);
     }
+    if (!nullToAbsent || zoomLevel != null) {
+      map['zoom_level'] = Variable<double>(zoomLevel);
+    }
+    if (!nullToAbsent || spotId != null) {
+      map['spot_id'] = Variable<String>(spotId);
+    }
+    if (!nullToAbsent || discovererUid != null) {
+      map['discoverer_uid'] = Variable<String>(discovererUid);
+    }
+    if (!nullToAbsent || discovererNickname != null) {
+      map['discoverer_nickname'] = Variable<String>(discovererNickname);
+    }
+    if (!nullToAbsent || discovererThumbPath != null) {
+      map['discoverer_thumb_path'] = Variable<String>(discovererThumbPath);
+    }
+    if (!nullToAbsent || discovererJudgeRank != null) {
+      map['discoverer_judge_rank'] = Variable<String>(discovererJudgeRank);
+    }
+    if (!nullToAbsent || discovererDistanceErrorMeters != null) {
+      map['discoverer_distance_error_meters'] = Variable<double>(
+        discovererDistanceErrorMeters,
+      );
+    }
+    if (!nullToAbsent || discovererHeadingErrorDegrees != null) {
+      map['discoverer_heading_error_degrees'] = Variable<double>(
+        discovererHeadingErrorDegrees,
+      );
+    }
+    if (!nullToAbsent || discovererGuessLat != null) {
+      map['discoverer_guess_lat'] = Variable<double>(discovererGuessLat);
+    }
+    if (!nullToAbsent || discovererGuessLng != null) {
+      map['discoverer_guess_lng'] = Variable<double>(discovererGuessLng);
+    }
+    if (!nullToAbsent || discovererCapturedHeading != null) {
+      map['discoverer_captured_heading'] = Variable<double>(
+        discovererCapturedHeading,
+      );
+    }
+    if (!nullToAbsent || discovererZoomLevel != null) {
+      map['discoverer_zoom_level'] = Variable<double>(discovererZoomLevel);
+    }
+    map['is_cleared'] = Variable<int>(isCleared);
     return map;
   }
 
@@ -1355,6 +2111,53 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           capturedHeading == null && nullToAbsent
               ? const Value.absent()
               : Value(capturedHeading),
+      zoomLevel:
+          zoomLevel == null && nullToAbsent
+              ? const Value.absent()
+              : Value(zoomLevel),
+      spotId:
+          spotId == null && nullToAbsent ? const Value.absent() : Value(spotId),
+      discovererUid:
+          discovererUid == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererUid),
+      discovererNickname:
+          discovererNickname == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererNickname),
+      discovererThumbPath:
+          discovererThumbPath == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererThumbPath),
+      discovererJudgeRank:
+          discovererJudgeRank == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererJudgeRank),
+      discovererDistanceErrorMeters:
+          discovererDistanceErrorMeters == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererDistanceErrorMeters),
+      discovererHeadingErrorDegrees:
+          discovererHeadingErrorDegrees == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererHeadingErrorDegrees),
+      discovererGuessLat:
+          discovererGuessLat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererGuessLat),
+      discovererGuessLng:
+          discovererGuessLng == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererGuessLng),
+      discovererCapturedHeading:
+          discovererCapturedHeading == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererCapturedHeading),
+      discovererZoomLevel:
+          discovererZoomLevel == null && nullToAbsent
+              ? const Value.absent()
+              : Value(discovererZoomLevel),
+      isCleared: Value(isCleared),
     );
   }
 
@@ -1389,6 +2192,37 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       guessLat: serializer.fromJson<double?>(json['guessLat']),
       guessLng: serializer.fromJson<double?>(json['guessLng']),
       capturedHeading: serializer.fromJson<double?>(json['capturedHeading']),
+      zoomLevel: serializer.fromJson<double?>(json['zoomLevel']),
+      spotId: serializer.fromJson<String?>(json['spotId']),
+      discovererUid: serializer.fromJson<String?>(json['discovererUid']),
+      discovererNickname: serializer.fromJson<String?>(
+        json['discovererNickname'],
+      ),
+      discovererThumbPath: serializer.fromJson<String?>(
+        json['discovererThumbPath'],
+      ),
+      discovererJudgeRank: serializer.fromJson<String?>(
+        json['discovererJudgeRank'],
+      ),
+      discovererDistanceErrorMeters: serializer.fromJson<double?>(
+        json['discovererDistanceErrorMeters'],
+      ),
+      discovererHeadingErrorDegrees: serializer.fromJson<double?>(
+        json['discovererHeadingErrorDegrees'],
+      ),
+      discovererGuessLat: serializer.fromJson<double?>(
+        json['discovererGuessLat'],
+      ),
+      discovererGuessLng: serializer.fromJson<double?>(
+        json['discovererGuessLng'],
+      ),
+      discovererCapturedHeading: serializer.fromJson<double?>(
+        json['discovererCapturedHeading'],
+      ),
+      discovererZoomLevel: serializer.fromJson<double?>(
+        json['discovererZoomLevel'],
+      ),
+      isCleared: serializer.fromJson<int>(json['isCleared']),
     );
   }
   @override
@@ -1414,6 +2248,25 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
       'guessLat': serializer.toJson<double?>(guessLat),
       'guessLng': serializer.toJson<double?>(guessLng),
       'capturedHeading': serializer.toJson<double?>(capturedHeading),
+      'zoomLevel': serializer.toJson<double?>(zoomLevel),
+      'spotId': serializer.toJson<String?>(spotId),
+      'discovererUid': serializer.toJson<String?>(discovererUid),
+      'discovererNickname': serializer.toJson<String?>(discovererNickname),
+      'discovererThumbPath': serializer.toJson<String?>(discovererThumbPath),
+      'discovererJudgeRank': serializer.toJson<String?>(discovererJudgeRank),
+      'discovererDistanceErrorMeters': serializer.toJson<double?>(
+        discovererDistanceErrorMeters,
+      ),
+      'discovererHeadingErrorDegrees': serializer.toJson<double?>(
+        discovererHeadingErrorDegrees,
+      ),
+      'discovererGuessLat': serializer.toJson<double?>(discovererGuessLat),
+      'discovererGuessLng': serializer.toJson<double?>(discovererGuessLng),
+      'discovererCapturedHeading': serializer.toJson<double?>(
+        discovererCapturedHeading,
+      ),
+      'discovererZoomLevel': serializer.toJson<double?>(discovererZoomLevel),
+      'isCleared': serializer.toJson<int>(isCleared),
     };
   }
 
@@ -1437,6 +2290,19 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     Value<double?> guessLat = const Value.absent(),
     Value<double?> guessLng = const Value.absent(),
     Value<double?> capturedHeading = const Value.absent(),
+    Value<double?> zoomLevel = const Value.absent(),
+    Value<String?> spotId = const Value.absent(),
+    Value<String?> discovererUid = const Value.absent(),
+    Value<String?> discovererNickname = const Value.absent(),
+    Value<String?> discovererThumbPath = const Value.absent(),
+    Value<String?> discovererJudgeRank = const Value.absent(),
+    Value<double?> discovererDistanceErrorMeters = const Value.absent(),
+    Value<double?> discovererHeadingErrorDegrees = const Value.absent(),
+    Value<double?> discovererGuessLat = const Value.absent(),
+    Value<double?> discovererGuessLng = const Value.absent(),
+    Value<double?> discovererCapturedHeading = const Value.absent(),
+    Value<double?> discovererZoomLevel = const Value.absent(),
+    int? isCleared,
   }) => HistorySpotRow(
     id: id ?? this.id,
     historyId: historyId ?? this.historyId,
@@ -1469,6 +2335,47 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLng: guessLng.present ? guessLng.value : this.guessLng,
     capturedHeading:
         capturedHeading.present ? capturedHeading.value : this.capturedHeading,
+    zoomLevel: zoomLevel.present ? zoomLevel.value : this.zoomLevel,
+    spotId: spotId.present ? spotId.value : this.spotId,
+    discovererUid:
+        discovererUid.present ? discovererUid.value : this.discovererUid,
+    discovererNickname:
+        discovererNickname.present
+            ? discovererNickname.value
+            : this.discovererNickname,
+    discovererThumbPath:
+        discovererThumbPath.present
+            ? discovererThumbPath.value
+            : this.discovererThumbPath,
+    discovererJudgeRank:
+        discovererJudgeRank.present
+            ? discovererJudgeRank.value
+            : this.discovererJudgeRank,
+    discovererDistanceErrorMeters:
+        discovererDistanceErrorMeters.present
+            ? discovererDistanceErrorMeters.value
+            : this.discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees:
+        discovererHeadingErrorDegrees.present
+            ? discovererHeadingErrorDegrees.value
+            : this.discovererHeadingErrorDegrees,
+    discovererGuessLat:
+        discovererGuessLat.present
+            ? discovererGuessLat.value
+            : this.discovererGuessLat,
+    discovererGuessLng:
+        discovererGuessLng.present
+            ? discovererGuessLng.value
+            : this.discovererGuessLng,
+    discovererCapturedHeading:
+        discovererCapturedHeading.present
+            ? discovererCapturedHeading.value
+            : this.discovererCapturedHeading,
+    discovererZoomLevel:
+        discovererZoomLevel.present
+            ? discovererZoomLevel.value
+            : this.discovererZoomLevel,
+    isCleared: isCleared ?? this.isCleared,
   );
   HistorySpotRow copyWithCompanion(HistorySpotsCompanion data) {
     return HistorySpotRow(
@@ -1516,6 +2423,49 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           data.capturedHeading.present
               ? data.capturedHeading.value
               : this.capturedHeading,
+      zoomLevel: data.zoomLevel.present ? data.zoomLevel.value : this.zoomLevel,
+      spotId: data.spotId.present ? data.spotId.value : this.spotId,
+      discovererUid:
+          data.discovererUid.present
+              ? data.discovererUid.value
+              : this.discovererUid,
+      discovererNickname:
+          data.discovererNickname.present
+              ? data.discovererNickname.value
+              : this.discovererNickname,
+      discovererThumbPath:
+          data.discovererThumbPath.present
+              ? data.discovererThumbPath.value
+              : this.discovererThumbPath,
+      discovererJudgeRank:
+          data.discovererJudgeRank.present
+              ? data.discovererJudgeRank.value
+              : this.discovererJudgeRank,
+      discovererDistanceErrorMeters:
+          data.discovererDistanceErrorMeters.present
+              ? data.discovererDistanceErrorMeters.value
+              : this.discovererDistanceErrorMeters,
+      discovererHeadingErrorDegrees:
+          data.discovererHeadingErrorDegrees.present
+              ? data.discovererHeadingErrorDegrees.value
+              : this.discovererHeadingErrorDegrees,
+      discovererGuessLat:
+          data.discovererGuessLat.present
+              ? data.discovererGuessLat.value
+              : this.discovererGuessLat,
+      discovererGuessLng:
+          data.discovererGuessLng.present
+              ? data.discovererGuessLng.value
+              : this.discovererGuessLng,
+      discovererCapturedHeading:
+          data.discovererCapturedHeading.present
+              ? data.discovererCapturedHeading.value
+              : this.discovererCapturedHeading,
+      discovererZoomLevel:
+          data.discovererZoomLevel.present
+              ? data.discovererZoomLevel.value
+              : this.discovererZoomLevel,
+      isCleared: data.isCleared.present ? data.isCleared.value : this.isCleared,
     );
   }
 
@@ -1540,13 +2490,30 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           ..write('headingErrorDegrees: $headingErrorDegrees, ')
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
-          ..write('capturedHeading: $capturedHeading')
+          ..write('capturedHeading: $capturedHeading, ')
+          ..write('zoomLevel: $zoomLevel, ')
+          ..write('spotId: $spotId, ')
+          ..write('discovererUid: $discovererUid, ')
+          ..write('discovererNickname: $discovererNickname, ')
+          ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('discovererJudgeRank: $discovererJudgeRank, ')
+          ..write(
+            'discovererDistanceErrorMeters: $discovererDistanceErrorMeters, ',
+          )
+          ..write(
+            'discovererHeadingErrorDegrees: $discovererHeadingErrorDegrees, ',
+          )
+          ..write('discovererGuessLat: $discovererGuessLat, ')
+          ..write('discovererGuessLng: $discovererGuessLng, ')
+          ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
+          ..write('discovererZoomLevel: $discovererZoomLevel, ')
+          ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     historyId,
     sortOrder,
@@ -1566,7 +2533,20 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
     guessLat,
     guessLng,
     capturedHeading,
-  );
+    zoomLevel,
+    spotId,
+    discovererUid,
+    discovererNickname,
+    discovererThumbPath,
+    discovererJudgeRank,
+    discovererDistanceErrorMeters,
+    discovererHeadingErrorDegrees,
+    discovererGuessLat,
+    discovererGuessLng,
+    discovererCapturedHeading,
+    discovererZoomLevel,
+    isCleared,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1589,7 +2569,22 @@ class HistorySpotRow extends DataClass implements Insertable<HistorySpotRow> {
           other.headingErrorDegrees == this.headingErrorDegrees &&
           other.guessLat == this.guessLat &&
           other.guessLng == this.guessLng &&
-          other.capturedHeading == this.capturedHeading);
+          other.capturedHeading == this.capturedHeading &&
+          other.zoomLevel == this.zoomLevel &&
+          other.spotId == this.spotId &&
+          other.discovererUid == this.discovererUid &&
+          other.discovererNickname == this.discovererNickname &&
+          other.discovererThumbPath == this.discovererThumbPath &&
+          other.discovererJudgeRank == this.discovererJudgeRank &&
+          other.discovererDistanceErrorMeters ==
+              this.discovererDistanceErrorMeters &&
+          other.discovererHeadingErrorDegrees ==
+              this.discovererHeadingErrorDegrees &&
+          other.discovererGuessLat == this.discovererGuessLat &&
+          other.discovererGuessLng == this.discovererGuessLng &&
+          other.discovererCapturedHeading == this.discovererCapturedHeading &&
+          other.discovererZoomLevel == this.discovererZoomLevel &&
+          other.isCleared == this.isCleared);
 }
 
 class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
@@ -1612,6 +2607,19 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
   final Value<double?> guessLat;
   final Value<double?> guessLng;
   final Value<double?> capturedHeading;
+  final Value<double?> zoomLevel;
+  final Value<String?> spotId;
+  final Value<String?> discovererUid;
+  final Value<String?> discovererNickname;
+  final Value<String?> discovererThumbPath;
+  final Value<String?> discovererJudgeRank;
+  final Value<double?> discovererDistanceErrorMeters;
+  final Value<double?> discovererHeadingErrorDegrees;
+  final Value<double?> discovererGuessLat;
+  final Value<double?> discovererGuessLng;
+  final Value<double?> discovererCapturedHeading;
+  final Value<double?> discovererZoomLevel;
+  final Value<int> isCleared;
   const HistorySpotsCompanion({
     this.id = const Value.absent(),
     this.historyId = const Value.absent(),
@@ -1632,6 +2640,19 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.zoomLevel = const Value.absent(),
+    this.spotId = const Value.absent(),
+    this.discovererUid = const Value.absent(),
+    this.discovererNickname = const Value.absent(),
+    this.discovererThumbPath = const Value.absent(),
+    this.discovererJudgeRank = const Value.absent(),
+    this.discovererDistanceErrorMeters = const Value.absent(),
+    this.discovererHeadingErrorDegrees = const Value.absent(),
+    this.discovererGuessLat = const Value.absent(),
+    this.discovererGuessLng = const Value.absent(),
+    this.discovererCapturedHeading = const Value.absent(),
+    this.discovererZoomLevel = const Value.absent(),
+    this.isCleared = const Value.absent(),
   });
   HistorySpotsCompanion.insert({
     this.id = const Value.absent(),
@@ -1653,6 +2674,19 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     this.guessLat = const Value.absent(),
     this.guessLng = const Value.absent(),
     this.capturedHeading = const Value.absent(),
+    this.zoomLevel = const Value.absent(),
+    this.spotId = const Value.absent(),
+    this.discovererUid = const Value.absent(),
+    this.discovererNickname = const Value.absent(),
+    this.discovererThumbPath = const Value.absent(),
+    this.discovererJudgeRank = const Value.absent(),
+    this.discovererDistanceErrorMeters = const Value.absent(),
+    this.discovererHeadingErrorDegrees = const Value.absent(),
+    this.discovererGuessLat = const Value.absent(),
+    this.discovererGuessLng = const Value.absent(),
+    this.discovererCapturedHeading = const Value.absent(),
+    this.discovererZoomLevel = const Value.absent(),
+    this.isCleared = const Value.absent(),
   }) : historyId = Value(historyId),
        sortOrder = Value(sortOrder),
        isDestination = Value(isDestination),
@@ -1679,6 +2713,19 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Expression<double>? guessLat,
     Expression<double>? guessLng,
     Expression<double>? capturedHeading,
+    Expression<double>? zoomLevel,
+    Expression<String>? spotId,
+    Expression<String>? discovererUid,
+    Expression<String>? discovererNickname,
+    Expression<String>? discovererThumbPath,
+    Expression<String>? discovererJudgeRank,
+    Expression<double>? discovererDistanceErrorMeters,
+    Expression<double>? discovererHeadingErrorDegrees,
+    Expression<double>? discovererGuessLat,
+    Expression<double>? discovererGuessLng,
+    Expression<double>? discovererCapturedHeading,
+    Expression<double>? discovererZoomLevel,
+    Expression<int>? isCleared,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1703,6 +2750,27 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       if (guessLat != null) 'guess_lat': guessLat,
       if (guessLng != null) 'guess_lng': guessLng,
       if (capturedHeading != null) 'captured_heading': capturedHeading,
+      if (zoomLevel != null) 'zoom_level': zoomLevel,
+      if (spotId != null) 'spot_id': spotId,
+      if (discovererUid != null) 'discoverer_uid': discovererUid,
+      if (discovererNickname != null) 'discoverer_nickname': discovererNickname,
+      if (discovererThumbPath != null)
+        'discoverer_thumb_path': discovererThumbPath,
+      if (discovererJudgeRank != null)
+        'discoverer_judge_rank': discovererJudgeRank,
+      if (discovererDistanceErrorMeters != null)
+        'discoverer_distance_error_meters': discovererDistanceErrorMeters,
+      if (discovererHeadingErrorDegrees != null)
+        'discoverer_heading_error_degrees': discovererHeadingErrorDegrees,
+      if (discovererGuessLat != null)
+        'discoverer_guess_lat': discovererGuessLat,
+      if (discovererGuessLng != null)
+        'discoverer_guess_lng': discovererGuessLng,
+      if (discovererCapturedHeading != null)
+        'discoverer_captured_heading': discovererCapturedHeading,
+      if (discovererZoomLevel != null)
+        'discoverer_zoom_level': discovererZoomLevel,
+      if (isCleared != null) 'is_cleared': isCleared,
     });
   }
 
@@ -1726,6 +2794,19 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     Value<double?>? guessLat,
     Value<double?>? guessLng,
     Value<double?>? capturedHeading,
+    Value<double?>? zoomLevel,
+    Value<String?>? spotId,
+    Value<String?>? discovererUid,
+    Value<String?>? discovererNickname,
+    Value<String?>? discovererThumbPath,
+    Value<String?>? discovererJudgeRank,
+    Value<double?>? discovererDistanceErrorMeters,
+    Value<double?>? discovererHeadingErrorDegrees,
+    Value<double?>? discovererGuessLat,
+    Value<double?>? discovererGuessLng,
+    Value<double?>? discovererCapturedHeading,
+    Value<double?>? discovererZoomLevel,
+    Value<int>? isCleared,
   }) {
     return HistorySpotsCompanion(
       id: id ?? this.id,
@@ -1747,6 +2828,22 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
       guessLat: guessLat ?? this.guessLat,
       guessLng: guessLng ?? this.guessLng,
       capturedHeading: capturedHeading ?? this.capturedHeading,
+      zoomLevel: zoomLevel ?? this.zoomLevel,
+      spotId: spotId ?? this.spotId,
+      discovererUid: discovererUid ?? this.discovererUid,
+      discovererNickname: discovererNickname ?? this.discovererNickname,
+      discovererThumbPath: discovererThumbPath ?? this.discovererThumbPath,
+      discovererJudgeRank: discovererJudgeRank ?? this.discovererJudgeRank,
+      discovererDistanceErrorMeters:
+          discovererDistanceErrorMeters ?? this.discovererDistanceErrorMeters,
+      discovererHeadingErrorDegrees:
+          discovererHeadingErrorDegrees ?? this.discovererHeadingErrorDegrees,
+      discovererGuessLat: discovererGuessLat ?? this.discovererGuessLat,
+      discovererGuessLng: discovererGuessLng ?? this.discovererGuessLng,
+      discovererCapturedHeading:
+          discovererCapturedHeading ?? this.discovererCapturedHeading,
+      discovererZoomLevel: discovererZoomLevel ?? this.discovererZoomLevel,
+      isCleared: isCleared ?? this.isCleared,
     );
   }
 
@@ -1816,6 +2913,57 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
     if (capturedHeading.present) {
       map['captured_heading'] = Variable<double>(capturedHeading.value);
     }
+    if (zoomLevel.present) {
+      map['zoom_level'] = Variable<double>(zoomLevel.value);
+    }
+    if (spotId.present) {
+      map['spot_id'] = Variable<String>(spotId.value);
+    }
+    if (discovererUid.present) {
+      map['discoverer_uid'] = Variable<String>(discovererUid.value);
+    }
+    if (discovererNickname.present) {
+      map['discoverer_nickname'] = Variable<String>(discovererNickname.value);
+    }
+    if (discovererThumbPath.present) {
+      map['discoverer_thumb_path'] = Variable<String>(
+        discovererThumbPath.value,
+      );
+    }
+    if (discovererJudgeRank.present) {
+      map['discoverer_judge_rank'] = Variable<String>(
+        discovererJudgeRank.value,
+      );
+    }
+    if (discovererDistanceErrorMeters.present) {
+      map['discoverer_distance_error_meters'] = Variable<double>(
+        discovererDistanceErrorMeters.value,
+      );
+    }
+    if (discovererHeadingErrorDegrees.present) {
+      map['discoverer_heading_error_degrees'] = Variable<double>(
+        discovererHeadingErrorDegrees.value,
+      );
+    }
+    if (discovererGuessLat.present) {
+      map['discoverer_guess_lat'] = Variable<double>(discovererGuessLat.value);
+    }
+    if (discovererGuessLng.present) {
+      map['discoverer_guess_lng'] = Variable<double>(discovererGuessLng.value);
+    }
+    if (discovererCapturedHeading.present) {
+      map['discoverer_captured_heading'] = Variable<double>(
+        discovererCapturedHeading.value,
+      );
+    }
+    if (discovererZoomLevel.present) {
+      map['discoverer_zoom_level'] = Variable<double>(
+        discovererZoomLevel.value,
+      );
+    }
+    if (isCleared.present) {
+      map['is_cleared'] = Variable<int>(isCleared.value);
+    }
     return map;
   }
 
@@ -1840,7 +2988,24 @@ class HistorySpotsCompanion extends UpdateCompanion<HistorySpotRow> {
           ..write('headingErrorDegrees: $headingErrorDegrees, ')
           ..write('guessLat: $guessLat, ')
           ..write('guessLng: $guessLng, ')
-          ..write('capturedHeading: $capturedHeading')
+          ..write('capturedHeading: $capturedHeading, ')
+          ..write('zoomLevel: $zoomLevel, ')
+          ..write('spotId: $spotId, ')
+          ..write('discovererUid: $discovererUid, ')
+          ..write('discovererNickname: $discovererNickname, ')
+          ..write('discovererThumbPath: $discovererThumbPath, ')
+          ..write('discovererJudgeRank: $discovererJudgeRank, ')
+          ..write(
+            'discovererDistanceErrorMeters: $discovererDistanceErrorMeters, ',
+          )
+          ..write(
+            'discovererHeadingErrorDegrees: $discovererHeadingErrorDegrees, ',
+          )
+          ..write('discovererGuessLat: $discovererGuessLat, ')
+          ..write('discovererGuessLng: $discovererGuessLng, ')
+          ..write('discovererCapturedHeading: $discovererCapturedHeading, ')
+          ..write('discovererZoomLevel: $discovererZoomLevel, ')
+          ..write('isCleared: $isCleared')
           ..write(')'))
         .toString();
   }
@@ -1885,6 +3050,12 @@ typedef $$MissionHistoriesTableCreateCompanionBuilder =
       Value<String> mode,
       Value<double?> destinationLat,
       Value<double?> destinationLng,
+      Value<String?> roomCode,
+      Value<String?> coopSyncState,
+      Value<int?> coopIsHost,
+      Value<String?> coopMembers,
+      Value<int?> coopExpiresAt,
+      Value<int?> coopDeleteAt,
       Value<int> rowid,
     });
 typedef $$MissionHistoriesTableUpdateCompanionBuilder =
@@ -1899,6 +3070,12 @@ typedef $$MissionHistoriesTableUpdateCompanionBuilder =
       Value<String> mode,
       Value<double?> destinationLat,
       Value<double?> destinationLng,
+      Value<String?> roomCode,
+      Value<String?> coopSyncState,
+      Value<int?> coopIsHost,
+      Value<String?> coopMembers,
+      Value<int?> coopExpiresAt,
+      Value<int?> coopDeleteAt,
       Value<int> rowid,
     });
 
@@ -1996,6 +3173,36 @@ class $$MissionHistoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get roomCode => $composableBuilder(
+    column: $table.roomCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> historySpotsRefs(
     Expression<bool> Function($$HistorySpotsTableFilterComposer f) f,
   ) {
@@ -2080,6 +3287,36 @@ class $$MissionHistoriesTableOrderingComposer
     column: $table.destinationLng,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get roomCode => $composableBuilder(
+    column: $table.roomCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MissionHistoriesTableAnnotationComposer
@@ -2132,6 +3369,34 @@ class $$MissionHistoriesTableAnnotationComposer
 
   GeneratedColumn<double> get destinationLng => $composableBuilder(
     column: $table.destinationLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get roomCode =>
+      $composableBuilder(column: $table.roomCode, builder: (column) => column);
+
+  GeneratedColumn<String> get coopSyncState => $composableBuilder(
+    column: $table.coopSyncState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopIsHost => $composableBuilder(
+    column: $table.coopIsHost,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coopMembers => $composableBuilder(
+    column: $table.coopMembers,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopExpiresAt => $composableBuilder(
+    column: $table.coopExpiresAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coopDeleteAt => $composableBuilder(
+    column: $table.coopDeleteAt,
     builder: (column) => column,
   );
 
@@ -2208,6 +3473,12 @@ class $$MissionHistoriesTableTableManager
                 Value<String> mode = const Value.absent(),
                 Value<double?> destinationLat = const Value.absent(),
                 Value<double?> destinationLng = const Value.absent(),
+                Value<String?> roomCode = const Value.absent(),
+                Value<String?> coopSyncState = const Value.absent(),
+                Value<int?> coopIsHost = const Value.absent(),
+                Value<String?> coopMembers = const Value.absent(),
+                Value<int?> coopExpiresAt = const Value.absent(),
+                Value<int?> coopDeleteAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion(
                 id: id,
@@ -2220,6 +3491,12 @@ class $$MissionHistoriesTableTableManager
                 mode: mode,
                 destinationLat: destinationLat,
                 destinationLng: destinationLng,
+                roomCode: roomCode,
+                coopSyncState: coopSyncState,
+                coopIsHost: coopIsHost,
+                coopMembers: coopMembers,
+                coopExpiresAt: coopExpiresAt,
+                coopDeleteAt: coopDeleteAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2234,6 +3511,12 @@ class $$MissionHistoriesTableTableManager
                 Value<String> mode = const Value.absent(),
                 Value<double?> destinationLat = const Value.absent(),
                 Value<double?> destinationLng = const Value.absent(),
+                Value<String?> roomCode = const Value.absent(),
+                Value<String?> coopSyncState = const Value.absent(),
+                Value<int?> coopIsHost = const Value.absent(),
+                Value<String?> coopMembers = const Value.absent(),
+                Value<int?> coopExpiresAt = const Value.absent(),
+                Value<int?> coopDeleteAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MissionHistoriesCompanion.insert(
                 id: id,
@@ -2246,6 +3529,12 @@ class $$MissionHistoriesTableTableManager
                 mode: mode,
                 destinationLat: destinationLat,
                 destinationLng: destinationLng,
+                roomCode: roomCode,
+                coopSyncState: coopSyncState,
+                coopIsHost: coopIsHost,
+                coopMembers: coopMembers,
+                coopExpiresAt: coopExpiresAt,
+                coopDeleteAt: coopDeleteAt,
                 rowid: rowid,
               ),
           withReferenceMapper:
@@ -2330,6 +3619,19 @@ typedef $$HistorySpotsTableCreateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<double?> zoomLevel,
+      Value<String?> spotId,
+      Value<String?> discovererUid,
+      Value<String?> discovererNickname,
+      Value<String?> discovererThumbPath,
+      Value<String?> discovererJudgeRank,
+      Value<double?> discovererDistanceErrorMeters,
+      Value<double?> discovererHeadingErrorDegrees,
+      Value<double?> discovererGuessLat,
+      Value<double?> discovererGuessLng,
+      Value<double?> discovererCapturedHeading,
+      Value<double?> discovererZoomLevel,
+      Value<int> isCleared,
     });
 typedef $$HistorySpotsTableUpdateCompanionBuilder =
     HistorySpotsCompanion Function({
@@ -2352,6 +3654,19 @@ typedef $$HistorySpotsTableUpdateCompanionBuilder =
       Value<double?> guessLat,
       Value<double?> guessLng,
       Value<double?> capturedHeading,
+      Value<double?> zoomLevel,
+      Value<String?> spotId,
+      Value<String?> discovererUid,
+      Value<String?> discovererNickname,
+      Value<String?> discovererThumbPath,
+      Value<String?> discovererJudgeRank,
+      Value<double?> discovererDistanceErrorMeters,
+      Value<double?> discovererHeadingErrorDegrees,
+      Value<double?> discovererGuessLat,
+      Value<double?> discovererGuessLng,
+      Value<double?> discovererCapturedHeading,
+      Value<double?> discovererZoomLevel,
+      Value<int> isCleared,
     });
 
 final class $$HistorySpotsTableReferences
@@ -2478,6 +3793,71 @@ class $$HistorySpotsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get zoomLevel => $composableBuilder(
+    column: $table.zoomLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get spotId => $composableBuilder(
+    column: $table.spotId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererDistanceErrorMeters => $composableBuilder(
+    column: $table.discovererDistanceErrorMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererHeadingErrorDegrees => $composableBuilder(
+    column: $table.discovererHeadingErrorDegrees,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MissionHistoriesTableFilterComposer get historyId {
     final $$MissionHistoriesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2601,6 +3981,73 @@ class $$HistorySpotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get zoomLevel => $composableBuilder(
+    column: $table.zoomLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get spotId => $composableBuilder(
+    column: $table.spotId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererDistanceErrorMeters =>
+      $composableBuilder(
+        column: $table.discovererDistanceErrorMeters,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<double> get discovererHeadingErrorDegrees =>
+      $composableBuilder(
+        column: $table.discovererHeadingErrorDegrees,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MissionHistoriesTableOrderingComposer get historyId {
     final $$MissionHistoriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2706,6 +4153,67 @@ class $$HistorySpotsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get zoomLevel =>
+      $composableBuilder(column: $table.zoomLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get spotId =>
+      $composableBuilder(column: $table.spotId, builder: (column) => column);
+
+  GeneratedColumn<String> get discovererUid => $composableBuilder(
+    column: $table.discovererUid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discovererNickname => $composableBuilder(
+    column: $table.discovererNickname,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discovererThumbPath => $composableBuilder(
+    column: $table.discovererThumbPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discovererJudgeRank => $composableBuilder(
+    column: $table.discovererJudgeRank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererDistanceErrorMeters =>
+      $composableBuilder(
+        column: $table.discovererDistanceErrorMeters,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<double> get discovererHeadingErrorDegrees =>
+      $composableBuilder(
+        column: $table.discovererHeadingErrorDegrees,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<double> get discovererGuessLat => $composableBuilder(
+    column: $table.discovererGuessLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererGuessLng => $composableBuilder(
+    column: $table.discovererGuessLng,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererCapturedHeading => $composableBuilder(
+    column: $table.discovererCapturedHeading,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get discovererZoomLevel => $composableBuilder(
+    column: $table.discovererZoomLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get isCleared =>
+      $composableBuilder(column: $table.isCleared, builder: (column) => column);
+
   $$MissionHistoriesTableAnnotationComposer get historyId {
     final $$MissionHistoriesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -2780,6 +4288,21 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<double?> zoomLevel = const Value.absent(),
+                Value<String?> spotId = const Value.absent(),
+                Value<String?> discovererUid = const Value.absent(),
+                Value<String?> discovererNickname = const Value.absent(),
+                Value<String?> discovererThumbPath = const Value.absent(),
+                Value<String?> discovererJudgeRank = const Value.absent(),
+                Value<double?> discovererDistanceErrorMeters =
+                    const Value.absent(),
+                Value<double?> discovererHeadingErrorDegrees =
+                    const Value.absent(),
+                Value<double?> discovererGuessLat = const Value.absent(),
+                Value<double?> discovererGuessLng = const Value.absent(),
+                Value<double?> discovererCapturedHeading = const Value.absent(),
+                Value<double?> discovererZoomLevel = const Value.absent(),
+                Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion(
                 id: id,
                 historyId: historyId,
@@ -2800,6 +4323,19 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
+                spotId: spotId,
+                discovererUid: discovererUid,
+                discovererNickname: discovererNickname,
+                discovererThumbPath: discovererThumbPath,
+                discovererJudgeRank: discovererJudgeRank,
+                discovererDistanceErrorMeters: discovererDistanceErrorMeters,
+                discovererHeadingErrorDegrees: discovererHeadingErrorDegrees,
+                discovererGuessLat: discovererGuessLat,
+                discovererGuessLng: discovererGuessLng,
+                discovererCapturedHeading: discovererCapturedHeading,
+                discovererZoomLevel: discovererZoomLevel,
+                isCleared: isCleared,
               ),
           createCompanionCallback:
               ({
@@ -2822,6 +4358,21 @@ class $$HistorySpotsTableTableManager
                 Value<double?> guessLat = const Value.absent(),
                 Value<double?> guessLng = const Value.absent(),
                 Value<double?> capturedHeading = const Value.absent(),
+                Value<double?> zoomLevel = const Value.absent(),
+                Value<String?> spotId = const Value.absent(),
+                Value<String?> discovererUid = const Value.absent(),
+                Value<String?> discovererNickname = const Value.absent(),
+                Value<String?> discovererThumbPath = const Value.absent(),
+                Value<String?> discovererJudgeRank = const Value.absent(),
+                Value<double?> discovererDistanceErrorMeters =
+                    const Value.absent(),
+                Value<double?> discovererHeadingErrorDegrees =
+                    const Value.absent(),
+                Value<double?> discovererGuessLat = const Value.absent(),
+                Value<double?> discovererGuessLng = const Value.absent(),
+                Value<double?> discovererCapturedHeading = const Value.absent(),
+                Value<double?> discovererZoomLevel = const Value.absent(),
+                Value<int> isCleared = const Value.absent(),
               }) => HistorySpotsCompanion.insert(
                 id: id,
                 historyId: historyId,
@@ -2842,6 +4393,19 @@ class $$HistorySpotsTableTableManager
                 guessLat: guessLat,
                 guessLng: guessLng,
                 capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
+                spotId: spotId,
+                discovererUid: discovererUid,
+                discovererNickname: discovererNickname,
+                discovererThumbPath: discovererThumbPath,
+                discovererJudgeRank: discovererJudgeRank,
+                discovererDistanceErrorMeters: discovererDistanceErrorMeters,
+                discovererHeadingErrorDegrees: discovererHeadingErrorDegrees,
+                discovererGuessLat: discovererGuessLat,
+                discovererGuessLng: discovererGuessLng,
+                discovererCapturedHeading: discovererCapturedHeading,
+                discovererZoomLevel: discovererZoomLevel,
+                isCleared: isCleared,
               ),
           withReferenceMapper:
               (p0) =>

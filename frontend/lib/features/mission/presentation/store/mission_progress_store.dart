@@ -1,36 +1,61 @@
 import 'package:flutter_riverpod/experimental/persist.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:snampo/core/domain/coordinate.dart';
+import 'package:snampo/core/domain/mission_session_kind.dart';
+import 'package:snampo/core/domain/photo_judge_rank.dart';
+import 'package:snampo/core/domain/room_code.dart';
+import 'package:snampo/core/storage/mission_photo_directory.dart';
 import 'package:snampo/features/mission/di/mission_provider.dart';
 import 'package:snampo/features/mission/domain/entity/mission_progress_entity.dart';
-import 'package:snampo/features/mission/domain/entity/photo_judge_rank.dart';
-import 'package:snampo/features/mission/domain/value_object/coordinate.dart';
 
 part 'mission_progress_store.g.dart';
 
 /// ミッション進捗を管理するストア
+///
+/// セッション種別 (ソロ / 協力プレイ) ごとに 1 枠ずつ保存する。
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
   @override
-  Future<MissionProgressEntity?> build() async {
+  Future<MissionProgressEntity?> build(MissionSessionKind kind) async {
     await persist(ref.watch(storageProvider.future)).future;
     return state.value;
   }
 
+  @override
+  String get key => kind.persistKey('MissionProgressStoreNotifier');
+
   /// ミッション進捗を開始する
   ///
   /// [checkpointCount] はチェックポイントの数（waypoints + destination）
-  void startProgress(int checkpointCount) {
+  /// [roomCode] は協力プレイのルームコード (ソロでは null)
+  void startProgress(int checkpointCount, {RoomCode? roomCode}) {
     state = AsyncValue.data(
       MissionProgressEntity(
         startedAt: DateTime.now(),
+        roomCode: roomCode,
         checkpoints: List.filled(checkpointCount, null),
       ),
     );
   }
 
+  /// 前の進捗 (保存した写真を含む) を片付けて、新しいミッションの進捗を始める
+  ///
+  /// build() の完了を待ってから書き換える。build() と並行すると、build() の返り値 (null) が
+  /// あとから適用されて、始めた進捗を上書きするため。
+  Future<void> restartProgress(
+    int checkpointCount, {
+    RoomCode? roomCode,
+  }) async {
+    await future;
+    await clearProgress();
+    startProgress(checkpointCount, roomCode: roomCode);
+  }
+
   /// チェックポイントの撮影結果と採点結果を確定する
+  ///
+  /// 協力プレイで既に発見者がいる場合も、発見者の情報は残したまま自分の写真と採点を記録する。
   Future<CheckpointProgress?> completeCheckpoint({
     required int index,
     required String tempPhotoPath,
@@ -39,6 +64,7 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     required PhotoJudgeRank judgeRank,
     required double distanceErrorMeters,
     required double? headingErrorDegrees,
+    required double zoomLevel,
   }) async {
     final current = state.value;
     if (current == null) return null;
@@ -49,15 +75,19 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
     final checkpoint = await useCase.call(
       tempPhotoPath: tempPhotoPath,
       checkpointIndex: index,
+      photoDirectory: MissionPhotoDirectory.of(roomCode: current.roomCode),
       guessPosition: guessPosition,
       capturedHeading: capturedHeading,
       judgeRank: judgeRank,
       distanceErrorMeters: distanceErrorMeters,
       headingErrorDegrees: headingErrorDegrees,
+      zoomLevel: zoomLevel,
     );
 
     final latest = state.value;
-    if (latest == null || index >= latest.checkpoints.length) {
+    if (latest == null ||
+        index >= latest.checkpoints.length ||
+        latest.roomCode != current.roomCode) {
       final orphanPath = checkpoint.userPhotoPath;
       if (orphanPath != null) {
         try {
@@ -69,10 +99,44 @@ class MissionProgressStoreNotifier extends _$MissionProgressStoreNotifier {
       return null;
     }
 
-    final updated = List<CheckpointProgress?>.from(latest.checkpoints);
-    updated[index] = checkpoint;
-    state = AsyncValue.data(latest.copyWith(checkpoints: updated));
-    return checkpoint;
+    final next = latest.withCapture(index, checkpoint);
+    state = AsyncValue.data(next);
+    return next.checkpoints[index];
+  }
+
+  /// [index] の撮影の記録 (自分の写真と採点) を捨てる (写真のファイルも消す)
+  ///
+  /// 協力プレイで発見を共有できなかったとき、誰もクリアしていない扱いに戻すために使う。
+  /// [roomCode] がこの進捗のルームと違えば何もしない。
+  Future<void> discardCapture(RoomCode roomCode, int index) async {
+    final current = state.value;
+    if (current == null) return;
+    final next = current.withoutCapture(roomCode, index);
+    if (identical(next, current)) return;
+    final photoPath = current.checkpoints[index]?.userPhotoPath;
+    state = AsyncValue.data(next);
+    if (photoPath != null) {
+      try {
+        await ref.read(photoStorageProvider).deletePhoto(photoPath);
+      } on Object {
+        // 消せなくても、進捗からは捨ててあるので続ける
+      }
+    }
+  }
+
+  /// 協力プレイの発見者を進捗に反映する (キーはチェックポイントのインデックス)
+  ///
+  /// [roomCode] がこの進捗のルームと違えば何もしない。
+  void applyCoopDiscoveries(
+    RoomCode roomCode,
+    Map<int, CoopDiscovery> discoveries,
+  ) {
+    final current = state.value;
+    if (current == null) return;
+    final next = current.withCoopDiscoveries(roomCode, discoveries);
+    if (!identical(next, current)) {
+      state = AsyncValue.data(next);
+    }
   }
 
   /// 進捗状態のみリセットする（写真ファイルは削除しない）
