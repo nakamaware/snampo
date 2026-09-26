@@ -441,6 +441,8 @@ class SnapView extends HookConsumerWidget {
 ///
 /// カメラ画面へ移り、撮影と採点が確定したら `missionProgressStore` に保存して
 /// (再開後もプレビューできる)、スポットの結果画面へ進む。
+/// カメラ画面を開いている間に撮影できなくなったら ([MissionPageExtension.captureBlockedReason])、
+/// カメラ画面に理由を出して閉じる。
 Future<void> _captureSpot(
   BuildContext context,
   WidgetRef ref, {
@@ -452,70 +454,94 @@ Future<void> _captureSpot(
 }) async {
   final router = GoRouter.of(context);
   SpotResultPageArgs? nextSpotResultArgs;
-  await router.push<void>(
-    '/camera',
-    extra: CameraPageArgs(
-      title: 'Spot ${spotIndex + 1}',
-      referenceImageBase64: missionPoint.imageBase64,
-      loadingMessage: extension?.captureLoadingMessage ?? '採点中...',
-      onPhotoAccepted: (capturedFile, zoomLevel) async {
-        final path = capturedFile.path;
-        final currentPosition =
-            await ref.read(getCurrentPositionUseCaseProvider).call();
-        final capturedHeading =
-            await ref.read(getCurrentHeadingUseCaseProvider).call();
-        final judgeResult = ref
-            .read(judgePhotoUseCaseProvider)
-            .call(
-              currentPosition: currentPosition,
-              target: missionPoint,
-              capturedHeading: capturedHeading,
-              zoomLevel: zoomLevel,
+  final blockedReason = ValueNotifier<String?>(null);
+  final progressSubscription =
+      extension == null
+          ? null
+          : ref.listenManual(missionProgressStoreProvider(kind), (_, next) {
+            final checkpoints = next.value?.checkpoints ?? const [];
+            blockedReason.value = extension.captureBlockedReason(
+              ref,
+              checkpoint:
+                  spotIndex < checkpoints.length
+                      ? checkpoints[spotIndex]
+                      : null,
             );
+          }, fireImmediately: true);
+  try {
+    await router.push<void>(
+      '/camera',
+      extra: CameraPageArgs(
+        title: 'Spot ${spotIndex + 1}',
+        referenceImageBase64: missionPoint.imageBase64,
+        loadingMessage: extension?.captureLoadingMessage ?? '採点中...',
+        blockedReason: blockedReason,
+        onPhotoAccepted: (capturedFile, zoomLevel) async {
+          final path = capturedFile.path;
+          final currentPosition =
+              await ref.read(getCurrentPositionUseCaseProvider).call();
+          final capturedHeading =
+              await ref.read(getCurrentHeadingUseCaseProvider).call();
+          final judgeResult = ref
+              .read(judgePhotoUseCaseProvider)
+              .call(
+                currentPosition: currentPosition,
+                target: missionPoint,
+                capturedHeading: capturedHeading,
+                zoomLevel: zoomLevel,
+              );
 
-        final checkpoint = await ref
-            .read(missionProgressStoreProvider(kind).notifier)
-            .completeCheckpoint(
-              index: spotIndex,
-              tempPhotoPath: path,
-              guessPosition: currentPosition,
-              capturedHeading: capturedHeading,
-              judgeRank: judgeResult.rank,
-              distanceErrorMeters: judgeResult.distanceErrorMeters,
-              headingErrorDegrees: judgeResult.headingErrorDegrees,
-              zoomLevel: judgeResult.zoomLevel,
-            );
-        if (checkpoint == null) {
-          return false;
-        }
-        await extension?.onCheckpointCompleted(
-          ref,
-          index: spotIndex,
-          checkpoint: checkpoint,
-        );
+          final checkpoint = await ref
+              .read(missionProgressStoreProvider(kind).notifier)
+              .completeCheckpoint(
+                index: spotIndex,
+                tempPhotoPath: path,
+                guessPosition: currentPosition,
+                capturedHeading: capturedHeading,
+                judgeRank: judgeResult.rank,
+                distanceErrorMeters: judgeResult.distanceErrorMeters,
+                headingErrorDegrees: judgeResult.headingErrorDegrees,
+                zoomLevel: judgeResult.zoomLevel,
+              );
+          if (checkpoint == null) {
+            return false;
+          }
+          await extension?.onCheckpointCompleted(
+            ref,
+            index: spotIndex,
+            checkpoint: checkpoint,
+          );
 
-        ref
-            .read(cameraStoreProvider.notifier)
-            .savePhoto(spotIndex, checkpoint.userPhotoPath ?? path);
-        nextSpotResultArgs = SpotResultPageArgs(
-          spotIndex: spotIndex,
-          totalCheckpointCount:
-              ref
-                  .read(missionProgressStoreProvider(kind))
-                  .value
-                  ?.checkpoints
-                  .length ??
-              spotIndex + 1,
-          missionPoint: missionPoint,
-          checkpoint: checkpoint,
-          isDestinationMode: isDestinationMode,
-          closeLabel: extension?.spotResultCloseLabel(ref, index: spotIndex),
-          kind: kind,
-        );
-        return true;
-      },
-    ),
-  );
+          // 協力プレイで先を越されると撮影は捨てられ、発見者の結果に入れ替わっている
+          final checkpoints =
+              ref.read(missionProgressStoreProvider(kind)).value?.checkpoints;
+          final latest =
+              checkpoints != null && spotIndex < checkpoints.length
+                  ? checkpoints[spotIndex]
+                  : null;
+          final resultCheckpoint = latest ?? checkpoint;
+          if (resultCheckpoint.userPhotoPath != null) {
+            ref
+                .read(cameraStoreProvider.notifier)
+                .savePhoto(spotIndex, resultCheckpoint.userPhotoPath!);
+          }
+          nextSpotResultArgs = SpotResultPageArgs(
+            spotIndex: spotIndex,
+            totalCheckpointCount: checkpoints?.length ?? spotIndex + 1,
+            missionPoint: missionPoint,
+            checkpoint: resultCheckpoint,
+            isDestinationMode: isDestinationMode,
+            closeLabel: extension?.spotResultCloseLabel(ref, index: spotIndex),
+            kind: kind,
+          );
+          return true;
+        },
+      ),
+    );
+  } finally {
+    // 閉じていくカメラ画面がまだ参照していることがあるので、blockedReason は dispose しない
+    progressSubscription?.close();
+  }
   if (!context.mounted || nextSpotResultArgs == null) {
     return;
   }
@@ -597,6 +623,15 @@ abstract class MissionPageExtension {
     required int index,
     required CheckpointProgress checkpoint,
   }) async {}
+
+  /// カメラ画面を開いている間に、スポットを撮影できなくなった理由 (撮影できれば null)
+  ///
+  /// build の外 (進捗の変化の通知) で呼ぶので、[ref] では read する。理由があると、
+  /// カメラ画面は理由を出して閉じる (採点中は、[onCheckpointCompleted] の結果に任せる)。
+  String? captureBlockedReason(
+    WidgetRef ref, {
+    required CheckpointProgress? checkpoint,
+  }) => null;
 
   /// 撮影してから [onCheckpointCompleted] が完了するまでに表示する文言
   String get captureLoadingMessage => '採点中...';
