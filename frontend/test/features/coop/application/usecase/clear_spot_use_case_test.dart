@@ -147,17 +147,15 @@ void main() {
     expect(result, isA<ClearSpotFailed>());
   });
 
-  test('先に他の人がクリアしていたら、その発見者を返す', () async {
-    await clear(uid: 'other');
+  test('先に他の人がクリアしていたら、その発見者を返し、自分の撮影は履歴に残さない', () async {
+    rooms.clears[fx.code] = {spotId: fx.clear('a', 'other')};
 
     final result = await clear();
 
     expect((result as ClearSpotAlreadyCleared).existing.clearedBy, 'other');
-    // 自分の写真は手元に残す
-    expect(
-      histories.histories[fx.code]!.spots.single.userPhotoPath,
-      '/photos/a.jpg',
-    );
+    final spot = histories.histories[fx.code]!.spots.single;
+    expect(spot.userPhotoPath, isNull);
+    expect(spot.discovererUid, isNot('me'));
   });
 
   test('時間切れのあとに届いた自分のクリアが先にあれば (撮り直したときなど)、自分が発見者として扱う', () async {

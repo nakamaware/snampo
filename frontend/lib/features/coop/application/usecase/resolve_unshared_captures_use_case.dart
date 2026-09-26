@@ -10,8 +10,9 @@ import 'package:snampo/features/mission/domain/entity/mission_progress_entity.da
 /// 共有の途中でアプリが終了した撮影 (自分の写真はあるが発見者がいない) の扱いを決める
 ///
 /// 共有の結果を待たずに終わっているので、共有できなかった扱いにして捨てる
-/// (もう一度撮影できるようにする)。ただし、サーバにそのスポットのクリアがあれば
-/// (共有は届いていて、同期の前に終了した。先着に負けた場合を含む) 捨てない。
+/// (もう一度撮影できるようにする)。ただし、サーバにそのスポットの自分のクリアがあれば
+/// (共有は届いていて、同期の前に終了した) 捨てない。先に他の人のクリアがあれば (先着に
+/// 負けた)、他の人が発見したスポットと同じ扱いにするため捨てる。
 ///
 /// クリアは監視のキャッシュではなく、サーバから読む (キャッシュが古いと、届いていた共有の
 /// 撮影を捨ててしまうため)。サーバから読めなければ (時間内に返事が来ない場合を含む)、
@@ -36,25 +37,26 @@ class ResolveUnsharedCapturesUseCase {
   /// サーバからクリアを読むのを待つ時間 (電波が弱いときに、待たせ続けないため)
   final Duration fetchTimeout;
 
-  /// [captures] (スポット ID ごとの撮影) のうち、捨てる撮影のスポット ID を返す
+  /// [captures] (スポット ID ごとの、[uid] の撮影) のうち、捨てる撮影のスポット ID を返す
   ///
   /// [upToDateClears] は、サーバの最新の値と確かめられた `clears` (監視で届いたもの)。
   /// あればサーバから読み直さない。判断できなければ (サーバから読めない、時間切れ) null を返す。
   Future<Set<SpotId>?> call(
     RoomCode roomCode,
     Map<SpotId, CheckpointProgress> captures, {
+    required String uid,
     List<SpotClear>? upToDateClears,
   }) async {
     if (captures.isEmpty) {
       return const {};
     }
-    final Set<SpotId> clearedSpotIds;
+    final Set<SpotId> mySpotIds;
     try {
-      clearedSpotIds = {
+      mySpotIds = {
         for (final clear
             in upToDateClears ??
                 await _rooms.fetchClears(roomCode).timeout(fetchTimeout))
-          clear.spotId,
+          if (clear.clearedBy == uid) clear.spotId,
       };
     } on Object catch (e) {
       log('未共有の撮影を確かめられなかった: $e', name: 'ResolveUnsharedCaptures');
@@ -62,7 +64,7 @@ class ResolveUnsharedCapturesUseCase {
     }
     final discard = <SpotId>{};
     for (final MapEntry(key: spotId, value: checkpoint) in captures.entries) {
-      if (!clearedSpotIds.contains(spotId)) {
+      if (!mySpotIds.contains(spotId)) {
         discard.add(spotId);
         continue;
       }
