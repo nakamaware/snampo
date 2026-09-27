@@ -33,26 +33,38 @@ void main() {
     final discard = await useCase(fx.code, {
       fx.spot('a'): capture,
       fx.spot('b'): capture,
-    });
+    }, uid: 'me');
 
     expect(discard, {fx.spot('a'), fx.spot('b')});
   });
 
-  test('サーバにクリアがあるスポットの撮影は捨てない (先着に負けた場合を含む)', () async {
-    rooms.clears[fx.code] = {fx.spot('a'): fx.clear('a', 'other')};
+  test('サーバに自分のクリアがあるスポットの撮影は捨てない', () async {
+    rooms.clears[fx.code] = {fx.spot('a'): fx.clear('a', 'me')};
 
     final discard = await useCase(fx.code, {
       fx.spot('a'): capture,
       fx.spot('b'): capture,
-    });
+    }, uid: 'me');
 
     expect(discard, {fx.spot('b')});
   });
 
-  test('捨てない撮影は、自分の写真と採点を履歴に残す (共有の途中で終了して、残せていない)', () async {
+  test('先に他の人のクリアがあるスポットの撮影は捨てる (先着に負けた)', () async {
     rooms.clears[fx.code] = {fx.spot('a'): fx.clear('a', 'other')};
 
-    await useCase(fx.code, {fx.spot('a'): capture, fx.spot('b'): capture});
+    final discard = await useCase(fx.code, {fx.spot('a'): capture}, uid: 'me');
+
+    expect(discard, {fx.spot('a')});
+    expect(photoInHistory('a'), isNull);
+  });
+
+  test('捨てない撮影は、自分の写真と採点を履歴に残す (共有の途中で終了して、残せていない)', () async {
+    rooms.clears[fx.code] = {fx.spot('a'): fx.clear('a', 'me')};
+
+    await useCase(fx.code, {
+      fx.spot('a'): capture,
+      fx.spot('b'): capture,
+    }, uid: 'me');
 
     expect(photoInHistory('a'), '/photos/a.jpg');
     expect(photoInHistory('b'), isNull);
@@ -61,7 +73,7 @@ void main() {
   test('サーバからクリアを読めなければ (オフラインなど)、判断できないので捨てない', () async {
     rooms.offline = true;
 
-    final discard = await useCase(fx.code, {fx.spot('a'): capture});
+    final discard = await useCase(fx.code, {fx.spot('a'): capture}, uid: 'me');
 
     expect(discard, isNull);
     expect(photoInHistory('a'), isNull);
@@ -75,7 +87,7 @@ void main() {
       fetchTimeout: const Duration(milliseconds: 10),
     );
 
-    final discard = await useCase(fx.code, {fx.spot('a'): capture});
+    final discard = await useCase(fx.code, {fx.spot('a'): capture}, uid: 'me');
 
     expect(discard, isNull);
     expect(photoInHistory('a'), isNull);
@@ -87,7 +99,8 @@ void main() {
     final discard = await useCase(
       fx.code,
       {fx.spot('a'): capture, fx.spot('b'): capture},
-      upToDateClears: [fx.clear('a', 'other')],
+      uid: 'me',
+      upToDateClears: [fx.clear('a', 'me')],
     );
 
     expect(discard, {fx.spot('b')});

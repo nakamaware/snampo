@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -20,6 +21,7 @@ class CameraPageArgs {
     required this.referenceImageBase64,
     required this.onPhotoAccepted,
     this.loadingMessage = '採点中...',
+    this.blockedReason,
   });
 
   /// 上に出すタイトル (例: Spot 2)
@@ -36,6 +38,12 @@ class CameraPageArgs {
 
   /// [onPhotoAccepted] の完了を待つ間に表示する文言
   final String loadingMessage;
+
+  /// 撮影できなくなった理由 (null なら撮影できる)
+  ///
+  /// 理由が入ったら、理由を出してカメラ画面を閉じる (協力プレイで他の人が先に発見したなど)。
+  /// 採点中は [onPhotoAccepted] の結果に任せ、採点を受け付けられなかったときに閉じる。
+  final ValueListenable<String?>? blockedReason;
 }
 
 /// カメラページウィジェット。
@@ -68,25 +76,39 @@ class _CameraPageState extends State<CameraPage> {
   /// 確認中の撮った写真 (null ならプレビューを出す)
   XFile? _capturedFile;
 
+  /// 閉じようとしているか (撮影を受け付けたか、撮影できなくなった理由を出した)
+  bool _isClosing = false;
+
   @override
   void initState() {
     super.initState();
+    widget.args.blockedReason?.addListener(_closeIfBlocked);
     _setupCamera();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfBlocked());
+  }
+
+  /// 撮影できなくなっていたら、理由を出して閉じる (採点中は待つ)
+  void _closeIfBlocked() {
+    final reason = widget.args.blockedReason?.value;
+    if (reason == null || _isBusy || _isClosing || !mounted) return;
+    _isClosing = true;
+    unawaited(_showErrorDialog(reason, title: 'お知らせ'));
   }
 
   // エラーを表示する共通メソッド
-  Future<void> _showErrorDialog(String message) async {
+  Future<void> _showErrorDialog(String message, {String title = 'エラー'}) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // 枠外をタップしても閉じないようにする
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('エラー'),
+          title: Text(title),
           content: Text(message),
           actions: <Widget>[
             TextButton(
               child: const Text('戻る'),
               onPressed: () {
+                _isClosing = true;
                 Navigator.of(context).pop(); // ダイアログを閉じる
                 Navigator.of(context).pop(); // カメラ画面も閉じる
               },
@@ -151,6 +173,7 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   void dispose() {
+    widget.args.blockedReason?.removeListener(_closeIfBlocked);
     _controller?.dispose();
     super.dispose();
   }
@@ -410,7 +433,11 @@ class _CameraPageState extends State<CameraPage> {
       if (!mounted) return;
       await _showErrorDialog('写真の撮影に失敗しました。');
     } finally {
-      if (mounted) setState(() => _isBusy = false);
+      if (mounted) {
+        setState(() => _isBusy = false);
+        // 採点中に撮影できなくなっていて、採点を受け付けられなかった (閉じていない) とき
+        _closeIfBlocked();
+      }
     }
   }
 
@@ -523,6 +550,7 @@ class _CameraPageState extends State<CameraPage> {
       }
 
       if (isAccepted && mounted) {
+        _isClosing = true;
         Navigator.of(context).pop();
       }
     } finally {

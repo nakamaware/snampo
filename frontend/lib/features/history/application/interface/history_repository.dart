@@ -55,7 +55,7 @@ abstract class IHistoryRepository {
     required String sourcePath,
   });
 
-  /// 自分が撮影した写真と採点を反映する (先に他の人が発見していても手元に残す)
+  /// 自分が撮影した写真と採点を反映する (自分が発見者になった撮影だけ。先を越された撮影は残さない)
   Future<void> saveCoopUserPhoto({
     required RoomCode roomCode,
     required SpotId spotId,

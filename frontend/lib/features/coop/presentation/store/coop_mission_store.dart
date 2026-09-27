@@ -578,7 +578,8 @@ class CoopMissionStore extends _$CoopMissionStore {
 
   /// 撮影して採点したスポットをクリアにする
   ///
-  /// 自分の写真と採点は、先に他の人が発見していても手元 (進捗と履歴) に残す。
+  /// 先に他の人が発見していたら、自分の写真と採点は捨て、発見者 (写真と採点) を進捗に
+  /// 反映する (他の人が発見したスポットと同じ扱いにし、結果画面でも発見者の結果を出す)。
   /// 共有に失敗した撮影は捨て (誰もクリアしていない扱いに戻り、もう一度撮影できる)、
   /// 利用者に表示する理由を返す。共有できたら (先を越された場合を含む) null を返す。
   Future<String?> clearSpot({
@@ -617,6 +618,8 @@ class CoopMissionStore extends _$CoopMissionStore {
           error = null;
         case ClearSpotAlreadyCleared(:final existing):
           error = null;
+          await _applyPrecedingClear(existing);
+          await _discardCapture(spotIndex);
           _notify(
             '先に${_displayName(existing.clearedBy, existing.nickname)}'
             'さんが発見しました',
@@ -640,10 +643,25 @@ class CoopMissionStore extends _$CoopMissionStore {
     }
   }
 
+  /// 先を越されたスポットの発見者を、`clears` の通知を待たずに履歴と進捗に反映する
+  ///
+  /// 撮影直後の結果画面で発見者の結果 (サムネを含む) を出すため。サムネを取得できなければ
+  /// 発見者だけ反映し、サムネは次の `clears` の反映で取り直す。
+  Future<void> _applyPrecedingClear(SpotClear clear) async {
+    try {
+      final result = await ref.read(syncCoopClearsUseCaseProvider)(roomCode, [
+        clear,
+      ]);
+      _applyDiscoveriesToProgress(result.discoveries);
+    } on Object catch (e, st) {
+      log('先に発見した人を反映できなかった', error: e, stackTrace: st, name: 'CoopMission');
+    }
+  }
+
   /// 共有の途中でアプリが終了した撮影 (自分の写真はあるが発見者がいない) を、捨てるか決める
   ///
   /// 共有の結果を待たずに終わっているので、共有できなかった扱いにして捨てる
-  /// (もう一度撮影できるようにする)。サーバにそのスポットのクリアがあれば捨てない
+  /// (もう一度撮影できるようにする)。サーバにそのスポットの自分のクリアがあれば捨てない
   /// ([ResolveUnsharedCapturesUseCase])。[snapshot] がサーバの最新の値ならそれで決め、
   /// そうでなければサーバから読む。読めなければ決めずに残し、次にサーバの最新の値が
   /// 届いたときに決め直す。
@@ -674,6 +692,7 @@ class CoopMissionStore extends _$CoopMissionStore {
       final discard = await ref.read(resolveUnsharedCapturesUseCaseProvider)(
         roomCode,
         captures,
+        uid: await _uid(),
         upToDateClears: snapshot.isUpToDate ? snapshot.clears : null,
       );
       if (discard == null) return;

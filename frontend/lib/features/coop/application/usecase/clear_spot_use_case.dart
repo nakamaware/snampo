@@ -22,7 +22,7 @@ final class ClearSpotCleared extends ClearSpotResult {
   const ClearSpotCleared();
 }
 
-/// 先に他の人が発見していた (自分の写真と採点は手元に残す)
+/// 先に他の人が発見していた (自分の写真と採点は捨てる)
 final class ClearSpotAlreadyCleared extends ClearSpotResult {
   /// [ClearSpotAlreadyCleared] を作成する
   const ClearSpotAlreadyCleared(this.existing);
@@ -48,9 +48,9 @@ final class ClearSpotFailed extends ClearSpotResult {
 /// 1. サムネを作ってアップロードし、thumbPath を入れてクリアを作成する。
 ///    [shareTimeout] 以内に終わらなければ失敗にする (送り直しはしない。撮り直してもらう)。
 ///    時間切れのあとにアップロードが終わっても、クリアは作成しない (失敗と伝えた撮影を発見にしない)
-/// 2. 共有できたら、自分の写真と採点を履歴に残す (先に他の人が発見していても残す)。
+/// 2. 自分が発見者になったら、自分の写真と採点、発見者と自分のサムネを履歴に反映する。
+///    先に他の人が発見していたら、自分の撮影は履歴に残さない (他の人の発見と同じ扱いにする)。
 ///    共有に失敗した撮影は、誰もクリアしていない扱いにして履歴に残さない
-/// 3. 自分が発見者になったら、履歴に発見者と自分のサムネを反映する
 ///
 /// 最後のクリアで finished にするのは、`clears` を監視しているストア (CoopMissionStore) が行う。
 class ClearSpotUseCase {
@@ -114,6 +114,11 @@ class ClearSpotUseCase {
       return const ClearSpotFailed();
     }
 
+    if (result case ClearAlreadyExists(
+      :final existing,
+    ) when existing.clearedBy != uid) {
+      return ClearSpotAlreadyCleared(existing);
+    }
     try {
       await _histories.saveCoopUserPhoto(
         roomCode: room.code,
@@ -122,11 +127,6 @@ class ClearSpotUseCase {
       );
     } on Object catch (e) {
       log('履歴への写真の保存に失敗した: $e', name: 'ClearSpot');
-    }
-    if (result case ClearAlreadyExists(
-      :final existing,
-    ) when existing.clearedBy != uid) {
-      return ClearSpotAlreadyCleared(existing);
     }
     // 作成できたか、時間切れのあとに届いた自分のクリアが先にあった (どちらも自分が発見者)。
     // 先にあった場合の発見日時は、サーバのクリアに揃える

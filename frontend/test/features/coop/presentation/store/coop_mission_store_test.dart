@@ -172,7 +172,9 @@ void main() {
           overrides: [
             coopRoomProvider(code).overrideWith((ref) => Stream.value(playing)),
             coopClearsProvider(code).overrideWith((ref) => clears.stream),
-            coopMembersProvider(code).overrideWith((ref) => Stream.value([])),
+            coopMembersProvider(
+              code,
+            ).overrideWith((ref) => Stream.value([member('me')])),
             missionProgressStoreProvider.overrideWith(
               () => ProgressOf(unshared),
             ),
@@ -187,6 +189,7 @@ void main() {
             coopStorageProvider.overrideWithValue(storage),
             historyRepositoryProvider.overrideWithValue(histories),
             photoStorageProvider.overrideWithValue(FakePhotoStorage()),
+            thumbnailServiceProvider.overrideWithValue(FakeThumbnailService()),
           ],
         );
         addTearDown(container.dispose);
@@ -234,6 +237,39 @@ void main() {
         expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
         expect(checkpoints()[1]?.discovererUid, 'me');
         expect(histories.histories[code]!.spots[1].userPhotoPath, '/b.jpg');
+      });
+
+      test('先に他の人のクリアがあるスポットの撮影は捨て、発見者の結果にする (先着に負けた)', () async {
+        final list = [clear('b', 'me'), clear('c', 'other')];
+        rooms.clears[code] = {for (final c in list) c.spotId: c};
+        await start();
+        await receive(list, isUpToDate: true);
+
+        expect(checkpoints()[1]?.userPhotoPath, '/b.jpg');
+        expect(checkpoints()[2]?.userPhotoPath, isNull);
+        expect(checkpoints()[2]?.discovererUid, 'other');
+        expect(histories.histories[code]!.spots[2].userPhotoPath, isNull);
+      });
+
+      test('撮影したスポットを先に他の人が発見していたら、撮影を捨てて発見者の結果にする', () async {
+        await start();
+        rooms.clears[code]![spot('d')] = clear('d', 'other');
+
+        final error = await container
+            .read(coopMissionStoreProvider(code).notifier)
+            .clearSpot(
+              spotIndex: 3,
+              checkpoint: const CheckpointProgress(userPhotoPath: '/d.jpg'),
+            );
+
+        expect(error, isNull);
+        final checkpoint = checkpoints()[3];
+        expect(checkpoint?.userPhotoPath, isNull);
+        expect(checkpoint?.discovererUid, 'other');
+        // 撮影直後の結果画面で出せるよう、発見者のサムネも取得しておく
+        expect(checkpoint?.discovererThumbPath, isNotNull);
+        expect(histories.histories[code]!.spots[3].userPhotoPath, isNull);
+        expect(histories.histories[code]!.spots[3].discovererUid, 'other');
       });
 
       group('結果画面の「ホームへ戻る」で進捗を片付けてよいか', () {

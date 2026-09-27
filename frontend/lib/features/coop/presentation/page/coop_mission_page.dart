@@ -5,6 +5,7 @@ import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_mission_effects.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
@@ -60,13 +61,42 @@ class _CoopMissionPageExtension extends MissionPageExtension {
   String? discovererName(
     WidgetRef ref, {
     required CheckpointProgress? checkpoint,
+  }) => _discovererName(
+    checkpoint,
+    myUid: ref.watch(coopSessionStoreProvider).value?.uid,
+    members: ref.watch(coopMembersProvider(roomCode)).value,
+  );
+
+  /// カメラ画面を開いている間に他の人が発見したら、撮影できない
+  ///
+  /// 時間切れのあとに届いた自分のクリアなら撮影できる (撮り直した撮影を自分の発見にする)。
+  @override
+  String? captureBlockedReason(
+    WidgetRef ref, {
+    required CheckpointProgress? checkpoint,
+  }) {
+    final myUid = ref.read(coopSessionStoreProvider).value?.uid;
+    final uid = checkpoint?.discovererUid;
+    if (uid == null || uid == myUid) return null;
+    final name = _discovererName(
+      checkpoint,
+      myUid: myUid,
+      members: ref.read(coopMembersProvider(roomCode)).value,
+    );
+    return '先に$nameさんが発見しました';
+  }
+
+  String? _discovererName(
+    CheckpointProgress? checkpoint, {
+    required String? myUid,
+    required List<RoomMember>? members,
   }) {
     final uid = checkpoint?.discovererUid;
     if (uid == null) return null;
-    if (uid == ref.watch(coopSessionStoreProvider).value?.uid) return 'あなた';
-    final members = ref.watch(coopMembersProvider(roomCode)).value ?? const [];
+    if (uid == myUid) return 'あなた';
     return displayNicknames([
-          for (final m in members) (uid: m.uid, nickname: m.nickname),
+          for (final m in members ?? const <RoomMember>[])
+            (uid: m.uid, nickname: m.nickname),
         ])[uid] ??
         checkpoint?.discovererNickname;
   }
