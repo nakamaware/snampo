@@ -57,11 +57,26 @@ class NicknameStore extends _$NicknameStore {
 
   /// 入力からニックネームを保存する。空欄ならおまかせの名前を作って保存する
   SavedNickname saveInput(String input) {
-    final isAuto = input.trim().isEmpty;
-    final saved = SavedNickname(Nickname.orAuto(input), isAuto: isAuto);
+    final saved = SavedNickname(
+      Nickname.orAuto(input),
+      isAuto: isAutoInput(input, state.value),
+    );
     state = AsyncValue.data(saved);
     return saved;
   }
+}
+
+/// 入力から保存する名前が、おまかせの名前かどうか
+///
+/// 空欄ならおまかせで命名する。保存済みのおまかせの名前をそのまま保存したときも、おまかせのまま
+/// にする (設定画面の入力欄には保存済みの名前が入っているため)。
+@visibleForTesting
+bool isAutoInput(String input, SavedNickname? previous) {
+  final trimmed = input.trim();
+  return trimmed.isEmpty ||
+      (previous != null &&
+          previous.isAuto &&
+          previous.nickname.value == trimmed);
 }
 
 /// 以前の自動命名の形式 (おまかせかを保存していなかったころの値の判定に使う)
