@@ -6,12 +6,17 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 class Nickname {
   const Nickname._(this.value);
 
+  /// おまかせのニックネームを作る (例: 「プレイヤー1234」)
+  factory Nickname.auto([Random? random]) {
+    final number = (random ?? Random()).nextInt(10000);
+    return Nickname._('プレイヤー${number.toString().padLeft(4, '0')}');
+  }
+
   /// 入力からニックネームを作る。空欄なら自動で命名する (例: 「プレイヤー1234」)
   factory Nickname.orAuto(String input, [Random? random]) {
     final trimmed = input.trim();
     if (trimmed.isEmpty) {
-      final number = (random ?? Random()).nextInt(10000);
-      return Nickname._('プレイヤー${number.toString().padLeft(4, '0')}');
+      return Nickname.auto(random);
     }
     final runes = trimmed.runes.toList();
     return Nickname._(
@@ -62,14 +67,25 @@ class NicknameConverter implements JsonConverter<Nickname, String> {
 
 /// ルーム内の表示名を uid ごとに返す
 ///
-/// [membersInJoinOrder] は入室順に並べたメンバー。名前が重複した場合は、表示するときだけ
-/// 2 人目以降に「たろう(2)」のような番号を付ける (保存するデータは変えない)。
+/// 名前が重複した場合は、表示するときだけ 2 人目以降に「たろう(2)」のような番号を付ける
+/// (保存するデータは変えない)。番号は `namedAt` の順に付ける。基本は入室時刻で、ルーム内で
+/// 名前を変えた人はその時刻になる (あとから同じ名前にした人に番号が付く)。
+/// [members] は入室順に並べたメンバー。`namedAt` が分からない人がいれば入室順のまま付ける。
 Map<String, String> displayNicknames(
-  List<({String uid, String nickname})> membersInJoinOrder,
+  List<({String uid, String nickname, DateTime? namedAt})> members,
 ) {
+  final ordered = [...members];
+  if (ordered.every((m) => m.namedAt != null)) {
+    // 同じ時刻なら入室順を保つ (List.sort は安定ではないので、元の位置も比べる)
+    final index = {for (final (i, m) in members.indexed) m.uid: i};
+    ordered.sort((a, b) {
+      final byTime = a.namedAt!.compareTo(b.namedAt!);
+      return byTime != 0 ? byTime : index[a.uid]!.compareTo(index[b.uid]!);
+    });
+  }
   final counts = <String, int>{};
   return {
-    for (final member in membersInJoinOrder)
+    for (final member in ordered)
       member.uid: () {
         final count = (counts[member.nickname] ?? 0) + 1;
         counts[member.nickname] = count;

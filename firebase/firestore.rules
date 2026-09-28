@@ -172,6 +172,11 @@ service cloud.firestore {
           return afterLeft == beforeLeft || (beforeLeft == null && afterLeft is timestamp);
         }
 
+        // ロビーで名前を変えた時刻 (同じ名前の番号付けに使う)。書くならサーバー時刻にする
+        function isValidRename() {
+          return !('renamedAt' in changedKeys()) || request.resource.data.renamedAt == request.time;
+        }
+
         function validMemberUpdate() {
           let room = roomData(code);
           let after = request.resource.data;
@@ -183,7 +188,7 @@ service cloud.firestore {
             && after.nickname.size() <= 30
             && (
               (changedKeys().hasOnly(['nickname', 'leftAt', 'joinedAt']) && isRejoin(room))
-              || (changedKeys().hasOnly(['nickname', 'leftAt']) && isAllowedLeftAtChange())
+              || (changedKeys().hasOnly(['nickname', 'leftAt', 'renamedAt']) && isAllowedLeftAtChange() && isValidRename())
             );
         }
 

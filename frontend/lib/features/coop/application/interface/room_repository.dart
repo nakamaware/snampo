@@ -60,6 +60,17 @@ abstract class IRoomRepository {
     required Nickname nickname,
   });
 
+  /// ロビーで自分のニックネームを変える (waiting のとき)
+  ///
+  /// サーバと通信して確かめる (トランザクション)。オフラインなら例外を投げ、端末に書き込みを
+  /// 溜めない (失敗したと表示したあとに名前が変わらないように)。waiting でなければ
+  /// [CoopPermissionDeniedException] を投げる。
+  Future<void> updateNickname(
+    RoomCode code, {
+    required String uid,
+    required Nickname nickname,
+  });
+
   /// ルームを抜ける (`leftAt` を記録する。ドキュメントは削除しない)
   Future<void> leaveRoom(RoomCode code, String uid);
 

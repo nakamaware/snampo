@@ -7,6 +7,7 @@ import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/domain/entity/room_member.dart';
+import 'package:snampo/features/coop/presentation/component/nickname_sheet.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 
@@ -152,12 +153,16 @@ class RoomCodeCard extends StatelessWidget {
 }
 
 /// メンバーの一覧 (ホストには星、抜けた人は薄く表示する)
+///
+/// [onEditMyNickname] を渡すと (ロビーの開始前)、自分の行から名前を変えられる。
 class RoomMembersCard extends StatelessWidget {
   /// [RoomMembersCard] を作成する
   const RoomMembersCard({
     required this.members,
     required this.hostId,
     required this.myUid,
+    this.isMyNicknameAuto = false,
+    this.onEditMyNickname,
     super.key,
   });
 
@@ -170,12 +175,19 @@ class RoomMembersCard extends StatelessWidget {
   /// 自分の uid
   final String myUid;
 
+  /// 自分の名前がおまかせで付けた名前か
+  final bool isMyNicknameAuto;
+
+  /// 自分の名前を変える
+  final VoidCallback? onEditMyNickname;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // 重複した名前には、表示するときだけ入室順に番号を付ける
+    // 重複した名前には、表示するときだけ番号を付ける (あとから同じ名前にした人に付く)
     final names = displayNicknames([
-      for (final m in members) (uid: m.uid, nickname: m.nickname),
+      for (final m in members)
+        (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
     ]);
     final activeCount = members.where((m) => !m.hasLeft).length;
     return Card(
@@ -190,27 +202,105 @@ class RoomMembersCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             for (final member in members)
-              ListTile(
-                dense: true,
-                leading: Icon(
-                  member.uid == hostId ? Icons.star : Icons.person,
-                  color: member.hasLeft ? theme.colorScheme.outline : null,
+              if (member.uid == myUid)
+                _MyMemberTile(
+                  name: names[member.uid] ?? member.nickname,
+                  isHost: member.uid == hostId,
+                  isAuto: isMyNicknameAuto,
+                  onEdit: onEditMyNickname,
+                )
+              else
+                ListTile(
+                  dense: true,
+                  leading: Icon(
+                    member.uid == hostId ? Icons.star : Icons.person,
+                    color: member.hasLeft ? theme.colorScheme.outline : null,
+                  ),
+                  title: Text(
+                    [
+                      names[member.uid] ?? member.nickname,
+                      if (member.hasLeft) '(抜けました)',
+                    ].join(' '),
+                    style:
+                        member.hasLeft
+                            ? TextStyle(color: theme.colorScheme.outline)
+                            : null,
+                  ),
                 ),
-                title: Text(
-                  [
-                    names[member.uid] ?? member.nickname,
-                    if (member.uid == myUid) '(あなた)',
-                    if (member.hasLeft) '(抜けました)',
-                  ].join(' '),
-                  style:
-                      member.hasLeft
-                          ? TextStyle(color: theme.colorScheme.outline)
-                          : null,
-                ),
-              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 自分の行。名前を変えられるときは、行全体と ✎ で変えられる
+///
+/// おまかせの名前なら、変えられることを名前の下に 1 行で示す (変えると消える)。
+class _MyMemberTile extends StatelessWidget {
+  const _MyMemberTile({
+    required this.name,
+    required this.isHost,
+    required this.isAuto,
+    required this.onEdit,
+  });
+
+  final String name;
+  final bool isHost;
+  final bool isAuto;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final editable = onEdit != null;
+    return ListTile(
+      dense: true,
+      tileColor: colors.primary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: const EdgeInsets.only(left: 16, right: 4),
+      onTap: onEdit,
+      leading: Icon(isHost ? Icons.star : Icons.person),
+      title: Row(
+        children: [
+          Flexible(child: Text(name)),
+          const SizedBox(width: 8),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: colors.outline),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                'あなた',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      subtitle:
+          editable && isAuto
+              ? const Row(
+                children: [
+                  AutoNicknameBadge(small: true),
+                  SizedBox(width: 4),
+                  Text('タップして変える'),
+                ],
+              )
+              : null,
+      trailing:
+          editable
+              ? IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: '名前を変える',
+                onPressed: onEdit,
+              )
+              : null,
     );
   }
 }

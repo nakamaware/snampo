@@ -104,6 +104,26 @@ class FakeRoomRepository implements IRoomRepository {
   }
 
   @override
+  Future<void> updateNickname(
+    RoomCode code, {
+    required String uid,
+    required Nickname nickname,
+  }) async {
+    if (offline) {
+      throw StateError('offline');
+    }
+    if (rooms[code]!.status != RoomStatus.waiting) {
+      throw const CoopPermissionDeniedException('not waiting');
+    }
+    final list = members[code]!;
+    final index = list.indexWhere((m) => m.uid == uid);
+    list[index] = list[index].copyWith(
+      nickname: nickname.value,
+      renamedAt: now,
+    );
+  }
+
+  @override
   Future<List<RoomMember>> fetchMembers(RoomCode code) async {
     if (offline) {
       throw StateError('offline');

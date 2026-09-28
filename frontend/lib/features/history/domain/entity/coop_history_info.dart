@@ -21,6 +21,9 @@ abstract class CoopHistoryMember with _$CoopHistoryMember {
     /// Auth の uid (将来の account link と「過去に一緒に遊んだ人」のために保存する)
     required String uid,
     required String nickname,
+
+    /// 同じ名前の番号付けに使う時刻 (以前の履歴には無い)
+    DateTime? namedAt,
   }) = _CoopHistoryMember;
 
   /// JSON から [CoopHistoryMember] を生成する

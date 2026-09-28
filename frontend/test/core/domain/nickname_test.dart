@@ -46,15 +46,35 @@ void main() {
   });
 
   group('displayNicknames', () {
-    test('重複した名前には入室順に番号を付ける', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+
+    test('重複した名前には、名前を付けた順 (基本は入室順) に番号を付ける', () {
       final names = displayNicknames([
-        (uid: 'a', nickname: 'たろう'),
-        (uid: 'b', nickname: 'はなこ'),
-        (uid: 'c', nickname: 'たろう'),
-        (uid: 'd', nickname: 'たろう'),
+        (uid: 'a', nickname: 'たろう', namedAt: at(0)),
+        (uid: 'b', nickname: 'はなこ', namedAt: at(1)),
+        (uid: 'c', nickname: 'たろう', namedAt: at(2)),
+        (uid: 'd', nickname: 'たろう', namedAt: at(3)),
       ]);
 
       expect(names, {'a': 'たろう', 'b': 'はなこ', 'c': 'たろう(2)', 'd': 'たろう(3)'});
+    });
+
+    test('先に入室した人があとから同じ名前に変えたら、その人に番号が付く', () {
+      final names = displayNicknames([
+        (uid: 'host', nickname: 'はなこ', namedAt: at(5)), // 入室は 0 分、5 分に名前を変えた
+        (uid: 'guest', nickname: 'はなこ', namedAt: at(3)), // 3 分に名前を変えた
+      ]);
+
+      expect(names, {'host': 'はなこ(2)', 'guest': 'はなこ'});
+    });
+
+    test('名前を付けた時刻が分からない人がいれば、並び順 (入室順) のまま付ける', () {
+      final names = displayNicknames([
+        (uid: 'a', nickname: 'たろう', namedAt: null),
+        (uid: 'b', nickname: 'たろう', namedAt: at(0)),
+      ]);
+
+      expect(names, {'a': 'たろう', 'b': 'たろう(2)'});
     });
   });
 

@@ -26,7 +26,11 @@ class UpsertCoopHistoryUseCase {
       isHost: room.isHost(uid),
       members: [
         for (final m in members)
-          CoopHistoryMember(uid: m.uid, nickname: m.nickname),
+          CoopHistoryMember(
+            uid: m.uid,
+            nickname: m.nickname,
+            namedAt: m.namedAt,
+          ),
       ],
       expiresAt: room.expiresAt,
       deleteAt: room.deleteAt,

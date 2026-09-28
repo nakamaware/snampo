@@ -7,6 +7,7 @@ import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/join_and_enter_room.dart';
+import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// 「ルームに入る」: コード入力と QR スキャン
 class JoinRoomPage extends HookConsumerWidget {
@@ -21,8 +22,8 @@ class JoinRoomPage extends HookConsumerWidget {
 
     Future<void> join(RoomCode code) async {
       error.value = null;
-      final name = await ensureNickname(context, ref);
-      if (name == null || !context.mounted) return;
+      final name = (await ref.read(nicknameStoreProvider.future)).nickname;
+      if (!context.mounted) return;
       if (!await confirmLeaveCurrentRoom(context, ref, nextCode: code)) return;
       isJoining.value = true;
       try {

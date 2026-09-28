@@ -3,18 +3,23 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/config.dart';
+import 'package:snampo/core/domain/nickname.dart';
+import 'package:snampo/features/coop/application/interface/room_repository.dart';
 import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
+import 'package:snampo/features/coop/domain/entity/room_member.dart';
 import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/leave_room_pop_scope.dart';
 import 'package:snampo/features/coop/presentation/component/lobby_settings_card.dart';
 import 'package:snampo/features/coop/presentation/component/mission_generating_overlay.dart';
+import 'package:snampo/features/coop/presentation/component/nickname_sheet.dart';
 import 'package:snampo/features/coop/presentation/component/room_info.dart';
 import 'package:snampo/features/coop/presentation/store/coop_mission_store.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
+import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// ロビー: メンバーを集め、ホストが設定を決めて開始する画面
 ///
@@ -41,6 +46,60 @@ class LobbyPage extends ConsumerWidget {
   }
 }
 
+/// ロビーで自分の名前を変える。変えた名前は端末にも保存し、次のルームでも使う
+Future<void> _editMyNickname(
+  BuildContext context,
+  WidgetRef ref, {
+  required CoopSession session,
+  required List<RoomMember> members,
+  required SavedNickname current,
+}) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final result = await showNicknameSheet(
+    context,
+    current: current,
+    helperText: 'ルームの全員に表示されます',
+    duplicateWarning: (name) => _duplicateWarning(name, members, session.uid),
+    onSave: (saved) async {
+      try {
+        await ref.read(updateMyNicknameUseCaseProvider)(
+          session.roomCode,
+          uid: session.uid,
+          nickname: saved.nickname,
+        );
+      } on CoopPermissionDeniedException {
+        return 'ミッションの準備が始まったため、名前を変えられませんでした';
+      } on Object {
+        return '名前を変えられませんでした。通信状況を確認してもう一度お試しください';
+      }
+      ref
+          .read(nicknameStoreProvider.notifier)
+          .save(saved.nickname, isAuto: saved.isAuto);
+      return null;
+    },
+  );
+  if (result != null) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('名前を「${result.nickname}」に変えました')),
+    );
+  }
+}
+
+/// ほかのメンバーと同じ名前なら、番号付きでどう表示されるかを知らせる
+String? _duplicateWarning(String name, List<RoomMember> members, String myUid) {
+  if (!members.any((m) => m.uid != myUid && m.nickname == name)) {
+    return null;
+  }
+  // 名前を変えると、変えた人があとから同じ名前にした人になる
+  final names = displayNicknames([
+    for (final m in members)
+      m.uid == myUid
+          ? (uid: m.uid, nickname: name, namedAt: DateTime.now())
+          : (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
+  ]);
+  return '「$name」さんと同じ名前です。あなたは「${names[myUid] ?? name}」と表示されます';
+}
+
 class _Lobby extends HookConsumerWidget {
   const _Lobby({required this.session});
 
@@ -58,6 +117,7 @@ class _Lobby extends HookConsumerWidget {
       coopMissionStoreProvider(code).select((s) => s.prepareError),
     );
     final room = roomAsync.value;
+    final savedNickname = ref.watch(nicknameStoreProvider).value;
     // ホストのこの端末で生成中か。generating のままホストがキルされた場合は、再度開始できる
     final isStartingHere = useState(false);
 
@@ -100,6 +160,14 @@ class _Lobby extends HookConsumerWidget {
     final isGenerating = room.status == RoomStatus.generating;
     final isStarted =
         room.status == RoomStatus.playing || room.status == RoomStatus.finished;
+    final myNickname =
+        members.where((m) => m.uid == session.uid).firstOrNull?.nickname;
+    // 端末に保存した名前がおまかせで、ルームでもその名前のままなら、おまかせと示す
+    final isMyNicknameAuto = switch (savedNickname) {
+      SavedNickname(:final isAuto, :final nickname) =>
+        isAuto && nickname.value == myNickname,
+      null => false,
+    };
 
     return LeaveRoomPopScope(
       child: Scaffold(
@@ -123,6 +191,21 @@ class _Lobby extends HookConsumerWidget {
                   members: members,
                   hostId: room.hostId,
                   myUid: session.uid,
+                  isMyNicknameAuto: isMyNicknameAuto,
+                  // 発見者の名前は発見時点の名前で残るため、変えられるのは開始前だけ
+                  onEditMyNickname:
+                      room.status == RoomStatus.waiting && myNickname != null
+                          ? () => _editMyNickname(
+                            context,
+                            ref,
+                            session: session,
+                            members: members,
+                            current: SavedNickname(
+                              Nickname.parse(myNickname),
+                              isAuto: isMyNicknameAuto,
+                            ),
+                          )
+                          : null,
                 ),
                 const SizedBox(height: 16),
                 LobbySettingsCard(

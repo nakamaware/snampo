@@ -206,6 +206,21 @@ describe("members", () => {
     );
   });
 
+  test("名前を変えた時刻 (renamedAt) はサーバー時刻でだけ書ける", async () => {
+    await seedRoom(env);
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { nickname: "じろう", renamedAt: serverTimestamp() }));
+    await assertFails(
+      updateDoc(ref, { nickname: "さぶろう", renamedAt: Timestamp.fromMillis(Date.now() - 60_000) }),
+    );
+    await assertFails(
+      updateDoc(doc(db(HOST), "rooms", ROOM, "members", MEMBER), {
+        nickname: "x",
+        renamedAt: serverTimestamp(),
+      }),
+    );
+  });
+
   test("抜けた人は入室時刻を更新して入り直せる (人数の上限を入室順で数えるため)", async () => {
     await seedRoom(env);
     const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);

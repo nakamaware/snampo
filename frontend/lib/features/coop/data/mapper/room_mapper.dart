@@ -99,6 +99,7 @@ class RoomMapper {
     nickname: data['nickname'] as String,
     joinedAt: _time(data['joinedAt']),
     leftAt: _optionalTime(data['leftAt']),
+    renamedAt: _optionalTime(data['renamedAt']),
   );
 
   /// `rooms/{roomCode}/clears/{spotId}` を [SpotClear] にする
