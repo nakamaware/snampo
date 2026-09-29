@@ -42,7 +42,7 @@ final class NicknameStoreProvider
   NicknameStore create() => NicknameStore();
 }
 
-String _$nicknameStoreHash() => r'648e0e627594a0c7a72ce983ca885dd745d356f8';
+String _$nicknameStoreHash() => r'ed838705f2ae81254a4a328b20fb8cf1eac6217a';
 
 /// アプリに保存するニックネーム
 ///

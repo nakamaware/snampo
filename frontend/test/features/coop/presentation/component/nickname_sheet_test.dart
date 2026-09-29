@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/coop/presentation/component/nickname_sheet.dart';
-import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 void main() {
   final auto = SavedNickname(Nickname.parse('プレイヤー6916'), isAuto: true);
@@ -16,20 +17,22 @@ void main() {
     late Future<SavedNickname?> result;
     await tester.pumpWidget(
       MaterialApp(
-        home: Builder(
-          builder:
-              (context) => TextButton(
-                onPressed:
-                    () =>
-                        result = showNicknameSheet(
-                          context,
-                          current: current ?? auto,
-                          helperText: 'ルームのメンバーに表示されます',
-                          onSave: onSave,
-                          duplicateWarning: duplicateWarning,
-                        ),
-                child: const Text('open'),
-              ),
+        home: Scaffold(
+          body: Builder(
+            builder:
+                (context) => TextButton(
+                  onPressed:
+                      () =>
+                          result = showNicknameSheet(
+                            context,
+                            current: current ?? auto,
+                            helperText: 'ルームのメンバーに表示されます',
+                            onSave: onSave,
+                            duplicateWarning: duplicateWarning,
+                          ),
+                  child: const Text('open'),
+                ),
+          ),
         ),
       ),
     );
@@ -117,5 +120,24 @@ void main() {
 
     expect(find.text('名前を変える'), findsNothing);
     expect(await result, SavedNickname(Nickname.parse('たろう'), isAuto: false));
+  });
+
+  testWidgets('保存中にシートを閉じられたあとで失敗したら、SnackBar でエラーを知らせる', (tester) async {
+    final gate = Completer<String?>();
+    await open(tester, onSave: (_) => gate.future);
+
+    await tester.enterText(find.byType(TextField), 'たろう');
+    await tester.pump();
+    await tester.tap(find.text('保存'));
+    await tester.pump();
+    // 下にスワイプして閉じたのと同じく、ルートを直接 pop する
+    Navigator.of(tester.element(find.text('名前を変える'))).pop();
+    await tester.pumpAndSettle();
+    expect(find.text('名前を変える'), findsNothing);
+
+    gate.complete('名前を変えられませんでした');
+    await tester.pumpAndSettle();
+
+    expect(find.text('名前を変えられませんでした'), findsOneWidget);
   });
 }

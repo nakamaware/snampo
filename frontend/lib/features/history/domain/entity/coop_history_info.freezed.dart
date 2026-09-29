@@ -212,8 +212,8 @@ return $default(_that.uid,_that.nickname,_that.namedAt);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _CoopHistoryMember implements CoopHistoryMember {
-  const _CoopHistoryMember({required this.uid, required this.nickname, this.namedAt});
+class _CoopHistoryMember extends CoopHistoryMember {
+  const _CoopHistoryMember({required this.uid, required this.nickname, this.namedAt}): super._();
   factory _CoopHistoryMember.fromJson(Map<String, dynamic> json) => _$CoopHistoryMemberFromJson(json);
 
 /// Auth の uid (将来の account link と「過去に一緒に遊んだ人」のために保存する)

@@ -95,8 +95,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     if (uid == null) return null;
     if (uid == myUid) return 'あなた';
     return displayNicknames([
-          for (final m in members ?? const <RoomMember>[])
-            (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
+          for (final m in members ?? const <RoomMember>[]) m.named,
         ])[uid] ??
         checkpoint?.discovererNickname;
   }

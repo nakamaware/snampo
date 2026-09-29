@@ -58,10 +58,7 @@ class CoopResultPage extends HookConsumerWidget {
         myUid: session?.uid,
         uidsInJoinOrder: [for (final m in members) m.uid],
         // 重複した名前には、表示するときだけ番号を付ける (あとから同じ名前にした人に付く)
-        displayNames: displayNicknames([
-          for (final m in members)
-            (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
-        ]),
+        displayNames: displayNicknames([for (final m in members) m.named]),
       ),
     );
   }

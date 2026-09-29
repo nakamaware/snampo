@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/nickname.dart';
 
 part 'room_member.freezed.dart';
 
@@ -21,6 +22,9 @@ abstract class RoomMember with _$RoomMember {
   }) = _RoomMember;
 
   const RoomMember._();
+
+  /// 同じ名前の番号付けに使う情報
+  NamedMember get named => (uid: uid, nickname: nickname, namedAt: namedAt);
 
   /// 同じ名前の番号付けに使う時刻 (入室時刻。入室後に名前を変えていればその時刻)
   ///

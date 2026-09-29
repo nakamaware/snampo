@@ -185,10 +185,7 @@ class RoomMembersCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // 重複した名前には、表示するときだけ番号を付ける (あとから同じ名前にした人に付く)
-    final names = displayNicknames([
-      for (final m in members)
-        (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
-    ]);
+    final names = displayNicknames([for (final m in members) m.named]);
     final activeCount = members.where((m) => !m.hasLeft).length;
     return Card(
       child: Padding(

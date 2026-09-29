@@ -78,6 +78,82 @@ void main() {
     });
   });
 
+  group('SavedNickname', () {
+    final auto = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: true);
+
+    test('空欄の入力ならおまかせの名前を作る', () {
+      final saved = SavedNickname.fromInput('  ', previous: auto);
+      expect(saved.isAuto, isTrue);
+      expect(saved.nickname.hasAutoFormat, isTrue);
+    });
+
+    test('保存済みのおまかせの名前をそのまま保存したら、おまかせのまま', () {
+      expect(SavedNickname.fromInput(' プレイヤー1234 ', previous: auto), auto);
+    });
+
+    test('名前を変えたら、おまかせではなくなる', () {
+      expect(
+        SavedNickname.fromInput('たろう', previous: auto),
+        SavedNickname(Nickname.parse('たろう'), isAuto: false),
+      );
+    });
+
+    test('自分で付けた名前は、同じ名前で保存してもおまかせにならない', () {
+      final custom = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: false);
+      expect(
+        SavedNickname.fromInput('プレイヤー1234', previous: custom).isAuto,
+        isFalse,
+      );
+    });
+
+    test('ルームでの名前が、この端末で付けたおまかせの名前のままか', () {
+      expect(auto.isAutoIn('プレイヤー1234'), isTrue);
+      expect(auto.isAutoIn('たろう'), isFalse);
+      expect(auto.isAutoIn(null), isFalse);
+    });
+  });
+
+  group('duplicateNicknameWarning', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+    final members = <NamedMember>[
+      (uid: 'host', nickname: 'たろう', namedAt: at(0)),
+      (uid: 'me', nickname: 'はなこ', namedAt: at(1)),
+    ];
+
+    test('同じ名前の人がいれば、あとから同じ名前にした自分に付く番号を示す', () {
+      expect(
+        duplicateNicknameWarning(
+          name: 'たろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '「たろう」さんと同じ名前です。あなたは「たろう(2)」と表示されます',
+      );
+    });
+
+    test('同じ名前の人がいなければ null (自分の今の名前は数えない)', () {
+      expect(
+        duplicateNicknameWarning(
+          name: 'はなこ',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        isNull,
+      );
+      expect(
+        duplicateNicknameWarning(
+          name: 'じろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('discovererLabel', () {
     test('発見者がいれば「発見: 名前」', () {
       expect(discovererLabel('たろう(2)'), '発見: たろう(2)');

@@ -202,10 +202,7 @@ class CoopMissionStore extends _$CoopMissionStore {
   String _displayName(String uid, String fallback) {
     final members =
         ref.read(coopMembersProvider(roomCode)).value ?? const <RoomMember>[];
-    return displayNicknames([
-          for (final m in members)
-            (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
-        ])[uid] ??
+    return displayNicknames([for (final m in members) m.named])[uid] ??
         fallback;
   }
 

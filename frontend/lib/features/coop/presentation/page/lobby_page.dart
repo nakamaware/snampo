@@ -55,14 +55,23 @@ Future<void> _editMyNickname(
   required SavedNickname current,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
-  final result = await showNicknameSheet(
+  // 保存中にロビーが破棄されても使えるように、先に取っておく
+  final updateMyNickname = ref.read(updateMyNicknameUseCaseProvider);
+  final nicknameStore = ref.read(nicknameStoreProvider.notifier);
+  await showNicknameSheet(
     context,
     current: current,
     helperText: 'ルームの全員に表示されます',
-    duplicateWarning: (name) => _duplicateWarning(name, members, session.uid),
+    duplicateWarning:
+        (name) => duplicateNicknameWarning(
+          name: name,
+          myUid: session.uid,
+          members: [for (final m in members) m.named],
+          now: DateTime.now(),
+        ),
     onSave: (saved) async {
       try {
-        await ref.read(updateMyNicknameUseCaseProvider)(
+        await updateMyNickname(
           session.roomCode,
           uid: session.uid,
           nickname: saved.nickname,
@@ -72,32 +81,14 @@ Future<void> _editMyNickname(
       } on Object {
         return '名前を変えられませんでした。通信状況を確認してもう一度お試しください';
       }
-      ref
-          .read(nicknameStoreProvider.notifier)
-          .save(saved.nickname, isAuto: saved.isAuto);
+      nicknameStore.save(saved.nickname, isAuto: saved.isAuto);
+      // 保存中にシートが閉じられても分かるように、シートの結果ではなくここで知らせる
+      messenger.showSnackBar(
+        SnackBar(content: Text('名前を「${saved.nickname}」に変えました')),
+      );
       return null;
     },
   );
-  if (result != null) {
-    messenger.showSnackBar(
-      SnackBar(content: Text('名前を「${result.nickname}」に変えました')),
-    );
-  }
-}
-
-/// ほかのメンバーと同じ名前なら、番号付きでどう表示されるかを知らせる
-String? _duplicateWarning(String name, List<RoomMember> members, String myUid) {
-  if (!members.any((m) => m.uid != myUid && m.nickname == name)) {
-    return null;
-  }
-  // 名前を変えると、変えた人があとから同じ名前にした人になる
-  final names = displayNicknames([
-    for (final m in members)
-      m.uid == myUid
-          ? (uid: m.uid, nickname: name, namedAt: DateTime.now())
-          : (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
-  ]);
-  return '「$name」さんと同じ名前です。あなたは「${names[myUid] ?? name}」と表示されます';
 }
 
 class _Lobby extends HookConsumerWidget {
@@ -163,11 +154,7 @@ class _Lobby extends HookConsumerWidget {
     final myNickname =
         members.where((m) => m.uid == session.uid).firstOrNull?.nickname;
     // 端末に保存した名前がおまかせで、ルームでもその名前のままなら、おまかせと示す
-    final isMyNicknameAuto = switch (savedNickname) {
-      SavedNickname(:final isAuto, :final nickname) =>
-        isAuto && nickname.value == myNickname,
-      null => false,
-    };
+    final isMyNicknameAuto = savedNickname?.isAutoIn(myNickname) ?? false;
 
     return LeaveRoomPopScope(
       child: Scaffold(

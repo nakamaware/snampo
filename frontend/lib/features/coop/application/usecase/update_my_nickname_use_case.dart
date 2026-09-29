@@ -11,7 +11,7 @@ class UpdateMyNicknameUseCase {
 
   final IRoomRepository _rooms;
 
-  /// 変える
+  /// ロビーで自分 ([uid]) のニックネームを [nickname] に変える
   Future<void> call(
     RoomCode code, {
     required String uid,

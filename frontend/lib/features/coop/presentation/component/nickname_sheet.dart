@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:snampo/core/domain/nickname.dart';
-import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// 名前を変えるシートを表示し、保存した名前を返す (閉じたら null)
 ///
 /// 「みんなで」画面とロビーで使う。[onSave] を渡すと、保存を押したときに呼び、終わるまで
-/// シートを開いたままにする。エラーの文を返すとシートに表示して閉じない。
+/// シートを開いたままにする。エラーの文を返すとシートに表示して閉じない。保存中にシートが
+/// 閉じられることもあるので、保存できたことの通知は [onSave] の中で出す。
 /// [duplicateWarning] は、入力中の名前がほかのメンバーと同じときの注意 (なければ null)。
 Future<SavedNickname?> showNicknameSheet(
   BuildContext context, {
@@ -74,10 +74,18 @@ class _NicknameSheet extends HookWidget {
         isAuto: input == autoName.value,
       );
       if (onSave case final onSave?) {
+        // 保存中にシートを下にスワイプして閉じられることがある (PopScope では止められない)。
+        // 閉じたあとに失敗したら、シートの代わりに SnackBar で知らせる
+        final messenger = ScaffoldMessenger.maybeOf(context);
         isSaving.value = true;
         saveError.value = null;
         final error = await onSave(saved);
-        if (!context.mounted) return;
+        if (!context.mounted) {
+          if (error != null) {
+            messenger?.showSnackBar(SnackBar(content: Text(error)));
+          }
+          return;
+        }
         isSaving.value = false;
         if (error != null) {
           saveError.value = error;

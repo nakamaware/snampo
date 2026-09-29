@@ -3,28 +3,6 @@ import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 void main() {
-  group('isAutoInput', () {
-    final auto = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: true);
-
-    test('空欄ならおまかせ', () {
-      expect(isAutoInput('  ', auto), isTrue);
-      expect(isAutoInput('', null), isTrue);
-    });
-
-    test('保存済みのおまかせの名前をそのまま保存したら、おまかせのまま', () {
-      expect(isAutoInput(' プレイヤー1234 ', auto), isTrue);
-    });
-
-    test('名前を変えたら、おまかせではなくなる', () {
-      expect(isAutoInput('たろう', auto), isFalse);
-    });
-
-    test('自分で付けた名前は、同じ名前で保存してもおまかせにならない', () {
-      final custom = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: false);
-      expect(isAutoInput('プレイヤー1234', custom), isFalse);
-    });
-  });
-
   group('decodeSavedNickname', () {
     test('名前とおまかせかを復元する', () {
       expect(

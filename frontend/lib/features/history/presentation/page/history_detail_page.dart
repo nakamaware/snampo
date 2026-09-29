@@ -80,10 +80,7 @@ class _HistoryDetailBody extends ConsumerWidget {
     final displayNames =
         coop == null
             ? const <String, String>{}
-            : displayNicknames([
-              for (final m in coop.members)
-                (uid: m.uid, nickname: m.nickname, namedAt: m.namedAt),
-            ]);
+            : displayNicknames([for (final m in coop.members) m.named]);
     // 自分の uid は保存していないので、自分の写真で発見したスポットの発見者から分かる
     final myUid =
         record.spots
