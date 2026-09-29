@@ -221,6 +221,14 @@ describe("members", () => {
     );
   });
 
+  test("名前を変えずに、名前を変えた時刻 (renamedAt) だけを更新できない", async () => {
+    await seedRoom(env, { status: "waiting" });
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertFails(updateDoc(ref, { renamedAt: serverTimestamp() }));
+    // 名前だけの更新はこれまでどおりできる
+    await assertSucceeds(updateDoc(ref, { nickname: "じろう" }));
+  });
+
   test("開始後は名前を変えた時刻 (renamedAt) を書けない", async () => {
     await seedRoom(env, { status: "playing" });
     const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
