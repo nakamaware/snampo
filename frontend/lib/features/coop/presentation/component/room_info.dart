@@ -303,7 +303,13 @@ class _MyMemberTile extends StatelessWidget {
       ),
       subtitle: switch (hint) {
         _MyNameHint.none => null,
-        _MyNameHint.duplicated => const Text('同じ名前の人がいます。タップして変える'),
+        _MyNameHint.duplicated => const Row(
+          children: [
+            _DuplicatedNameBadge(),
+            SizedBox(width: 4),
+            Text('タップして変える'),
+          ],
+        ),
         _MyNameHint.auto => const Row(
           children: [
             AutoNicknameBadge(small: true),
@@ -320,6 +326,34 @@ class _MyMemberTile extends StatelessWidget {
                 onPressed: onEdit,
               )
               : null,
+    );
+  }
+}
+
+/// 同じ名前の人がいて、自分に番号が付いたことを示す小さい表示
+///
+/// おまかせの表示 ([AutoNicknameBadge]) と同じ形で、色を変えて見分けられるようにする。
+class _DuplicatedNameBadge extends StatelessWidget {
+  const _DuplicatedNameBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        child: Text(
+          '同じ名前',
+          style: theme.textTheme.labelSmall?.copyWith(
+            fontSize: 10,
+            color: theme.colorScheme.onTertiaryContainer,
+          ),
+        ),
+      ),
     );
   }
 }

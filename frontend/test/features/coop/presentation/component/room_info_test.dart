@@ -119,7 +119,8 @@ void main() {
       );
 
       expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前の人がいます。タップして変える'), findsOneWidget);
+      expect(find.text('同じ名前'), findsOneWidget);
+      expect(find.text('タップして変える'), findsOneWidget);
     });
 
     testWidgets('おまかせの名前が重なったら、同じ名前の表示を優先する', (tester) async {
@@ -132,7 +133,8 @@ void main() {
         ),
       );
 
-      expect(find.text('同じ名前の人がいます。タップして変える'), findsOneWidget);
+      expect(find.text('同じ名前'), findsOneWidget);
+      expect(find.text('タップして変える'), findsOneWidget);
       expect(find.text('おまかせ'), findsNothing);
     });
 
@@ -148,7 +150,7 @@ void main() {
       );
 
       expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前の人がいます。タップして変える'), findsNothing);
+      expect(find.text('同じ名前'), findsNothing);
     });
 
     testWidgets('変えられないとき (開始後) は、同じ名前でも表示しない', (tester) async {
@@ -157,7 +159,7 @@ void main() {
       );
 
       expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前の人がいます。タップして変える'), findsNothing);
+      expect(find.text('同じ名前'), findsNothing);
     });
   });
 }
