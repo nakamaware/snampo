@@ -148,6 +148,12 @@ Map<String, String> displayNicknames(List<NamedMember> members) {
   };
 }
 
+/// [member] の表示名に番号が付いたか (あとから同じ名前にした人か)
+///
+/// [displayNames] は [displayNicknames] で作った表示名。
+bool isNumberedNickname(Map<String, String> displayNames, NamedMember member) =>
+    (displayNames[member.uid] ?? member.nickname) != member.nickname;
+
 /// ロビーで [name] に変えようとしている人 ([myUid]) に、同じ名前の人がいることを知らせる文
 ///
 /// 名前を変えた人があとから同じ名前にした人になるので、自分に付く番号を示す。同じ名前の人が

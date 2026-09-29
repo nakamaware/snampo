@@ -78,6 +78,35 @@ void main() {
     });
   });
 
+  group('isNumberedNickname', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+
+    test('あとから同じ名前にした人だけが、番号付きになる', () {
+      final members = <NamedMember>[
+        (uid: 'host', nickname: 'たろう', namedAt: at(5)), // 5 分に同じ名前に変えた
+        (uid: 'guest', nickname: 'たろう', namedAt: at(3)),
+        (uid: 'other', nickname: 'はなこ', namedAt: at(1)),
+      ];
+      final names = displayNicknames(members);
+
+      expect(
+        [for (final m in members) isNumberedNickname(names, m)],
+        [true, false, false],
+      );
+    });
+
+    test('もともと「(2)」の入った名前でも、重複しなければ番号付きにならない', () {
+      final members = <NamedMember>[
+        (uid: 'a', nickname: 'たろう(2)', namedAt: at(0)),
+      ];
+
+      expect(
+        isNumberedNickname(displayNicknames(members), members.single),
+        isFalse,
+      );
+    });
+  });
+
   group('SavedNickname', () {
     final auto = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: true);
 
