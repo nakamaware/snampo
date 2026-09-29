@@ -162,4 +162,39 @@ void main() {
       expect(find.text('同じ名前'), findsNothing);
     });
   });
+
+  group('duplicateNicknameSnackBar', () {
+    testWidgets('番号の付いた名前を知らせ、「変える」で名前を変えられる', (tester) async {
+      var edits = 0;
+      final snackBar = duplicateNicknameSnackBar(
+        displayName: 'hanako(2)',
+        onChange: () => edits++,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder:
+                  (context) => TextButton(
+                    onPressed:
+                        () => ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(snackBar),
+                    child: const Text('show'),
+                  ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('show'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('同じ名前の人がいるため「hanako(2)」と表示されます'), findsOneWidget);
+      // 操作を止めないよう、ボタンがあっても時間が経てば消す
+      expect(snackBar.persist, isFalse);
+
+      await tester.tap(find.text('変える'));
+      expect(edits, 1);
+    });
+  });
 }

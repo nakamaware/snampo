@@ -142,6 +142,44 @@ void main() {
     });
   });
 
+  group('duplicateNicknameNotice', () {
+    test('番号の付いた表示名を示す', () {
+      expect(duplicateNicknameNotice('たろう(2)'), '同じ名前の人がいるため「たろう(2)」と表示されます');
+    });
+  });
+
+  group('renamedNicknameMessage', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+    final members = <NamedMember>[
+      (uid: 'host', nickname: 'たろう', namedAt: at(0)),
+      (uid: 'me', nickname: 'はなこ', namedAt: at(1)),
+    ];
+
+    test('同じ名前の人がいなければ、変えたことだけを知らせる', () {
+      expect(
+        renamedNicknameMessage(
+          name: 'じろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '名前を「じろう」に変えました',
+      );
+    });
+
+    test('同じ名前にしたら、自分に付いた番号も知らせる', () {
+      expect(
+        renamedNicknameMessage(
+          name: 'たろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '名前を「たろう」に変えました。同じ名前の人がいるため「たろう(2)」と表示されます',
+      );
+    });
+  });
+
   group('duplicateNicknameWarning', () {
     DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
     final members = <NamedMember>[

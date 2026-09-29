@@ -83,8 +83,18 @@ Future<void> _editMyNickname(
       }
       nicknameStore.save(saved.nickname, isAuto: saved.isAuto);
       // 保存中にシートが閉じられても分かるように、シートの結果ではなくここで知らせる
+      // 同じ名前の人がいて番号が付いたら、その表示名も知らせる
       messenger.showSnackBar(
-        SnackBar(content: Text('名前を「${saved.nickname}」に変えました')),
+        SnackBar(
+          content: Text(
+            renamedNicknameMessage(
+              name: saved.nickname.value,
+              myUid: session.uid,
+              members: [for (final m in members) m.named],
+              now: DateTime.now(),
+            ),
+          ),
+        ),
       );
       return null;
     },
@@ -111,6 +121,49 @@ class _Lobby extends HookConsumerWidget {
     final savedNickname = ref.watch(nicknameStoreProvider).value;
     // ホストのこの端末で生成中か。generating のままホストがキルされた場合は、再度開始できる
     final isStartingHere = useState(false);
+    final me = members.where((m) => m.uid == session.uid).firstOrNull;
+
+    // 自分の名前を変える。あとから開いても今のメンバーで確かめるよう、開くときに読み直す
+    void editMyNickname() {
+      final latest = ref.read(coopMembersProvider(code)).value ?? const [];
+      final mine = latest.where((m) => m.uid == session.uid).firstOrNull;
+      if (mine == null) return;
+      final saved = ref.read(nicknameStoreProvider).value;
+      _editMyNickname(
+        context,
+        ref,
+        session: session,
+        members: latest,
+        current: SavedNickname(
+          Nickname.parse(mine.nickname),
+          isAuto: saved?.isAutoIn(mine.nickname) ?? false,
+        ),
+      );
+    }
+
+    // 同じ名前の人がいて自分に番号が付いていたら、ロビーに入ったときに 1 回だけ知らせる。
+    // ロビーで名前を変えたときは、変えたときのメッセージで知らせる
+    final checkedDuplicate = useRef(false);
+    useEffect(() {
+      if (checkedDuplicate.value || me == null || room == null) return null;
+      checkedDuplicate.value = true;
+      final names = displayNicknames([for (final m in members) m.named]);
+      if (room.status != RoomStatus.waiting ||
+          !isNumberedNickname(names, me.named)) {
+        return null;
+      }
+      final displayName = names[me.uid] ?? me.nickname;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          duplicateNicknameSnackBar(
+            displayName: displayName,
+            onChange: editMyNickname,
+          ),
+        );
+      });
+      return null;
+    }, [me != null, room != null]);
 
     // playing でミッションを端末に用意できたら、全員が Mission 画面へ一斉に遷移する
     useEffect(() {
@@ -151,8 +204,7 @@ class _Lobby extends HookConsumerWidget {
     final isGenerating = room.status == RoomStatus.generating;
     final isStarted =
         room.status == RoomStatus.playing || room.status == RoomStatus.finished;
-    final myNickname =
-        members.where((m) => m.uid == session.uid).firstOrNull?.nickname;
+    final myNickname = me?.nickname;
     // 端末に保存した名前がおまかせで、ルームでもその名前のままなら、おまかせと示す
     final isMyNicknameAuto = savedNickname?.isAutoIn(myNickname) ?? false;
 
@@ -182,16 +234,7 @@ class _Lobby extends HookConsumerWidget {
                   // 発見者の名前は発見時点の名前で残るため、変えられるのは開始前だけ
                   onEditMyNickname:
                       room.status == RoomStatus.waiting && myNickname != null
-                          ? () => _editMyNickname(
-                            context,
-                            ref,
-                            session: session,
-                            members: members,
-                            current: SavedNickname(
-                              Nickname.parse(myNickname),
-                              isAuto: isMyNicknameAuto,
-                            ),
-                          )
+                          ? editMyNickname
                           : null,
                 ),
                 const SizedBox(height: 16),

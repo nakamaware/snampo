@@ -240,6 +240,20 @@ class RoomMembersCard extends StatelessWidget {
   }
 }
 
+/// 同じ名前の人がいて、自分の表示名 [displayName] に番号が付いたことを知らせる
+///
+/// ロビーに入ったときに出す。「変える」で [onChange] (名前を変えるシート) を開く。
+/// ロビーでの操作を止めないよう、ボタンがあっても時間が経てば消す。
+SnackBar duplicateNicknameSnackBar({
+  required String displayName,
+  required VoidCallback onChange,
+}) => SnackBar(
+  content: Text(duplicateNicknameNotice(displayName)),
+  duration: const Duration(seconds: 6),
+  persist: false,
+  action: SnackBarAction(label: '変える', onPressed: onChange),
+);
+
 /// 自分の行の名前の下に出す、名前を変えられることの案内
 enum _MyNameHint {
   /// 出さない (変えられないときも)

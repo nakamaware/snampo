@@ -167,11 +167,54 @@ String? duplicateNicknameWarning({
   if (!members.any((m) => m.uid != myUid && m.nickname == name)) {
     return null;
   }
+  final displayName = _displayNameIfRenamed(
+    name: name,
+    myUid: myUid,
+    members: members,
+    now: now,
+  );
+  return '「$name」さんと同じ名前です。あなたは「$displayName」と表示されます';
+}
+
+/// 自分の表示名に番号が付いたことを知らせる文
+///
+/// [displayName] は番号の付いた表示名 ([displayNicknames] で作ったもの)。
+String duplicateNicknameNotice(String displayName) =>
+    '同じ名前の人がいるため「$displayName」と表示されます';
+
+/// ロビーで [name] に名前を変えた人 ([myUid]) に知らせる文
+///
+/// 同じ名前の人がいて自分に番号が付いたら、その表示名も知らせる。
+String renamedNicknameMessage({
+  required String name,
+  required String myUid,
+  required List<NamedMember> members,
+  required DateTime now,
+}) {
+  final displayName = _displayNameIfRenamed(
+    name: name,
+    myUid: myUid,
+    members: members,
+    now: now,
+  );
+  final renamed = '名前を「$name」に変えました';
+  return displayName == name
+      ? renamed
+      : '$renamed。${duplicateNicknameNotice(displayName)}';
+}
+
+/// [myUid] が [now] に [name] へ名前を変えたときの表示名
+String _displayNameIfRenamed({
+  required String name,
+  required String myUid,
+  required List<NamedMember> members,
+  required DateTime now,
+}) {
   final names = displayNicknames([
     for (final m in members)
       m.uid == myUid ? (uid: m.uid, nickname: name, namedAt: now) : m,
   ]);
-  return '「$name」さんと同じ名前です。あなたは「${names[myUid] ?? name}」と表示されます';
+  return names[myUid] ?? name;
 }
 
 /// 協力プレイのスポットの発見者の表示
