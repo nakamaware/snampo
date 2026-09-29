@@ -66,21 +66,12 @@ void main() {
   });
 
   group('RoomMembersCard', () {
-    Widget card({
-      required bool isAuto,
-      VoidCallback? onEdit,
-      String hostName = 'host',
-      String meName = 'me',
-      String myUid = 'me',
-    }) => MaterialApp(
+    Widget card({required bool isAuto, VoidCallback? onEdit}) => MaterialApp(
       home: Scaffold(
         body: RoomMembersCard(
-          members: [
-            member('host').copyWith(nickname: hostName),
-            member('me', joinedMinutes: 1).copyWith(nickname: meName),
-          ],
+          members: [member('host'), member('me', joinedMinutes: 1)],
           hostId: 'host',
-          myUid: myUid,
+          myUid: 'me',
           isMyNicknameAuto: isAuto,
           onEditMyNickname: onEdit,
         ),
@@ -112,57 +103,7 @@ void main() {
       expect(find.text('おまかせ'), findsNothing);
       expect(find.byTooltip('名前を変える'), findsNothing);
     });
-
-    testWidgets('自分の名前に番号が付いたら、同じ名前の人がいることを示す', (tester) async {
-      await tester.pumpWidget(
-        card(isAuto: false, onEdit: () {}, hostName: 'たろう', meName: 'たろう'),
-      );
-
-      expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前'), findsOneWidget);
-      expect(find.text('タップして変える'), findsOneWidget);
-    });
-
-    testWidgets('おまかせの名前が重なったら、同じ名前の表示を優先する', (tester) async {
-      await tester.pumpWidget(
-        card(
-          isAuto: true,
-          onEdit: () {},
-          hostName: 'プレイヤー1234',
-          meName: 'プレイヤー1234',
-        ),
-      );
-
-      expect(find.text('同じ名前'), findsOneWidget);
-      expect(find.text('タップして変える'), findsOneWidget);
-      expect(find.text('おまかせ'), findsNothing);
-    });
-
-    testWidgets('番号が付いたのが相手なら、自分の行には出さない', (tester) async {
-      await tester.pumpWidget(
-        card(
-          isAuto: false,
-          onEdit: () {},
-          hostName: 'たろう',
-          meName: 'たろう',
-          myUid: 'host',
-        ),
-      );
-
-      expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前'), findsNothing);
-    });
-
-    testWidgets('変えられないとき (開始後) は、同じ名前でも表示しない', (tester) async {
-      await tester.pumpWidget(
-        card(isAuto: false, hostName: 'たろう', meName: 'たろう'),
-      );
-
-      expect(find.text('たろう(2)'), findsOneWidget);
-      expect(find.text('同じ名前'), findsNothing);
-    });
   });
-
   group('duplicateNicknameSnackBar', () {
     testWidgets('番号の付いた名前を知らせ、「変える」で名前を変えられる', (tester) async {
       var edits = 0;

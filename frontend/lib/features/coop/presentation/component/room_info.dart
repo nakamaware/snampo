@@ -202,17 +202,8 @@ class RoomMembersCard extends StatelessWidget {
               if (member.uid == myUid)
                 _MyMemberTile(
                   name: names[member.uid] ?? member.nickname,
-                  hint: switch ((
-                    onEditMyNickname != null,
-                    isNumberedNickname(names, member.named),
-                    isMyNicknameAuto,
-                  )) {
-                    (false, _, _) => _MyNameHint.none,
-                    (true, true, _) => _MyNameHint.duplicated,
-                    (true, false, true) => _MyNameHint.auto,
-                    (true, false, false) => _MyNameHint.none,
-                  },
                   isHost: member.uid == hostId,
+                  isAuto: isMyNicknameAuto,
                   onEdit: onEditMyNickname,
                 )
               else
@@ -254,32 +245,20 @@ SnackBar duplicateNicknameSnackBar({
   action: SnackBarAction(label: '変える', onPressed: onChange),
 );
 
-/// 自分の行の名前の下に出す、名前を変えられることの案内
-enum _MyNameHint {
-  /// 出さない (変えられないときも)
-  none,
-
-  /// 同じ名前の人がいて、自分に番号が付いた。おまかせの名前でもこちらを出す
-  duplicated,
-
-  /// おまかせの名前のまま
-  auto,
-}
-
 /// 自分の行。名前を変えられるときは、行全体と ✎ で変えられる
 ///
-/// 変えたほうがよい名前なら、[hint] で名前の下に 1 行で示す (変えると消える)。
+/// おまかせの名前なら、変えられることを名前の下に 1 行で示す (変えると消える)。
 class _MyMemberTile extends StatelessWidget {
   const _MyMemberTile({
     required this.name,
-    required this.hint,
     required this.isHost,
+    required this.isAuto,
     required this.onEdit,
   });
 
   final String name;
-  final _MyNameHint hint;
   final bool isHost;
+  final bool isAuto;
   final VoidCallback? onEdit;
 
   @override
@@ -315,23 +294,16 @@ class _MyMemberTile extends StatelessWidget {
           ),
         ],
       ),
-      subtitle: switch (hint) {
-        _MyNameHint.none => null,
-        _MyNameHint.duplicated => const Row(
-          children: [
-            _DuplicatedNameBadge(),
-            SizedBox(width: 4),
-            Text('タップして変える'),
-          ],
-        ),
-        _MyNameHint.auto => const Row(
-          children: [
-            AutoNicknameBadge(small: true),
-            SizedBox(width: 4),
-            Text('タップして変える'),
-          ],
-        ),
-      },
+      subtitle:
+          editable && isAuto
+              ? const Row(
+                children: [
+                  AutoNicknameBadge(small: true),
+                  SizedBox(width: 4),
+                  Text('タップして変える'),
+                ],
+              )
+              : null,
       trailing:
           editable
               ? IconButton(
@@ -340,34 +312,6 @@ class _MyMemberTile extends StatelessWidget {
                 onPressed: onEdit,
               )
               : null,
-    );
-  }
-}
-
-/// 同じ名前の人がいて、自分に番号が付いたことを示す小さい表示
-///
-/// おまかせの表示 ([AutoNicknameBadge]) と同じ形で、色を変えて見分けられるようにする。
-class _DuplicatedNameBadge extends StatelessWidget {
-  const _DuplicatedNameBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-        child: Text(
-          '同じ名前',
-          style: theme.textTheme.labelSmall?.copyWith(
-            fontSize: 10,
-            color: theme.colorScheme.onTertiaryContainer,
-          ),
-        ),
-      ),
     );
   }
 }
