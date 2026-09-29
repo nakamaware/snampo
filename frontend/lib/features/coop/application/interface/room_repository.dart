@@ -78,7 +78,10 @@ abstract class IRoomRepository {
   Future<List<RoomMember>> fetchMembers(RoomCode code);
 
   /// メンバーを監視する (入室順)
-  Stream<List<RoomMember>> watchMembers(RoomCode code);
+  ///
+  /// 値がサーバと同期する前のキャッシュかどうかも伝える (キャッシュからサーバの値に
+  /// 変わったときも、メンバーに変更がなくても通知する)。
+  Stream<RoomMembersSnapshot> watchMembers(RoomCode code);
 
   /// 設定を変更する (ホストのみ、waiting のとき)
   Future<void> updateSettings(RoomCode code, RoomSettings settings);

@@ -110,7 +110,10 @@ class _Lobby extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final code = session.roomCode;
     final roomAsync = ref.watch(coopRoomProvider(code));
-    final members = ref.watch(coopMembersProvider(code)).value ?? const [];
+    final memberSnapshot = ref.watch(coopMemberSnapshotsProvider(code)).value;
+    final members = memberSnapshot?.members ?? const <RoomMember>[];
+    // サーバの最新の値と確かめられたか (入室の直後は、キャッシュに自分しかいないことがある)
+    final membersUpToDate = memberSnapshot?.isUpToDate ?? false;
     final isReady = ref.watch(
       coopMissionStoreProvider(code).select((s) => s.isReady),
     );
@@ -125,7 +128,9 @@ class _Lobby extends HookConsumerWidget {
 
     // 自分の名前を変える。あとから開いても今のメンバーで確かめるよう、開くときに読み直す
     void editMyNickname() {
-      final latest = ref.read(coopMembersProvider(code)).value ?? const [];
+      final latest =
+          ref.read(coopMemberSnapshotsProvider(code)).value?.members ??
+          const <RoomMember>[];
       final mine = latest.where((m) => m.uid == session.uid).firstOrNull;
       if (mine == null) return;
       final saved = ref.read(nicknameStoreProvider).value;
@@ -142,10 +147,16 @@ class _Lobby extends HookConsumerWidget {
     }
 
     // 同じ名前の人がいて自分に番号が付いていたら、ロビーに入ったときに 1 回だけ知らせる。
+    // キャッシュに同じ名前の人がまだないことがあるので、サーバの値と確かめてから判定する。
     // ロビーで名前を変えたときは、変えたときのメッセージで知らせる
     final checkedDuplicate = useRef(false);
     useEffect(() {
-      if (checkedDuplicate.value || me == null || room == null) return null;
+      if (checkedDuplicate.value ||
+          !membersUpToDate ||
+          me == null ||
+          room == null) {
+        return null;
+      }
       checkedDuplicate.value = true;
       final names = displayNicknames([for (final m in members) m.named]);
       if (room.status != RoomStatus.waiting ||
@@ -163,7 +174,7 @@ class _Lobby extends HookConsumerWidget {
         );
       });
       return null;
-    }, [me != null, room != null]);
+    }, [me != null, room != null, membersUpToDate]);
 
     // playing でミッションを端末に用意できたら、全員が Mission 画面へ一斉に遷移する
     useEffect(() {

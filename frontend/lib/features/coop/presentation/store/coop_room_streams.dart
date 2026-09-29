@@ -17,6 +17,11 @@ Stream<Room?> coopRoom(Ref ref, RoomCode roomCode) =>
 Stream<List<RoomMember>> coopMembers(Ref ref, RoomCode roomCode) =>
     ref.watch(watchRoomUseCaseProvider).members(roomCode);
 
+/// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+@riverpod
+Stream<RoomMembersSnapshot> coopMemberSnapshots(Ref ref, RoomCode roomCode) =>
+    ref.watch(watchRoomUseCaseProvider).memberSnapshots(roomCode);
+
 /// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 @riverpod
 Stream<SpotClearsSnapshot> coopClears(Ref ref, RoomCode roomCode) =>

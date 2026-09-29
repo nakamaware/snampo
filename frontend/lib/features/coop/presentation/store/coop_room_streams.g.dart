@@ -170,6 +170,93 @@ final class CoopMembersFamily extends $Family
   String toString() => r'coopMembersProvider';
 }
 
+/// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+
+@ProviderFor(coopMemberSnapshots)
+final coopMemberSnapshotsProvider = CoopMemberSnapshotsFamily._();
+
+/// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+
+final class CoopMemberSnapshotsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<RoomMembersSnapshot>,
+          RoomMembersSnapshot,
+          Stream<RoomMembersSnapshot>
+        >
+    with
+        $FutureModifier<RoomMembersSnapshot>,
+        $StreamProvider<RoomMembersSnapshot> {
+  /// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+  CoopMemberSnapshotsProvider._({
+    required CoopMemberSnapshotsFamily super.from,
+    required RoomCode super.argument,
+  }) : super(
+         retry: null,
+         name: r'coopMemberSnapshotsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$coopMemberSnapshotsHash();
+
+  @override
+  String toString() {
+    return r'coopMemberSnapshotsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<RoomMembersSnapshot> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<RoomMembersSnapshot> create(Ref ref) {
+    final argument = this.argument as RoomCode;
+    return coopMemberSnapshots(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CoopMemberSnapshotsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$coopMemberSnapshotsHash() =>
+    r'fba76286498cb731fbe748437e47eac2d067fecd';
+
+/// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+
+final class CoopMemberSnapshotsFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<RoomMembersSnapshot>, RoomCode> {
+  CoopMemberSnapshotsFamily._()
+    : super(
+        retry: null,
+        name: r'coopMemberSnapshotsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// メンバーを監視する (サーバの最新の値と確かめられたかも伝える)
+
+  CoopMemberSnapshotsProvider call(RoomCode roomCode) =>
+      CoopMemberSnapshotsProvider._(argument: roomCode, from: this);
+
+  @override
+  String toString() => r'coopMemberSnapshotsProvider';
+}
+
 /// クリアを監視する (サーバの最新の値と確かめられたかも伝える)
 
 @ProviderFor(coopClears)

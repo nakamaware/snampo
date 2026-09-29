@@ -132,8 +132,8 @@ class FakeRoomRepository implements IRoomRepository {
   }
 
   @override
-  Stream<List<RoomMember>> watchMembers(RoomCode code) =>
-      Stream.value(members[code] ?? const []);
+  Stream<RoomMembersSnapshot> watchMembers(RoomCode code) =>
+      Stream.value((members: members[code] ?? const [], isUpToDate: true));
 
   @override
   Future<void> updateSettings(RoomCode code, RoomSettings settings) async {

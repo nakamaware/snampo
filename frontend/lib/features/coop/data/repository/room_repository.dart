@@ -139,14 +139,26 @@ class RoomRepository implements IRoomRepository {
   }
 
   @override
-  Stream<List<RoomMember>> watchMembers(RoomCode code) =>
-      _members(code).snapshots().map((snapshot) {
-        final members = [
+  Stream<RoomMembersSnapshot> watchMembers(RoomCode code) async* {
+    // キャッシュからサーバの値に変わったことを知るため、メタデータの変更も受け取る。
+    // メンバーも、キャッシュかどうかも変わらない通知 (書き込みの確定など) は流さない
+    bool? lastFromCache;
+    final snapshots = _members(code).snapshots(includeMetadataChanges: true);
+    await for (final snapshot in snapshots) {
+      final isFromCache = snapshot.metadata.isFromCache;
+      if (snapshot.docChanges.isEmpty && isFromCache == lastFromCache) {
+        continue;
+      }
+      lastFromCache = isFromCache;
+      yield (
+        members: [
           for (final doc in snapshot.docs)
             RoomMapper.memberFromFirestore(doc.id, doc.data()),
-        ]..sort((a, b) => a.joinedAt.compareTo(b.joinedAt));
-        return members;
-      });
+        ]..sort((a, b) => a.joinedAt.compareTo(b.joinedAt)),
+        isUpToDate: !isFromCache,
+      );
+    }
+  }
 
   @override
   Future<void> updateSettings(RoomCode code, RoomSettings settings) =>

@@ -37,3 +37,16 @@ abstract class RoomMember with _$RoomMember {
   /// ルームを抜けたか
   bool get hasLeft => leftAt != null;
 }
+
+/// メンバーの監視で届いた値
+typedef RoomMembersSnapshot =
+    ({
+      /// メンバー (入室順)
+      List<RoomMember> members,
+
+      /// サーバの最新の値と確かめられたか
+      ///
+      /// false なら、端末に残っていた値 (入室の直後や電波のないとき) で、
+      /// ほかのメンバーを含まないことがある。
+      bool isUpToDate,
+    });
