@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/room_code.dart';
-import 'package:snampo/features/coop/presentation/component/confirm_dialog.dart';
+import 'package:snampo/core/presentation/confirm_dialog.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 
