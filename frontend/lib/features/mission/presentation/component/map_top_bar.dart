@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snampo/features/mission/presentation/component/map_floating_surface.dart';
 
 /// 地図の上に浮かべる、戻るボタンとモードのボタン (AppBar の代わり)
 ///
@@ -29,7 +30,7 @@ class MapTopBar extends StatelessWidget {
             child: Row(
               children: [
                 if (canPop)
-                  _FloatingSurface(
+                  MapFloatingSurface(
                     shape: const CircleBorder(),
                     child: IconButton(
                       tooltip: '戻る',
@@ -39,7 +40,7 @@ class MapTopBar extends StatelessWidget {
                   ),
                 const Spacer(),
                 if (actions.isNotEmpty)
-                  _FloatingSurface(
+                  MapFloatingSurface(
                     shape: const StadiumBorder(),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -50,30 +51,6 @@ class MapTopBar extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// 地図の上で読みやすいよう、背景と影をつけた土台
-class _FloatingSurface extends StatelessWidget {
-  const _FloatingSurface({required this.shape, required this.child});
-
-  final ShapeBorder shape;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: colorScheme.surfaceContainerLow,
-      shape: shape,
-      elevation: 3,
-      shadowColor: Colors.black,
-      clipBehavior: Clip.antiAlias,
-      child: IconTheme.merge(
-        data: IconThemeData(color: colorScheme.onSurface),
-        child: child,
       ),
     );
   }
