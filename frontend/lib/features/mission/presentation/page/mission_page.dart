@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -21,6 +22,7 @@ import 'package:snampo/features/mission/presentation/component/map_top_bar.dart'
 import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
+import 'package:snampo/features/mission/presentation/component/my_location_button.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
@@ -127,13 +129,23 @@ class MissionPage extends HookConsumerWidget {
 
     final extension = this.extension;
     final missionAsyncValue = ref.watch(missionStoreProvider(_params));
+    // シートの高さ (地図のボタンと余白を合わせる)。ドラッグのたびにページを作り直さないよう通知で渡す
+    final sheetExtent = useValueNotifier<MissionSheetExtent?>(null);
 
     return missionAsyncValue.when(
       data: (missionInfo) {
         final body = Stack(
           children: [
-            MapView(currentLocation: missionInfo.departure, params: _params),
-            SnapView(params: _params, extension: extension),
+            MapView(
+              currentLocation: missionInfo.departure,
+              params: _params,
+              sheetExtent: sheetExtent,
+            ),
+            SnapView(
+              params: _params,
+              extension: extension,
+              onSheetExtentChanged: (extent) => sheetExtent.value = extent,
+            ),
           ],
         );
         // AppBar は置かず、地図を画面いっぱいに見せる (見出しはシートの「ミッション」が兼ねる)。
@@ -173,9 +185,11 @@ class MapView extends ConsumerStatefulWidget {
   ///
   /// [currentLocation] は現在位置の座標情報
   /// [params] はミッションストアのパラメータ
+  /// [sheetExtent] は地図に重なるシートの高さ
   const MapView({
     required this.currentLocation,
     required this.params,
+    required this.sheetExtent,
     super.key,
   });
 
@@ -185,14 +199,23 @@ class MapView extends ConsumerStatefulWidget {
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
 
+  /// 地図に重なるシートの高さ (まだ分からなければ null)
+  final ValueListenable<MissionSheetExtent?> sheetExtent;
+
   @override
   ConsumerState<MapView> createState() => _MapViewState();
 }
 
 /// MapViewの状態を管理するクラス
 class _MapViewState extends ConsumerState<MapView> {
-  /// マップの表示制御用
-  late GoogleMapController mapController;
+  /// マップの表示制御用 (地図ができるまでは null)
+  GoogleMapController? _mapController;
+
+  /// 地図に触れるたびに進む (現在地ボタンの取得中の寄せをやめる)
+  final _mapTouches = ValueNotifier<int>(0);
+
+  /// シートが止まったときの高さ (地図の下余白に使う。まだ分からなければ null)
+  double? _restingSheetHeight;
 
   /// ポリラインの座標リスト
   final List<LatLng> _polylineCoordinates = [];
@@ -201,6 +224,49 @@ class _MapViewState extends ConsumerState<MapView> {
   @override
   void initState() {
     super.initState();
+    widget.sheetExtent.addListener(_onSheetExtentChanged);
+  }
+
+  @override
+  void didUpdateWidget(MapView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.sheetExtent != widget.sheetExtent) {
+      oldWidget.sheetExtent.removeListener(_onSheetExtentChanged);
+      widget.sheetExtent.addListener(_onSheetExtentChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.sheetExtent.removeListener(_onSheetExtentChanged);
+    _mapTouches.dispose();
+    super.dispose();
+  }
+
+  /// シートが「閉じた」か「開いた」で止まったら、地図の下余白を合わせる
+  ///
+  /// ドラッグ中に毎フレーム変えると地図がカクつくので、止まったときだけ変える。
+  void _onSheetExtentChanged() {
+    final extent = widget.sheetExtent.value;
+    if (extent == null || !extent.isResting) return;
+    if (_restingSheetHeight == extent.height) return;
+    setState(() => _restingSheetHeight = extent.height);
+  }
+
+  /// 現在地ボタンで、地図を [position] へ寄せる
+  ///
+  /// ズームと向きはそのまま。ただし大きく引いていたら、周りが見えるところまで寄る。
+  Future<void> _moveTo(Coordinate position) async {
+    final controller = _mapController;
+    if (controller == null) return;
+    final target = LatLng(position.latitude, position.longitude);
+    final zoom = await controller.getZoomLevel();
+    if (!mounted) return;
+    await controller.animateCamera(
+      zoom < _recenterMinZoom
+          ? CameraUpdate.newLatLngZoom(target, _initialZoom)
+          : CameraUpdate.newLatLng(target),
+    );
   }
 
   @override
@@ -246,6 +312,8 @@ class _MapViewState extends ConsumerState<MapView> {
     final target = missionInfo.destination;
     final currentLat = widget.currentLocation.latitude;
     final currentLng = widget.currentLocation.longitude;
+    // シートの高さが分かるまでの目安 (閉じたシートの見出しくらい)
+    final fallbackSheetHeight = MediaQuery.paddingOf(context).bottom + 130;
 
     return SizedBox(
       height: height,
@@ -253,36 +321,52 @@ class _MapViewState extends ConsumerState<MapView> {
       child: Scaffold(
         body: Stack(
           children: <Widget>[
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                //マップの初期位置を指定
-                zoom: 17, //ズーム
-                target: LatLng(
-                  //緯度, 経度
-                  currentLat,
-                  currentLng,
-                ),
-              ),
-              markers: {
-                Marker(
-                  markerId: const MarkerId('marker_1'),
-                  position: LatLng(
-                    target.coordinate.latitude,
-                    target.coordinate.longitude,
+            // 地図に触れたら、現在地ボタンの取得中の寄せをやめる
+            Listener(
+              onPointerDown: (_) => _mapTouches.value++,
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  //マップの初期位置を指定
+                  zoom: _initialZoom, //ズーム
+                  target: LatLng(
+                    //緯度, 経度
+                    currentLat,
+                    currentLng,
                   ),
                 ),
-              },
-              polylines: _polylines,
-              padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + MapTopBar.height,
-                bottom: MediaQuery.paddingOf(context).bottom + 130,
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('marker_1'),
+                    position: LatLng(
+                      target.coordinate.latitude,
+                      target.coordinate.longitude,
+                    ),
+                  ),
+                },
+                polylines: _polylines,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.paddingOf(context).top + MapTopBar.height,
+                  bottom: _restingSheetHeight ?? fallbackSheetHeight,
+                ),
+                myLocationEnabled: true,
+                // 既定のボタンは余白との兼ね合いで位置を決めにくいので、自前のボタンを置く
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                onMapCreated: (GoogleMapController controller) {
+                  _mapController = controller;
+                },
               ),
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
-              },
+            ),
+            // 現在地ボタンは、シートの上端にくっついて一緒に上下する
+            ValueListenableBuilder(
+              valueListenable: widget.sheetExtent,
+              builder:
+                  (context, extent, child) => Positioned(
+                    right: 16,
+                    bottom: (extent?.height ?? fallbackSheetHeight) + 12,
+                    child: child!,
+                  ),
+              child: MyLocationButton(onLocated: _moveTo, cancel: _mapTouches),
             ),
           ],
         ),
@@ -291,16 +375,30 @@ class _MapViewState extends ConsumerState<MapView> {
   }
 }
 
+/// 地図の初期のズーム
+const _initialZoom = 17.0;
+
+/// 現在地ボタンで寄せるとき、これより引いていたら [_initialZoom] まで寄る
+const _recenterMinZoom = 15.0;
+
 /// Mission 画面の、スポットを並べるボトムシート
 class SnapView extends HookConsumerWidget {
   /// SnapViewウィジェットのコンストラクタ
-  const SnapView({required this.params, this.extension, super.key});
+  const SnapView({
+    required this.params,
+    this.extension,
+    this.onSheetExtentChanged,
+    super.key,
+  });
 
   /// ミッションストアのパラメータ
   final MissionStoreParams params;
 
   /// モード固有の部品 (ソロでは null)
   final MissionPageExtension? extension;
+
+  /// シートの高さが変わったとき
+  final ValueChanged<MissionSheetExtent>? onSheetExtentChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -433,6 +531,7 @@ class SnapView extends HookConsumerWidget {
       showPlayResultButton:
           (extension?.showsResultButton ?? true) && allCompleted,
       onShowPlayResult: isSubmitting.value ? null : showPlayResult,
+      onExtentChanged: onSheetExtentChanged,
     );
   }
 }

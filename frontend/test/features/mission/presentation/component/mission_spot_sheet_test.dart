@@ -27,6 +27,7 @@ Future<void> _pump(
   ValueChanged<int>? onShowResult,
   bool showPlayResultButton = false,
   VoidCallback? onShowPlayResult,
+  ValueChanged<MissionSheetExtent>? onExtentChanged,
   Size size = const Size(393, 852),
   bool tickerEnabled = true,
 }) async {
@@ -46,6 +47,7 @@ Future<void> _pump(
             onShowResult: onShowResult ?? (_) {},
             showPlayResultButton: showPlayResultButton,
             onShowPlayResult: onShowPlayResult,
+            onExtentChanged: onExtentChanged,
           ),
         ),
       ),
@@ -83,6 +85,55 @@ Future<void> _open(WidgetTester tester) async {
 
 void main() {
   group('MissionSpotSheet', () {
+    testWidgets('シートの高さを知らせ、止まったときは止まったと知らせる', (tester) async {
+      final extents = <MissionSheetExtent>[];
+      await _pump(
+        tester,
+        spots: const [_todo, _todo],
+        onExtentChanged: extents.add,
+      );
+
+      // 画面の下端からシートの上端までの高さ
+      double sheetTopHeight() =>
+          852 -
+          tester
+              .getTopLeft(
+                find
+                    .ancestor(
+                      of: find.text('ミッション'),
+                      matching: find.byWidgetPredicate(
+                        (widget) =>
+                            widget is Material &&
+                            widget.shape is RoundedRectangleBorder,
+                      ),
+                    )
+                    .first,
+              )
+              .dy;
+
+      final closed = extents.last;
+      expect(closed.isResting, isTrue);
+      expect(closed.height, moreOrLessEquals(sheetTopHeight()));
+
+      extents.clear();
+      await _open(tester);
+
+      // 開く途中は止まっていない。開ききると画面の 60% で止まる
+      expect(extents.any((extent) => !extent.isResting), isTrue);
+      expect(extents.last.isResting, isTrue);
+      expect(
+        extents.last.height,
+        moreOrLessEquals(852 * MissionSpotSheet.maxSize),
+      );
+      expect(extents.last.height, moreOrLessEquals(sheetTopHeight()));
+
+      extents.clear();
+      await tester.tap(find.text('ミッション'));
+      await tester.pumpAndSettle();
+
+      expect(extents.last, closed);
+    });
+
     testWidgets('見出しに進み具合とスポットごとのチップを出す', (tester) async {
       await _pump(tester, spots: const [_shot, _todo, _todo]);
 
