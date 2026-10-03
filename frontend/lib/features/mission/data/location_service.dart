@@ -21,13 +21,29 @@ class LocationService implements ILocationService {
       );
     } on LocationServiceDisabledException catch (e) {
       // Android で「位置情報の精度」の確認を断った場合もここに来る
-      throw LocationUnavailableException(e.toString());
+      throw LocationUnavailableException(
+        LocationUnavailableReason.serviceDisabled,
+        e.toString(),
+      );
     } on PermissionDeniedException catch (e) {
-      throw LocationUnavailableException(e.toString());
+      throw LocationUnavailableException(
+        LocationUnavailableReason.permissionDenied,
+        e.toString(),
+      );
     }
     return Coordinate(
       latitude: position.latitude,
       longitude: position.longitude,
     );
+  }
+
+  @override
+  Future<void> openSettings(LocationUnavailableReason reason) async {
+    switch (reason) {
+      case LocationUnavailableReason.serviceDisabled:
+        await Geolocator.openLocationSettings();
+      case LocationUnavailableReason.permissionDenied:
+        await Geolocator.openAppSettings();
+    }
   }
 }

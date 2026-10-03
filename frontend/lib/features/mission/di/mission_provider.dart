@@ -9,6 +9,7 @@ import 'package:snampo/features/mission/application/usecase/create_random_missio
 import 'package:snampo/features/mission/application/usecase/get_current_heading_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/get_current_position_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/judge_photo_use_case.dart';
+import 'package:snampo/features/mission/application/usecase/open_location_settings_use_case.dart';
 import 'package:snampo/features/mission/application/usecase/save_photo_use_case.dart';
 import 'package:snampo/features/mission/data/heading_service.dart';
 import 'package:snampo/features/mission/data/location_service.dart';
@@ -59,6 +60,12 @@ CreateDestinationMissionUseCase createDestinationMissionUseCase(Ref ref) {
 @riverpod
 GetCurrentPositionUseCase getCurrentPositionUseCase(Ref ref) {
   return GetCurrentPositionUseCase(ref.read(locationServiceProvider));
+}
+
+/// 位置情報の設定画面を開くユースケースのプロバイダー
+@riverpod
+OpenLocationSettingsUseCase openLocationSettingsUseCase(Ref ref) {
+  return OpenLocationSettingsUseCase(ref.read(locationServiceProvider));
 }
 
 /// 現在方角を取得するユースケースのプロバイダー

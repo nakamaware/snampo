@@ -8,7 +8,13 @@ import 'package:snampo/features/mission/application/usecase/create_random_missio
 class _NoLocation implements ILocationService {
   @override
   Future<Coordinate> getCurrentPosition() async =>
-      throw const LocationUnavailableException('disabled');
+      throw const LocationUnavailableException(
+        LocationUnavailableReason.serviceDisabled,
+        'disabled',
+      );
+
+  @override
+  Future<void> openSettings(LocationUnavailableReason reason) async {}
 }
 
 class _UnusedRepository implements IMissionRepository {
