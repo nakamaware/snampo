@@ -321,6 +321,60 @@ final class GetCurrentPositionUseCaseProvider
 String _$getCurrentPositionUseCaseHash() =>
     r'fad01b4707dc85fcbac4f1f6f9500449007eb397';
 
+/// 位置情報の設定画面を開くユースケースのプロバイダー
+
+@ProviderFor(openLocationSettingsUseCase)
+final openLocationSettingsUseCaseProvider =
+    OpenLocationSettingsUseCaseProvider._();
+
+/// 位置情報の設定画面を開くユースケースのプロバイダー
+
+final class OpenLocationSettingsUseCaseProvider
+    extends
+        $FunctionalProvider<
+          OpenLocationSettingsUseCase,
+          OpenLocationSettingsUseCase,
+          OpenLocationSettingsUseCase
+        >
+    with $Provider<OpenLocationSettingsUseCase> {
+  /// 位置情報の設定画面を開くユースケースのプロバイダー
+  OpenLocationSettingsUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'openLocationSettingsUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$openLocationSettingsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<OpenLocationSettingsUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  OpenLocationSettingsUseCase create(Ref ref) {
+    return openLocationSettingsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OpenLocationSettingsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OpenLocationSettingsUseCase>(value),
+    );
+  }
+}
+
+String _$openLocationSettingsUseCaseHash() =>
+    r'c9d99b846f1fed4b2b024012b7e2541e519f36be';
+
 /// 現在方角を取得するユースケースのプロバイダー
 
 @ProviderFor(getCurrentHeadingUseCase)

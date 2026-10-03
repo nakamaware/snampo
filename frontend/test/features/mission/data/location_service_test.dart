@@ -51,7 +51,13 @@ void main() {
 
       expect(
         LocationService().getCurrentPosition(),
-        throwsA(isA<LocationUnavailableException>()),
+        throwsA(
+          isA<LocationUnavailableException>().having(
+            (e) => e.reason,
+            'reason',
+            LocationUnavailableReason.serviceDisabled,
+          ),
+        ),
       );
     });
 
@@ -62,7 +68,13 @@ void main() {
 
       expect(
         LocationService().getCurrentPosition(),
-        throwsA(isA<LocationUnavailableException>()),
+        throwsA(
+          isA<LocationUnavailableException>().having(
+            (e) => e.reason,
+            'reason',
+            LocationUnavailableReason.permissionDenied,
+          ),
+        ),
       );
     });
   });

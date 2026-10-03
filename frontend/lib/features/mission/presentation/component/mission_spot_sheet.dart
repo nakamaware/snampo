@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:snampo/core/domain/nickname.dart';
@@ -56,6 +57,32 @@ class MissionSheetSpot {
   }
 }
 
+/// シートの今の高さ (地図のボタンや余白をシートに合わせるのに使う)
+@immutable
+class MissionSheetExtent {
+  /// [MissionSheetExtent] を作成する
+  const MissionSheetExtent({required this.height, required this.isResting});
+
+  /// 画面の下端からシートの上端までの高さ
+  final double height;
+
+  /// 「閉じた」か「開いた」で止まっているか (ドラッグやアニメーションの途中なら false)
+  final bool isResting;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MissionSheetExtent &&
+      other.height == height &&
+      other.isResting == isResting;
+
+  @override
+  int get hashCode => Object.hash(height, isResting);
+
+  @override
+  String toString() =>
+      'MissionSheetExtent(height: $height, isResting: $isResting)';
+}
+
 /// Mission 画面の、スポットを並べるボトムシート
 ///
 /// 高さは「最小 (見出しだけ)」と [maxSize] の 2 段で、それ以上は開かない。
@@ -72,6 +99,7 @@ class MissionSpotSheet extends HookWidget {
     this.capturingIndex,
     this.showPlayResultButton = false,
     this.onShowPlayResult,
+    this.onExtentChanged,
     super.key,
   });
 
@@ -102,6 +130,9 @@ class MissionSpotSheet extends HookWidget {
   /// 「プレイ結果を見る」を押したとき (null なら押せない)
   final VoidCallback? onShowPlayResult;
 
+  /// シートの高さが変わったとき
+  final ValueChanged<MissionSheetExtent>? onExtentChanged;
+
   @override
   Widget build(BuildContext context) {
     final sheetController = useMemoized(DraggableScrollableController.new);
@@ -119,6 +150,40 @@ class MissionSpotSheet extends HookWidget {
     final listScrollLocked = useRef(false);
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    // 高さの通知に使う、最新の画面の高さと閉じたときの割合
+    final availableRef = useRef<double>(0);
+    final minSizeRef = useRef<double>(0);
+    // 高さの通知は最初の build で登録するので、最新のコールバックを ref で持つ
+    final onExtentChangedRef = useRef(onExtentChanged)..value = onExtentChanged;
+
+    void reportExtent() {
+      final onExtentChanged = onExtentChangedRef.value;
+      if (onExtentChanged == null || !sheetController.isAttached) return;
+      final size = sheetController.size;
+      onExtentChanged(
+        MissionSheetExtent(
+          height: size * availableRef.value,
+          isResting:
+              (size - minSizeRef.value).abs() < 0.001 ||
+              (size - maxSize).abs() < 0.001,
+        ),
+      );
+    }
+
+    useEffect(() {
+      // シートのレイアウト中にも高さが変わるので、通知はフレームの外で行う
+      void onSheetChanged() {
+        final phase = SchedulerBinding.instance.schedulerPhase;
+        if (phase == SchedulerPhase.persistentCallbacks) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => reportExtent());
+        } else {
+          reportExtent();
+        }
+      }
+
+      sheetController.addListener(onSheetChanged);
+      return () => sheetController.removeListener(onSheetChanged);
+    }, [sheetController]);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -127,6 +192,12 @@ class MissionSpotSheet extends HookWidget {
         double minSizeFor(double header) =>
             ((header + bottomInset) / available).clamp(0.05, maxSize);
         final minSize = minSizeFor(headerHeight.value);
+        availableRef.value = available;
+        minSizeRef.value = minSize;
+        // 最初の表示や画面の高さが変わったときも、高さを知らせる
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) reportExtent();
+        });
 
         Future<void> expand() async {
           if (!sheetController.isAttached || sheetController.size >= maxSize) {
