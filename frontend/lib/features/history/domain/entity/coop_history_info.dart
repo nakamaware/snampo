@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:snampo/core/domain/nickname.dart';
 import 'package:snampo/core/domain/room_code.dart';
 
 part 'coop_history_info.freezed.dart';
@@ -21,11 +22,19 @@ abstract class CoopHistoryMember with _$CoopHistoryMember {
     /// Auth の uid (将来の account link と「過去に一緒に遊んだ人」のために保存する)
     required String uid,
     required String nickname,
+
+    /// 同じ名前の番号付けに使う時刻 (以前の履歴には無い)
+    DateTime? namedAt,
   }) = _CoopHistoryMember;
+
+  const CoopHistoryMember._();
 
   /// JSON から [CoopHistoryMember] を生成する
   factory CoopHistoryMember.fromJson(Map<String, dynamic> json) =>
       _$CoopHistoryMemberFromJson(json);
+
+  /// 同じ名前の番号付けに使う情報
+  NamedMember get named => (uid: uid, nickname: nickname, namedAt: namedAt);
 }
 
 /// 協力プレイの履歴の情報

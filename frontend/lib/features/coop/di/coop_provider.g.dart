@@ -511,6 +511,59 @@ final class LeaveRoomUseCaseProvider
 
 String _$leaveRoomUseCaseHash() => r'b251999b441111a87626dcbe84a29fdd85fe8637';
 
+/// ロビーで自分のニックネームを変えるユースケース
+
+@ProviderFor(updateMyNicknameUseCase)
+final updateMyNicknameUseCaseProvider = UpdateMyNicknameUseCaseProvider._();
+
+/// ロビーで自分のニックネームを変えるユースケース
+
+final class UpdateMyNicknameUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UpdateMyNicknameUseCase,
+          UpdateMyNicknameUseCase,
+          UpdateMyNicknameUseCase
+        >
+    with $Provider<UpdateMyNicknameUseCase> {
+  /// ロビーで自分のニックネームを変えるユースケース
+  UpdateMyNicknameUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateMyNicknameUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateMyNicknameUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateMyNicknameUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdateMyNicknameUseCase create(Ref ref) {
+    return updateMyNicknameUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateMyNicknameUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateMyNicknameUseCase>(value),
+    );
+  }
+}
+
+String _$updateMyNicknameUseCaseHash() =>
+    r'7d004aa7ade6af21da7c0868a50cb65937de74a4';
+
 /// ロビーでミッションの設定を変更するユースケース
 
 @ProviderFor(updateRoomSettingsUseCase)

@@ -9,6 +9,7 @@ import 'package:snampo/features/coop/di/coop_provider.dart';
 import 'package:snampo/features/coop/domain/entity/coop_session.dart';
 import 'package:snampo/features/coop/domain/entity/room.dart';
 import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
+import 'package:snampo/features/coop/presentation/component/nickname_sheet.dart';
 import 'package:snampo/features/coop/presentation/hook/use_coop_sign_in.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
@@ -24,11 +25,10 @@ class CoopEntryPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final signIn = useCoopSignIn(ref);
     final isCreating = useState(false);
-    final nickname = ref.watch(nicknameStoreProvider).value;
 
     Future<void> createRoom(String uid) async {
-      final name = await ensureNickname(context, ref);
-      if (name == null || !context.mounted) return;
+      final name = (await ref.read(nicknameStoreProvider.future)).nickname;
+      if (!context.mounted) return;
       if (!await confirmLeaveCurrentRoom(context, ref)) return;
       isCreating.value = true;
       try {
@@ -68,23 +68,8 @@ class CoopEntryPage extends HookConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(nickname?.value ?? 'ニックネーム未設定'),
-                  trailing: TextButton(
-                    onPressed: () async {
-                      final input = await showNicknameDialog(
-                        context,
-                        initialValue: nickname?.value ?? '',
-                      );
-                      if (input != null) {
-                        ref.read(nicknameStoreProvider.notifier).save(input);
-                      }
-                    },
-                    child: const Text('変更'),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                const _NameTag(),
+                const SizedBox(height: 32),
                 FilledButton.icon(
                   onPressed: isCreating.value ? null : () => createRoom(uid),
                   icon: const Icon(Icons.add),
@@ -93,7 +78,7 @@ class CoopEntryPage extends HookConsumerWidget {
                     child: Text('ルームを作る'),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed:
                       isCreating.value
@@ -111,6 +96,116 @@ class CoopEntryPage extends HookConsumerWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// 自分の名前の名札。タップすると名前を変えるシートを開く
+///
+/// 初めてならおまかせの名前が入っていて、何もしなくてもそのまま遊べる。
+class _NameTag extends ConsumerWidget {
+  const _NameTag();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final saved = ref.watch(nicknameStoreProvider).value;
+
+    Future<void> edit() async {
+      final current = await ref.read(nicknameStoreProvider.future);
+      if (!context.mounted) return;
+      final result = await showNicknameSheet(
+        context,
+        current: current,
+        helperText: 'ルームのメンバーに表示されます',
+      );
+      if (result != null) {
+        ref
+            .read(nicknameStoreProvider.notifier)
+            .save(result.nickname, isAuto: result.isAuto);
+      }
+    }
+
+    final name = saved?.nickname.value ?? '';
+    final isAuto = saved?.isAuto ?? false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card.filled(
+          margin: EdgeInsets.zero,
+          color: colors.surfaceContainerHigh,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: saved == null ? null : edit,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'あなたの名前',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: colors.secondaryContainer,
+                        foregroundColor: colors.onSecondaryContainer,
+                        child:
+                            isAuto || name.isEmpty
+                                ? const Icon(Icons.person)
+                                : Text(
+                                  String.fromCharCodes(name.runes.take(1)),
+                                ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: theme.textTheme.titleLarge,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (isAuto) ...[
+                              const SizedBox(height: 4),
+                              const AutoNicknameBadge(),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: '名前を変える',
+                        onPressed: saved == null ? null : edit,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'ルームのメンバーに表示されます',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -195,16 +195,14 @@ class CoopMissionStore extends _$CoopMissionStore {
         return Nickname.orAuto(member.nickname);
       }
     }
-    return ref.read(nicknameStoreProvider).value ?? Nickname.orAuto('');
+    return ref.read(nicknameStoreProvider).value?.nickname ?? Nickname.auto();
   }
 
-  /// メンバーの表示名 (重複した名前には、表示するときだけ入室順に番号を付ける)
+  /// メンバーの表示名 (重複した名前には、表示するときだけ番号を付ける)
   String _displayName(String uid, String fallback) {
     final members =
         ref.read(coopMembersProvider(roomCode)).value ?? const <RoomMember>[];
-    return displayNicknames([
-          for (final m in members) (uid: m.uid, nickname: m.nickname),
-        ])[uid] ??
+    return displayNicknames([for (final m in members) m.named])[uid] ??
         fallback;
   }
 

@@ -6,12 +6,17 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 class Nickname {
   const Nickname._(this.value);
 
+  /// おまかせのニックネームを作る (例: 「プレイヤー1234」)
+  factory Nickname.auto([Random? random]) {
+    final number = (random ?? Random()).nextInt(10000);
+    return Nickname._('$_autoPrefix${number.toString().padLeft(4, '0')}');
+  }
+
   /// 入力からニックネームを作る。空欄なら自動で命名する (例: 「プレイヤー1234」)
   factory Nickname.orAuto(String input, [Random? random]) {
     final trimmed = input.trim();
     if (trimmed.isEmpty) {
-      final number = (random ?? Random()).nextInt(10000);
-      return Nickname._('プレイヤー${number.toString().padLeft(4, '0')}');
+      return Nickname.auto(random);
     }
     final runes = trimmed.runes.toList();
     return Nickname._(
@@ -31,6 +36,15 @@ class Nickname {
     }
     return Nickname._(trimmed);
   }
+
+  /// おまかせの名前と同じ書式か
+  ///
+  /// おまかせかどうかを保存していなかったころの値を読むときだけに使う。自分で「プレイヤー1234」と
+  /// 付けた人もおまかせと見なしてしまうので、それ以外では [SavedNickname.isAuto] を使う。
+  bool get hasAutoFormat => _autoFormat.hasMatch(value);
+
+  static const _autoPrefix = 'プレイヤー';
+  static final _autoFormat = RegExp('^$_autoPrefix\\d{4}\$');
 
   /// ニックネームの最大文字数 (Security Rules の上限と揃える)
   static const maxLength = 30;
@@ -60,22 +74,147 @@ class NicknameConverter implements JsonConverter<Nickname, String> {
   String toJson(Nickname object) => object.value;
 }
 
+/// 端末に保存したニックネーム
+@immutable
+class SavedNickname {
+  /// [SavedNickname] を作成する
+  const SavedNickname(this.nickname, {required this.isAuto});
+
+  /// 設定画面などの入力から作る。空欄ならおまかせの名前を作る
+  ///
+  /// 保存済みのおまかせの名前 ([previous]) をそのまま保存したときは、おまかせのままにする
+  /// (設定画面の入力欄には保存済みの名前が入っているため)。
+  factory SavedNickname.fromInput(String input, {SavedNickname? previous}) {
+    final trimmed = input.trim();
+    final keepsAuto =
+        previous != null &&
+        previous.isAuto &&
+        previous.nickname.value == trimmed;
+    return SavedNickname(
+      Nickname.orAuto(input),
+      isAuto: trimmed.isEmpty || keepsAuto,
+    );
+  }
+
+  /// ニックネーム
+  final Nickname nickname;
+
+  /// おまかせで付けた名前か (自分で入力した名前なら false)
+  final bool isAuto;
+
+  /// ルームでの自分の名前 ([roomNickname]) が、この端末で付けたおまかせの名前のままか
+  bool isAutoIn(String? roomNickname) =>
+      isAuto && nickname.value == roomNickname;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SavedNickname &&
+      other.nickname == nickname &&
+      other.isAuto == isAuto;
+
+  @override
+  int get hashCode => Object.hash(nickname, isAuto);
+}
+
+/// 同じ名前の番号付けに使う、メンバー 1 人分の情報
+///
+/// `namedAt` は名前を付けた時刻 (基本は入室時刻。ルーム内で名前を変えたらその時刻)。
+typedef NamedMember = ({String uid, String nickname, DateTime? namedAt});
+
 /// ルーム内の表示名を uid ごとに返す
 ///
-/// [membersInJoinOrder] は入室順に並べたメンバー。名前が重複した場合は、表示するときだけ
-/// 2 人目以降に「たろう(2)」のような番号を付ける (保存するデータは変えない)。
-Map<String, String> displayNicknames(
-  List<({String uid, String nickname})> membersInJoinOrder,
-) {
+/// 名前が重複した場合は、表示するときだけ 2 人目以降に「たろう(2)」のような番号を付ける
+/// (保存するデータは変えない)。番号は `namedAt` の順に付ける。基本は入室時刻で、ルーム内で
+/// 名前を変えた人はその時刻になる (あとから同じ名前にした人に番号が付く)。
+/// [members] は入室順に並べたメンバー。`namedAt` が分からない人がいれば入室順のまま付ける。
+Map<String, String> displayNicknames(List<NamedMember> members) {
+  final ordered = [...members];
+  if (ordered.every((m) => m.namedAt != null)) {
+    // 同じ時刻なら入室順を保つ (List.sort は安定ではないので、元の位置も比べる)
+    final index = {for (final (i, m) in members.indexed) m.uid: i};
+    ordered.sort((a, b) {
+      final byTime = a.namedAt!.compareTo(b.namedAt!);
+      return byTime != 0 ? byTime : index[a.uid]!.compareTo(index[b.uid]!);
+    });
+  }
   final counts = <String, int>{};
   return {
-    for (final member in membersInJoinOrder)
+    for (final member in ordered)
       member.uid: () {
         final count = (counts[member.nickname] ?? 0) + 1;
         counts[member.nickname] = count;
         return count == 1 ? member.nickname : '${member.nickname}($count)';
       }(),
   };
+}
+
+/// [member] の表示名に番号が付いたか (あとから同じ名前にした人か)
+///
+/// [displayNames] は [displayNicknames] で作った表示名。
+bool isNumberedNickname(Map<String, String> displayNames, NamedMember member) =>
+    (displayNames[member.uid] ?? member.nickname) != member.nickname;
+
+/// ロビーで [name] に変えようとしている人 ([myUid]) に、同じ名前の人がいることを知らせる文
+///
+/// 名前を変えた人があとから同じ名前にした人になるので、自分に付く番号を示す。同じ名前の人が
+/// いなければ null。
+String? duplicateNicknameWarning({
+  required String name,
+  required String myUid,
+  required List<NamedMember> members,
+  required DateTime now,
+}) {
+  if (!members.any((m) => m.uid != myUid && m.nickname == name)) {
+    return null;
+  }
+  final displayName = _displayNameIfRenamed(
+    name: name,
+    myUid: myUid,
+    members: members,
+    now: now,
+  );
+  return '「$name」さんと同じ名前です。あなたは「$displayName」と表示されます';
+}
+
+/// 自分の表示名に番号が付いたことを知らせる文
+///
+/// [displayName] は番号の付いた表示名 ([displayNicknames] で作ったもの)。
+String duplicateNicknameNotice(String displayName) =>
+    '同じ名前の人がいるため「$displayName」と表示されます';
+
+/// ロビーで [name] に名前を変えた人 ([myUid]) に知らせる文
+///
+/// 同じ名前の人がいて自分に番号が付いたら、その表示名も知らせる。
+String renamedNicknameMessage({
+  required String name,
+  required String myUid,
+  required List<NamedMember> members,
+  required DateTime now,
+}) {
+  final displayName = _displayNameIfRenamed(
+    name: name,
+    myUid: myUid,
+    members: members,
+    now: now,
+  );
+  final renamed = '名前を「$name」に変えました';
+  return displayName == name
+      ? renamed
+      : '$renamed。${duplicateNicknameNotice(displayName)}';
+}
+
+/// [myUid] が [now] に [name] へ名前を変えたときの表示名
+String _displayNameIfRenamed({
+  required String name,
+  required String myUid,
+  required List<NamedMember> members,
+  required DateTime now,
+}) {
+  final names = displayNicknames([
+    for (final m in members)
+      m.uid == myUid ? (uid: m.uid, nickname: name, namedAt: now) : m,
+  ]);
+  return names[myUid] ?? name;
 }
 
 /// 協力プレイのスポットの発見者の表示

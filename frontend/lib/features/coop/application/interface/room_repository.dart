@@ -60,6 +60,17 @@ abstract class IRoomRepository {
     required Nickname nickname,
   });
 
+  /// ロビーで自分のニックネームを変える (waiting のとき)
+  ///
+  /// サーバと通信して確かめる (トランザクション)。オフラインなら例外を投げ、端末に書き込みを
+  /// 溜めない (失敗したと表示したあとに名前が変わらないように)。waiting でなければ
+  /// [CoopPermissionDeniedException] を投げる。
+  Future<void> updateNickname(
+    RoomCode code, {
+    required String uid,
+    required Nickname nickname,
+  });
+
   /// ルームを抜ける (`leftAt` を記録する。ドキュメントは削除しない)
   Future<void> leaveRoom(RoomCode code, String uid);
 
@@ -67,7 +78,10 @@ abstract class IRoomRepository {
   Future<List<RoomMember>> fetchMembers(RoomCode code);
 
   /// メンバーを監視する (入室順)
-  Stream<List<RoomMember>> watchMembers(RoomCode code);
+  ///
+  /// 値がサーバと同期する前のキャッシュかどうかも伝える (キャッシュからサーバの値に
+  /// 変わったときも、メンバーに変更がなくても通知する)。
+  Stream<RoomMembersSnapshot> watchMembers(RoomCode code);
 
   /// 設定を変更する (ホストのみ、waiting のとき)
   Future<void> updateSettings(RoomCode code, RoomSettings settings);

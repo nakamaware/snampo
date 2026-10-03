@@ -76,13 +76,11 @@ class _HistoryDetailBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coop = record.coop;
-    // 重複した名前には、表示するときだけ入室順に番号を付ける
+    // 重複した名前には、表示するときだけ番号を付ける (あとから同じ名前にした人に付く)
     final displayNames =
         coop == null
             ? const <String, String>{}
-            : displayNicknames([
-              for (final m in coop.members) (uid: m.uid, nickname: m.nickname),
-            ]);
+            : displayNicknames([for (final m in coop.members) m.named]);
     // 自分の uid は保存していないので、自分の写真で発見したスポットの発見者から分かる
     final myUid =
         record.spots

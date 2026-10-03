@@ -19,7 +19,7 @@ class SettingsPage extends HookConsumerWidget {
     final controller = useTextEditingController();
     useEffect(() {
       if (saved != null && controller.text.isEmpty) {
-        controller.text = saved.value;
+        controller.text = saved.nickname.value;
       }
       return null;
     }, [saved]);
@@ -45,8 +45,8 @@ class SettingsPage extends HookConsumerWidget {
               onPressed: () {
                 final value = ref
                     .read(nicknameStoreProvider.notifier)
-                    .save(controller.text);
-                controller.text = value.value;
+                    .saveInput(controller.text);
+                controller.text = value.nickname.value;
                 FocusScope.of(context).unfocus();
                 ScaffoldMessenger.of(
                   context,

@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$CoopHistoryMember {
 
 /// Auth の uid (将来の account link と「過去に一緒に遊んだ人」のために保存する)
- String get uid; String get nickname;
+ String get uid; String get nickname;/// 同じ名前の番号付けに使う時刻 (以前の履歴には無い)
+ DateTime? get namedAt;
 /// Create a copy of CoopHistoryMember
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +30,16 @@ $CoopHistoryMemberCopyWith<CoopHistoryMember> get copyWith => _$CoopHistoryMembe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoopHistoryMember&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.nickname, nickname) || other.nickname == nickname));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoopHistoryMember&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.namedAt, namedAt) || other.namedAt == namedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,uid,nickname);
+int get hashCode => Object.hash(runtimeType,uid,nickname,namedAt);
 
 @override
 String toString() {
-  return 'CoopHistoryMember(uid: $uid, nickname: $nickname)';
+  return 'CoopHistoryMember(uid: $uid, nickname: $nickname, namedAt: $namedAt)';
 }
 
 
@@ -49,7 +50,7 @@ abstract mixin class $CoopHistoryMemberCopyWith<$Res>  {
   factory $CoopHistoryMemberCopyWith(CoopHistoryMember value, $Res Function(CoopHistoryMember) _then) = _$CoopHistoryMemberCopyWithImpl;
 @useResult
 $Res call({
- String uid, String nickname
+ String uid, String nickname, DateTime? namedAt
 });
 
 
@@ -66,11 +67,12 @@ class _$CoopHistoryMemberCopyWithImpl<$Res>
 
 /// Create a copy of CoopHistoryMember
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? nickname = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? nickname = null,Object? namedAt = freezed,}) {
   return _then(_self.copyWith(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
-as String,
+as String,namedAt: freezed == namedAt ? _self.namedAt : namedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -155,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String nickname)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String nickname,  DateTime? namedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CoopHistoryMember() when $default != null:
-return $default(_that.uid,_that.nickname);case _:
+return $default(_that.uid,_that.nickname,_that.namedAt);case _:
   return orElse();
 
 }
@@ -176,10 +178,10 @@ return $default(_that.uid,_that.nickname);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String nickname)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String nickname,  DateTime? namedAt)  $default,) {final _that = this;
 switch (_that) {
 case _CoopHistoryMember():
-return $default(_that.uid,_that.nickname);case _:
+return $default(_that.uid,_that.nickname,_that.namedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +198,10 @@ return $default(_that.uid,_that.nickname);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String nickname)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String nickname,  DateTime? namedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _CoopHistoryMember() when $default != null:
-return $default(_that.uid,_that.nickname);case _:
+return $default(_that.uid,_that.nickname,_that.namedAt);case _:
   return null;
 
 }
@@ -210,13 +212,15 @@ return $default(_that.uid,_that.nickname);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _CoopHistoryMember implements CoopHistoryMember {
-  const _CoopHistoryMember({required this.uid, required this.nickname});
+class _CoopHistoryMember extends CoopHistoryMember {
+  const _CoopHistoryMember({required this.uid, required this.nickname, this.namedAt}): super._();
   factory _CoopHistoryMember.fromJson(Map<String, dynamic> json) => _$CoopHistoryMemberFromJson(json);
 
 /// Auth の uid (将来の account link と「過去に一緒に遊んだ人」のために保存する)
 @override final  String uid;
 @override final  String nickname;
+/// 同じ名前の番号付けに使う時刻 (以前の履歴には無い)
+@override final  DateTime? namedAt;
 
 /// Create a copy of CoopHistoryMember
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CoopHistoryMember&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.nickname, nickname) || other.nickname == nickname));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CoopHistoryMember&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.namedAt, namedAt) || other.namedAt == namedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,uid,nickname);
+int get hashCode => Object.hash(runtimeType,uid,nickname,namedAt);
 
 @override
 String toString() {
-  return 'CoopHistoryMember(uid: $uid, nickname: $nickname)';
+  return 'CoopHistoryMember(uid: $uid, nickname: $nickname, namedAt: $namedAt)';
 }
 
 
@@ -251,7 +255,7 @@ abstract mixin class _$CoopHistoryMemberCopyWith<$Res> implements $CoopHistoryMe
   factory _$CoopHistoryMemberCopyWith(_CoopHistoryMember value, $Res Function(_CoopHistoryMember) _then) = __$CoopHistoryMemberCopyWithImpl;
 @override @useResult
 $Res call({
- String uid, String nickname
+ String uid, String nickname, DateTime? namedAt
 });
 
 
@@ -268,11 +272,12 @@ class __$CoopHistoryMemberCopyWithImpl<$Res>
 
 /// Create a copy of CoopHistoryMember
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? nickname = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? nickname = null,Object? namedAt = freezed,}) {
   return _then(_CoopHistoryMember(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
-as String,
+as String,namedAt: freezed == namedAt ? _self.namedAt : namedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

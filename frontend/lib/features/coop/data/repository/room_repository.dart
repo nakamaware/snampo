@@ -103,6 +103,26 @@ class RoomRepository implements IRoomRepository {
   });
 
   @override
+  Future<void> updateNickname(
+    RoomCode code, {
+    required String uid,
+    required Nickname nickname,
+  }) => _mapDenied(
+    () => _firestore.runTransaction<void>((transaction) async {
+      // 発見者の名前は発見時点の名前で残るため、開始後は変えない
+      final room = (await transaction.get(_room(code))).data();
+      if (room?['status'] != RoomStatus.waiting.name) {
+        throw const CoopPermissionDeniedException('ルームが待機中ではない');
+      }
+      transaction.update(_members(code).doc(uid), {
+        'nickname': nickname.value,
+        // あとから同じ名前にした人に番号を付けるため、変えた時刻を残す
+        'renamedAt': FieldValue.serverTimestamp(),
+      });
+    }),
+  );
+
+  @override
   Future<void> leaveRoom(RoomCode code, String uid) => _mapDenied(
     () => _members(
       code,
@@ -119,14 +139,26 @@ class RoomRepository implements IRoomRepository {
   }
 
   @override
-  Stream<List<RoomMember>> watchMembers(RoomCode code) =>
-      _members(code).snapshots().map((snapshot) {
-        final members = [
+  Stream<RoomMembersSnapshot> watchMembers(RoomCode code) async* {
+    // キャッシュからサーバの値に変わったことを知るため、メタデータの変更も受け取る。
+    // メンバーも、キャッシュかどうかも変わらない通知 (書き込みの確定など) は流さない
+    bool? lastFromCache;
+    final snapshots = _members(code).snapshots(includeMetadataChanges: true);
+    await for (final snapshot in snapshots) {
+      final isFromCache = snapshot.metadata.isFromCache;
+      if (snapshot.docChanges.isEmpty && isFromCache == lastFromCache) {
+        continue;
+      }
+      lastFromCache = isFromCache;
+      yield (
+        members: [
           for (final doc in snapshot.docs)
             RoomMapper.memberFromFirestore(doc.id, doc.data()),
-        ]..sort((a, b) => a.joinedAt.compareTo(b.joinedAt));
-        return members;
-      });
+        ]..sort((a, b) => a.joinedAt.compareTo(b.joinedAt)),
+        isUpToDate: !isFromCache,
+      );
+    }
+  }
 
   @override
   Future<void> updateSettings(RoomCode code, RoomSettings settings) =>

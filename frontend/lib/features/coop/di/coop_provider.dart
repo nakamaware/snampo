@@ -21,6 +21,7 @@ import 'package:snampo/features/coop/application/usecase/start_coop_mission_use_
 import 'package:snampo/features/coop/application/usecase/sync_coop_clears_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_history_if_signed_in_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/sync_coop_history_use_case.dart';
+import 'package:snampo/features/coop/application/usecase/update_my_nickname_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/update_room_settings_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/upsert_coop_history_use_case.dart';
 import 'package:snampo/features/coop/application/usecase/watch_room_use_case.dart';
@@ -82,6 +83,11 @@ JoinRoomUseCase joinRoomUseCase(Ref ref) =>
 @riverpod
 LeaveRoomUseCase leaveRoomUseCase(Ref ref) =>
     LeaveRoomUseCase(ref.read(roomRepositoryProvider));
+
+/// ロビーで自分のニックネームを変えるユースケース
+@riverpod
+UpdateMyNicknameUseCase updateMyNicknameUseCase(Ref ref) =>
+    UpdateMyNicknameUseCase(ref.read(roomRepositoryProvider));
 
 /// ロビーでミッションの設定を変更するユースケース
 @riverpod

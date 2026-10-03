@@ -178,8 +178,9 @@ void main() {
       expect(companion.roomCode.value, 'ABCD23');
       expect(companion.coopSyncState.value, 'inProgress');
       expect(companion.coopIsHost.value, 0);
+      // 名前を付けた時刻は、以前の履歴 (この項目が無い) と同じく読める
       expect(jsonDecode(companion.coopMembers.value!), [
-        {'uid': 'host', 'nickname': 'たろう'},
+        {'uid': 'host', 'nickname': 'たろう', 'namedAt': null},
       ]);
       expect(companion.destinationLat.value, 35.1);
     });

@@ -8,15 +8,21 @@ part of 'nickname_store.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// アプリに保存するニックネーム (未設定なら null)
+/// アプリに保存するニックネーム
+///
+/// 初めて読み込んだときにおまかせの名前を作って保存する (開くたびに変わらないように)。
 
 @ProviderFor(NicknameStore)
 final nicknameStoreProvider = NicknameStoreProvider._();
 
-/// アプリに保存するニックネーム (未設定なら null)
+/// アプリに保存するニックネーム
+///
+/// 初めて読み込んだときにおまかせの名前を作って保存する (開くたびに変わらないように)。
 final class NicknameStoreProvider
-    extends $AsyncNotifierProvider<NicknameStore, Nickname?> {
-  /// アプリに保存するニックネーム (未設定なら null)
+    extends $AsyncNotifierProvider<NicknameStore, SavedNickname> {
+  /// アプリに保存するニックネーム
+  ///
+  /// 初めて読み込んだときにおまかせの名前を作って保存する (開くたびに変わらないように)。
   NicknameStoreProvider._()
     : super(
         from: null,
@@ -36,21 +42,23 @@ final class NicknameStoreProvider
   NicknameStore create() => NicknameStore();
 }
 
-String _$nicknameStoreHash() => r'f356be7cacb6cdc0505dad5ac26f205398ecff08';
+String _$nicknameStoreHash() => r'ed838705f2ae81254a4a328b20fb8cf1eac6217a';
 
-/// アプリに保存するニックネーム (未設定なら null)
+/// アプリに保存するニックネーム
+///
+/// 初めて読み込んだときにおまかせの名前を作って保存する (開くたびに変わらないように)。
 
-abstract class _$NicknameStore extends $AsyncNotifier<Nickname?> {
-  FutureOr<Nickname?> build();
+abstract class _$NicknameStore extends $AsyncNotifier<SavedNickname> {
+  FutureOr<SavedNickname> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<Nickname?>, Nickname?>;
+    final ref = this.ref as $Ref<AsyncValue<SavedNickname>, SavedNickname>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<Nickname?>, Nickname?>,
-              AsyncValue<Nickname?>,
+              AnyNotifier<AsyncValue<SavedNickname>, SavedNickname>,
+              AsyncValue<SavedNickname>,
               Object?,
               Object?
             >;

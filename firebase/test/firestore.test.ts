@@ -206,6 +206,35 @@ describe("members", () => {
     );
   });
 
+  test("名前を変えた時刻 (renamedAt) は waiting のときに、サーバー時刻でだけ書ける", async () => {
+    await seedRoom(env, { status: "waiting" });
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertSucceeds(updateDoc(ref, { nickname: "じろう", renamedAt: serverTimestamp() }));
+    await assertFails(
+      updateDoc(ref, { nickname: "さぶろう", renamedAt: Timestamp.fromMillis(Date.now() - 60_000) }),
+    );
+    await assertFails(
+      updateDoc(doc(db(HOST), "rooms", ROOM, "members", MEMBER), {
+        nickname: "x",
+        renamedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("名前を変えずに、名前を変えた時刻 (renamedAt) だけを更新できない", async () => {
+    await seedRoom(env, { status: "waiting" });
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertFails(updateDoc(ref, { renamedAt: serverTimestamp() }));
+    // 名前だけの更新はこれまでどおりできる
+    await assertSucceeds(updateDoc(ref, { nickname: "じろう" }));
+  });
+
+  test("開始後は名前を変えた時刻 (renamedAt) を書けない", async () => {
+    await seedRoom(env, { status: "playing" });
+    const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);
+    await assertFails(updateDoc(ref, { nickname: "じろう", renamedAt: serverTimestamp() }));
+  });
+
   test("抜けた人は入室時刻を更新して入り直せる (人数の上限を入室順で数えるため)", async () => {
     await seedRoom(env);
     const ref = doc(db(MEMBER), "rooms", ROOM, "members", MEMBER);

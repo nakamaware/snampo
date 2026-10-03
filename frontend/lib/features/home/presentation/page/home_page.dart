@@ -5,12 +5,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/domain/room_code.dart';
 import 'package:snampo/features/coop/application/usecase/join_room_use_case.dart';
-import 'package:snampo/features/coop/presentation/component/coop_room_dialogs.dart';
 import 'package:snampo/features/coop/presentation/component/join_and_enter_room.dart';
 import 'package:snampo/features/coop/presentation/store/coop_room_streams.dart';
 import 'package:snampo/features/coop/presentation/store/coop_session_store.dart';
 import 'package:snampo/features/coop/presentation/store/left_coop_room_store.dart';
 import 'package:snampo/features/mission/presentation/store/persisted_mission_provider.dart';
+import 'package:snampo/features/settings/presentation/store/nickname_store.dart';
 
 /// アプリケーションのトップページ
 class HomePage extends ConsumerWidget {
@@ -259,8 +259,8 @@ class _RejoinTile extends HookConsumerWidget {
       // 入れると、この行は「ルームに戻る」に変わって消えるので、先に取っておく
       final router = GoRouter.of(context);
       final messenger = ScaffoldMessenger.of(context);
-      final name = await ensureNickname(context, ref);
-      if (name == null || !context.mounted) return;
+      final name = (await ref.read(nicknameStoreProvider.future)).nickname;
+      if (!context.mounted) return;
       isJoining.value = true;
       String? error;
       try {

@@ -46,15 +46,178 @@ void main() {
   });
 
   group('displayNicknames', () {
-    test('重複した名前には入室順に番号を付ける', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+
+    test('重複した名前には、名前を付けた順 (基本は入室順) に番号を付ける', () {
       final names = displayNicknames([
-        (uid: 'a', nickname: 'たろう'),
-        (uid: 'b', nickname: 'はなこ'),
-        (uid: 'c', nickname: 'たろう'),
-        (uid: 'd', nickname: 'たろう'),
+        (uid: 'a', nickname: 'たろう', namedAt: at(0)),
+        (uid: 'b', nickname: 'はなこ', namedAt: at(1)),
+        (uid: 'c', nickname: 'たろう', namedAt: at(2)),
+        (uid: 'd', nickname: 'たろう', namedAt: at(3)),
       ]);
 
       expect(names, {'a': 'たろう', 'b': 'はなこ', 'c': 'たろう(2)', 'd': 'たろう(3)'});
+    });
+
+    test('先に入室した人があとから同じ名前に変えたら、その人に番号が付く', () {
+      final names = displayNicknames([
+        (uid: 'host', nickname: 'はなこ', namedAt: at(5)), // 入室は 0 分、5 分に名前を変えた
+        (uid: 'guest', nickname: 'はなこ', namedAt: at(3)), // 3 分に名前を変えた
+      ]);
+
+      expect(names, {'host': 'はなこ(2)', 'guest': 'はなこ'});
+    });
+
+    test('名前を付けた時刻が分からない人がいれば、並び順 (入室順) のまま付ける', () {
+      final names = displayNicknames([
+        (uid: 'a', nickname: 'たろう', namedAt: null),
+        (uid: 'b', nickname: 'たろう', namedAt: at(0)),
+      ]);
+
+      expect(names, {'a': 'たろう', 'b': 'たろう(2)'});
+    });
+  });
+
+  group('isNumberedNickname', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+
+    test('あとから同じ名前にした人だけが、番号付きになる', () {
+      final members = <NamedMember>[
+        (uid: 'host', nickname: 'たろう', namedAt: at(5)), // 5 分に同じ名前に変えた
+        (uid: 'guest', nickname: 'たろう', namedAt: at(3)),
+        (uid: 'other', nickname: 'はなこ', namedAt: at(1)),
+      ];
+      final names = displayNicknames(members);
+
+      expect(
+        [for (final m in members) isNumberedNickname(names, m)],
+        [true, false, false],
+      );
+    });
+
+    test('もともと「(2)」の入った名前でも、重複しなければ番号付きにならない', () {
+      final members = <NamedMember>[
+        (uid: 'a', nickname: 'たろう(2)', namedAt: at(0)),
+      ];
+
+      expect(
+        isNumberedNickname(displayNicknames(members), members.single),
+        isFalse,
+      );
+    });
+  });
+
+  group('SavedNickname', () {
+    final auto = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: true);
+
+    test('空欄の入力ならおまかせの名前を作る', () {
+      final saved = SavedNickname.fromInput('  ', previous: auto);
+      expect(saved.isAuto, isTrue);
+      expect(saved.nickname.hasAutoFormat, isTrue);
+    });
+
+    test('保存済みのおまかせの名前をそのまま保存したら、おまかせのまま', () {
+      expect(SavedNickname.fromInput(' プレイヤー1234 ', previous: auto), auto);
+    });
+
+    test('名前を変えたら、おまかせではなくなる', () {
+      expect(
+        SavedNickname.fromInput('たろう', previous: auto),
+        SavedNickname(Nickname.parse('たろう'), isAuto: false),
+      );
+    });
+
+    test('自分で付けた名前は、同じ名前で保存してもおまかせにならない', () {
+      final custom = SavedNickname(Nickname.parse('プレイヤー1234'), isAuto: false);
+      expect(
+        SavedNickname.fromInput('プレイヤー1234', previous: custom).isAuto,
+        isFalse,
+      );
+    });
+
+    test('ルームでの名前が、この端末で付けたおまかせの名前のままか', () {
+      expect(auto.isAutoIn('プレイヤー1234'), isTrue);
+      expect(auto.isAutoIn('たろう'), isFalse);
+      expect(auto.isAutoIn(null), isFalse);
+    });
+  });
+
+  group('duplicateNicknameNotice', () {
+    test('番号の付いた表示名を示す', () {
+      expect(duplicateNicknameNotice('たろう(2)'), '同じ名前の人がいるため「たろう(2)」と表示されます');
+    });
+  });
+
+  group('renamedNicknameMessage', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+    final members = <NamedMember>[
+      (uid: 'host', nickname: 'たろう', namedAt: at(0)),
+      (uid: 'me', nickname: 'はなこ', namedAt: at(1)),
+    ];
+
+    test('同じ名前の人がいなければ、変えたことだけを知らせる', () {
+      expect(
+        renamedNicknameMessage(
+          name: 'じろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '名前を「じろう」に変えました',
+      );
+    });
+
+    test('同じ名前にしたら、自分に付いた番号も知らせる', () {
+      expect(
+        renamedNicknameMessage(
+          name: 'たろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '名前を「たろう」に変えました。同じ名前の人がいるため「たろう(2)」と表示されます',
+      );
+    });
+  });
+
+  group('duplicateNicknameWarning', () {
+    DateTime at(int minute) => DateTime.utc(2026, 9, 29, 10, minute);
+    final members = <NamedMember>[
+      (uid: 'host', nickname: 'たろう', namedAt: at(0)),
+      (uid: 'me', nickname: 'はなこ', namedAt: at(1)),
+    ];
+
+    test('同じ名前の人がいれば、あとから同じ名前にした自分に付く番号を示す', () {
+      expect(
+        duplicateNicknameWarning(
+          name: 'たろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        '「たろう」さんと同じ名前です。あなたは「たろう(2)」と表示されます',
+      );
+    });
+
+    test('同じ名前の人がいなければ null (自分の今の名前は数えない)', () {
+      expect(
+        duplicateNicknameWarning(
+          name: 'はなこ',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        isNull,
+      );
+      expect(
+        duplicateNicknameWarning(
+          name: 'じろう',
+          myUid: 'me',
+          members: members,
+          now: at(5),
+        ),
+        isNull,
+      );
     });
   });
 

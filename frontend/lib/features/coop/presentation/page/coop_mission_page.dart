@@ -56,7 +56,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     _CoopMissionMenu(roomCode: roomCode),
   ];
 
-  /// 自分の発見は「あなた」、他の人は入室順に番号を付けた名前 (重複した名前を見分けるため)
+  /// 自分の発見は「あなた」、他の人は番号を付けた名前 (重複した名前を見分けるため)
   @override
   String? discovererName(
     WidgetRef ref, {
@@ -95,8 +95,7 @@ class _CoopMissionPageExtension extends MissionPageExtension {
     if (uid == null) return null;
     if (uid == myUid) return 'あなた';
     return displayNicknames([
-          for (final m in members ?? const <RoomMember>[])
-            (uid: m.uid, nickname: m.nickname),
+          for (final m in members ?? const <RoomMember>[]) m.named,
         ])[uid] ??
         checkpoint?.discovererNickname;
   }
