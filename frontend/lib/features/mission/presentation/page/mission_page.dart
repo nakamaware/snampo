@@ -21,6 +21,7 @@ import 'package:snampo/features/mission/presentation/component/map_top_bar.dart'
 import 'package:snampo/features/mission/presentation/component/mission_error_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_loading_view.dart';
 import 'package:snampo/features/mission/presentation/component/mission_spot_sheet.dart';
+import 'package:snampo/features/mission/presentation/component/suspend_mission_pop_scope.dart';
 import 'package:snampo/features/mission/presentation/page/camera_page.dart';
 import 'package:snampo/features/mission/presentation/page/spot_result_page.dart';
 import 'package:snampo/features/mission/presentation/store/camera_store.dart';
@@ -138,7 +139,7 @@ class MissionPage extends HookConsumerWidget {
         );
         // AppBar は置かず、地図を画面いっぱいに見せる (見出しはシートの「ミッション」が兼ねる)。
         // 戻るボタンとモードのボタンは、モードの画面 (準備の失敗など) の上にも出す
-        return AnnotatedRegion<SystemUiOverlayStyle>(
+        final page = AnnotatedRegion<SystemUiOverlayStyle>(
           // 地図の上なので、ステータスバーの文字を濃くする
           value: SystemUiOverlayStyle.dark,
           child: Scaffold(
@@ -150,6 +151,7 @@ class MissionPage extends HookConsumerWidget {
             ),
           ),
         );
+        return SuspendMissionPopScope(kind: kind, child: page);
       },
       loading: () => const MissionLoadingView(),
       error: (error, stackTrace) {
