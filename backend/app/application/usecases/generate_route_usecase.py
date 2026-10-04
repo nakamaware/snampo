@@ -20,7 +20,7 @@ from app.config import (
     LANDMARK_SEARCH_MAX_CALLS,
     LANDMARK_SEARCH_TARGET_COUNT,
     MIDPOINT_DEDUP_MIN_DISTANCE_TO_DESTINATION_M,
-    MIDPOINT_MIN_GAP_RATIO,
+    MIDPOINT_MIN_INTERVAL_RATIO,
     MIDPOINT_MIN_SEARCH_RADIUS_M,
 )
 from app.domain.exceptions import (
@@ -172,7 +172,7 @@ class GenerateRouteUseCase:
 
             # 4. 現在地→目的地の実ルート上から複数の中間地点候補を生成
             candidate_coordinates = []
-            min_gap_m = 0.0
+            min_interval_m = 0.0
             if midpoint_target_count > 0:
                 route_coordinates, _ = self.google_maps_gateway.get_directions(
                     origin=current_coordinate,
@@ -182,13 +182,13 @@ class GenerateRouteUseCase:
                 candidate_coordinates = coordinate_service.divide_route_into_segments(
                     route_coordinates=route_coordinates,
                     num_segments=midpoint_target_count,
-                    min_gap_ratio=MIDPOINT_MIN_GAP_RATIO,
+                    min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
                     rng=self.rng,
                 )
                 if candidate_coordinates:
                     route_length_m = coordinate_service.calculate_route_length(route_coordinates)
-                    min_gap_m = (
-                        route_length_m / (midpoint_target_count + 1) * MIDPOINT_MIN_GAP_RATIO
+                    min_interval_m = (
+                        route_length_m / (midpoint_target_count + 1) * MIDPOINT_MIN_INTERVAL_RATIO
                     )
 
             # 5. 各中間地点付近でランドマーク検索
@@ -225,7 +225,7 @@ class GenerateRouteUseCase:
                         *(point.coordinate for point in midpoint_results),
                     ]
                     ordered_landmarks, spaced_place_ids = self._order_by_spacing(
-                        filtered_landmarks, adopted_coordinates, min_gap_m
+                        filtered_landmarks, adopted_coordinates, min_interval_m
                     )
                     try:
                         landmark, image = self.landmark_selector.select(ordered_landmarks)
@@ -233,11 +233,11 @@ class GenerateRouteUseCase:
                             logger.warning(
                                 (
                                     "No landmark for mission point %s/%s satisfies the "
-                                    "minimum gap of %.0fm; using the farthest candidate"
+                                    "minimum interval of %.0fm; using the farthest candidate"
                                 ),
                                 i,
                                 midpoint_target_count,
-                                min_gap_m,
+                                min_interval_m,
                             )
                         used_place_ids.add(landmark.place_id)
                         midpoint_results.append(
@@ -298,7 +298,7 @@ class GenerateRouteUseCase:
     def _order_by_spacing(
         landmarks: list[Landmark],
         adopted_coordinates: list[Coordinate],
-        min_gap_m: float,
+        min_interval_m: float,
     ) -> tuple[list[Landmark], set[str]]:
         """既存地点から最低間隔以上離れた候補を優先する順に並べ替える
 
@@ -317,7 +317,7 @@ class GenerateRouteUseCase:
                 coordinate_service.calculate_distance(lm.coordinate, coordinate)
                 for coordinate in adopted_coordinates
             )
-            if nearest_m >= min_gap_m:
+            if nearest_m >= min_interval_m:
                 spaced.append(lm)
             else:
                 too_close.append((nearest_m, lm))

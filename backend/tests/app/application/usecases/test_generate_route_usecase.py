@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from app.application.usecases.generate_route_usecase import GenerateRouteUseCase
-from app.config import DIRECTIONS_API_MAX_WAYPOINTS, MIDPOINT_MIN_GAP_RATIO
+from app.config import DIRECTIONS_API_MAX_WAYPOINTS, MIDPOINT_MIN_INTERVAL_RATIO
 from app.domain.services.coordinate_service import calculate_distance as real_calculate_distance
 from app.domain.value_objects import Coordinate, Landmark, StreetViewImage
 
@@ -65,7 +65,7 @@ def test_execute_目的地指定モードでは距離算出後にミッション
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=4,
-        min_gap_ratio=MIDPOINT_MIN_GAP_RATIO,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
         rng=usecase.rng,
     )
     assert google_maps_gateway.get_directions.call_count == 2
@@ -142,7 +142,7 @@ def test_execute_ミッション総数が上限超過なら最大件数にクラ
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=DIRECTIONS_API_MAX_WAYPOINTS,
-        min_gap_ratio=MIDPOINT_MIN_GAP_RATIO,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
         rng=usecase.rng,
     )
     assert result.destination.coordinate == destination_coordinate
@@ -257,7 +257,7 @@ def test_execute_実ルート上の候補地点生成にルート座標列を使
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=1,
-        min_gap_ratio=MIDPOINT_MIN_GAP_RATIO,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
         rng=usecase.rng,
     )
 
@@ -391,7 +391,7 @@ def test_order_by_spacing_最低間隔を満たす候補を元の順で先頭に
     )
 
     ordered, spaced_ids = GenerateRouteUseCase._order_by_spacing(
-        [close_50m, spaced_near, close_150m, spaced_far], adopted, min_gap_m=200
+        [close_50m, spaced_near, close_150m, spaced_far], adopted, min_interval_m=200
     )
 
     assert [lm.place_id for lm in ordered] == [
