@@ -28,6 +28,9 @@ MIN_SEARCH_RADIUS_M = 50  # Google Maps Nearby Search APIの最小検索半径 (
 PLACES_API_MAX_SEARCH_RADIUS_M = 50000  # Places API searchNearby の最大検索半径 (メートル)
 MIDPOINT_MIN_SEARCH_RADIUS_M = 300  # 中間地点検索の最小半径 (メートル)
 MIDPOINT_DEDUP_MIN_DISTANCE_TO_DESTINATION_M = 10  # 中間地点と最終目的地の重複判定 (メートル)
+MIDPOINT_MIN_INTERVAL_RATIO = (
+    0.5  # 中間地点同士(出発地・目的地を含む)の最低間隔。平均間隔に対する割合
+)
 
 # Directions API制約
 DIRECTIONS_API_MAX_WAYPOINTS = 25  # origin/destination を除く waypoint 最大数

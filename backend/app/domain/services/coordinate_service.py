@@ -3,7 +3,8 @@
 座標に関するビジネスロジックを提供します。
 """
 
-from itertools import pairwise
+import random
+from itertools import accumulate, pairwise
 
 from geographiclib.geodesic import Geodesic
 from geopy.distance import geodesic
@@ -59,41 +60,67 @@ def calculate_bearing(start: Coordinate, end: Coordinate) -> float:
     return bearing
 
 
-def divide_route_into_segments(
-    route_coordinates: list[Coordinate], num_segments: int
-) -> list[Coordinate]:
-    """ルート座標列から等間隔の中間地点を抽出する
+def calculate_route_length(route_coordinates: list[Coordinate]) -> float:
+    """ルート座標列の総距離を計算
 
-    Directions API などで得たルート座標列に沿って、総距離を等分した位置にある
-    中間地点を返します。始点・終点そのものは含みません。
+    Args:
+        route_coordinates: ルートを表す座標列
+
+    Returns:
+        float: 総距離 (メートル単位)。座標が2点未満なら0
+    """
+    return sum(calculate_distance(start, end) for start, end in pairwise(route_coordinates))
+
+
+def divide_route_into_segments(
+    route_coordinates: list[Coordinate],
+    num_segments: int,
+    min_interval_ratio: float = 1.0,
+    rng: random.Random | None = None,
+) -> list[Coordinate]:
+    """ルート座標列から中間地点を抽出する
+
+    Directions API などで得たルート座標列を num_segments + 1 個の間隔に分け、
+    間隔の境目にあたる中間地点を返します。始点・終点そのものは含みません。
+
+    各間隔の長さは「平均間隔 x min_interval_ratio」を最低保証し、残りの距離を
+    ランダムに配分します。min_interval_ratio=1.0 のときは等間隔になります。
 
     Args:
         route_coordinates: ルートを表す座標列
         num_segments: 取得したい中間地点の数
+        min_interval_ratio: 平均間隔に対する最低間隔の割合 (0以上1以下)
+        rng: 乱数生成器 (Noneの場合は新しく生成)。テストではシード固定のものを渡す
 
     Returns:
         中間地点のリスト(num_segments個以下)
 
     Raises:
-        ValueError: num_segmentsが0以下の場合
+        ValueError: num_segmentsが0以下、またはmin_interval_ratioが範囲外の場合
     """
     if num_segments <= 0:
         raise ValueError("num_segments must be positive")
+    if not 0.0 <= min_interval_ratio <= 1.0:
+        raise ValueError("min_interval_ratio must be between 0 and 1")
 
     if len(route_coordinates) < 2:
         return []
 
-    segment_distances: list[float] = []
-    total_distance = 0.0
-    for start, end in pairwise(route_coordinates):
-        distance = calculate_distance(start, end)
-        segment_distances.append(distance)
-        total_distance += distance
+    segment_distances = [
+        calculate_distance(start, end) for start, end in pairwise(route_coordinates)
+    ]
+    total_distance = sum(segment_distances)
 
     if total_distance <= 0:
         return []
 
-    target_distances = [total_distance * i / (num_segments + 1) for i in range(1, num_segments + 1)]
+    intervals = generate_random_intervals(
+        total_distance=total_distance,
+        num_intervals=num_segments + 1,
+        min_interval_ratio=min_interval_ratio,
+        rng=rng or random.Random(),  # noqa: S311 - 配置のゆらぎ用で暗号用途ではない
+    )
+    target_distances = list(accumulate(intervals[:-1]))
     intermediate_points: list[Coordinate] = []
     traversed_distance = 0.0
     segment_index = 0
@@ -120,6 +147,43 @@ def divide_route_into_segments(
             segment_index += 1
 
     return intermediate_points
+
+
+def generate_random_intervals(
+    total_distance: float,
+    num_intervals: int,
+    min_interval_ratio: float,
+    rng: random.Random,
+) -> list[float]:
+    """総距離を、隣り合う地点同士の間隔 (interval) に分ける
+
+    間隔は「出発地・中間地点・目的地のうち隣り合う2点の、ルート沿いの距離」を指します。
+    中間地点が n 件なら間隔は n + 1 個です。各間隔に「平均間隔 x min_interval_ratio」を
+    最低保証として割り当て、残りの距離を一様ランダムな比率 (指数分布の正規化) で配分します。
+
+    Args:
+        total_distance: 総距離 (メートル単位)
+        num_intervals: 間隔の数 (中間地点数 + 1)
+        min_interval_ratio: 平均間隔に対する最低間隔の割合 (0以上1以下)
+        rng: 乱数生成器
+
+    Returns:
+        出発地側から順に並べた間隔のリスト。合計は total_distance に一致する
+
+    Raises:
+        ValueError: num_intervalsが0以下の場合
+    """
+    if num_intervals <= 0:
+        raise ValueError("num_intervals must be positive")
+
+    min_interval = total_distance / num_intervals * min_interval_ratio
+    remaining_distance = total_distance - min_interval * num_intervals
+    if remaining_distance <= 0:
+        return [total_distance / num_intervals] * num_intervals
+
+    weights = [rng.expovariate(1.0) for _ in range(num_intervals)]
+    weight_sum = sum(weights)
+    return [min_interval + remaining_distance * weight / weight_sum for weight in weights]
 
 
 def _interpolate_point_on_segment(
