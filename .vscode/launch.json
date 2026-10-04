@@ -23,9 +23,8 @@
             "type": "dart",
             "program": "lib/main.dart",
             "cwd": "${workspaceFolder}/frontend",
-            "toolArgs": [
-                "--dart-define-from-file=.env"
-            ]
+            "customTool": "${workspaceFolder}/scripts/flutter-with-env.sh",
+            "customToolReplacesArgs": 0
         }
     ]
 }
