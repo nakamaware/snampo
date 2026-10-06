@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/core/presentation/confirm_dialog.dart';
 
 /// 戻る (左上の戻るボタンと Android の戻る) で、ソロのミッションを中断するかを確認する
 ///
 /// 誤操作で画面を離れないようにするためのもの。進捗は保存されていて、ホームから再開できるので、
-/// 中断しても進捗は消さない。iOS のスワイプで戻る操作は、`PopScope` が戻れない間は無効になる。
+/// 中断しても進捗は消さない。中断したら、どこから始めたミッションでもホームへ戻る
+/// (再開の案内がすぐ見えるようにする)。iOS のスワイプで戻る操作は、`PopScope` が戻れない間は無効になる。
 /// 協力プレイはモードの画面がルームを抜けるかを確認するので、ここでは何もしない。
 class SuspendMissionPopScope extends StatelessWidget {
   /// [SuspendMissionPopScope] を作成する
@@ -35,7 +37,7 @@ class SuspendMissionPopScope extends StatelessWidget {
           confirmLabel: '中断する',
         );
         if (confirmed && context.mounted) {
-          Navigator.of(context).pop();
+          context.go('/');
         }
       },
       child: child,

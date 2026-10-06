@@ -1,38 +1,43 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:snampo/core/domain/mission_session_kind.dart';
 import 'package:snampo/features/mission/presentation/component/suspend_mission_pop_scope.dart';
 
 void main() {
-  /// 前の画面からミッション画面を開いた状態にする
+  /// ホーム → 前の画面 → ミッション画面 と開いた状態にする
   Future<void> openMission(
     WidgetTester tester, {
     required Widget Function(Widget mission) wrap,
   }) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder:
-              (context) => TextButton(
-                onPressed:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder:
-                            (_) => wrap(const Scaffold(body: Text('ミッション画面'))),
-                      ),
-                    ),
-                child: const Text('前の画面'),
-              ),
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('ホーム')),
         ),
-      ),
+        GoRoute(
+          path: '/setup',
+          builder: (_, _) => const Scaffold(body: Text('前の画面')),
+        ),
+        GoRoute(
+          path: '/mission',
+          builder: (_, _) => wrap(const Scaffold(body: Text('ミッション画面'))),
+        ),
+      ],
     );
-    await tester.tap(find.text('前の画面'));
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    unawaited(router.push('/setup'));
+    await tester.pumpAndSettle();
+    unawaited(router.push('/mission'));
     await tester.pumpAndSettle();
   }
 
   /// 左上の戻るボタンと同じく、戻れるかを確かめてから戻る
   Future<void> pressBack(WidgetTester tester) async {
-    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.state<NavigatorState>(find.byType(Navigator).last).maybePop();
     await tester.pumpAndSettle();
   }
 
@@ -61,7 +66,7 @@ void main() {
     expect(find.text('ミッション画面'), findsOneWidget);
   });
 
-  testWidgets('中断すると、前の画面に戻る', (tester) async {
+  testWidgets('中断すると、前の画面ではなくホームに戻る', (tester) async {
     await openMission(tester, wrap: solo);
 
     await pressBack(tester);
@@ -69,7 +74,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ミッション画面'), findsNothing);
-    expect(find.text('前の画面'), findsOneWidget);
+    expect(find.text('前の画面'), findsNothing);
+    expect(find.text('ホーム'), findsOneWidget);
   });
 
   testWidgets('Android の戻るでも確認する', (tester) async {
