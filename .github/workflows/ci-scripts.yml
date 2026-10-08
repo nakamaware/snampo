@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CI - Scripts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/flutter-with-env.sh'
+      - 'scripts/test-flutter-with-env.sh'
+      - '.github/workflows/ci-scripts.yml'
+  pull_request:
+    paths:
+      - 'scripts/flutter-with-env.sh'
+      - 'scripts/test-flutter-with-env.sh'
+      - '.github/workflows/ci-scripts.yml'
+
+jobs:
+  flutter-with-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Lint (shellcheck)
+        run: shellcheck scripts/flutter-with-env.sh scripts/test-flutter-with-env.sh
+      - name: Test
+        run: bash scripts/test-flutter-with-env.sh

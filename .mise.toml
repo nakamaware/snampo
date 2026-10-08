@@ -25,6 +25,11 @@ run = "uv run python scripts/run_bash_script.py scripts/generate-api.sh"
 description = "生成されたAPIクライアントが最新かチェック（pre-commit/CI/CD用）"
 run = "uv run python scripts/run_bash_script.py scripts/check-api.sh"
 
+# スクリプトのテスト
+[tasks."test-scripts"]
+description = "VS Code 用の .env ラッパー（scripts/flutter-with-env.sh）をテスト"
+run = "bash scripts/test-flutter-with-env.sh"
+
 # Combined Tasks
 [tasks.setup]
 description = "プロジェクトの初期セットアップ（依存関係のインストールとpre-commitのセットアップ）"
