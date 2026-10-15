@@ -38,12 +38,15 @@ resource "google_pubsub_topic" "budget_notifications" {
   project = local.project_id
 }
 
+# 予算は請求先アカウント配下のリソースのため、Terraform SA に請求先アカウントの
+# roles/billing.costsManager が必要 (プロジェクトの Owner だけでは作成できない)。
+# 請求先アカウント管理者による手動付与が必要。手順は terraform/README.md を参照。
 resource "google_billing_budget" "budget" {
   billing_account = var.billing_account_id
   display_name    = "Billing Budget for ${local.project_name}"
 
   budget_filter {
-    projects = ["projects/${local.project_id}"]
+    projects = ["projects/${data.google_project.current.number}"]
   }
 
   amount {

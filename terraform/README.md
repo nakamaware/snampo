@@ -66,6 +66,21 @@ terraform plan
 terraform apply
 ```
 
+### 予算アラート用の権限付与（dev）
+
+`env/dev/budget.tf` の予算 (`google_billing_budget`) は請求先アカウント配下のリソースのため、プロジェクトの Owner 権限だけでは作成できない（`Error 400: Precondition check failed.` になる）。
+請求先アカウント管理者（Billing Account Administrator）が、Terraform 用サービスアカウントに請求先アカウントの `roles/billing.costsManager` を一度だけ手動で付与する。
+
+```bash
+# 請求先アカウントの通貨が JPY であることを確認（budget.tf の currency_code と一致している必要がある）
+gcloud billing accounts describe BILLING_ACCOUNT_ID --format="value(currencyCode)"
+
+# Terraform SA に予算の作成権限を付与
+gcloud billing accounts add-iam-policy-binding BILLING_ACCOUNT_ID \
+  --member="serviceAccount:snampo-dev-terraform@snampo-480404.iam.gserviceaccount.com" \
+  --role="roles/billing.costsManager"
+```
+
 ## 新しく環境を追加する場合（ステージング環境など）
 
 **Owner権限が必要**
