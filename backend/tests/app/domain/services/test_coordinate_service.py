@@ -1,11 +1,16 @@
 """coordinate_serviceのテスト"""
 
+import random
+from itertools import pairwise
+
 import pytest
 
 from app.domain.services.coordinate_service import (
     calculate_bearing,
     calculate_distance,
+    calculate_route_length,
     divide_route_into_segments,
+    generate_random_intervals,
 )
 from app.domain.value_objects import Coordinate
 
@@ -102,6 +107,126 @@ def test_divide_route_into_segments_分割数が非正なら例外を送出す�
 
     with pytest.raises(ValueError, match="num_segments must be positive"):
         divide_route_into_segments(route_coordinates, num_segments)
+
+
+@pytest.mark.parametrize("min_interval_ratio", [-0.1, 1.1])
+def test_divide_route_into_segments_最低間隔の割合が範囲外なら例外を送出すること(
+    min_interval_ratio: float,
+) -> None:
+    """min_interval_ratio が0〜1の範囲外なら ValueError となることを確認"""
+    route_coordinates = [
+        Coordinate(latitude=35.6812, longitude=139.7671),
+        Coordinate(latitude=35.7101, longitude=139.8107),
+    ]
+
+    with pytest.raises(ValueError, match="min_interval_ratio must be between 0 and 1"):
+        divide_route_into_segments(route_coordinates, 2, min_interval_ratio=min_interval_ratio)
+
+
+# 経線に沿った直線ルート (約11.1km)。直線距離とルート沿いの距離が一致する
+STRAIGHT_ROUTE = [
+    Coordinate(latitude=0.0, longitude=0.0),
+    Coordinate(latitude=0.05, longitude=0.0),
+    Coordinate(latitude=0.1, longitude=0.0),
+]
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_divide_route_into_segments_ランダム配置でも最低間隔を守ること(seed: int) -> None:
+    """出発地・中間地点・目的地の隣り合う間隔がすべて最低間隔以上になることを確認"""
+    num_segments = 6
+    min_interval_ratio = 0.5
+    route_length = calculate_route_length(STRAIGHT_ROUTE)
+    min_interval = route_length / (num_segments + 1) * min_interval_ratio
+
+    points = divide_route_into_segments(
+        STRAIGHT_ROUTE,
+        num_segments,
+        min_interval_ratio=min_interval_ratio,
+        rng=random.Random(seed),
+    )
+
+    assert len(points) == num_segments
+    stops = [STRAIGHT_ROUTE[0], *points, STRAIGHT_ROUTE[-1]]
+    for start, end in pairwise(stops):
+        assert calculate_distance(start, end) >= min_interval - 1e-6
+
+
+def test_divide_route_into_segments_同じシードなら同じ配置になること() -> None:
+    """シードを固定すれば同じ中間地点が得られることを確認"""
+    first = divide_route_into_segments(
+        STRAIGHT_ROUTE, 4, min_interval_ratio=0.5, rng=random.Random(77)
+    )
+    second = divide_route_into_segments(
+        STRAIGHT_ROUTE, 4, min_interval_ratio=0.5, rng=random.Random(77)
+    )
+
+    assert first == second
+
+
+def test_divide_route_into_segments_ランダム配置では等間隔にならないこと() -> None:
+    """min_interval_ratio < 1 なら等間隔の配置から外れることを確認"""
+    even = divide_route_into_segments(STRAIGHT_ROUTE, 4)
+    spread = divide_route_into_segments(
+        STRAIGHT_ROUTE, 4, min_interval_ratio=0.5, rng=random.Random(77)
+    )
+
+    assert len(spread) == len(even)
+    assert spread != even
+
+
+# ===== generate_random_intervals のテスト =====
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_generate_random_intervals_合計が総距離に一致し最低長を守ること(seed: int) -> None:
+    """区間長の合計が総距離に一致し、どの区間も最低長以上であることを確認"""
+    intervals = generate_random_intervals(
+        total_distance=1800.0, num_intervals=7, min_interval_ratio=0.5, rng=random.Random(seed)
+    )
+
+    assert len(intervals) == 7
+    assert sum(intervals) == pytest.approx(1800.0)
+    assert min(intervals) >= 1800.0 / 7 * 0.5 - 1e-9
+
+
+def test_generate_random_intervals_割合が1なら等間隔になること() -> None:
+    """min_interval_ratio=1.0 では乱数によらず等間隔になることを確認"""
+    intervals = generate_random_intervals(
+        total_distance=900.0, num_intervals=3, min_interval_ratio=1.0, rng=random.Random(0)
+    )
+
+    assert intervals == pytest.approx([300.0, 300.0, 300.0])
+
+
+@pytest.mark.parametrize("num_intervals", [0, -1])
+def test_generate_random_intervals_区間数が非正なら例外を送出すること(num_intervals: int) -> None:
+    """区間数が0以下なら ValueError となることを確認"""
+    with pytest.raises(ValueError, match="num_intervals must be positive"):
+        generate_random_intervals(
+            total_distance=900.0,
+            num_intervals=num_intervals,
+            min_interval_ratio=0.5,
+            rng=random.Random(0),
+        )
+
+
+# ===== calculate_route_length のテスト =====
+
+
+def test_calculate_route_length_各区間の距離の合計を返すこと() -> None:
+    """ルート長が隣り合う座標間の距離の合計になることを確認"""
+    expected = calculate_distance(STRAIGHT_ROUTE[0], STRAIGHT_ROUTE[1]) + calculate_distance(
+        STRAIGHT_ROUTE[1], STRAIGHT_ROUTE[2]
+    )
+
+    assert calculate_route_length(STRAIGHT_ROUTE) == pytest.approx(expected)
+
+
+def test_calculate_route_length_座標が1点以下なら0を返すこと() -> None:
+    """座標が足りない場合は0を返すことを確認"""
+    assert calculate_route_length([STRAIGHT_ROUTE[0]]) == 0
+    assert calculate_route_length([]) == 0
 
 
 # ===== calculate_bearing のテスト =====

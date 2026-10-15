@@ -4,6 +4,7 @@
 """
 
 import logging
+import random
 
 from injector import inject
 
@@ -19,6 +20,7 @@ from app.config import (
     LANDMARK_SEARCH_MAX_CALLS,
     LANDMARK_SEARCH_TARGET_COUNT,
     MIDPOINT_DEDUP_MIN_DISTANCE_TO_DESTINATION_M,
+    MIDPOINT_MIN_INTERVAL_RATIO,
     MIDPOINT_MIN_SEARCH_RADIUS_M,
 )
 from app.domain.exceptions import (
@@ -60,6 +62,8 @@ class GenerateRouteUseCase:
         self.landmark_search_service = landmark_search_service
         self.landmark_selector = landmark_selector
         self.street_view_image_fetch_service = street_view_image_fetch_service
+        # 中間地点の配置に使う乱数生成器。テストではシード固定のものに差し替える
+        self.rng = random.Random()  # noqa: S311 - 配置のゆらぎ用で暗号用途ではない
 
     def execute(
         self,
@@ -77,7 +81,7 @@ class GenerateRouteUseCase:
         1. 目的地のランドマークを決定 (ランダムモードの場合)
         2. 必要なmission地点数を計算(距離に応じて)
         3. 現在地→目的地のルートを先に取得
-        4. ルート上を等分割して複数の中間地点候補を生成
+        4. ルート上に最低間隔を保ちつつランダムな間隔で中間地点候補を生成
         5. 各中間地点付近でランドマークを検索
         6. 初期地点→目的地のルートを取得(waypoints=[地点1, 地点2, ...])
 
@@ -168,6 +172,7 @@ class GenerateRouteUseCase:
 
             # 4. 現在地→目的地の実ルート上から複数の中間地点候補を生成
             candidate_coordinates = []
+            min_interval_m = 0.0
             if midpoint_target_count > 0:
                 route_coordinates, _ = self.google_maps_gateway.get_directions(
                     origin=current_coordinate,
@@ -177,7 +182,14 @@ class GenerateRouteUseCase:
                 candidate_coordinates = coordinate_service.divide_route_into_segments(
                     route_coordinates=route_coordinates,
                     num_segments=midpoint_target_count,
+                    min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
+                    rng=self.rng,
                 )
+                if candidate_coordinates:
+                    route_length_m = coordinate_service.calculate_route_length(route_coordinates)
+                    min_interval_m = (
+                        route_length_m / (midpoint_target_count + 1) * MIDPOINT_MIN_INTERVAL_RATIO
+                    )
 
             # 5. 各中間地点付近でランドマーク検索
             midpoint_results: list[RoutePointDto] = []
@@ -207,8 +219,26 @@ class GenerateRouteUseCase:
                             midpoint_target_count,
                         )
                         continue
+                    adopted_coordinates = [
+                        current_coordinate,
+                        destination_coordinate,
+                        *(point.coordinate for point in midpoint_results),
+                    ]
+                    ordered_landmarks, spaced_place_ids = self._order_by_spacing(
+                        filtered_landmarks, adopted_coordinates, min_interval_m
+                    )
                     try:
-                        landmark, image = self.landmark_selector.select(filtered_landmarks)
+                        landmark, image = self.landmark_selector.select(ordered_landmarks)
+                        if landmark.place_id not in spaced_place_ids:
+                            logger.warning(
+                                (
+                                    "No landmark for mission point %s/%s satisfies the "
+                                    "minimum interval of %.0fm; using the farthest candidate"
+                                ),
+                                i,
+                                midpoint_target_count,
+                                min_interval_m,
+                            )
                         used_place_ids.add(landmark.place_id)
                         midpoint_results.append(
                             RoutePointDto(
@@ -263,6 +293,36 @@ class GenerateRouteUseCase:
                     "Street View画像が取得可能なルートが見つかりませんでした"
                 ),
             ) from e
+
+    @staticmethod
+    def _order_by_spacing(
+        landmarks: list[Landmark],
+        adopted_coordinates: list[Coordinate],
+        min_interval_m: float,
+    ) -> tuple[list[Landmark], set[str]]:
+        """既存地点から最低間隔以上離れた候補を優先する順に並べ替える
+
+        最低間隔を満たす候補は元の順 (基準点に近い順) のまま先頭に置き、
+        満たさない候補は既存地点から遠い順に後ろへ並べます。
+        こうすることで、条件を満たす候補がない (または画像が取れない) 場合も
+        既存地点から最も離れた候補が選ばれます。
+
+        Returns:
+            (並べ替えた候補リスト, 最低間隔を満たす候補の place_id 集合)
+        """
+        spaced: list[Landmark] = []
+        too_close: list[tuple[float, Landmark]] = []
+        for lm in landmarks:
+            nearest_m = min(
+                coordinate_service.calculate_distance(lm.coordinate, coordinate)
+                for coordinate in adopted_coordinates
+            )
+            if nearest_m >= min_interval_m:
+                spaced.append(lm)
+            else:
+                too_close.append((nearest_m, lm))
+        too_close.sort(key=lambda item: item[0], reverse=True)
+        return spaced + [lm for _, lm in too_close], {lm.place_id for lm in spaced}
 
     @staticmethod
     def _filter_midpoint_landmark_candidates(

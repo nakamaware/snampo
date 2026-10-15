@@ -88,8 +88,8 @@ ignore = [
 known-first-party = ["app"]
 
 [tool.ruff.lint.per-file-ignores]
-# テストファイルではassert文の使用を許可、関数名に日本語を使用可能にする
-"tests/**/*.py" = ["S101", "N802"]
+# テストファイルではassert文の使用を許可、関数名に日本語を使用可能にする、シード固定の乱数を使用可能にする
+"tests/**/*.py" = ["S101", "N802", "S311"]
 
 [tool.uv]
 # 間接依存のバージョンを指定する

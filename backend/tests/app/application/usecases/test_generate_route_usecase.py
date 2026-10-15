@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from app.application.usecases.generate_route_usecase import GenerateRouteUseCase
-from app.config import DIRECTIONS_API_MAX_WAYPOINTS
+from app.config import DIRECTIONS_API_MAX_WAYPOINTS, MIDPOINT_MIN_INTERVAL_RATIO
 from app.domain.services.coordinate_service import calculate_distance as real_calculate_distance
 from app.domain.value_objects import Coordinate, Landmark, StreetViewImage
 
@@ -65,6 +65,8 @@ def test_execute_目的地指定モードでは距離算出後にミッション
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=4,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
+        rng=usecase.rng,
     )
     assert google_maps_gateway.get_directions.call_count == 2
     assert google_maps_gateway.get_directions.call_args_list[0].kwargs == {
@@ -140,6 +142,8 @@ def test_execute_ミッション総数が上限超過なら最大件数にクラ
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=DIRECTIONS_API_MAX_WAYPOINTS,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
+        rng=usecase.rng,
     )
     assert result.destination.coordinate == destination_coordinate
     assert result.destination.street_view_image == destination_image
@@ -253,6 +257,8 @@ def test_execute_実ルート上の候補地点生成にルート座標列を使
     mock_divide_route_into_segments.assert_called_once_with(
         route_coordinates=route_coordinates,
         num_segments=1,
+        min_interval_ratio=MIDPOINT_MIN_INTERVAL_RATIO,
+        rng=usecase.rng,
     )
 
 
@@ -357,6 +363,106 @@ def test_filter_midpoint_landmark_candidates_place_idと至近距離で除外す
     )
     assert len(filtered) == 1
     assert filtered[0].place_id == "ChIJ_ok"
+
+
+def test_order_by_spacing_最低間隔を満たす候補を元の順で先頭に置くこと() -> None:
+    """最低間隔を満たす候補が優先され、満たさない候補は既存地点から遠い順に後ろへ並ぶ"""
+    adopted = [Coordinate(latitude=0.0, longitude=0.0)]
+    # 緯度0.001度 ≒ 111m
+    spaced_near = Landmark(
+        place_id="spaced_near",
+        display_name="spaced_near",
+        coordinate=Coordinate(latitude=0.003, longitude=0),
+    )
+    spaced_far = Landmark(
+        place_id="spaced_far",
+        display_name="spaced_far",
+        coordinate=Coordinate(latitude=0.005, longitude=0),
+    )
+    close_50m = Landmark(
+        place_id="close_50m",
+        display_name="close_50m",
+        coordinate=Coordinate(latitude=0.00045, longitude=0),
+    )
+    close_150m = Landmark(
+        place_id="close_150m",
+        display_name="close_150m",
+        coordinate=Coordinate(latitude=0.00135, longitude=0),
+    )
+
+    ordered, spaced_ids = GenerateRouteUseCase._order_by_spacing(
+        [close_50m, spaced_near, close_150m, spaced_far], adopted, min_interval_m=200
+    )
+
+    assert [lm.place_id for lm in ordered] == [
+        "spaced_near",
+        "spaced_far",
+        "close_150m",
+        "close_50m",
+    ]
+    assert spaced_ids == {"spaced_near", "spaced_far"}
+
+
+def test_execute_既存スポットに近すぎる候補より離れた候補を選ぶこと() -> None:
+    """2つ目の中間地点では、1つ目に近すぎる候補を避けて離れた候補を選ぶことを確認"""
+    current_coordinate = Coordinate(latitude=0.0, longitude=0.0)
+    destination_coordinate = Coordinate(latitude=0.03, longitude=0.0)  # 約3.3km
+    destination_image = StreetViewImage(
+        metadata_coordinate=destination_coordinate,
+        original_coordinate=destination_coordinate,
+        image_data=b"destination-image",
+    )
+    route_coordinates = [current_coordinate, destination_coordinate]
+    first = Landmark(
+        place_id="first", display_name="first", coordinate=Coordinate(latitude=0.01, longitude=0.0)
+    )
+    # 1つ目から約55m。最低間隔 (ルート長/3 x 0.5 ≒ 555m) を満たさない
+    too_close = Landmark(
+        place_id="too_close",
+        display_name="too_close",
+        coordinate=Coordinate(latitude=0.0105, longitude=0.0),
+    )
+    spaced = Landmark(
+        place_id="spaced",
+        display_name="spaced",
+        coordinate=Coordinate(latitude=0.02, longitude=0.0),
+    )
+
+    google_maps_gateway = MagicMock()
+    google_maps_gateway.get_directions.side_effect = [
+        (route_coordinates, "initial-overview-polyline"),
+        ([], "overview-polyline"),
+    ]
+    google_maps_gateway.search_landmarks_nearby.side_effect = [[first], [too_close, spaced]]
+    street_view_image_fetch_service = MagicMock()
+    street_view_image_fetch_service.get_image.return_value = destination_image
+    landmark_selector = MagicMock()
+    landmark_selector.select.side_effect = lambda candidates: (
+        candidates[0],
+        StreetViewImage(
+            metadata_coordinate=candidates[0].coordinate,
+            original_coordinate=candidates[0].coordinate,
+            image_data=b"image",
+        ),
+    )
+
+    usecase = GenerateRouteUseCase(
+        google_maps_gateway=google_maps_gateway,
+        landmark_search_service=MagicMock(),
+        landmark_selector=landmark_selector,
+        street_view_image_fetch_service=street_view_image_fetch_service,
+    )
+
+    with patch(
+        "app.application.usecases.generate_route_usecase.calculate_mission_point_count",
+        return_value=2,
+    ):
+        result = usecase.execute(
+            current_coordinate=current_coordinate,
+            destination_coordinate=destination_coordinate,
+        )
+
+    assert [point.landmark.place_id for point in result.midpoints] == ["first", "spaced"]
 
 
 def test_execute_同一place_idの2つ目のセグメントは中間地点を付与しないこと() -> None:
